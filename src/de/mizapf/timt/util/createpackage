@@ -1,0 +1,9 @@
+#!/bin/bash
+[ -f src.zip ] && rm src.zip
+[ -f tiimagetool.jar ] && rm tiimagetool.jar
+[ -f tiimagetool.zip ] && rm tiimagetool.zip
+cp de/mizapf/timt/image/README .
+cp de/mizapf/timt/image/LICENSE .
+zip src.zip de/mizapf/timt/conn/*.java de/mizapf/timt/files/*.java de/mizapf/timt/image/*.java de/mizapf/timt/image/*.html de/mizapf/timt/image/*.txt de/mizapf/timt/util/Utilities.java 
+cp dist/lib/tiimagetool.jar .
+zip -0 tiimagetool.zip LICENSE src.zip tiimagetool.jar README

@@ -1,0 +1,10 @@
+ECHO OFF
+VER
+ECHO For more information about the Geneve, including documentation, latest
+ECHO Geneve OS revision, tools and applications, visit
+ECHO
+ECHO http://ftp.whtech.com/info/geneve.html
+ECHO
+ECHO Floppy drive 1 is A:, hard disk drive 1 is E:
+ECHO
+PROMPT $n:\$p$g

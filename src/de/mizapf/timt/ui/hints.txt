@@ -1,0 +1,79 @@
+# Hint file
+# Number = Text
+0 = there is a new feature called "Hints" which, on startup and by selection 
+in the Help menu, give you helpful information on new program features and 
+the way you can use them. You can turn off the hints completely or just 
+deselect single ones at any time.
+1 = we have a pretty long reference manual for TIImageTool in the Help menu
+2 = you should have a look at the settings in the <em>File->Preferences</em> menu 
+3 = you can create disk images from SSSD to DSHD (90 KiB to 1.44 MiB), 
+preformatted or blank, by a few clicks (<em>File->New</em>).
+4 = the last 10 image files are available by a single click in the Open Recent
+menu item.
+5 = you can create ready-to-use hard disk images for use in MESS (<em>File->New</em>).
+6 = we have full copy/paste support for file transfer between images, 
+directories, and even for export and import: Press Ctrl-C in a directory view 
+and you will notice that you can paste the file into your host file system. 
+Cutting is not supported for export and import, only for transfer between
+disk images.
+7 = you can drag and drop files and directories not only between 
+directory views in TIImageTool, but also to your PC file system.
+8 = there is a full XModem support so that you can send and receive files via 
+a serial connection (<em>Edit->Import</em> from remote). You can, for instance, run TELCO
+on your TI to exchange files with TIImageTool.
+9 = files created by Archiver can be opened just like a directory, and you can
+even cut, copy, and paste files from or into it on the fly. Yes, you can
+open archives inside archives. You can even rename a file inside a nested archive.
+10 = you can import binary files as PROGRAM files.
+11 = you can import text files as DIS/VAR 80 files, which is pretty useful 
+for assembler source code.
+12 = TIImageTool automatically finds out whether a PROGRAM file is a BASIC
+program, and if so, produces a BASIC listing. It can also load BASIC programs 
+in MERGE format as well as in LONG format.
+13 = several picture formats are recognized: TI-ARTIST, MyArt, YAPP, and
+FRACTALS. Double-clicking on such a file opens the picture in a window. 
+14 = you can create directories on hard disk and floppy images, but on floppy
+images, you can only create three directories inside the root directory and none
+in deeper levels.
+15 = there is a file system checker in the menu <em>Utility->Check filesystem</em> which
+checks for under-/over-/cross-allocation issues and for L3 record count errors.
+16 = there is a context menu which is displayed when you click the right mouse button within
+a directory view.
+17 = directory views can be detached from the main window so that you can easily
+compare image contents and use drag-and-drop to copy or move contents. When you
+close a detached view, it becomes a tab in the main window. When you close the
+main window, all windows are closed.
+18 = you can open an image more than once, which makes it quite simple to apply
+cut/copy/paste or drag-and-drop within the image.
+19 = files can be exported in TIFILES format into the host file system, and 
+you can specify in <em>File->Preferences</em> how the external file name shall
+be determined.
+20 = besides files, you can also export directories and their contained 
+files and subdirectories. In order to preserve the directory name, the name
+is stored in a file called <em>meta.inf</em>.
+21 = when you import a file you can tell TIImageTool to ignore the file name 
+in the TIFILES header and take the file name from the host file system, with 
+automatic replacement of unsupported characters.
+22 = there is a TMS9900 disassembler in TIImageTool which allows you to 
+specify regions which shall not be disassembled (text or data), and these settings
+are persistently stored for each file so you do not have to re-enter them again.
+23 = the TMS9900 disassembler takes PROGRAM files or DIS/FIX 80 files, and 
+it can produce syntactically correct source code that can be assembled again.
+24 = there is a GPL disassembler in TIImageTool that can be configured to
+exclude regions from disassembly and that stores its settings for each file
+so that you do not have to enter them again.
+25 = you can create a Geneve floppy or hard boot disk with the menu function 
+<em>Utility->Install Geneve OS</em>. All necessary files, including GeneveOS, are 
+contained in this TIImageTool distribution. If you have the boot EPROM dump, 
+you can immediately fire up your MESS Geneve emulation.
+26 = you can create CHD files (MESS hard disk containers) from your plain
+SCSI drive dump, and you can get a dump to be written back again.
+27 = TIImageTool provides the Serial Bridge feature, which allows MESS to
+communicate with a real TI via a serial connection.
+28 = there is a command line mode in TIImageTool which can be used to get a 
+directory listing or to output a text file located in an
+image file. Use <em>java -jar tiimagetool.jar CommandShell -h</em> to get more information.
+29 = you can import BASIC programs from a text file or the built-in text editor;
+that way you can paste BASIC listings into an image file.
+30 = output from the program, including error messages, can now be logged in
+a file; you can set the file name in the preferences.

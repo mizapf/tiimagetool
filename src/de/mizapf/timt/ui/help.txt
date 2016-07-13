@@ -1,0 +1,52 @@
+
+Command overview
+----------------
+
+<tf_file> is a file in TIFILES format. <image(_file)> is a file in 
+sector dump format (SDF).
+
+Show directory:
+   dir <image_file> [<subdir>]
+   ls  <image_file> [<subdir>]   (lists only file names)
+
+Create binary dumps from GK files (GK files in TIFILES format):
+   gkbin <tf_file>+ <basename>
+  
+Create TIFILES format file from the given file in image
+   gettf <image> <pathname_in_image> <tf_file>
+
+Put the tifiles file on the given image
+   puttf <imagename> <tf_file> [<filename>]
+  
+Create a TIFILES file from the plain dump (as PROGRAM file):   
+   maketf <plainfile> <tf_name> 
+
+Creates a blank or formatted image file (format is SSSD ... DSUD), tracks may
+be appended (like DSDD80):
+   create <image> (blank|formatted) (sdf|tdf) <format>[<tracks>] [<name>] 
+
+Extract content of tifiles file; for data files separate the records by 
+EOR string: 
+   type  <tf_file> [<EOR>|<outfile>]  
+
+Disassemble program file; when a branch to some specified address occurs, skip
+the specified number of words:
+   dis   <tf_file> [ address:wordcnt* ] 
+
+List a BASIC program file:
+   list <tf_file>
+   
+Convert a SCSI image for HFDC (suggestions in parentheses). If appplicable, 
+fixes MaxAU bug. Caution: Image file is changed.  
+   scsi2hfdc <image> <sect_per_track(32)> <step_speed(1)>  
+             <reduced_write_curr(58)> <heads> <buf(0)> <precomp(29)>
+
+Convert a HFDC image for SCSI. Caution: Image file is changed.
+   hfdc2scsi <image>   
+ 
+Check the consistency of an image.
+   check <image>
+   
+Read the raw contents of a file or device
+   read <file> <start> <length>
+

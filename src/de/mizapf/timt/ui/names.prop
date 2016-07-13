@@ -1,0 +1,15 @@
+contentfont=output:s:Font for program code
+lookandfeel=general:s:Look and feel
+tempdir=paths:p:Temporary directory
+lower=export:b:Convert file name to lowercase
+suffix=export:s:Add file name suffix
+convert=export:s:Char conversion rules
+underscore=export:b:Replace underscore by dot
+keepname=import:b:Ignore name in TIFILES header
+forceupper=import:b:Force uppercase names
+hintstart=general:b:Show hints on startup
+basicver=output:b:LIST by Extended Basic style
+tfifilter=import:b:Suggest TIFILES file filter 
+newframe=general:b:Open image file in own frame
+escape=output:s:Replace unprintable characters by
+logging=general:s:Log console output to file

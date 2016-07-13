@@ -1,0 +1,121 @@
+/****************************************************************************
+    This file is part of TIImageTool.
+
+    TIImageTool is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    TIImageTool is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
+    
+    Copyright 2015 Michael Zapf
+    www.mizapf.de
+    
+****************************************************************************/
+package de.mizapf.timt.ui;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+
+import de.mizapf.timt.assm.Hint;
+import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.files.FormatException;
+import de.mizapf.timt.TIImageTool;
+
+class PreferencesDialog extends ToolDialog implements ActionListener {
+					
+	TIImageTool m_app;
+	
+	Map<String,JComponent> m_entries;
+	int m_fieldWidth;
+	
+	PreferencesDialog(JFrame owner, TIImageTool app) {
+		super(owner, "Preferences");
+		m_app = app;
+	}
+	
+	
+/*
+	| 	Preferences								|
+	
+		Name of pref:   [ value ]
+		Name of pref:   [ value ]
+		Name of pref:   [ value ]
+		Name of pref:   [ value ]
+		Name of pref:   [ value ]
+		
+				+-------+			+-----------+
+				|	OK	|			|	Cancel	|
+				+-------+           +-----------+
+*/	
+	void createGui(Font font) {
+		m_bSet = false;
+
+		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
+
+		// Sample text
+		m_nColumnWidth = fm.stringWidth("Escape unprintable character by XXXX");
+		
+		// Sample text
+		m_fieldWidth = fm.stringWidth("javax.swing.plaf.metal.MetalLookAndFeel");
+		
+		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+		m_entries = new HashMap<String,JComponent>();
+		
+		showPreferenceFields("General preferences", "general");
+		showPreferenceFields("Paths", "paths");
+		showPreferenceFields("Output", "output");
+		showPreferenceFields("Importing", "import");
+		showPreferenceFields("Exporting", "export");
+
+		addButtons();
+	}
+	
+	private void showPreferenceFields(String title, String category) {
+		java.util.List<String> prefs = m_app.getPreferences(category);
+		JComponent jc = null;		
+		String value = null;
+
+		add(Box.createVerticalStrut(10));		
+		putTextLine(this, "!" + title, 0);
+		add(Box.createVerticalStrut(7));		
+		add(Box.createVerticalGlue());
+		
+		for (String s : prefs) {
+			String name = m_app.getPreferenceLabel(s);
+			char type = m_app.getPreferenceType(s);
+			switch (type) {
+			case 's':
+				value = m_app.getPropertyString(s);
+				jc = putTextField(this, name, value, m_nColumnWidth, m_fieldWidth);
+				m_entries.put(s, jc);
+				break;
+			case 'b':
+				boolean selected = m_app.getPropertyBoolean(s);
+				jc = putCheckBox(this, name, selected, m_nColumnWidth);
+				m_entries.put(s, jc);
+				break;					
+			case 'p':
+				value = m_app.getPropertyString(s);
+				jc = putTextField(this, name, value, m_nColumnWidth, m_fieldWidth);
+				m_entries.put(s, jc);
+				break;
+			default:
+				System.err.println("Unknown preference type: " + type);
+				break;
+			}
+		}
+	}
+	
+	Map<String,JComponent> getSettings() {
+		return m_entries;
+	}
+}

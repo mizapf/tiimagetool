@@ -1,0 +1,2120 @@
+<!-- 
+****************************************************************************
+    This file is part of TIImageTool.
+
+    TIImageTool is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    TIImageTool is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
+    
+    Copyright 2016 Michael Zapf
+    www.mizapf.de
+    
+**************************************************************************** -->
+<html>
+<head>
+	<!-- meta http-equiv="Content-Type" content="text/html; charset=utf-8" -->
+	<style type="text/css">
+	body { background-color:#e0f4f8; }
+	div.all { margin:30 30 30 30; background-color:white; padding:20px }
+	h1 { 	font-family:DejaVu Sans, Arial, sans-serif;
+			font-style:italic;
+			font-weight:bold; 
+			font-size:30pt;
+			color:#333333;
+			text-align:center; }
+	h2 { font-family:sans-serif; margin:10 0 5 0; }
+	h3 { font-family:sans-serif; margin:15 0 3 0; }
+	h4 { font-family:sans-serif; margin:10 0 0 0; padding: 2 10 2 10; font-size:14pt; background-color:#adbdc0 }
+
+	p { font-family:sans-serif; margin:0 0 10 0; }
+	li { padding:0 0 0 0; }
+	ol.contents { padding:0; margin:10 40 10 30; }
+	ul.contents { padding:0; margin:10 40 10 30; }
+	
+	div.program { background-color:#c2d3d7; padding:5 10 10 10; margin:0 0 10 0}
+	ul { padding: 0 0 0 10; margin: 0 0 0 10; }	
+	li { font-family:sans-serif; margin: 2 0 3 0; padding: 0 0 0 0; }
+	
+	ul.contents li { margin: 0 0 0 0; padding: 0 0 0 0; }
+	li.subcontents { list-style-type:none; margin:0 0 0 20; }
+	td a { text-decoration: none; }
+	div { font-family:sans-serif; }
+	div.footnotes { font-size:small; background-color:#eeeeee; padding: 10 10 10 10 }
+	p.warn  { background-color:#d8b2b5; padding:10; margin:10 40 10 40; }
+	div.author { padding: 10 10 10 10; font-size:small; text-align:center; }
+	div.version { text-align:center; }
+	div.glossary h2 { font-size:large; }
+	div.code { font-family:monospaced; margin:10 0 10 10; }
+	span.imp { font-weight:bold; }
+	table { border-collapse: collapse; }
+	td { border-style:none; }
+	td.cont { padding:5 2 5 2; }
+	td.cont1 { padding:20 2 5 2; }
+	td.subcont { padding: 0 20 10 15; }
+	table.main { width:90%; }
+	</style>
+</head>
+<body>
+<a name="top"></a>
+<div class="all">
+<h1>TIImageTool</h1>
+<p style="text-align:center">Easily manage TI-99 floppy and hard disk images</p>
+
+<div class="version">Version: <span style="font-weight:bold">3.0</span>; July 2016</div>
+<div class="author">Author: Michael Zapf<br/>Contact: ti99@mizapf.de<br/>www.mizapf.de</div>
+
+<p style="text-align:center">Also see <span style="font-weight:bold">www.ninerpedia.org</span> for more technical
+details.</p>
+
+<hr>
+
+<h2>Main topics</h2>
+
+<table class="main">
+<tr><td><a href="#why">Preliminaries</a></td><td><a href="#license">License</a></td></tr>
+<tr><td><a href="#bugs">Bugs and errors</a></td><td><a href="#disclaimer">Disclaimer</a></td></tr>
+<tr><td><a href="#comments">Comments</a></td><td> </td></tr>
+<tr><td><a href="#formats">Supported formats</a></td><td><a href="#usage">General usage</a></td></tr>
+<tr><td><a href="#draganddrop">Dragging and dropping</a></td></tr>
+<tr><td> </td><td> </td></tr>
+<tr><td><a href="#diskimages">Floppy disk image handling</a></td><td><a href="#files">File management</a></td></tr>
+<tr><td><a href="#hddisk">Hard disk image handling</a></td><td><a href="#viewing">Viewing contents</a></td></tr>
+<tr><td><a href="#expimp">Export and import</a></td><td><a href="#utilities">Utilities</a></td></tr>
+<tr><td><a href="#archiving">Archive support</a></td><td><a href="#serial">Serial connections</a></td></tr>
+<tr><td><a href="#disassemb">Disassembling</a></td><td></td></tr>
+</table>
+<hr>
+
+<h2>Quick menu index</h2>
+
+<ol class="contents">
+<li>Menus</li>
+<ul class="contents">
+<li>File menu</li>
+<ul class="contents">
+<li><a href="#newfl">New floppy</a>/<a href="#newhd">hard disk</a> image</li>
+<li><a href="#open">Open</a></li>
+<li><a href="#close">Close (all)</a></li>
+<li><a href="#export">Export image</a></li>
+<li><a href="#pref">Preferences</a></li>
+<li><a href="#exit">Exit</a></li>
+</ul>
+<li>Edit menu</li>
+<ul class="contents">
+<li><a href="#cut">Cut, Copy, Paste, Delete</a></li>
+<li><a href="#rename">Rename</a></li>
+<li><a href="#select">Select all</a></li>
+<li><a href="#newdir">New directory</a></li>
+<li><a href="#newarch">Create archive</a></li>
+<li><a href="#importf">Import files</a></li>
+<li><a href="#importt">Import from text editor</a></li>
+<li><a href="#importt">Import binary content</a></li>
+<li><a href="#importr">Import from remote</a></li>
+</ul>
+<li>Utility menu</li>
+<ul class="contents">
+<li><a href="#redir">View Console output</a></li>
+<li><a href="#check">Check filesystem</a></li>
+<li><a href="#genos">Install Geneve OS</a></li>
+<li><a href="#hfdc">Convert to HFDC</a></li>
+<li><a href="#scsi">Convert to SCSI</a></li>
+<li><a href="#chdformat">Change CHD format</a></li>
+<li><a href="#chdraw">Extract raw from CHD</a></li>
+<li><a href="#rawchd">Import raw into CHD</a></li>
+<li><a href="#serialbr">Serial Bridge</a></li>
+</ul>
+<li>Help menu</li>
+<ul class="contents">
+<li><a href="#manual">Manual</a></li>
+<li><a href="#hints">Hints</a></li>
+<li><a href="#about">About TIImageTool</a></li>
+</ul>
+
+</ul>
+<li><a href="#context">Context menu</a></li>
+<ul class="contents">
+<li><a href="#enterdir">Enter</a></li>
+<li><a href="#cut">Cut, Copy, Paste, Delete</a></li>
+<li><a href="#rename">Rename</a></li>
+<li><a href="#selectall">Select all</a></li>
+<li><a href="#viewing">Views</a> (text, plain, util); also see <a href="#escaping">Unprintable characters</a></li>
+<li><a href="#dis">Disassemble</a></li>
+<li><a href="#dis">GPL Disassemble</a></li>
+<li><a href="#list">List BASIC program</a></li>
+<li><a href="#save">Save as TIFILES</a>, plain dump</li>
+<li><a href="#sendrem">Send to remote</a></li>
+<li><a href="#archiving">Archive</a></li>
+</ul>
+
+</ul>
+<li><a href="#command">Command line</a></li>
+<ul class="contents">
+<li><a href="#dirview">Show directory</a></li>
+<li><a href="#fileview">Show file content</a></li>
+<li><a href="#fileview">List BASIC file</a></li>
+</ul>
+
+</ol>
+
+<hr>
+
+<h2>New in this release</h2>
+<ul>
+<li>Redirect standard output / error channel to a file</li>
+<li>Open recent</li>
+<li>Fix copying of file sets with an empty file included</li>
+<li>Fix LONG format issue with small BASIC programs (programs that are too short cannot be saved as LONG)</li>
+<li>The file system check now verifies the L3 value and offers to correct it</li>
+<li>The file system check now logs its output in a report that can be viewed after completion</li>
+<li>The disassembler for PROGRAM files now offers an option to create a 
+file that can be assembled</li>
+</ul>
+
+<a name="why"></a>
+<h2>Objectives</h2>
+
+<p>The objective of this tool is to simplify working with disk images for 
+TI-99 systems. Disk images are, simply speaking, floppy disks or hard disks 
+that have been saved as a file. These images are used in some emulators like 
+MESS instead of using a real floppy drive or hard drive, mainly because the
+PC hardware does not directly support the device operations coming from the
+emulated TI. Instead, the emulator only works with a disk image, and the 
+emulator "believes" to see a real disk.</p>
+<p>Disk images can be created with most emulators, also with MESS, but apart
+from creating them, only little support for changing the image contents is
+available. Certainly, images change while we work with the emulator, because
+the emulated system performs write operations, and so we can copy files on the
+image, delete them, and also read them. But multi-system emulators like MESS
+simply cannot implement all the handling for every single system.</p>
+<p>TIImageTool is a program which allows you to create and modify TI disk
+images in a well-known, intuitive way, including common file management features
+that we know from PC systems. Disk images can be created with different sizes, 
+files can be copied from one disk to another, files can be imported and exported, 
+and file systems can be checked for errors.</p>
+<p>In the following sections I will go through each feature of the program and 
+explain its usage.</p>
+
+<h4>Program dialog</h4>
+<div class="program">
+Elements like this in the following text indicate explanations for topics within
+dialog windows of the program. If you wonder what to select when invoking some
+feature, look out for the respective element with a heading that belongs to the
+dialog window.
+</div>
+
+<a name="required"></a>
+<h2>Prerequisites</h2>
+<p>For using TIImageTool you only need a <span class="imp">Java Runtime 
+Environment</span> version 6 and higher. If you are reading this text from the help menu you
+obviously already have a working Java environment on your computer. Remember to
+install a Java Runtime on each system where you intend to use TIImageTool.</p>
+<p>One specific feature of TIImageTool is the <a href="#serialbr">Serial bridge</a>.
+This allows you to transfer files to and from another computer system via
+XModem file exchange. The other computer system may be a real TI or Geneve,
+so you can easily exchange your files between the PC and the TI. In order to 
+use the serial bridge you need the serial interface support for Java. TIImageTool
+uses the <a href="#rxtx">RXTX</a> serial library, so you have to install this library if you
+want to use the bridge. If you do not install it, you can use all features 
+of TIImageTool without limitations except for the serial connection which will
+then be unavailable.</p>
+
+<a name="starting"></a>
+<h2>Starting</h2>
+<p>You can start TIImageTool by double-clicking the JAR file (if the JAR file
+type is associated to the Java Runtime Environment). Alternatively, you can start
+the program on the command line</p>
+<div class="code">java -jar tiimagetool.jar [image_file]</div>
+<p>If you provide the optional <em>image_file</em> argument, TIImageTool will
+directly open the image on startup.</p>
+<p>You can also start the serial bridge without launching the rest of the 
+program by using the command line:</p>
+<div class="code">java -jar tiimagetool.jar BRIDGE serial_device socket_port</div>
+<p>Please see below (<a href="#serial">serial bridge</a>) for more details.</p>
+
+<a name="formats"></a>
+<h2>Supported formats</h2>
+<p>Image files that can be used with TIImageTool may have one of the following formats:</p>
+<div><strong>Floppy disk image formats</strong></div>
+<ul>
+<li>Sector dump format (also known as "v9t9" format)</li>
+<li>Track dump format (aka "PC99" format)</li>
+</ul>
+<div><strong>Hard disk image formats</strong></div>
+<ul>
+<li>Raw hard disk format (same as sector dump format but for hard disks)</li>
+<li>MESS CHD format (Compressed Hunks of Data, a MESS-specific format for mass storage media)</li>
+</ul>
+<p>All these formats can be used directly, including reading and writing operations.
+Files and directories may be moved or copied between images of different formats.
+The different formats are only visible to some lower layer of TIImageTool and 
+are not visible to the user. There are no constraints beyond those that are
+specific for the device (e.g. you cannot create more than three directories 
+on a floppy disk).</p>
+
+<a name="license"></a>
+<h2>Licensing</h2>
+<p>Usage of TIImageTool is subject to the <span class="imp">GPLv3</span> license. The terms of the 
+license can be found inside the distribution package file that contained this JAR file. 
+The package also contains the source code as required by the GPL license. 
+The GPL license text can also be downloaded
+from <span class="imp">www.gnu.org</span>. In essence, you can redistribute
+or change the software to your needs, but only if you put your modifications
+under the same GPLv3 license. In doubt, contact the above E-Mail address,
+also for dual licensing considerations.</p>
+
+<a name="bugs"></a>
+<h2>Bugs and errors</h2>
+<p>Although everyone does his or her best, to err remains human. I have added 
+a huge load of new features to the previous version of TIImageTool, certainly
+testing everything several times in different ways. But it's just impossible to
+ensure that everything works as expected.</p>
+<p>So if you find something weird going on with TIImageTool, here are some suggestions:</p>
+<ul>
+<li>Probably the program works correctly, and you just understood one of its functions differently. Read
+the appropriate section of this manual, or contact me by mail (see below).</li>
+<li>If you encounter trouble while writing on your images, make sure your images are not
+write-protected.</li>
+<li>If the program seems to hang (mouse pointer shows a "wait state"), check if
+some dialog window waits for your input. If not, you should restart the program
+in a command line. Watch if there is some output in 
+the command line which reads like an error message and report it to me.</li>
+</ul>
+<p>In all cases, if you need help please contact me at <strong>ti99@mizapf.de</strong>. It is
+most helpful for me to find the cause of the problem if you provide me with a 
+detailed description what you did before the error appeared. So if it seems to
+you as if there is a problem, first try to reproduce the problem, so my chances
+are better to quickly find it. In case of doubt, contact me, don't try to live
+with the problem.</p>
+<p><strong>Suggestions</strong> are always welcome. Also tell me if some program behavior
+is obviously correct as described but feels surprising, awkward, or not useful for you. 
+I cannot promise to consider all of your inputs but if your point convinces me
+there is a good chance you'll get in the next version.</p>
+<h3>Known issues</h3>
+<ul>
+<li>Single-sided TDF format images differ from PC99 images. If you intend to 
+create images for the PC99 emulator, only use double-sided images.</li>
+<li>When pasting fails during a move operation on the same medium, the file
+may be lost. Copying and deleting afterwards is safer.</li>
+</ul>
+
+<a name="disclaimer"></a>
+<h2>Disclaimer</h2>
+<p>TIImageTool has been created by myself without rigorous
+testing and without verification against any formal tests or test suites. The
+program may contain errors which may prevent it from functioning in a promised
+or expected way. Even worse, as the core features of the program comprise 
+file management, any malfunction may render image files useless after using this
+tool. As I am using this tool by myself, you can feel reassured that I do not
+plan to purposefully break the images, as my own ones would also be lost.</p>
+
+<p class="warn">Although care has been taken
+to ensure a safe working with images, you should always keep backup copies 
+of your media. As long as you only read files with this tool your images
+remain unchanged.</p>
+
+<a name="comments"></a>
+<h2>Comments from the author</h2>
+<p>My motivation for writing TIImageTool emerged when I managed to copy all 
+of my old TI floppy disks to PC image files; then I was in need of a tool which allowed 
+me to quickly check whether all images have been correctly
+copied. MESS offers a tool named <em>imgtool</em>, but it is a text-only command line tool, and its main
+usage seems to be to create new images. After I added the track dump format
+to the TI-99 emulation in MESS, I should have added that support to imgtool as
+well. imgtool is a good tool if you are working with many different emulations
+in MESS, but it cannot cover all features that one would like to have for one 
+specific platform.</p>
+
+<p>So I started with TIImageTool in 2010, first as a pure command 
+line tool. Later I added a graphical user interface. During the following years
+I added more and more features, like multi-disk support and cut-copy-paste 
+capabilities, hard disk operations, and archive support.</p> 
+<p>TIImageTool is a single-person project, done in my free time. 
+I wrote it completely in Java using the <em>jEdit</em> 
+editor as my favorite programming environment (small, fast, useful). The 
+background image was created by using <em>GIMP</em>, based on
+a screenshot of the Master Title Screen.</p>
+
+<a name="usage"></a>
+<h2>General usage</h2>
+<p>The typical usage is to open one or more images using the open function in the
+file menu and to view, move, copy, or save files stored inside the images. </p>
+<p>When an image is loaded its contents are displayed in an own <strong>tab</strong>
+in a format similar to the directory displays in the TI or Geneve. You can
+open more than one image, and each image gets its own tab. You can also open an
+image more than once for a comfortable file transfer on the same image. 
+You can certainly do file operations (like moving or copying) across different
+tabs.
+</p>
+<p>With the 2.0 release, you can <strong>detach</strong> tabs from the main 
+window. When you close the detached windows, they become tabs of the main window 
+again, unless you close the main window, which shuts down all open windows at once.
+</p>
+<p>In general, we call a directory listing of an image a <strong>view</strong>. 
+Thus, views can appear as tabs of the main window, or as separate windows.</p>
+
+<p>Within the directory content display you can open files by <strong>double-clicking</strong>
+the left mouse button over the entry. TIImageTool will choose a suitable display format (text 
+for DIS/VAR 80 files, program listing for BASIC). In order to step into a 
+subdirectory, double-click its name in the display; to get back, double-click the
+parent directory entry ("..").</p>
+<p>All file operations require that you <strong>select</strong> one or more
+files. Selection is done in the usual way by moving the mouse pointer over an
+entry and by left-clicking on it (marking it). If you want to do single file operations 
+you do not need to mark the file first; you can immediately double-click it 
+or use the context menu.</p>
+<p>Selection of multiple files or directories is done by left-clicking while
+pressing the <strong>Shift</strong> or <strong>Ctrl</strong> key on the keyboard.
+The Shift key allows you to select a range (starting at the last selected entry)
+while Ctrl is provided for separate selections.</p>
+<p>Available operations depend on the selected entries. For instance, if you
+select multiple text files you can open each one of them in one go. If you select
+a BASIC file and a text file together, however, there are less options because
+you cannot list a text file. The program determines which options may be reasonable
+to use for the current selection.</p>
+<p>According to the available operations, menu items become selectable or 
+become deactivated. Thus the <em>close</em> menu option is only available if
+an image has been opened.</p>
+<p>Many operations are available via the <strong>context menu</strong>. This
+menu is shown when you right-click a directory entry (right mouse button) or when
+you right-click on a free space on the directory tab. All this is done in a
+way which should be quite well-known for people using modern operating systems 
+like Linux, MacOS, or Windows.</p>
+
+<p>All operations are performed <strong>immediately</strong> on the image. 
+There is <strong>no undo</strong> feature in TIImageTool yet.</p> 
+
+<a name="draganddrop"></a>
+<h2>Dragging and dropping</h2>
+<p>One of the most notable enhancements of release 2.0 is the <strong>Drag-and-Drop support</strong> (DnD).
+You can now easily move or copy files between images, between directories,
+or even between an image and the PC file system and vice versa. The DnD support is based on the DnD implementation in Java Swing. It implements
+all common gestures, but has some few limitations that you should be aware of.</p>
+<p>In most cases, DnD is simply done by clicking on a file, holding the mouse
+button while moving the pointer to a target area, and then releasing the button.</p>
+<p><strong>Moving</strong> is the default operation in TIImageTool. This
+means that after the operation, the file is added to the target image (where you
+released the mouse button), and it is removed from the image from where you
+dragged the file away.</p>
+<p><strong>Copying</strong> is what you may want to do in almost the same number
+of times. You can specify that the DnD gesture means copying by pressing and holding the
+<strong>Ctrl</strong> button on the keyboard when you drop the file. In this 
+case, the file will not be removed from its origin.</p>
+<p>You can copy single files, but also a set of files from a single view. For this
+purpose you must mark the files as already described above (left-clicking, 
+together with Shift or Ctrl keys) and then drag them to the target view.</p>
+<p>We're not done yet. You can also copy directories; they behave in the same
+way as your files. One exception though, you cannot drag a directory into another
+directory on a floppy disk, since the floppy disk file system does not support
+nested directories.</p>
+<p>Finally, what happens when you pull your file out of TIImageTool? - 
+This will indeed be handled as an <strong>export</strong> operation, and you can
+again handle one or more files or directories in one go. The exported files
+will appear as TIFILES files on the file system.</p>
+<p>You can even drag files into TIImageTool from your file system. Simply try
+to pull a text file, or maybe a BASIC program? I guess it is better you just
+have a try before I continue with long explanations.</p>
+<p>One limitation of the export feature is that you can only copy files and
+directories from the image file to the external file system; moving is not
+possible even though your file explorer will offer you the option to move. This
+is a limitation of the Java DnD support.</p>
+
+<p>You find more details about import and export <a href="#importf">below</a>.</p>
+
+
+<a name="context"></a>
+<h2>Context menu functions</h2>
+
+<p>The context menu pops up when you click the right mouse button over an 
+entry of the directory. Its contents depend on the entry - BASIC files, for 
+instance, cause the <em>List BASIC</em> feature to become active. The "free space"
+of the directory tab offers a own context menu which contains options to 
+create new entries or to paste copied files into this directory.</p>
+
+<p><a href="#top">Back to top</a></p>
+
+<!-- ------------------------------------------------------------------------- -->
+
+<hr>
+<a name="diskimages"></a>
+<h2>Floppy disk image handling</h2>
+<p>Floppy disk images represent real floppy disks and contain files just as
+their real counterparts. Floppy images are stored in a specific format. MESS and TIImageTool support
+two formats known as the <em>Sector Dump Format</em> and the <em>Track Dump
+Format</em>; other names are <em>v9t9</em> and <em>pc99</em> format, according
+to the name of the emulators which first used them.</p> 
+
+<p>With the introduction of the HFDC controller, the 
+floppy file system was enhanced by directories, but we can only have 3
+directories at root level. Also, directories cannot be nested.</p>
+
+<p>TIImageTool does not allow for creating disk images from a real floppy disk
+at this time. This requires a low-level access to the floppy controller on the
+PC board. You can, however, transfer files using <a href="#importr">XModem</a>.</p>
+
+<p>Disk images can be created with or without a file system within TIImageTool.</p>
+
+<a name="newfl"></a>
+<h4>New</h4>
+<div class="program">
+<p>Allows you to create
+new floppy disk images. You can decide between pre-formatted and blank image files.  </p>
+<p>You have to choose a file name for the new image. If you create a sector dump
+format image (SDF), the file suffix "dsk" is appended (unless you provided it
+already). Track dump format files get a "dtk" suffix.</p>
+<ul>
+<li><em>Disk name</em>: <a href="#valid">Valid</a> disk names are at most 10 characters long; the period
+character "." is not allowed.</li>
+<li><em>Image type</em>: Choose between Sector Dump Format (v9t9) and Track Dump Format (pc99)</li>
+<li><em>Formatting</em>: If you create a blank image you need to format it within the emulator before you can use
+it in TIImageTool.</li>
+<li><em>Sides, Density, tracks</em>: Parameters which determine the capacity of the image.</li>
+</ul>
+</div>
+
+<p>Formatted images are automatically opened after creation.</p>
+
+<p>The most often used format is 360 KiB (double-sided, double density, 40
+tracks). While high and ultra density disks are supported by the HFDC <a href="#DSR">DSR</a>, 
+the real HFDC card cannot reliably deal with the higher data rates. You may
+find descriptions on the Web how to upgrade the hardware to work with these formats.</p>
+
+<p>The Sector Dump Format is recommended for common use.</p>
+
+<a name="open"></a>
+<h4>Open</h4>
+<div class="program">
+<p>This feature allows you to open an image and display its contents in a 
+new tab in the program window. As stated in the <a href="#formats">formats</a>
+section, floppy disk images in SDF and TDF format are supported. Also, hard disk
+images in RAW and CHD format may be used. It is not required to extract the
+CHD contents before using in TIImageTool, and modifications to the image
+are properly written into the CHD file.</p>
+<p>Unlike prior releases of TIImageTool, you can open an image more than once.
+Any change you commit to one of the copies is reflected in all others 
+immediately.</p>
+</div>
+
+<p>If you work with a small set of image files the "Open recent" feature considerably speeds up your work.</p>
+
+<h4>Open recent file</h4>
+<div class="program">
+<p>In the <strong>Open recent file</strong> menu item you can find the most recent
+10 image file names in a list.</p>
+</div>
+
+<p>You can close the currently selected image in several ways.</p>
+
+<a name="close"></a>
+<h4>Close / close all</h4>
+<div class="program">
+<p>This option closes the currently selected view (or all views). Remember that
+changes to the image have already been performed when you operated on the image,
+hence closing is not necessary to commit previous changes. You can also close tabs 
+using the <strong>close button</strong> on the tab (and I bet you'll use that one).</p>
+</div>
+
+<!-- -------------------------------------------------------------------- -->
+
+<a name="hddisk"></a>
+<h2>Hard disk image handling</h2>
+<p>Hard disks images can be used in MESS just like floppy disk images, but they
+are usually much bigger due to their higher storage capacity.</p>
+
+<p>MESS uses a special container for hard disk images called CHD (<em>Compressed 
+Hunks of Data</em>). TIImageTool allows for working with plain contents as 
+well as with these CHD containers. You can find all kinds of operations 
+like creating, extracting, or modifying the CHD container within 
+the menu functions.</p>
+
+<p>Also, two file systems are supported: the HFDC and the SCSI file system. The 
+difference between both is that the SCSI file system does not contain information
+about cylinders, heads, and sectors per track, because SCSI drives provide a 
+linear block addressing.</p>
+
+<h3>Raw images</h3>
+<p>Raw images are simply sector dump images as found with the floppy disks; they consist
+of a sequence of sector contents, starting with sector 0 and going up to the 
+last sector. Raw images do not contain information about the drive parameters
+(how may cylinders, heads, and sectors per track are used) except for the 
+information in sector 0 after the hard disk has been properly formatted.</p>
+
+<p>MESS cannot handle raw images because it must be able to determine the drive 
+parameters from unformatted drives as well. These parameters are available in the
+CHD format.</p>
+<p>When you attach your TI or Geneve SCSI hard disk to a SCSI adapter in a PC,
+you can read the raw data and produce a raw image, even though the PC does not
+know anything about the TI file systems. In Linux you can use the <strong>dd</strong>
+command:</p>
+
+<pre>
+dd if=/dev/sdX of=imagefile.raw bs=4096
+</pre>
+
+<p>You must, of course, use the appropriate device name (not sdX) which is
+assigned to that drive. In Linux you can use this "raw" device (e.g. sda, sdb, ...)
+when you want to access the device outside of any disk partitioning. The <em>bs</em>
+parameter declares the block size in bytes, which may be set to 256 as the 
+real sector size, but using a higher value speeds up the copy process (multiple
+sectors will be read in one go).</p>
+
+<h3>MESS CHD</h3>
+<p>CHD means <em>Compressed Hunks of Data</em> which implies one of its 
+original uses: to allow to pack contents of mass storage media in a comparably 
+small container. CHD is not only intended for hard disk images, but also for CD-ROMs,
+tapes, and others. The CHD container not only allows for compressing the contents,
+but also for checking their integrity with CRC and SHA1 hash values.</p>
+<p>For working hard disks, neither compression nor hash values can be used, because
+their contents are changing over time; only if a hard disk contains a fixed
+content these properties are useful. Apart from that, the CHD container adds 
+important information about the drive geometry (cylinders, heads,
+sectors per track).</p>
+
+<p><strong>CHD versions</strong></p>
+<p>CHD has evolved along many versions; the current version is 5. It introduced
+a very useful feature: The size of the image can be minimized even without 
+compressing. All tracks that are completely filled with 0 are not stored. There
+is a map at the beginning of the container, and when the system looks up the
+pointer to a desired track and gets a 0, it automatically creates an empty 
+track image filled with zeros.</p>
+<p>TIImageTool supports versions 4 and 5 of CHD. MESS itself does not
+accept older formats, which means that every now and then you will have to 
+upgrade the format of your CHD containers. TIImageTool allows you to change
+the version of the CHD container, even to downgrade, although this is only 
+reasonable when you want to use the image with an earlier MESS release.</p>
+
+<p>You can also extract the contents of a CHD container into a raw image; you
+will need this when you want to write contents back to your real TI/Geneve hard drive.
+Vice versa, you can import raw contents and create a new CHD container. On this
+occasion, you can specify whether you want unallocated space to be filled with
+zeros. As said above, this may greatly reduce the size of your image.</p>
+
+<p>When you create a blank hard disk with MESS tools or with TIImageTool without
+formatting, you must format it inside the emulation (e.g. with the 
+Myarc Disk Manager). However, you will notice that the CHD will grown to its 
+maximum size at once. The formatting tools in the emulation write a test 
+pattern on the disk, and the CHD support in MESS cannot know that this
+is merely a test pattern. However, this can be "fixed" because 
+TIImageTool can convert this test pattern to zeros if the respective sectors on the hard disks
+are not allocated for files.</p>
+
+<h3>Hard disk parameters</h3>
+<p>There are two groups of parameters for hard disk usage: the geometry, and 
+technical parameters</p>
+<p><strong>Geometry</strong></p>
+<ul>
+<li><em>Cylinders</em>: For floppy drives usually called tracks, but as 
+hard disks are usually built up by stacking multiple single disks, the tracks
+on top of each other are called a cylinder. The number of cylinders is determined
+by mechanical properties of the drive, so each drive has its specific count of cylinders.
+The number of cylinders is typically indicated on the case of the drive. The once
+famous ST-225 drive from Seagate had 615 cylinders, which is used as a default
+in TIImageTool. You can define <strong>up to 2048</strong> cylinders.
+</li>
+<li><em>Heads</em>: For floppy drives we usually speak about <em>sides</em>, but
+again, we have multiple disks in a hard disk case, so there are also multiple
+heads. You can have <strong>up to 16</strong> heads, and in this program we
+also require their number to be even (always using both sides of a disk).</li>
+<li><em>Sectors per track</em>: On floppy disks, sectors could be defined at any
+location on the track (<em>soft-sectored</em>), but hard disks may be designed to
+have sectors at specific locations. Therefore the number of sectors per track
+can be considered defined by geometry. We can have <strong>up to 256</strong> sectors per track, 
+but commonly we find 32 sectors per track.</li>
+<li><em>Sector length</em>: This is rather a matter of formatting, not of
+specific geometric constraints. Sector lengths for MFM drives and SCSI drives 
+as used in the TI/Geneve environments are always <strong>256 bytes</strong>.
+Only the IDE drives as used with the IDE adapter are created with 512 bytes as
+commonly used in the PC world, but this is not yet supported in TIImageTool.</li>
+<li><em>MESS CHD version</em>: You can set version 4 or 5, but 5 is highly 
+recommended because current MESS releases only support version 5.</li>
+</ul>
+
+<p>SCSI drives do not expose these geometric data to the outside world, other
+than MFM drives which were used with the HFDC controller. SCSI drives only define
+a number of sectors and care for locating them inside their own control logic.
+Accordingly, we have a variation of the hard disk file system on the TI/Geneve
+which we call <em>SCSI file system</em>; it only differs in the first sector
+where the geometry data and technical parameters are left blank.</p>
+
+<p><strong>Advanced options</strong></p>
+<ul>
+<li><em>Reserved AUs</em>: The root directory is located in the low sector numbers,
+near the beginning. It is reasonable to reserve a set of allocation units for this 
+directory to avoid that it becomes fragmented.</li>
+<li><em>Write precompensation</em>: Sectors near the center are packed tighter,
+and therefore some fractions of microseconds
+of time shifting in writing is required to make the recording reliable. Again,
+the value is guessed, and you can leave it this way.</li>
+<li><em>Reduced write current</em>: Inner sectors on the drive disk are closer
+together, so the current sent to the write head should be reduced to avoid 
+modifying the neighboring sectors. MFM and RLL drives were set to a lower write
+current by a special control line, and the controller had to be told from where to
+use the lower current. We use a guessed value here, determined from the default
+values as used in Myarc Disk Manager. You should be safe to leave the value as is.</li>
+<li><em>Step speed</em>: As the name implies, defines the step rate of the heads
+in the drive. Can be set in a range of 0-7 and depends on the mechanics of the drive.</li>
+<li><em>File system</em>: You can choose between HFDC and SCSI, but as already
+stated, MESS currently does not support SCSI.</li>
+<li><em>Buffered step</em>: Some drives were able to buffer step pulses for their
+heads, so the controller was not required to do single steps but to output a sequence
+of step pulses, and then listened to a line called <em>seek complete</em>. Older
+drives did not have such a buffer, so we leave this box unchecked by default.</li>
+</ul>
+
+<p>All these technical parameters may be safely left with their defaults. The only
+thing that you have to consider is that the size of the hard disk matches the
+declared parameters in the file system (in sector 0). You cannot use hard disks
+beyond the size of 248 MiB because of the size of the allocation table in the file
+system which has a size of 31 sectors.</p>
+
+<a name="newhd"></a>
+<h4>New</h4>
+<div class="program">
+<p>Allows you to create
+new hard disk images. You have to define the geometry of the disk and you can 
+decide between pre-formatted and blank image files.</p>
+
+<ul>
+<li><em>Volume name</em>: Specify a <a href="#valid">valid</a> volume name.</li>
+<li><em>Cylinders, heads, sectors</em>: Geometry parameters. You must define them
+even when you plan to create a SCSI image. This is required for the MESS CHD container.</li>
+<li><em>Sector length</em>: For HFDC and SCSI, the sector length must be 256. In a
+later revision there may be support for IDE drives with 512 bytes per sector.</li>
+<li><em>MESS CHD version</em>: You can create CHD images for versions 4 and 5, 
+but you must use the appropriate version for the MESS release you plan to use.
+Current releases only support version 5.</li>
+<li><em>Format hard disk</em>: Create the file system on the image. If you want
+to use an emulation-internal tool for formatting, uncheck the box.</li>
+<li><em>Advanced options</em>: Activating this box unfolds a set of detail
+options which you may want to set. However, for most situations, you should leave
+the default values unchanged.</li>
+</ul>
+</div>
+<p>Note that when you let TIImageTool format the hard disk image, the CHD 
+container can be minimized in size, as the free space is filled with zeros. Thus, 
+the formatted image is <strong>much smaller</strong> if you use this format option, compared
+to the fully expanded size which you will find after formatting with Myarc Disk Manager
+within the emulation.</p>
+
+<h4>Open / Close</h4>
+<div class="program">
+For opening and closing a hard disk image see the respective <a href="#open">section</a> for floppies.
+</div>
+
+<a name="chdformat"></a>
+<h3>Upgrading or downgrading the CHD format</h3>
+<p>You can use this function to upgrade your old CHD image from 4 to 5. You can
+also downgrade the container, although this is only recommended when you use
+it with an old MESS version.</p>
+
+<h4>Change CHD Format</h4>
+<div class="program">
+<p><em>Convert to version</em>: Specify the new CHD version. The default is 5.
+If you downgrade (from 5 to 4) you will get a warning notice.</p>
+</div>
+
+<p>You can always cancel the operation before any change takes place.</p>
+<p>If you leave the version as is, no operation will be performed. If you intend
+to optimize the size of the v5 container you should <a href="#chdraw">extract</a>
+and <a href="#rawchd">re-import</a> the contents again.</p>
+
+<a name="chdraw"></a>
+<h3>Extracting contents from a CHD container</h3>
+<p>Extracting is pretty simple, as the target format (the sector contents) does
+not need any parameters. Note that CHD
+containers may be much smaller than the size they represent. The extracted content
+will expand to the full size. Make sure you have enough space on your file system.</p>
+<p>Extraction will not be done on the currently open image, but you have to 
+choose an image file from your file system.</p>
+
+<h4>Extract raw from CHD</h4>
+<div class="program">
+<ul>
+<li><em>Source CHD</em>: You first have to specify the CHD container from which you want to extract
+the contents. The dialog window is a reminder that you will <strong>not</strong> extract from one of the
+currently open volume but that you have to specify a volume from the PC file system.</li>
+<li><em>Required space</em>: Tells you how much space this extraction will require.</li>
+<li><em>Target file</em>: Specify the target file name.</li>
+</ul>
+</div>
+
+<a name="rawchd"></a>
+<h3>Importing contents into a new CHD container</h3>
+<p>Importing requires some information that is not contained in the raw contents.
+This information (the <em>metadata</em>) inform MESS about the geometry of the
+drive even when it is not formatted yet.</p>
+<p>Also here, you do not operate on the currently open images.</p>
+
+<h4>Import from raw</h4>
+<div class="program">
+<ul>
+<li><em>Source CHD</em>: You first have to specify the raw file which contains
+the sector contents.</li>
+<li><em>Parameters</em></li>
+<ul>
+<li><em>Target CHD version</em>: You should use the default (5). The v4 format
+can only be used with earlier MESS versions.</li>
+<li><em>Fill unallocated space with zeros</em>: Tracks filled with zeros are not
+stored in a v5 container; this may allow the container to shrink considerably.</li>
+<li><em>Target parameters</em>: You cannot change these parameters. They are 
+computed from the size of the input file in a way to yield plausible values.</li>
+</ul>
+<li><em>Target file name</em>: Provide the name by which the CHD container shall be
+stored.</li>
+</ul>
+</div>
+
+<p>The new CHD container is stored on the PC drive, but it is not automatically 
+opened. You can open it <a href="#open">as usual</a>.</p>
+
+<p>The CHD container may be <strong>much smaller</strong> than you expected. MESS
+CHD v5 containers do not store tracks which are filled with zeros. However, if you
+format the drive within the emulation, test patterns will make the CHD expand to 
+its full size.</p>
+
+<h3>Converting between HFDC and SCSI file system</h3>
+<p>When you import raw data into a new CHD, TIImageTool fetches the geometry values
+from sector 0. If the raw image has a SCSI file system, we need to guess proper
+geometry values. This should not cause any problems, as there are no checks
+for known geometries. However, keep in mind that you cannot use SCSI images
+in MESS at this time (0.159).</p>
+<p>You can change the file system from SCSI to HFDC and back. You will lose the
+geometry and technical parameters when you convert it to SCSI, and you have to
+define them when you convert to HFDC.</p>
+<p>Changing the file system is possible with raw images, but not with CHD images.
+The reason is that when you change the parameters, the CHD information may
+become inconsistent. You have two ways to handle this:</p>
+<ul>
+<li>Create a new HFDC-formatted image and copy the contents from the raw SCSI image.</li>
+<li>Extract the raw contents from the CHD (if you have already imported them), change the file system,
+and import them again into a new CHD.</li>
+</ul>
+<p></p>
+
+<p><strong>Convert to HFDC</strong></p>
+<p>The volume information block (VIB) of a hard disk image differs between HFDC and
+SCSI systems: For the HFDC, the VIB contains cylinder/head/sector information
+(the disk geometry); SCSI file systems use a linear block addressing and therefore
+do not define a geometry. Converting to HFDC means that you have to supply the
+geometry data by yourself.</p>
+
+<a name="hfdc"></a>
+<h4>Define geometry</h4>
+<div class="program">
+<ul>
+<li><em>Cylinders, heads, ...</em>: These values are guessed from
+the raw data. You may want to provide other data here.</li>
+</ul>
+<p>The suggestions are a guess from the program which would result in a hard disk of the 
+size of the raw data.</p>
+</div>
+
+<p>TIImageTool tries to guess reasonable values for the drive geometry from
+the size of the image. SCSI drives, however, usually reserve a set of sectors
+for replacing defect sectors, so the number of sectors is less than should be
+expected from calculating the number by multiplying cylinders, heads, and sectors
+per track. We assume that we have 32 sectors per track and round up to the next
+multiple of 512 sectors. This allows us to cleanly divide the total sector number into
+the geometry values. If you know different values you can change them manually.</p>
+
+<p>This function also checks for <em>invalid MaxAU</em> values. These invalid values 
+are caused by a bug of a formatter in earlier MDOS versions. When found, the
+program will replace all of these values by the correct maximum value.</p>
+
+<p>Converting to HFDC is required only if you want to use a SCSI image with the HFDC. 
+For current MESS versions, only the HFDC controller is emulated. Later MESS
+versions may include a SCSI emulation so that this conversion may become
+obsolete.</p>
+
+<p><strong>Convert to SCSI</strong></p>
+<p>This is the inverse process to the conversion to HFDC. Here the geometry
+data are discarded. This may be necessary when you want to write an image back to a SCSI
+drive and continue to use it by a real SCSI controller (ASCSI or WHTech) attached
+to your TI or Geneve.</p>
+
+<a name="scsi"></a>
+<h4>Notifications</h4>
+<div class="program">
+You may get one of these notifications.
+<ul>
+<li><em>Cannot convert the image within the CHD container</em>: You cannot convert an image within the CHD
+container because this may have an effect on the geometry of the drive. You
+must first <a href="#chdraw">extract</a> the raw contents and apply this 
+function on the raw contents.</li>
+<li><em>This will remove the CHS information</em>: You are about to clear the
+fields within the raw data. You will not have a direct chance of undoing, so you
+should be certain what you are about to do.</li>
+</ul>
+</div>
+
+<p>The conversion completes silently, and you will notice the effect when you
+see that the heading contains the line <em>Directory of SCS1</em>.</p>
+
+<p><a href="#top">Back to top</a></p>
+<hr>
+<!-- -------------------------------------------------------------------- -->
+
+<h2>Direct device access</h2>
+
+<p>We cannot access floppy drives directly from TIImageTool, as we cannot 
+configure the PC floppy controller from within Java. Another interesting use
+case would be to gain direct access to devices like SCSI drives or Flash 
+ROM cards: </p>
+
+<ul>
+<li>We have a SCSI hard drive which is normally attached to a SCSI card in the
+TI peripheral system, like the WHTech SCSI or the ASCSI card. This SCSI drive
+can easily be hooked on a PC SCSI adaptor.</li>
+<li>Flash cards can be accessed as simply as SCSI drives, but they do not need
+a dedicated SCSI controller. Flash cards are also used with various compact flash
+extensions for the TI.</li>
+</ul>
+
+<p>In earlier releases of TIImageTool, a feature called <b>Open device</b> 
+was available. This feature was removed with release 3.0 for the following
+reasons:</p>
+
+<ul>
+<li>When run in <b>Windows</b>, opening the device for read/write is not possible,
+despite various suggestions in technical forums. This means you would only
+be able to read the device but you could not commit any changes.</li>
+<li>When run in <b>Linux</b> or <b>MacOS</b>, you need permission to access the device 
+directly. Running TIImageTool is not recommended to be run by root. Also,
+changing the permissions of the device for direct user access is a high security 
+risk.</li>
+</ul>
+
+<p>The <b>recommended practice</b> is to create an image file from your Flash ROM 
+card or other device by a separate tool (like <b>dd</b> in Linux, <b>WinDD</b> or <b>RawWrite</b> 
+in Windows). Then use TIImageTool to work on this image, change it, and write
+it back with the external tool.
+</p>
+<p><a href="#top">Back to top</a></p>
+<hr>
+
+<!-- -------------------------------------------------------------------- -->
+<a name="files"></a>
+<h2>File management</h2>
+<p>File management in TIImageTool is widely done in the same way as you know 
+it from working with PC file systems. Files can be <em>moved</em> (removed from the original location and
+put at the new one), <em>copied</em> (created at the new location without deleting
+it at the origin), <em>deleted</em> (removed, no way to undo the operation), or
+<em>renamed</em> (staying at the same location).</p>
+
+<a name="select"></a>
+<h3>Selecting</h3>
+<p>One important thing to know is how to determine on which files the operation
+shall be applied. To specify you must select the files by a single click.
+</p>
+<p>You can select a single file by moving the mouse pointer over the entry in the
+directory list and clicking the left mouse button. Pressing <strong>Shift</strong> while clicking the
+left mouse button, you can select a range of entries, while the <strong>Ctrl</strong>
+key allows you to add a file to the current selection. You can deselect files
+by clicking on them a second time (holding the Ctrl key). If you left-click on
+any item without holding one of these keys, the current selection will be canceled.
+</p>
+<p>You can work with directories in the same way - directories can be selected
+to be moved, renamed, and so on.</p>
+
+<a name="selectall"></a>
+<h3>Select all</h3>
+<p>Sometimes you may need to select all files; you can do this my selecting the
+first entry at the top and selecting the last one at the bottom, pushing Shift
+this time. Or you use this menu function. You can also select the whole contents using
+the <strong>Ctrl-A</strong> key combination.
+</p>
+
+<h3>File operations</h3>
+<p>These functions allow you to modify the image contents by moving, copying,
+and deleting entries of the directories. They work pretty much like the well-known
+functions which are available in many other programs.</p>
+
+<a name="cut"></a>
+<h4>Cut / copy / paste / delete</h4>
+<div class="program">
+<p>These functions are established ways to operate on files in directories. You 
+can <a href="#select">select</a> one or multiple files or directories, or both.</p>
+<ul>
+<li><em>Cut</em>: Marks a file for moving. Unless <em>paste</em> is selected, 
+nothing happens. In order to remind you of the cutting action, entries that have
+been cut are marked by a lighter text color.</li>
+<li><em>Copy</em>: Marks a file for copying. Again, nothing happens until you
+paste the file to its new destination. Files that are marked for copying are not
+specially highlighted.</li>
+<li><em>Paste</em>: Completes the cut/copy operation. The selected file(s) and 
+directory(s) are inserted into the currently open and selected directory. Also,
+when cut was selected, they are removed at their origin.</li>
+<li><em>Delete</em>: Removes the selected file(s) and directory(s). There is no
+way to restore them, so you have to approve the action in a confirmation dialog.</li>
+</ul>
+<p>You can use the well-known <em>shortcuts</em>: <strong>Ctrl-C</strong>
+for copy, <strong>Ctrl-V</strong> for paste, <strong>Ctrl-X</strong> for cut, <strong>Del</strong> for delete.
+</p>
+</div>
+
+<p>Moving files on the same image does not move the file contents. It only moves
+the file into another directory. Moving to another image, instead, first copies the
+file, then deletes the file on the original image. When you copy or move 
+a file or directory to a directory where there is already a file or directory of
+the same name, you will be asked to choose another name.</p>
+<p>Moving or copying directories applies to the complete subtree of this directory.
+This means that when you copy a directory to another image, the complete 
+contents will be copied as well.</p>
+
+<a name="rename"></a>
+<p>Files and directories can be renamed.</p>
+
+<h4>Rename</h4>
+<div class="program">
+<p>If you select multiple files or directories, this function is iteratively
+performed for each one.</p>
+<p>
+<em>New name</em>: Provide a <a href="#valid">valid</a> name. There is no auto-renaming scheme. The
+input is checked for validity and whether the name is already used.</p>
+</div>
+
+<p>You will notice that after renaming the contents will appear re-sorted. The TI file
+systems use sorted lists of files and directories, so it is an error if the
+list is not displayed as sorted.</p>
+
+<h3>New directory</h3>
+<p>Hard disks and also floppy disks may have directories to structure their
+content. Floppy disks are constrained to have at most three directories, and
+they must reside in the root directory of the file system. This means you cannot
+create a directory inside another
+directory when you are working with floppy images. On hard disks, these restrictions
+do not apply. You can have up to 114 subdirectories in a directory.</p>
+
+<a name="newdir"></a>
+<h4>New directory</h4>
+<div class="program">
+<p><em>Directory name</em>: Provide a <a href="#valid">valid</a> name. The
+input is checked for validity and whether the name is not already used. The new
+directory is created in the currently shown directory.</p>
+</div>
+
+<p>The menu function and the context menu function are deactivated when you
+are not allowed to create a new directory at this point.</p>
+
+<p><a href="#top">Back to top</a></p>
+<hr>
+<!-- -------------------------------------------------------------------- -->
+
+<a name="archiving"></a>
+<h2>Archiver support</h2>
+<p>Barry Boone's <em>Archiver</em> is the standard tool for packing files on 
+a TI or Geneve. Archiver works similar to the <em>tar</em> program; it concatenates
+all file contents in a single file, including the metadata of the files (file
+names, types, and other information). Archiver offers the option to compress the
+whole package using LZW compression. Archiver does not allow for storing directories
+and can only pack files from a single directory. It does not store path information.
+</p>
+<p>Uncompressed archive files have file type DIS/FIX 128, while compressed 
+archives can be recognized by their INT/FIX 128 file type.</p>
+
+<p>TIImageTool supports Archiver archive files in both compressed and uncompressed
+mode, and it provides a <em>transparent</em> integration. In fact, archive files
+are treated like directories, so when you double-click an archive file, 
+TIImageTool will act as if you entered a subdirectory.</p>
+<p>Within this kind of "directory" you have all features of TIImageTool at your
+control: You can view files, copy, delete, rename files, or even create new archives
+within. Indeed - you can step into <em>nested archives</em> at any level. This is a
+useful feature which you will enjoy when you encounter archive files that 
+contain archives themselves: You need not unpack everything first but simply follow
+the path through all nested archives. Unpacking or packing files is simply done 
+by opening the archive and doing the usual file operations.</p>
+
+<p>The only operation you are not allowed to do in archives is to create a subdirectory,
+as the Archiver format does not implement this feature. However, using nested
+archives you can get a similar effect, although it has a noticeably worse performance:
+Any change you apply to a nested archive will imply a re-packing of its 
+parent and recursively of all its ancestors.</p>
+
+<a name="newarch"></a>
+<h4>Create archive</h4>
+<div class="program">
+<p>This function creates an empty archive. Although TIImageTool can cope with
+empty archives, you should not try to open it with the Archiver or other tools 
+on the TI or Geneve, as those tools may not have been designed to handle 
+empty archives.</p>
+<ul>
+<li><em>Archive file name</em>: As every other file name, this name must be 
+<a href="#valid">valid</a>. The proposed file name is FILES_ARK.</li>
+<li><em>LZW compression</em>: Set by default; will make archives much smaller, but
+it also increases the processing time (not only here but also on the TI). Most
+archives are compressed.</li>
+</ul>
+</div>
+<p>Empty archives are like empty directories, and you can carry on
+by copying files into the archive.</p>
+
+<h3>Archiving files</h3>
+<p>You can archive files in two ways:</p>
+<ul>
+<li>Copy the files into an already open archive. This may be an empty archive
+created by the <a href="#newarch">above</a> procedure or an already filled archive.</li>
+<li>Create an archive from a selection of files. This function is available from
+the context menu, and you can specify the name and the compression in the same
+way as when creating an <a href="#newarch">empty archive</a>. The proposed name
+is derived from the name of the first file in the selection.</li>
+</ul>
+<p>After copying into the archive, the archive file is instantly recreated. If there
+is not enough space on the image, an error message is issued, and the archive
+file remains unchanged.</p>
+<p>Writing a set of files into an archive is a <strong>noticeably</strong> complex process because
+the archive is recreated for each single file. This will hopefully be fixed in a later
+release. So please be <strong>patient</strong> when you insert twenty or so files into an archive.</p>
+
+<h3>Unpacking archives</h3>
+<p>Archives are treated like directories. This means that by double-clicking on
+them you enter the archive just like a directory. You can unpack the files in this
+archive simply by <em>copying</em> them elsewhere. For instance, to unpack the
+archive in the same directory, enter the archive, select all files, choose copy,
+enter the parent directory (which is the directory where the archive file is located),
+and paste the files.</p>
+
+<p><a href="#top">Back to top</a></p>
+<hr>
+
+<!-- -------------------------------------------------------------------- -->
+
+<a name="viewing"></a>
+<h2>Viewing contents</h2>
+
+<p>Each file may have a specific method to view its contents. In the context menu
+you can find a choice of applicable ways. The standard way to look at the file
+is used when you double-click on the file.</p>
+
+<p>You can also select multiple files. In that case, viewing will be restricted
+to the ways that are supported by all files in the set, and all selected files
+will be shown in individual frames.</p>
+
+<a name="fibdump"></a>
+<h3>View file information block</h3>
+<p>This feature is particularly interesting when the file entries seem to
+have errors. You can have a look at the FIB as found on the image.</p>
+
+<a name="hexdump"></a>
+<h3>View plain dump</h3>
+<p>You can inspect each file in its plain dump format as a hex dump, including text files
+or BASIC programs. You can use this to find out more about the format of the file
+or when other options do not deliver the desired result.</p>
+
+<a name="textview"></a>
+<h3>View as text</h3>
+<p>All files with DIS/VAR 80 format are assumed to be text files. Double-clicking
+on them will open the text viewer. You can then save the text to a file on your
+PC file system, or copy it into the clipboard. Editing is not yet possible, although
+you can achive this by creating a new file with text content, and copying the 
+contents into the editor frame.</p>
+
+<a name="imageview"></a>
+<h3>View as image</h3>
+<p>TIImageTool recognizes three image formats:</p>
+<ul>
+<li>TI-ARTIST format: Consists of two PROGRAM files which are dumps of the pattern
+table and of the color table in video RAM. Both files are expected to be 6 KiB long each.
+If the color table file is missing, a black/white scheme is assumed. If the pattern
+table file is missing, a checkerboard pattern is assumed. You can select 
+either file to open the image view.</li>
+<li>MY-ART format: Single file of DIS/FIX 128 format, run length-encoded. There
+are some variants, most notably the YAPP format, which is also detected and
+properly displayed.</li>
+<li>FRACTALS! format: Single file of DIS/FIX 255 format, used with the FRACTALS!
+program, a program written by me ... long time ago when fractals was fab.</li>
+</ul>
+
+<h3>View as UTIL/GK dump</h3>
+<p>Viewing a <em>UTIL/GK</em> dump is almost the same as viewing the plain dump,
+with the exception that the UTIL or GK header is analyzed and the addresses 
+are automatically set according to this information. In this version the header 
+can only be used for the ROM portions of a GK dump, so this option does not show 
+up for the GROM parts.</p>
+<p>This option is not available when the program does not recognize the first
+bytes of the file as a valid UTIL or GK header.</p>
+
+<a name="list"></a>
+<h3>List BASIC program</h3>
+<p>When TTImageTool concludes that the selected file is a BASIC program, it 
+offers the option to list the BASIC program, and double-clicking will open this
+listing as well. BASIC programs are recognized in three formats:</p>
+<ul>
+<li>PROGRAM files, the standard format for BASIC.</li>
+<li>DIS/VAR 163 files, used for MERGE files in Extended Basic. BASIC programs stored
+in this format can be merged with the current program in memory.</li>
+<li>INT/VAR 254 files, used for long Extended Basic programs that cannot be 
+dumped from the memory as a normal PROGRAM file.</li>
+</ul>
+<p>By default, programs are displayed in the style as used by Extended Basic.
+In particular, this means that several subsequent colons are displayed with
+spaces in between so that they are not interpreted as the statement separator (double colon).
+This behaviour can be changed in the <a href="#pref">Preferences</a>.</p>
+
+<a name="escaping"></a>
+<h3>Unprintable characters</h3>
+<p>In text files, all bytes are supposed to be visible in the viewer frame.
+However, there may be unprintable characters, used as control characters for
+formatting, or used in BASIC programs for defining graphics. You can tell
+TIImageTool to replace these unprintable characters by a single character,
+or by an <em>escape sequence</em>. This can be configured in the <a href="#pref">Preferences</a>.</p>
+<p>There are essentially two option so far:</p>
+<ul>
+<li>Single character replacement: Default is "." (dot); you can choose any other
+character on your keyboard.</li>
+<li>Escape sequence: A string like "~%" defines that any unprintable characters
+shall be replaced by a tilde (~) followed by the 2-digit hexadecimal ASCII code. 
+For example, the character of the key combination CTRL-A would be displayed
+as ~81. If there is a tilde in the original text, it will be doubled (~~). 
+You can choose the escape character, but the second character must be a percent sign (%).</li>
+</ul>
+<p><a href="#top">Back to top</a></p>
+<hr>
+<!-- -------------------------------------------------------------------- -->
+<a name="disassemb"></a>
+<h2>Disassembling</h2>
+
+<p>TIImageTool allows to view the source code for two low-level languages. You 
+can disassemble GPL programs in memory image format (PROGRAM type) and native
+machine language programs (TMS99xx) in memory image format (PROGRAM) or tagged
+object code format (DIS/FIX 80).</p>
+
+<p><strong>Disassembling</strong> is the reverse operation of converting 
+assembly language programs into an executable format. That means, disassembling
+allows you to retrieve the human-readable source code from the executable code.</p>
+
+<p>Not all original information can be restored, however. Unlike BASIC programs,
+machine language programs do not store comments. Also, data words, bytes, or texts
+cannot easily be distinguished from machine commands. When we encounter a sequence
+of bytes in memory, these bytes may have been assembled from a DATA line, but 
+possibly also from a command line.</p>
+
+<p>In TIImageTool, you can give the disassembler some <strong>hints</strong> how
+the bytes should be disassembled. In particular, you can specify regions in the
+code which have to be interpreted as data.</p>
+
+<h3>Disassembling TMS99xx</h3>
+<p>Assembler programs that are written for the TMS99xx platform are also called
+native code programs. Native code is stored in two variants:</p>
+<ul>
+<li><strong>Program image</strong>: This is a plain sequence of bytes as memory
+contents. When the file is read, it is placed into memory at a fixed location.
+Program image files are usually stored in a headered format. The header defines
+the <em>start location</em> in memory as well as the <em>length</em> of the code,
+and also whether there are more files to be loaded (chaining).</li>
+<li><strong>Tagged object code</strong>: This is the original output of the 
+Assembler tool. Tagged object code is much more expressive than program image
+code. It defines memory contents plus the location where these contents are 
+to be loaded into memory. Tagged object code can be relocated in memory; the 
+loader in the TI system is able to recompute memory locations where the code 
+is loaded, including all references to memory addresses.</li>
+</ul>
+
+<p>Although tagged object code seems to be much more comfortable, loading is
+much slower. This is the reason why programmers ultimately try to bind the 
+object code to a program file.</p>
+
+<p>Depending on your selection, the TIImageTool disassembler presents a specific
+dialog for parameters. Program image files need the precise memory location where
+they are intended to be loaded. If the file contains a header, the header contents
+are filled as defaults into the dialog. Otherwise you have a chance to adjust these
+values. You can also start to disassemble the file somewhere in the middle.</p>
+
+<p>When you disassemble tagged object code, you cannot specify a loading address,
+since the address is usually defined as relocatable.</p>
+
+<p>Disassembling tagged object code yields results that may be 
+re-assembled again. Indeed, TIImageTool tries very hard to create <strong>syntactically correct</strong>
+source code. Try it with some small examples to get an idea how well the
+original source code can be reproduced.</p>
+
+<h3>Disassembling GPL</h3>
+
+<p>Decades before Java showed up on the scene, Texas Instruments invented a virtual
+machine inside the TI console. This virtual machine has an own machine language
+called GPL - Graphics Programming Language. GPL is a complex instruction set
+8-bit language. It is specifically tailored for use inside the TI computer,
+introducing more addressing modes with all available memory 
+spaces (CPU, VDP, GROM, CRU) for source and target addressing. The TI BASIC interpreter is completely
+written in GPL. And now you know why it is so slow.</p>
+
+<p>TIImageTool contains a GPL disassembler. GPL code is only available in memory
+image format, and it cannot be loaded in the TI system, as GPL is only intended
+for use in GROMs, which can be found in the console or in cartridges. But even when
+you do not intend to write own GPL programs, you may be interested in finding out
+how some cartridges are programmed.</p>
+
+<p>When you work with MESS you can try to have a look at the GROM contents of
+the console: Unpack the ti99_4x.zip file, and import the file with the GROM 
+contents into a disk image. Once it is on the disk image you can start the
+disassembler to get the source code.</p>
+
+<p>There are <strong>different variants</strong> of the GPL source code format,
+which is due to the fact that TI did not release a specification to the public. 
+Compared to the code as seen in the popular <em>TI Intern</em> book, there are 
+some differences:</p>
+
+<ul>
+<li>Source/destination order: TIImageTool uses the same operand ordering as the
+native machine language: <em>DST @>8346,@>8344</em> is an instruction that 
+copies the two bytes from address 8346 to address 8344.</li>
+<li>FMT: The formatting sublanguage has been reformulated to make it better readable.</li>
+<li>BTEXT: A special TEXT directive has been introduced to represent biased 
+character strings which are used in BASIC.</li>
+</ul>
+
+<h3>Disassembler hints</h3>
+
+<p>As already mentioned the disassembler cannot know whether the bytes it 
+finds in the file were created from instructions or from data or text lines. 
+You can give the disassembler some hints how to interpret the data appropriately.
+Several hints can be written one after another, separated by spaces, commas,
+or newlines.</p>
+
+<p>The good thing: The disassembler hints are <strong>stored</strong>
+in the settings file.  Actually, TIImageTool uses the <strong>contents of 
+the file to compute a key</strong> to look up the values, so you can rename the file on 
+the image, and the values are still correctly found.</p>
+
+<p>The hints make use of memory location specifications. We make use of the 
+term <em>location</em> as a generalized form of an <em>address</em>
+
+<ul>
+<li><em>Absolute address</em>: specifies the actual memory address. Examples: 837C, 0x837c, >837C, X837C,
+all of which are equivalent.</li>
+<li><em>Program-relocatable address</em>: specifies the offset from the loading address. The relocatable 
+address is specified as Rxxxx, with xxxx being the offset. Example: R0123.</li>
+<li><em>Common-relocatable</em> and <em>data-relocatable address</em>: Special memory scopes that
+are not supported by the loader of the Editor/Assembler cartridge but that are
+defined in the Assembler. Common-relocatable addresses look like Sbxxxx, with
+b being the segment number, xxxx being the offset in the segment; data-relocatable
+addresses are specified as Txxxx, like T0123.</li>
+</ul>
+<p></p>
+<p>There are several kinds of hints:</p>
+
+<p><strong>Data region</strong></p>
+<p>Format: <em>data(from,to)</em></p>
+<p>Tells the disassembler to create DATA lines for the given memory region. In the 
+memory image formats of the native language or GPL language, the addresses are 
+specified as 4-digit hexadecimal (absolute) addresses. For tagged image code,
+addresses are specified as locations.</p>
+<p><strong>Example</strong>: data(R0100,R017F) - declares the region of
+relocatable addresses 0100 to 017F as a data area.</p>
+
+<p><strong>Text region</strong></p>
+
+<p>Format: <em>text(from,to)</em></p>
+<p>Tells the disassembler to create TEXT lines for the given memory region. If
+the bytes are not within the range of displayable characters, BYTE lines are
+created instead.</p>
+<p><strong>Example</strong>: text(X6100,X6277) - declares the region of
+absolute addresses 6100 to 6277 as a text area.</p>
+<p>Format: <em>btext(from,to)</em></p>
+<p><em>Only available for GPL</em>. Similar to <em>text(,)</em>, but the characters
+in the region are shifted by 96 positions. This is the case in TI BASIC. Using
+this hint, the disassembler can create useful (readable) representations of the
+region.</p>
+
+<p><strong>Referenced line</strong></p>
+
+<p>Format: <em>ref(location)</em></p>
+<p><em>Only available for tagged object code</em>. The contents at the specified
+location are referenced by another line, for instance, as a jump or branch
+target or by source or target memory access. This means that the contents are very
+likely not suitable as arguments of another command. With this feature you can
+prevent the disassembler to falsely consume the bytes at this location when it
+tries to disassemble an assumed command in the predecessing location.</p>
+<p><strong>Example</strong>: ref(R0204) - the word at the relocatable location
+0204 is referenced from somewhere else.</p>
+
+<p><strong>Call parameters</strong></p>
+
+<p>Format: <em>param(branchTarget,count)</em></p>
+<p>Specifies that a BL / BLWP call (in GPL a CALL operation) is followed by
+a fixed number of data parameters. In the native machine language, you can only
+specify a number of 16-bit data words. In GPL, the count refers to the number of
+8-bit bytes.</p>
+<p>You can specify the <em>branchTarget</em> by the location of the subprogram,
+or by its label. Labels must be enclosed in quotes.</p>
+<p>The number of following data lines must be constant for each branch target,
+as the disassembler cannot find out how many data lines are required at run time. 
+If you are serious, you don't really want to write your programs this way.</p>
+
+<p><strong>Example</strong>: param("XMLLNK",1) defines that calls to XMLLNK are
+always followed by one DATA line.</p>
+
+<p><strong>FMT inhibit</strong></p>
+
+<p>Format: <em>nofmt(from,to)</em></p>
+<p><em>Only available for GPL</em>. Prevents the disassembler to disassemble FMT
+commands in the specified area. This is useful in order to prevent a false 
+disassembly of data items as FMT. The specific problem with FMT is that it can
+be used to build nested formatting structures, and in that role, each FMT must be 
+terminated by a matching END directive. If the disassembler runs into plain
+data areas, this constraint is not fulfilled, and the rest of the area will end up 
+in a phantom FMT block. An error message will be printed at the end which informs
+about the location of the unmatched FMT command.</p>
+
+<a name="dis"></a>
+<h4>Disassembler parameters (TMS99xx memory image)</h4>
+<div class="program">
+<ul>
+<li><em>Head of file</em>: The first 16 bytes are shown so that you can decide
+whether this file has a <em>header</em>.</li>
+<li><em>Type</em>: Memory dump</li>
+<li><em>Symbolic disassembly</em>: You can tell the disassembler to try to
+produce code that can be assembled again. This is actually a feature of the tagged
+object code disassembler which has been made available for the memory dumps.</li>
+<li><em>File offset</em>: If the file has a header this offset specifies where the
+actual contents begin. This is usually at byte 6 if there is a header.</li>
+<li><em>Start address</em>: The disassembler attempts to interpret the first
+bytes as a header; if there is a header actually, this would be the address
+where the program is loaded.</li>
+<li><em>Length</em>: Accordingly, the length is retrieved from the header.</li>
+<li><em>Show raw data at line end</em>: Adds the bytes to the line end which were used
+for disassembly.</li>
+<li><em>Show locations at line end</em>: Shows the locations of the lines. This is
+useful for symbolic disassembly; for memory dump disassembly you will see the line numbers
+at the start of each line..</li>
+<li><em>Disassembler hints</em>: Specify the disassembler hints as described above.</li>
+</ul>
+</div>
+
+<h4>Disassembler parameters (TMS99xx tagged object code)</h4>
+<div class="program">
+<ul>
+<li><em>Head of file</em>: The first 16 bytes are shown so that you can decide
+whether this file has a <em>header</em>.</li>
+<li><em>Type</em>: Tagged object code</li>
+<li><em>Show locations at line end</em>: Shows the locations of the lines. By default, line
+locations are shown only when referenced.</li>
+<li><em>Show raw data at line end</em>: Adds the bytes to the line end which were used
+for disassembly.</li>
+<li><em>Disassembler hints</em>: Specify the disassembler hints as described above.</li>
+</ul>
+</div>
+
+<h4>Disassembler parameters (GPL)</h4>
+<div class="program">
+<ul>
+<li><em>Head of file</em>: The first 16 bytes are shown so that you can decide
+whether this file has a <em>header</em>.</li>
+<li><em>Type</em>: Memory dump</li>
+<li><em>File offset</em>: Start location in the file. The byte at this offset
+will be assigned the address in the next line.</li>
+<li><em>Start address</em>: GPL files do not have a header. You must specify
+where the data are located.</li>
+<li><em>Length</em>: How many bytes shall be used for disassembly</li>
+<li><em>Skip invalid GROM addresses</em>: Original GROMs only have 6 KiB contents; 
+the disassembler will skip the last 2 KiB of each 8 KiB block.</li>
+<li><em>Show raw data at line end</em>: Adds the bytes to the line end which were used
+for disassembly.</li>
+<li><em>Disassembler hints</em>: Specify the disassembler hints as described above.</li>
+</ul>
+</div>
+
+<p><strong>Example</strong></p>
+
+<p>These are the hints to be used for disassembling GROM 0 and the first 512 bytes
+of GROM 1. Use 0000 for <em>offset</em> and <em>start address</em>, and 2200 for <em>length</em>.</p>
+
+<p>data(0000,000F),data(0045,0049),data(004C,0051),data(044F,048F),
+text(0490,04BB),data(04BC,094C),text(094D,094F),data(0950,099F),
+data(0FDB,117A),data(1267,12A9),text(12AA,12BF),data(12C0,130F),
+data(1310,1314),text(1315,1317),data(1318,131C),text(131D,131F),
+data(1320,1325),param(14A9,1),param(149F,1),param(14FE,1),data(15A0,17FF),
+data(2000,200F),btext(2022,214C),data(214D,2151),
+text(2152,2159),data(215C,216E)
+</p>
+<hr>
+
+<a name="enterdir"></a>
+<h3>Archive files</h3>
+<p>As long as they are not open, archive files are treated just like files - you
+can view their contents as a plain dump. However, you can open them by double-clicking
+or by selecting <em>Enter</em> in the context menu, and just as with a directory,
+the current tab displays the contents of the archive. Watch the path information
+in the heading showing an "(Archive)" notice.</p>
+<p>You can create an empty archive and copy files into that archive as you do
+with a directory, or you can create an archive from selected files. The archive
+name is suggested by taking the first 6 characters from the first file name and 
+adding "_ARK". You can change this suggestion if there are already files in the
+directory with that name.</p>
+<p>Find more about this feature in the <a href="#archiving">Archive support</a>
+section.</p>
+
+<h3>Directories</h3>
+<p>Viewing a directory is simply done by double-clicking on its name, or by 
+selecting <em>Enter</em> in the context menu. Note that directories are
+always listed at the beginning of the contents, and that they are shown in
+blue colored text, like the archive files. To close the view, you can either
+completely close the tab, or you enter the parent directory "..". The root directory
+has no parent.
+</p>
+<p><a href="#top">Back to top</a></p>
+
+<hr>
+<!-- -------------------------------------------------------------------- -->
+
+<a name="expimp"></a>
+<h2>Exporting and importing</h2>
+
+<p>Sometimes you may want to send a file to someone else by E-mail, or you 
+are using an emulation that makes use of external files (like Classic99). In this
+situation you have to <strong>export</strong> a file from a disk image to
+the host file system.</p>
+
+<p>Exporting and importing are simple ways to exchange files with a real 
+TI system via a serial connection. The standard 
+external format TIFILES was defined long ago just with the requirements of uploading and 
+downloading TI files to or from a file server.</p>
+
+<a name="importf"></a>
+<h3>Importing a TIFILES file</h3>
+<p>TIFILES files are files on a non-TI file system (e.g. on a PC) which contain
+information about the contents and about the file format which would otherwise 
+be lost in a PC file system. Essentially, the file from the TI is put inside this 
+format with the relevant entries from its <em>File Information Block</em> and
+with the contents of the sectors it occupied.</p>
+<p>TIImageTool will analyze the information at the head of the file and rebuild
+the file within the currently open directory. That is, you can import the file
+at any location in the image.</p>
+<p>The file name is specified in the head of the file as well, but earlier versions
+of the TIFILES format did not require a file name in the header, so it will
+not be found during import. In this case, TIImageTool offers two possibilities: </p>
+<ul>
+<li>You specify the name in a dialog window.</li>
+<li>You let the importer guess a suitable name.</li>
+</ul>
+
+<a name="impparam"></a>
+<h4>Import Parameters</h4>
+<div class="program">
+<p>You get this dialog window only when the file to be imported lacks a file name
+in the TIFILES header</p>
+<ul>
+<li><em>Use this file name</em>: The field shows a suggestion for a <a href="#valid">valid</a> file name.
+You can accept this or choose another one.</li>
+<li><em>Guess each file name</em>: If selected, the importer will not ask again
+but use its own suggestions for importing files that do not define a file
+name in the TIFILES header.</li>
+</ul>
+</div>
+
+<p>Guessing the name is particularly useful when you want to import a larger
+set of files and you really do not want to define every single name. The importer
+takes the PC file name and creates a valid TI file system name by stripping off
+the <em>suffix</em> (".tfi", ".tifile", ".tifiles") if there is one, converting
+all letters to <em>uppercase</em>, replacing <em>"."</em> by an underscore, and
+truncating the name to 10 characters. This turns "telco.ark.tfi" into "TELCO_ARK".</p>
+
+<p>You can find the rules by which the name conversion takes place in the 
+<a href="#pref">Preferences</a> dialog.</p>
+
+<p>You can also import files which do not have a TIFILES header. These files 
+may have been created by some communication tools that spared this header to lower
+the communication overhead. In that case you will get a dialog window where you
+can specify all missing data, from file name to file type, record length, and more.
+The dialog window fields are initially filled with a suggested DIS/FIX 128 format.
+</p>
+<p>It is recommended to use the ".tfi" suffix so that the file dialog can
+filter away all other files in the directory. If the file has another suffix
+you must switch to "all files" in the file filter.</p>
+
+<p>You get the following dialog window when the file has a TIFILES header, but the name
+is not valid. This is a somewhat exceptional situation, so the auto-repeat is
+not offered here.</p>
+
+<h4>Import Parameters</h4>
+<div class="program">
+<ul>
+<li><em>Use this file name</em>: The field shows a suggestion for a <a href="#valid">valid</a> file name.
+You can accept this or choose another one.</li>
+</ul>
+</div>
+
+<p>In this release, you can define your own preferences for handling file names
+during import and export. For instance, you can specify that the file name of the
+file on the PC file system shall be used as a file name within the TI file system,
+or, shortly, to <strong>ignore the file name</strong> in the TIFILES header. When there is no
+suitable file name you can tell the program to use the external file name so 
+it will not ask you to provide a name. The external file name will, however, 
+be checked for characters that are not allowed in the TI file system, and they will be replaced
+appropriately.</p>
+
+<a name="importt"></a>
+<h3>Importing text or BASIC files</h3>
+<p>If the file on the PC file system is a plain text file, you can import that
+file as a DIS/VAR 80 file. This also means that the PC-typical file structure
+with lines, separated by CRLF or LF, has to be converted to a sequence of
+variable records with length byte. This is automatically done in this function.</p>
+
+<p>TIImageTool tries to figure out whether the file is a text file or not, and
+offers you a dialog window where you can ultimately decide. If it detects
+other non-printable characters, it will present you the dialog as mentioned above
+(for files without TIFILES header). Sometimes, text files also contain control
+characters like ASCII 12 (form feed); instead of catching each of these exceptions,
+the programs leaves the decision up to you.</p>
+
+<h4>Import Parameters</h4>
+<div class="program">
+<ul>
+<li><em>File name</em>: The field shows a suggestion for a <a href="#valid">valid</a> file name.
+You can accept this or choose another one.</li>
+<li><em>DIS/VAR 80 text file</em>: If the file contents shown at the bottom 
+indicate this is a text file, you should select this option.</li>
+<li><em>Other format</em>: In other cases you can set the format here. Note that
+DIS/VAR 80 in this part lacks the transformation of text lines.</li>
+</ul>
+</div>
+<p>Also new to this release, TIImageTool will try to find out whether the 
+imported file is a BASIC program. For this purpose it looks at the first ten lines (or less)
+and tries to parse them for TI BASIC and then for Extended Basic. When successful,
+it offers you a modified import dialog.<p>
+
+<div class="program">
+<ul>
+<li><em>File name</em>: The field shows a suggestion for a <a href="#valid">valid</a> file name.
+You can accept this or choose another one.</li>
+<li><em>DIS/VAR 80 text file</em>: Maybe you still want to store the file 
+in text format.</li>
+<li><em>TI BASIC</em>: Create a TI BASIC program file.</li>
+<li><em>Extended Basic</em>: When you click this option you will get some more
+options to select:</li>
+<li><em>Save file in</em>: Determine the save format. You can save 
+as program file, as a mergeable file, or as a long file. If the file is too 
+long to be saved in program format, this dialog will reappear for you to choose
+another option.</li>
+<li><em>LIST protection</em>: You can save the program with LIST protection;
+when you load it and try to LIST it, Extended Basic will output an error message.
+This protection is not visible in the file system.</li>
+</ul>
+</div>
+
+<h3>Importing directories</h3>
+<p>This is actually a counterpart of the <a href="#export">export</a> feature explained
+below. You can recreate the whole directory structure (if possible; mind that 
+floppy disks only allow a single layer of directories). The information about
+the directory name is stored in a file called <em>meta.inf</em>.
+</p>
+
+<h3>Importing from text editor</h3>
+<p>This feature is mainly useful when you want to add a new text file into your
+disk image. Suppose you want to program some application in assembly language,
+but you prefer to use your editor on the PC. In that case you can simply paste 
+the text contents from the clipboard into the open window and save it.</p>
+
+<p>Alternatively, you can also use the file import function.</p>
+
+<p>Here as well, TIImageTool tries to figure out whether this can be 
+interpreted as a BASIC file, and if that is the case, it will provide you 
+with the options listed above.</p>
+
+<h4>Import content parameters</h4>
+<div class="program">
+<ul>
+<li><em>File name</em>: Specify a <a href="#valid">valid</a> name of the new file on the image.</li>
+<li><em>File format</em>: The only choice at this time is DIS/VAR 80.</li>
+<li><em>Replace TABs</em>: If there are TAB characters in the new file you
+can tell the program to leave them unchanged, or to replace them by a number of spaces.</li>
+<li><em>Special characters</em>: These are the characters outside of the standard
+set of printable ASCII characters (32-127).</li>
+<li><em>Translations</em>: Comma-separated list of characters that shall replace
+the corresponding special character.</li>
+</ul>
+</div>
+
+<p>The TAB and special characters entry is only shown if such characters were 
+found. For instance, the umlaut characters are usually mapped 
+to {, |, and } in the German versions of TI Writer.</p>
+
+<h3>Importing binary files</h3>
+<p>Usually you should always have a proper TIFILES header when importing. However,
+you may probably want to import a plain binary file (for instance, a dump from 
+a cartridge).</p>
+
+<h4>Import parameters</h4>
+<div class="program">
+See <a href="#impparam">above</a>. 
+</div>
+
+<a name="importr"></a>
+<h3>Importing from remote</h3>
+<p>You can try to read your TI floppy disks with the PC floppy drive (this is
+perfectly possible, since TI used standard formats, but you must have access
+to the low-level functions of the controller to configure the parameters), connect
+your SCSI drive to a SCSI adapter, or you transfer the files via a serial connection.
+</p>
+<p>Using this menu item you can utilize the <em>XModem</em> support in TIImageTool,
+and by this way you can send files from the TI where you have to run a suitable
+terminal program like TELCO or PORT.</p>
+<p>See more on that in the section on <a href="#serial">serial connections</a>.</p>
+
+<hr>
+
+<a name="export"></a>
+<h3>Export image</h3>
+<p>The export function is closely related to the <a href="#save">Save as TIFILE</a>
+option in the context menu. Unlike that one, however, it acts as if the root
+directory of the currently selected image has been selected.</p>
+<p>The <a href="#footnotes">TIFILES</a> format has been established as an 
+external format for files stored in TI file system. This external format 
+preserves all file meta-information beside the file contents. TIFILES files
+may be easily imported into TI disk images. Also, terminal emulator programs
+like <em>TELCO</em> or <em>PORT</em> make use of the TIFILES format when sending
+or receiving TI files. Sometimes the TIFILES format is also called the <em>XModem</em>
+format as the data transmitted by XModem is stored in this format on the remote 
+computer side. The format itself has nothing to do with the actual XModem protocol.</p>
+
+<p>The complete image will be exported, including all subdirectories. 
+The volume of the currently open and selected directory is exported to a directory
+on the PC file system that you select in the file chooser.</p>
+
+<a name="expparam"></a>
+<h4>Export parameters</h4>
+<div class="program">
+<p>The export feature suggests a scheme for creating file names for the TIFILES
+files.</p>
+<ul>
+<li><em>File name suffix</em>: The suggested suffix is <em>tfi</em>.</li>
+<li><em>Convert to lowercase</em>: File names on the TI images are normally set as uppercase; on the PC, most
+file names are lowercase. This option automatically converts the names to lowercase.</li>
+<li><em>Character replacement</em>: File names on the TI may contain characters 
+which are not allowed in PC file systems, like "/" or "\". You can determine
+which name is to be used for the file on the PC. The actual file name is stored inside the TIFILES
+file so that on import, the original file name will be restored.</p>
+</ul>
+</div>
+<p>For each directory on the TI image a directories is created in the target folder.
+To preserve the original name,
+a file called <strong>meta.inf</strong> is put into each directory, containing
+meta-information about this directory. At this time, the inf file only contains
+the actual directory name.</p>
+
+<p>As a result you get:</p>
+<ul>
+<li>Every file on the image is stored as a TIFILES file</li>
+<li>Every directory on the image corresponds to a directory on the target drive</li>
+<li>All files and directories are located in their respective containing directories.</li>
+</ul>
+
+<a name="save"></a>
+<h3>Save as TIFILES file</h3>
+<p>You can save a single file or a set of marked files to your PC's file
+system in TIFILES format. All information is stored inside the file header so that
+you will be able to import these files comfortably, without specifying anything but
+the target directory.</p>
+<p>If the file you want to export is a text file, you should better open a 
+<a href="#textview">text view</a> and save it from there.</p>
+
+<p>The only thing that you have to specify here is what PC file name shall be used.
+If you create a single file you have to provide the name directly. For a set of files,
+you will be supported by a file name creator which guesses suitable names.</p>
+
+<h4>Export parameters</h4>
+<div class="program">
+See <a href="#expparam">above.</a>
+</div>
+
+<p>The <a href="#export">Export image</a> feature is similar, but it always exports the
+whole image. This also includes all contained directories. As 
+a result you will find a directory structure on your PC drive with the respective
+exported files in it, and each directory contains a special file which tells the
+importer what name to assign to the newly created directory.</p>
+
+<h3>Save as plain dump</h3>
+<p>This option saves the contents of the file as a raw dump. With a hex editor
+you can see the same contents as if you were <a href="#hexdump">viewing</a> 
+the file as a plain dump.</p>
+
+<a name="sendrem"></a>
+<h3>Send to remote</h3>
+<p>This is the counterpart to the remote import from above. You can transmit 
+a file to a remote system, usually another TI or Geneve running a suitable
+application, using XModem. In this version you can only send a single file, not
+a list of files.</p>
+<p>Find more on remote communication in the <a href="#serial">serial</a> section</p>
+<p><a href="#top">Back to top</a></p>
+
+<hr>
+
+<!-- -------------------------------------------------------------------- -->
+<a name="serial"></a>
+<h2>Serial connections</h2>
+
+<p>For all serial operations in TIImageTool you need the <strong>RXTX library</strong> which 
+provides an access to the system's serial adaptors. If TIImageTool does not find 
+the RXTX library it will disable all these features.</p>
+
+<p>For some more information on setting up RXTX and on working with the
+serial connection please see <strong>www.ninerpedia.org</strong>.</p>
+
+<p>TIImageTool utilizes the serial connection for two purposes.</p>
+
+<h3>File transfer via XModem</h3>
+<p>XModem transfer is a traditional way of transmitting files over a serial connection,
+between directly connected computers or using a modem connection.</p>
+<p>You have to start suitable applications at both ends of the connection; one
+side is the sender, the other the receiver. Using <strong>Send to remote</strong>
+you configure TIImageTool to be the sender. You can choose TELCO, PORT, MYTERM
+or other tools on the TI/Geneve side to provide the receiver. The same programs
+will also serve as sender.</p>
+
+<h4>Serial connection setup</h4>
+<div class="program">
+<p>For setting up the connection you have to specify some parameters:</p>
+<ul>
+<li><em>Serial adapter</em>: This is your serial device at the PC side. In Linux 
+you will use a device like <tt>/dev/ttyS0</tt> while on Windows, serial adapters
+sound like <tt>COM1:</tt>. The available adapters are listed in a selection.</li>
+<li><em>Speed</em>: You can select a speed between 110 and 19200 baud. Using 9600
+baud proved to be sufficiently reliable on both sides.</li>
+<li><em>Data bits, stop bits, parity</em>: Common choices are 8 data bits, 1 stop bit,
+no parity. You should stay with these values.</li>
+<li><em>Transfer protocol (upload)</em>: XModem has some variations that you can choose; beside 
+the standard variant there is the XModem-1K option which uses larger data blocks. This
+speeds up the transfer but is not recommended for unstable connections. The
+opposite side must support the variant, otherwise the sender gets back to the 
+standard option as default.</li>
+<li><em>Transfer protocol (download)</em>: You can select the standard variant or the XModem/CRC
+option which requests the sender to provide CRC values. The XModem-1K option always implies CRC.</li>
+</ul>
+</div>
+
+<p>The receiver must define the same parameters. One exception is the transfer 
+protocol option which is negotiated between both sides. During the transfer you can watch the progress of the file transfer. When receiving,
+TIImageTool will place the file into the currently open directory.</p>
+
+<a name="serialbr"></a>
+<h3>Serial bridge</h3>
+
+<p>The <em>serial bridge</em> is a special feature used in conjunction with 
+the serial emulation in MESS. It is used to establish a serial connection 
+with another computer, in particular with a real TI or Geneve. The serial bridge
+consists of a server socket which communicates with MESS, and the serial library
+using RXTX which operates a local serial interface. </p>
+
+<h4>Serial bridge setup</h4>
+<div class="program">
+<ul>
+<li><em>Serial adapter</em>: Specify the serial port (something like /dev/ttyS0 in Linux or COM1 in Windows). 
+The selection lists all currently available interfaces.</li>
+<li><em>Port</em>: Port on which the process listens for data coming from MESS.
+You must specify the same port when starting MESS.</li>
+</ul>
+</div>
+
+<p>If you get an error message <em>"No serial ports found"</em> then either you
+actually do not have a serial port, or all serial ports are already used.</p>
+
+<p>Assuming that the bridge uses port 10000 on the same computer where MESS
+is running, you have to specify this as follows:</p>
+<pre>
+   mess ti99_4a -peb:slot6 tirs232 -serl1 socket.localhost:10000
+</pre>
+
+<p>You can also launch the serial bridge without bringing up the TIImageTool GUI by starting
+it with the parameter BRIDGE:</p>
+
+<pre>
+java -jar tiimagetool.jar BRIDGE /dev/ttyS0 10000
+</pre>
+
+<p>Other than in the XModem scenario, you <em>cannot set parameters</em> of the serial 
+bridge. These are actually set by the connected MESS emulator, or, more precisely,
+by the application running inside the emulator.</p>
+
+<p>With this bridge running, you can let the emulated TI/Geneve communicate
+with a real TI/Geneve or you can attach a modem. Concerning the XModem communication,
+you can now run TELCO on both sides (emulated and real) and use it to move
+files between them.</p>
+
+<p>The serial bridge menu item is always available, unless you have already 
+opened it; you can only run a single bridge with TIImageTool. Please 
+make sure you have prepared everything for the creation of the serial connection;
+check with the manuals of RXTX. In particular, you must be eligible to access
+the serial interface of your PC, and you must have permission to create a 
+lock file in /var/lock (when using Linux).</p>
+
+<p><a href="#top">Back to top</a></p>
+<hr>
+
+<!-- -------------------------------------------------------------------- -->
+<a name="utilmenu"></a>
+<a name="utilities"></a>
+<h2>Utilities</h2>
+<p>Many of the features have been explained above; here are the remaining three
+points.</p>
+
+<a name="redir"></a>
+<h3>View Console output</h3>
+<p>When you select this function, the log file is opened and shown in a new
+window. Note that each start of TIImageTool adds a separator line (=====) but
+does not clear the log file. You can clear the file by the menu selection
+<strong>Clear content</strong> in the <strong>File</strong> menu of the
+log output window.
+</p>
+<p>The window only shows the contents of the log file at the point of opening.
+It is <strong>not a live view</strong>. If you want to see the output 
+immediately, you should remove the file name in the Preferences, thus 
+redirecting the output back to the standard output and error channels. You 
+can see the output when you start TIImageTool in a console, not if you start 
+it by mouse click.
+</p>
+
+<a name="check"></a>
+<h3>Checking the filesystem</h3>
+<p>Using this function we can check the integrity of the file system. 
+This is a multi-stage test which checks the following properties:</p> 
+
+<ul>
+<li>For each file, all referenced allocation units are actually marked as
+allocated in the allocation map. If it finds an unallocated location on the
+image, it will ask the user whether to allocate this unit to the file. However,
+we cannot be sure that the resulting file is correct. In the meantime, the missing
+allocation unit may have been allocated to another file and released again.</li>
+<li>For each allocation unit that is marked as used there must be a file
+that it is allocated to. If not, this indicates that the allocation map has not
+been updated properly. These over-allocations can usually be released safely.</li>
+<li>For each allocated unit there is exactly one file it belongs to. If two files
+share the same allocation units this cannot automatically be repaired. You should
+then copy both files and check which one is still intact, then remove both files.</li>
+<li>Files should not contain sectors that are filled with certain bytes which
+are used to indicate freshly formatted sectors.</li>
+<li>Some files have an incorrect L3 value. This value contains the number of
+records in a fixed format file, but it must be set as little-endian (the only
+instance in the whole TI-99 world). Obviously some third-party DSR or utility
+program did not consider this. This check detects these L3 errors and allows
+you to have them fixed.</li>
+</ul>
+
+<p>As for the "broken sectors" check, formatting procedures usually fill all sectors with
+values like E5E5 or D7A5. Some copying tools fill sectors with the value DEAD if 
+the sector was not successfully copies. Although it may happen that such values
+indeed appear purposefully within the file, in most cases this is an indication that
+something is wrong. You should then check by yourself what might be the problem
+with this file.</p>
+
+<h3>Install Geneve OS</h3>
+<p>One of the problems you first encounter when you start up a Geneve (whether
+real or emulated) is that you will get an error message if no disk is inserted in 
+drive one, containing the operating system.</p>
+<p>TIImageTool contains in its JAR file a freely distributable release of the operating 
+system called <em>Geneve Operating System</em> (formerly called <em>MDOS</em>).
+The main operating system file is called <strong>SYSTEM/SYS</strong>; another
+file is required when the HFDC controller is used, called <strong>LOAD/SYS</strong>.
+Finally, similar to known operating systems on the PC, a text file named <strong>AUTOEXEC</strong>
+contains commands that are executed after booting is complete.</p>
+<p>For bootable floppy disks, all three files are put into the root directory of
+the floppy disk that is currently selected.</p>
+<p>For bootable hard disks, the LOAD/SYS file is put into a directory that is 
+located at root level; the other two files are put into the root directory.</p>
+<p>Unless there was an error (maybe because the disk was already full), you can
+directly boot the Geneve with this disk mounted as floppy disk 1, or with a hard disk as
+hard disk 1.</p>
+
+
+<p><a href="#top">Back to top</a></p>
+<hr>
+<!-- -------------------------------------------------------------------- -->
+<a name="misc"></a>
+<h2>Miscellaneous</h2>
+
+<a name="command"></a>
+<a name="dirview"></a>
+<a name="fileview"></a>
+<h3>Command line</h3>
+<p>This may be particularly interesting for Linux people. You can start
+TIImageTool without windows - just on the command line, or within a script file.</p>
+
+<p>When launching TIImageTool you simply add the parameter <em>CommandShell</em>
+and the respective command.</p>
+
+At this time, there are three features you can invoke this way:</p>
+<ul>
+<li><em>Help (-h)</em>: When you add "-h" behind CommandShell, you will get
+a short summary of the commands.</li>
+<li><em>View directory (dir/ls/lsf)</em>: Creates a directory listing. With
+<em>dir</em>, the full information is printed in a formatted way, similarly to the directory
+listing within the program. In contrast, <em>ls</em> just outputs the bare 
+file names. Usually, this kind of output can be used inside scripts
+for some nice further processing. <em>lsf</em> is similar to <em>ls</em> but
+adds <em>decorations</em> to the file names: ".d" for directories, ".t" for
+DIS/VAR 80 files. Again, you can use that for further processing.</li>
+<li><em>View file content (type)</em>: Outputs the contents of text files. You
+have to provide the file name after the image name. The file name may contain
+a path specification.</li>
+<li><em>List BASIC file (list)</em>: Outputs the contents of a BASIC program.</li>
+</ul>
+
+
+<p>Some examples:</p>
+<ul>
+<li>java -jar tiimagetool.jar CommandLine dir myimage.dsk</li>
+<li>java -jar tiimagetool.jar CommandLine ls another.dsk</li>
+<li>java -jar tiimagetool.jar CommandLine type myimage.dsk README</li>
+<li>java -jar tiimagetool.jar CommandLine type harddrive.chd ASM.SOURCE.PRG_S</li>
+</ul>
+
+<a name="manual"></a>
+<h3>Manual</h3>
+<p>This is the manual that you're reading at the moment. You can get it
+quickly by pressing F1.</p>
+
+<a name="hints"></a>
+<h3>Hints</h3>
+<p>You may have noticed that TIImageTool is getting more and more bloated,
+and it already takes quite a long time to read through this manual. For this 
+reason I added a feature that I paradoxically never liked in other programs.</p>
+
+<p>On startup, a short message will be shown that presents some of the important
+capabilities and properties of TIImageTool to you. The good thing is that you
+can stop that by selecting <em>Don't show me hints on startup</em>.</p>
+
+<p>Well, you should not do that too quickly. These messages do have some sense,
+and while I know well what is inside my program, you very likely do not. Just
+let me have a short word on that, and then you can continue. If you know my
+hint, you can block it from further bothering you by selecting <em>I know
+that one already</em>.</p>
+
+<p>You can use the preferences in the File menu (also see below) to turn on
+or off the automatic hints on program start. If you feel like getting a hint
+during runtime, just select the menu point in the <em>Help</em> menu, or press
+the F3 key.</p>
+
+<a name="about"></a>
+<h3>About TIImageTool</h3>
+<p>This function opens a small message window which tells you the release
+number of this program. This is important when you experience problems and 
+you want to get some help from other people.</p>
+
+<a name="pref"></a>
+<h3>Setting program parameters</h3>
+<p>Some settings may be done in this function. The settings are saved to disk
+so that they will be available on the next program start. At this time you
+can choose the font of the content display.</p> 
+
+<h4>Preferences</h4>
+<div class="program">
+<p>You can set properties which are saved to disk and loaded the next time you
+start TIImageTool.
+<ul>
+<li><em>Look and feel</em>: Setting for the look-and-feel of the Swing components. The default
+is the <em>Metal Look-and-Feel</em>.</li>
+<li><em>Show hints on startup</em>: When set, hints will be shown on each program start.
+If you change your mind, you can modify this setting any time.</li>
+<li><em>Open image in own frame</em>: When set, newly opened image files will
+be shown in a "detached" window instead of in a tabbed pane of the main window.</li>
+<li><em>Log console output to file</em>: File name of the log file in which error 
+outputs are stored. You can set a relative path (which depends on the folder in which 
+you start TIImageTool), or an absolute path. When this field is empty, the output
+is directed to the standard output and error channel.</li>
+<li><em>Temporary directory</em>: In order to support the Drag-and-Drop export functionality,
+TIImageTool must first export the files into the file system and then move/copy them. 
+A folder will be created inside this path; this folder will them be cleaned on 
+program end.</li>
+<li><em>Font for program code</em>: You can choose the font to be used for content display.
+This should be a monospaced font like Courier.</li>
+<li><em>Replace unprintable characters by</em>: a single character will be used to replace each unprintable character; a
+character with a following percent produces an escape sequence.</li>
+<li><em>LIST by Extended Basic style</em>: The BASIC file listing is compatible with
+Extended Basic. This particularly refers to the output of a sequence of colons (:).</li>
+<li><em>Force uppercase names</em>: When importing, file names will be uppercased if needed.</li>
+<li><em>Ignore name in TIFILES header</em>: Always create the TI file name from the external file name.</li>
+<li><em>Suggest TIFILES file filter</em>: When importing, apply a filter to the directory view so that
+only files with the .tfi or .tifiles extension are shown.</li>
+<li><em>Convert file name to lowercase</em>: On export, create lowercase file names for the external file system.</li>
+<li><em>Char conversion rules</em>: Two strings separated by a blank. The first string enumerates all characters
+to be converted; the right string enumerates the replacement characters. The default is /\* __x, which means that
+slashes and backslashes are converted to underscores, while the asterisk becomes an x.</li>
+<li><em>Replace underscore by dot</em>: Another export conversion rule. All underscores are replaced by dots. This
+rule is applied before the conversion.</li>
+<li><em>Add file name suffix</em>: Add this suffix to export file names. May be left blank.</li>
+</ul>
+</div>
+
+<p>The settings are saved to a file called <strong>tiimagetool.prop</strong> on
+Windows systems (located in the home folder of the user). On other systems like
+Linux the file is called <strong>.tiimagetoolrc</strong> and is located in the
+user's home directory. Opening the file in an editor reveals some more settings
+which the program saves for itself during usage. You can change the contents
+of this file as long as you keep its structure (name=value pairs).
+</p>
+
+<a name="exit"></a>
+<h3>Exit</h3>
+<p>Terminates the program. Changes to image file are always committed immediately,
+so there is no need to explicitly exit the program by this option. However,
+preferences are saved on exit. Closing the main window is equivalent to this
+menu function.</p>
+<p><a href="#top">Back to top</a></p>
+
+<p style="margin-bottom:2em"></p>
+
+<!-- --------------------------------------------------------------- -->
+
+<a name="footnotes"></a>
+<div class="footnotes">
+<h2>Footnotes</h2>
+<p><strong>CHD format</strong> is a container format used by the MESS emulator.
+It is used to store contents of mass storage devices like hard disks, CD-ROMs,
+Laserdisks, and more. The CHD format (short for "Compressed Hunks of Data") 
+allows for compressing the contents and for checking the integrity using checksums
+and digests. For hard disk images the CHD container must stay uncompressed because
+the contents are likely to change during usage (unlike CD-ROMs which remain
+unchanged).</p>
+<a name="DSR"></a><p><strong>DSR</strong> is short for <em>Device service routine</em>
+and would be called a device driver (or firmware) in the PC world.</p>
+<p><strong>LONG format</strong> is used by Extended Basic when a program does
+not fit into the free space of video memory. Although it may reside in the 
+memory expansion, the BASIC code must be copied into the video memory to be 
+saved in PROGRAM format. If this is not possible the program is stored
+in a record structure file instead of in a program file.</p>
+<p><strong>RXTX</strong> is a free implementation of the java.comm API. 
+TIImageTool links to these classes, so you must use RXTX and no alternative 
+implementation. Please visit the RXTX homepage and download the binary package.
+Installation of RXTX is very simple; you only have to put the <em>RXTXcomm.jar</em> and 
+the <em>librxtxSerial.so</em> (Unix) or <em>rxtxSerial.dll</em> (Windows) into
+your Java installation. For Windows, search the folders <em>ext</em> (for the jar file)
+and <em>bin</em> (for the dll) in your Java installation (in Program Files) and copy the files into them.
+Restart TIImageTool, and the XModem options should be available.</p>
+<p><strong>SDF images</strong> are in <em>sector dump format</em>, which means that the image 
+consists of consecutive sector contents. This format is also known as <strong>v9t9</strong> format,
+named after the v9t9 emulator which used this format first. SDF image files should use the 
+suffix <strong>.dsk</strong>. SDF images are always assumed to have a size 
+of a multiple of 256. There is a known extension of the SDF format with a map
+of bad sectors (768 bytes) at the end; this is detected and ignored, allowing to
+work with this image.</p>
+<p><strong>TDF images</strong> are in <em>track dump format</em>, which means that the image
+consists of whole track dumps including data outside of sectors. This format uses more space
+that the SDF format, but is more accurate to the structure of the real medium. This format is also 
+known as <strong>PC99</strong> format, named after the PC99 emulator. TDF image files should use the 
+suffix <strong>.dtk</strong>. In everyday usage, the SDF format should be preferred as it is 
+more common among the different emulators, and it is also much less overhead
+during processing, which could be important if you run the emulator on a weaker PC.
+Note that the TDF format differs from the PC99 formats for single-sided disks. 
+If you intend to create disk images for the PC99 emulator, only use double-sided
+formats.</p>
+<p><strong>TIFILES</strong> is a format for the external storage of TI-99 file system
+files on PCs. TIFILES files contain the file contents and meta-information about the file,
+like the file type and the file structure. This information is required for
+restoring the file in a TI-99 file system. TIFILES files are therefore well suited
+to be stored on file servers, and the Classic99 emulator uses TIFILES directly.
+TIFILES files should use the suffix <strong>.tifiles</strong>, 
+<strong>.tifile</strong>, or <strong>.tfi</strong>.</p>
+</a><p><strong>Valid names</strong><a name="valid"> for files and directories on TI disk images may
+use any character from the set of ASCII characters except for the period ("."). 
+Names may even use non-printable ASCII characters (below 32). They must be at
+most 10 characters long.</p>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<project name="TIImageTool" default="dist" basedir=".">
+
+<!-- set global properties for this build -->
+<property name="src" value="src"/>
+<property name="build" value="build"/>
+<property name="dist"  value="dist"/>
+<property name="ext"  value="ext"/>
+
+<!-- property name="build.compiler" value="classic"/ -->
+
+<target name="init">
+   <!-- Create the time stamp -->
+   <tstamp/>
+   <!-- Create the build directory structure used by compile -->
+   <mkdir dir="${build}"/>
+</target>
+
+<target name="tiimagetool" depends="init">
+   <echo>
+     ****    Building TIImageTool  ****
+   </echo>
+   <!-- Compile the java code from ${src} into ${build} -->
+   <javac srcdir="${src}" destdir="${build}" debug="on" includeAntRuntime="false" 
+         classpath="${ext}/RXTXcomm.jar"
+         encoding="utf-8" 
+         includes="de/mizapf/timt/**/*.java" >
+       <compilerarg value="-Xlint:unchecked" />
+   </javac>
+   <!--        <compilerarg value="-Xmaxerrs"/>
+	 <compilerarg value="1"/>
+   </javac> -->
+
+   <copy todir="${build}/de/mizapf/timt/ui">
+      <fileset dir="${src}/de/mizapf/timt/ui">
+         <include name="*.png"/>
+         <include name="*.jpg"/>
+         <include name="*.txt"/>
+         <include name="*.html"/>
+         <include name="*.prop"/>
+      </fileset>
+   </copy>
+
+   <copy todir="${build}/de/mizapf/timt/util">
+      <fileset dir="${src}/de/mizapf/timt/util">
+         <include name="*.tfi"/>
+         <include name="autoexec.txt"/>
+      </fileset>
+   </copy>
+</target>
+
+<target name="dist" depends="distri"/>
+
+<target name="distri" depends="tiimagetool">
+   <!-- Create the distribution directory -->
+   <mkdir dir="${dist}/lib"/>
+   <delete file="${dist}/lib/tiimagetool.jar"/>
+   <jar jarfile="${dist}/lib/tiimagetool.jar" basedir="${build}" 
+	   includes="de/mizapf/timt/**/*.class de/mizapf/timt/ui/*.png de/mizapf/timt/ui/*.html de/mizapf/timt/ui/*.txt de/mizapf/timt/ui/*.jpg de/mizapf/timt/util/*.tfi de/mizapf/timt/util/autoexec.txt de/mizapf/timt/ui/names.prop">
+	   <manifest>
+		 <attribute name="Main-Class" value="de.mizapf.timt.TIImageTool" />
+	   </manifest>
+   </jar>
+</target>
+
+<target name="srczip">
+   <delete file="${src}/src.zip"/>
+   <zip destfile="${src}/src.zip" basedir="${src}"
+       includes="build.xml de/mizapf/timt/**/*.java de/mizapf/timt/**/*.txt de/mizapf/timt/**/*.jpg de/mizapf/timt/**/*.prop de/mizapf/timt/**/*.html de/mizapf/timt/**/*.tfi" />
+</target>
+   
+<target name="ship" depends="srczip, dist">
+   <delete file="${src}/tiimagetool.zip"/>
+
+   <copy file="${src}/de/mizapf/timt/LICENSE" todir="${dist}"/>
+   <copy file="${src}/de/mizapf/timt/README" todir="${dist}"/>
+   <copy file="${src}/src.zip" todir="${dist}"/>
+   <copy file="${dist}/lib/tiimagetool.jar" todir="${dist}"/>
+   
+   <zip destfile="${dist}/tiimagetool.zip" basedir="${dist}"
+   includes="src.zip tiimagetool.jar LICENSE README" />
+</target>
+   
+<target name="clean">
+   <!-- Delete the ${build} and ${dist} directory trees -->
+   <delete dir="${build}"/>
+   <delete dir="${dist}"/>
+</target>
+</project>
