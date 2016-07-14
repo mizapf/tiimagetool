@@ -20,7 +20,7 @@
 ****************************************************************************/
 
 /*
-	TODOs for 3.x
+	TODOs for 2.x
 	-------------
 	[x] Drag and Drop
 	[x] Hints
@@ -105,7 +105,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "3.0";
+	public final static String VERSION = "2.2";
 	public final static String DATE = "July 2016";
 	
 	private static final String TITLE = "TIImageTool";
