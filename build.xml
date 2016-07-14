@@ -18,6 +18,10 @@
 </target>
 
 <target name="tiimagetool" depends="init">
+<!-- Check for RXTXcomm.jar -->
+   <available file="${ext}/RXTXcomm.jar" property="rxtx.available"/>
+   <fail message="RXTXcomm.jar not found in folder ${ext}" unless="rxtx.available"/>
+
    <echo>
      ****    Building TIImageTool  ****
    </echo>
