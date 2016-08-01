@@ -42,7 +42,7 @@ class DDData implements Transferable {
 	static {
 		m_supportedFlavors = new DataFlavor[2];
 		try {
-			m_supportedFlavors[0] = new DataFlavor("application/x-tiimagetool-elementcollection; class=de.mizapf.timt.image.DDData");
+			m_supportedFlavors[0] = new DataFlavor("application/x-tiimagetool-elementcollection; class=de.mizapf.timt.ui.DDData");
 			m_supportedFlavors[1] = DataFlavor.javaFileListFlavor;
 			elementCollection = m_supportedFlavors[0];
 		}
