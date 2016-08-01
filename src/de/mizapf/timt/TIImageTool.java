@@ -1810,7 +1810,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_iSerialBridge.setEnabled(m_bSerial);
 
 		if (m_jtViews.getTabCount()==0) {
-			m_mEdit.activateMenuItems(false, false, false);
+			m_mEdit.activateMenuItems(false, false, false, m_bSerial);
 		}
 		else {
 			m_dvSelected.activateEditMenu();

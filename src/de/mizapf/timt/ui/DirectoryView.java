@@ -362,7 +362,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		}			
 		
 		boolean bClipboard = m_app.clipboardNotEmpty();	
-		m_mEdit.activateMenuItems(true, bDirPossible, bClipboard);
+		m_mEdit.activateMenuItems(true, bDirPossible, bClipboard, m_app.offersSerialConnection());
 	}
 	
 	public void windowActivated(WindowEvent we) {
