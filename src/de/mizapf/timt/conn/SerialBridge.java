@@ -55,6 +55,8 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	
 	boolean m_bDone;
 
+	int m_nDebugChars;
+	
 	// ==============
 	private int m_nMode;
 	final static int NORMAL = 1;
@@ -83,8 +85,12 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	private final static byte EXCEPT = (byte)0x40;
 	private final static byte LINES = (byte)0x00;
 	
-	public final static int VERBOSE = 1;
-	
+	public final static boolean TRACESIG = false;
+	public final static boolean TRACECONF = false;
+	public final static boolean TRACEIN = false;
+	public final static boolean TRACEOUT = false;
+	public final static boolean TRACECHAR = false;
+		
 	SerialPort m_sp;
 	
 	private synchronized void debug(String s) {
@@ -95,10 +101,16 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	}
 	
 	private synchronized void debugch(byte byIn, boolean bIn) {
-		if (byIn >= 32 && byIn < 128) debug((char)byIn);
-		else debug(".");
-		debug(bIn? "[" : "{");
-		debug(Utilities.toHex(byIn,2) + (bIn? "]" : "}"));		
+		debug(bIn? ">" : "<");
+		debug(Utilities.toHex(byIn,2));		
+		if (TRACECHAR) {
+			debug("[");
+			if (byIn >= 32 && byIn < 128) debug((char)byIn);
+			else debug(".");
+			debug("]");
+		}
+		debug(" ");
+		if (m_nDebugChars++>16) { m_nDebugChars = 0; debug("\n"); }
 	}
 	
 	public SerialBridge(String sAdapter, int nPort, SerialBridgeDisplay disp) {
@@ -128,7 +140,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 		m_thrSerial = new Thread(this);
 		m_thrSerial.start();
 
-//		System.out.println("Bridge established");
+		if (TRACECONF) debug("Bridge established\n");
 		
 		// We only allow for one connection
 		Socket sock = null;
@@ -146,7 +158,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 			}
 		}
 		if (m_isFromSocket != null) {
-			// System.out.println("Closing socket");
+			if (TRACECONF) debug("Closing socket\n");
 			m_isFromSocket.close();
 			m_osToSocket.close();
 			sock.close();
@@ -223,6 +235,9 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	}
 		
 	private void setSerialSpeed(int nSpeed) {
+		// FIXME: RXTX fails for rates above 19200. Maybe there is a fix; 
+		// have to check
+		if (nSpeed > 19200) nSpeed = 19200;
 		m_nSpeed = nSpeed;
 		m_Display.setSpeed(nSpeed);
 	}
@@ -246,11 +261,13 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	}
 	
 	private void adjustSerialParameters() throws ConnectionException {
+		if (TRACECONF) debug("speed=" + m_nSpeed + ", data=" + m_nData + ", stop=" + m_nStop + ", parity=" + m_nParity + "\n");
+
 		try {
 			m_sp.setSerialPortParams(m_nSpeed, m_nData, m_nStop, m_nParity);
 		}
 		catch (UnsupportedCommOperationException ucx) {
-			throw new ConnectionException(m_sAdapter, "Serial port operation not supported: " + ucx.getMessage());
+			throw new ConnectionException(m_sAdapter, "Setting serial port parameters failed (speed=" + m_nSpeed + ", data=" + m_nData + ", stop=" + m_nStop + ", parity=" + m_nParity + ")");
 		}
 	}
 	
@@ -286,6 +303,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 			setLineDTR(true);
 			
 			m_byLines = (byte)0;
+			if (TRACECONF) debug("Serial connection opened\n");
 		}
 		catch (PortInUseException px) {
 			throw new ConnectionException(sPort, "Port in use");
@@ -304,11 +322,13 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	
 	private void setLineRTS(boolean bVal) {
 		// System.out.println("Set RTS = " + bVal);
+		if (TRACESIG) debug(bVal? ">RTS " : ">rts ");
 		m_sp.setRTS(bVal);
 		m_Display.setRTS(bVal);		
 	}
 
 	private void setLineDTR(boolean bVal) {
+		if (TRACESIG) debug(bVal? ">DTR " : ">dtr ");
 		// System.out.println("Set DTR = " + bVal);
 		m_sp.setDTR(bVal);		
 		m_Display.setDTR(bVal);
@@ -323,7 +343,8 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	
 	// ==========================================================
 	
-	private void send_line_state(byte byValue, boolean bException) {
+	/** Don't let this interfere with the normal byte reception. */
+	private synchronized void send_line_state(byte byValue, boolean bException) {
 		try {
 			if (m_osToSocket != null) {
 				m_osToSocket.write(0x1b);
@@ -354,43 +375,51 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	public void serialEvent(SerialPortEvent se) {
 		byte byVal = (byte)0;
 		int nType = se.getEventType();
+		boolean bNewVal = se.getNewValue();
 		switch (nType) {
 		case SerialPortEvent.CD:
 //			System.out.println("carrier detect=" + se.getNewValue());
-			m_Display.setDCD(se.getNewValue());
-			setLine(DCD, se.getNewValue());
+			if (TRACESIG) debug(bNewVal? "<CD " : "<cd ");
+			m_Display.setDCD(bNewVal);
+			setLine(DCD, bNewVal);
 			break;
 		case SerialPortEvent.CTS:
 			// System.out.println("clear to send=" + se.getNewValue());
-			m_Display.setCTS(se.getNewValue());
-			setLine(CTS, se.getNewValue());
+			if (TRACESIG) debug(bNewVal? "<CTS " : "<cts ");
+			m_Display.setCTS(bNewVal);
+			setLine(CTS, bNewVal);
 			break;
 		case SerialPortEvent.DSR:
 			// System.out.println("data set ready=" + se.getNewValue());
-			m_Display.setDSR(se.getNewValue());
-			setLine(DSR, se.getNewValue());
+			if (TRACESIG) debug(bNewVal? "<DSR " : "<dsr ");
+			m_Display.setDSR(bNewVal);
+			setLine(DSR, bNewVal);
 			break;
 		case SerialPortEvent.RI:
 			// System.out.println("ring indicator");
-			m_Display.setRingIndicator(se.getNewValue());
-			setLine(RI, se.getNewValue());
+			if (TRACESIG) debug(bNewVal? "<RI " : "<ri ");
+			m_Display.setRingIndicator(bNewVal);
+			setLine(RI, bNewVal);
 			break;
 
 		case SerialPortEvent.BI:
 			// System.out.println("break in=" + se.getNewValue());
-			m_Display.setBreakIn(se.getNewValue());
+			if (TRACESIG) debug(bNewVal? "<BREAK " : "<break ");
+			m_Display.setBreakIn(bNewVal);
 			byVal = BRK;
-			if (se.getNewValue()==true) byVal |= 1;
+			if (bNewVal) byVal |= 1;
 			send_line_state(byVal, true);
 			return;
 		case SerialPortEvent.FE:
 			// System.out.println("framing error");
-			m_Display.setFrameError(se.getNewValue());
+			if (TRACESIG) debug(bNewVal? "<FRAMEERR " : "<frameerr ");
+			m_Display.setFrameError(bNewVal);
 			send_line_state(FRMERR, true);
 			return;
 		case SerialPortEvent.PE:
 			// System.out.println("parity error");
-			m_Display.setParityError(se.getNewValue());
+			if (TRACESIG) debug(bNewVal? "<PARERR " : "<parerr ");
+			m_Display.setParityError(bNewVal);
 			send_line_state(PARERR, true);
 			return;
 		}
@@ -410,7 +439,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 			else {
 				m_Display.pulseDataOut();
 				m_osToSerial.write(byOut);
-				if (VERBOSE>4) {
+				if (TRACEOUT) {
 					debugch(byOut, false);
 				}
 			}
@@ -419,7 +448,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 			// ESC ESC = send ESC
 			if (byOut==0x1b) {
 				m_Display.pulseDataOut();
-				if (VERBOSE>4) debug("<ESC> ");
+				if (TRACEOUT) debug("<ESC> ");
 				m_osToSerial.write(byOut);
 			}
 			else {
@@ -438,11 +467,13 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 		}
 	}
 	
-	/** Handels bytes going inbound (from the serial adapter).
+	/**
+		Handels bytes going inbound (from the serial adapter).
+		Don't let this interfere with send_line_state
 	*/	
-	private void processIn(byte byIn) throws IOException {
+	private synchronized void processIn(byte byIn) throws IOException {
 		m_Display.pulseDataIn();
-		if (VERBOSE>4) {
+		if (TRACEIN) {
 			debugch(byIn, true);
 		}
 		if (m_osToSocket != null) {
@@ -466,7 +497,6 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	}
 	
 	private void control(byte[] aby) throws ConnectionException {
-
 		if (isConfig(aby[0])) {
 			int nType = aby[0] & 0x07;
 			if (nType != 1) {
@@ -541,7 +571,6 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 				// 00ab cdef = setting line RTS=a, CTS=b, DSR=c, DCD=d, DTR=e, RI=f 
 				
 				// Only these lines are outbound
-				// debug("#<" + Integer.toHexString(aby[0]&0x00ff) + "># ");
 				setLineRTS((aby[0] & RTS)==RTS);
 				setLineDTR((aby[0] & DTR)==DTR);
 			}
