@@ -185,15 +185,15 @@ file that can be assembled</li>
 <p>The objective of this tool is to simplify working with disk images for 
 TI-99 systems. Disk images are, simply speaking, floppy disks or hard disks 
 that have been saved as a file. These images are used in some emulators like 
-MESS instead of using a real floppy drive or hard drive, mainly because the
+MAME instead of using a real floppy drive or hard drive, mainly because the
 PC hardware does not directly support the device operations coming from the
 emulated TI. Instead, the emulator only works with a disk image, and the 
 emulator "believes" to see a real disk.</p>
-<p>Disk images can be created with most emulators, also with MESS, but apart
+<p>Disk images can be created with most emulators, also with MAME, but apart
 from creating them, only little support for changing the image contents is
 available. Certainly, images change while we work with the emulator, because
 the emulated system performs write operations, and so we can copy files on the
-image, delete them, and also read them. But multi-system emulators like MESS
+image, delete them, and also read them. But multi-system emulators like MAME
 simply cannot implement all the handling for every single system.</p>
 <p>TIImageTool is a program which allows you to create and modify TI disk
 images in a well-known, intuitive way, including common file management features
@@ -251,7 +251,7 @@ program by using the command line:</p>
 <div><strong>Hard disk image formats</strong></div>
 <ul>
 <li>Raw hard disk format (same as sector dump format but for hard disks)</li>
-<li>MESS CHD format (Compressed Hunks of Data, a MESS-specific format for mass storage media)</li>
+<li>MAME CHD format (Compressed Hunks of Data, a MAME-specific format for mass storage media)</li>
 </ul>
 <p>All these formats can be used directly, including reading and writing operations.
 Files and directories may be moved or copied between images of different formats.
@@ -326,11 +326,11 @@ remain unchanged.</p>
 <p>My motivation for writing TIImageTool emerged when I managed to copy all 
 of my old TI floppy disks to PC image files; then I was in need of a tool which allowed 
 me to quickly check whether all images have been correctly
-copied. MESS offers a tool named <em>imgtool</em>, but it is a text-only command line tool, and its main
+copied. MAME offers a tool named <em>imgtool</em>, but it is a text-only command line tool, and its main
 usage seems to be to create new images. After I added the track dump format
-to the TI-99 emulation in MESS, I should have added that support to imgtool as
+to the TI-99 emulation in MAME, I should have added that support to imgtool as
 well. imgtool is a good tool if you are working with many different emulations
-in MESS, but it cannot cover all features that one would like to have for one 
+in MAME, but it cannot cover all features that one would like to have for one 
 specific platform.</p>
 
 <p>So I started with TIImageTool in 2010, first as a pure command 
@@ -447,7 +447,7 @@ create new entries or to paste copied files into this directory.</p>
 <a name="diskimages"></a>
 <h2>Floppy disk image handling</h2>
 <p>Floppy disk images represent real floppy disks and contain files just as
-their real counterparts. Floppy images are stored in a specific format. MESS and TIImageTool support
+their real counterparts. Floppy images are stored in a specific format. MAME and TIImageTool support
 two formats known as the <em>Sector Dump Format</em> and the <em>Track Dump
 Format</em>; other names are <em>v9t9</em> and <em>pc99</em> format, according
 to the name of the emulators which first used them.</p> 
@@ -529,10 +529,10 @@ using the <strong>close button</strong> on the tab (and I bet you'll use that on
 
 <a name="hddisk"></a>
 <h2>Hard disk image handling</h2>
-<p>Hard disks images can be used in MESS just like floppy disk images, but they
+<p>Hard disks images can be used in MAME just like floppy disk images, but they
 are usually much bigger due to their higher storage capacity.</p>
 
-<p>MESS uses a special container for hard disk images called CHD (<em>Compressed 
+<p>MAME uses a special container for hard disk images called CHD (<em>Compressed 
 Hunks of Data</em>). TIImageTool allows for working with plain contents as 
 well as with these CHD containers. You can find all kinds of operations 
 like creating, extracting, or modifying the CHD container within 
@@ -550,7 +550,7 @@ last sector. Raw images do not contain information about the drive parameters
 (how may cylinders, heads, and sectors per track are used) except for the 
 information in sector 0 after the hard disk has been properly formatted.</p>
 
-<p>MESS cannot handle raw images because it must be able to determine the drive 
+<p>MAME cannot handle raw images because it must be able to determine the drive 
 parameters from unformatted drives as well. These parameters are available in the
 CHD format.</p>
 <p>When you attach your TI or Geneve SCSI hard disk to a SCSI adapter in a PC,
@@ -569,7 +569,7 @@ parameter declares the block size in bytes, which may be set to 256 as the
 real sector size, but using a higher value speeds up the copy process (multiple
 sectors will be read in one go).</p>
 
-<h3>MESS CHD</h3>
+<h3>MAME CHD</h3>
 <p>CHD means <em>Compressed Hunks of Data</em> which implies one of its 
 original uses: to allow to pack contents of mass storage media in a comparably 
 small container. CHD is not only intended for hard disk images, but also for CD-ROMs,
@@ -588,11 +588,11 @@ compressing. All tracks that are completely filled with 0 are not stored. There
 is a map at the beginning of the container, and when the system looks up the
 pointer to a desired track and gets a 0, it automatically creates an empty 
 track image filled with zeros.</p>
-<p>TIImageTool supports versions 4 and 5 of CHD. MESS itself does not
+<p>TIImageTool supports versions 4 and 5 of CHD. MAME itself does not
 accept older formats, which means that every now and then you will have to 
 upgrade the format of your CHD containers. TIImageTool allows you to change
 the version of the CHD container, even to downgrade, although this is only 
-reasonable when you want to use the image with an earlier MESS release.</p>
+reasonable when you want to use the image with an earlier MAME release.</p>
 
 <p>You can also extract the contents of a CHD container into a raw image; you
 will need this when you want to write contents back to your real TI/Geneve hard drive.
@@ -600,11 +600,11 @@ Vice versa, you can import raw contents and create a new CHD container. On this
 occasion, you can specify whether you want unallocated space to be filled with
 zeros. As said above, this may greatly reduce the size of your image.</p>
 
-<p>When you create a blank hard disk with MESS tools or with TIImageTool without
+<p>When you create a blank hard disk with MAME tools or with TIImageTool without
 formatting, you must format it inside the emulation (e.g. with the 
 Myarc Disk Manager). However, you will notice that the CHD will grown to its 
 maximum size at once. The formatting tools in the emulation write a test 
-pattern on the disk, and the CHD support in MESS cannot know that this
+pattern on the disk, and the CHD support in MAME cannot know that this
 is merely a test pattern. However, this can be "fixed" because 
 TIImageTool can convert this test pattern to zeros if the respective sectors on the hard disks
 are not allocated for files.</p>
@@ -636,8 +636,8 @@ specific geometric constraints. Sector lengths for MFM drives and SCSI drives
 as used in the TI/Geneve environments are always <strong>256 bytes</strong>.
 Only the IDE drives as used with the IDE adapter are created with 512 bytes as
 commonly used in the PC world, but this is not yet supported in TIImageTool.</li>
-<li><em>MESS CHD version</em>: You can set version 4 or 5, but 5 is highly 
-recommended because current MESS releases only support version 5.</li>
+<li><em>MAME CHD version</em>: You can set version 4 or 5, but 5 is highly 
+recommended because current MAME releases only support version 5.</li>
 </ul>
 
 <p>SCSI drives do not expose these geometric data to the outside world, other
@@ -665,7 +665,7 @@ values as used in Myarc Disk Manager. You should be safe to leave the value as i
 <li><em>Step speed</em>: As the name implies, defines the step rate of the heads
 in the drive. Can be set in a range of 0-7 and depends on the mechanics of the drive.</li>
 <li><em>File system</em>: You can choose between HFDC and SCSI, but as already
-stated, MESS currently does not support SCSI.</li>
+stated, MAME currently does not support SCSI.</li>
 <li><em>Buffered step</em>: Some drives were able to buffer step pulses for their
 heads, so the controller was not required to do single steps but to output a sequence
 of step pulses, and then listened to a line called <em>seek complete</em>. Older
@@ -688,11 +688,11 @@ decide between pre-formatted and blank image files.</p>
 <ul>
 <li><em>Volume name</em>: Specify a <a href="#valid">valid</a> volume name.</li>
 <li><em>Cylinders, heads, sectors</em>: Geometry parameters. You must define them
-even when you plan to create a SCSI image. This is required for the MESS CHD container.</li>
+even when you plan to create a SCSI image. This is required for the MAME CHD container.</li>
 <li><em>Sector length</em>: For HFDC and SCSI, the sector length must be 256. In a
 later revision there may be support for IDE drives with 512 bytes per sector.</li>
-<li><em>MESS CHD version</em>: You can create CHD images for versions 4 and 5, 
-but you must use the appropriate version for the MESS release you plan to use.
+<li><em>MAME CHD version</em>: You can create CHD images for versions 4 and 5, 
+but you must use the appropriate version for the MAME release you plan to use.
 Current releases only support version 5.</li>
 <li><em>Format hard disk</em>: Create the file system on the image. If you want
 to use an emulation-internal tool for formatting, uncheck the box.</li>
@@ -716,7 +716,7 @@ For opening and closing a hard disk image see the respective <a href="#open">sec
 <h3>Upgrading or downgrading the CHD format</h3>
 <p>You can use this function to upgrade your old CHD image from 4 to 5. You can
 also downgrade the container, although this is only recommended when you use
-it with an old MESS version.</p>
+it with an old MAME version.</p>
 
 <h4>Change CHD Format</h4>
 <div class="program">
@@ -752,7 +752,7 @@ currently open volume but that you have to specify a volume from the PC file sys
 <a name="rawchd"></a>
 <h3>Importing contents into a new CHD container</h3>
 <p>Importing requires some information that is not contained in the raw contents.
-This information (the <em>metadata</em>) inform MESS about the geometry of the
+This information (the <em>metadata</em>) inform MAME about the geometry of the
 drive even when it is not formatted yet.</p>
 <p>Also here, you do not operate on the currently open images.</p>
 
@@ -764,7 +764,7 @@ the sector contents.</li>
 <li><em>Parameters</em></li>
 <ul>
 <li><em>Target CHD version</em>: You should use the default (5). The v4 format
-can only be used with earlier MESS versions.</li>
+can only be used with earlier MAME versions.</li>
 <li><em>Fill unallocated space with zeros</em>: Tracks filled with zeros are not
 stored in a v5 container; this may allow the container to shrink considerably.</li>
 <li><em>Target parameters</em>: You cannot change these parameters. They are 
@@ -778,7 +778,7 @@ stored.</li>
 <p>The new CHD container is stored on the PC drive, but it is not automatically 
 opened. You can open it <a href="#open">as usual</a>.</p>
 
-<p>The CHD container may be <strong>much smaller</strong> than you expected. MESS
+<p>The CHD container may be <strong>much smaller</strong> than you expected. MAME
 CHD v5 containers do not store tracks which are filled with zeros. However, if you
 format the drive within the emulation, test patterns will make the CHD expand to 
 its full size.</p>
@@ -788,7 +788,7 @@ its full size.</p>
 from sector 0. If the raw image has a SCSI file system, we need to guess proper
 geometry values. This should not cause any problems, as there are no checks
 for known geometries. However, keep in mind that you cannot use SCSI images
-in MESS at this time (0.159).</p>
+in MAME at this time (0.159).</p>
 <p>You can change the file system from SCSI to HFDC and back. You will lose the
 geometry and technical parameters when you convert it to SCSI, and you have to
 define them when you convert to HFDC.</p>
@@ -833,7 +833,7 @@ are caused by a bug of a formatter in earlier MDOS versions. When found, the
 program will replace all of these values by the correct maximum value.</p>
 
 <p>Converting to HFDC is required only if you want to use a SCSI image with the HFDC. 
-For current MESS versions, only the HFDC controller is emulated. Later MESS
+For current MAME versions, only the HFDC controller is emulated. Later MAME
 versions may include a SCSI emulation so that this conversion may become
 obsolete.</p>
 
@@ -1254,7 +1254,7 @@ for use in GROMs, which can be found in the console or in cartridges. But even w
 you do not intend to write own GPL programs, you may be interested in finding out
 how some cartridges are programmed.</p>
 
-<p>When you work with MESS you can try to have a look at the GROM contents of
+<p>When you work with MAME you can try to have a look at the GROM contents of
 the console: Unpack the ti99_4x.zip file, and import the file with the GROM 
 contents into a disk image. Once it is on the disk image you can start the
 disassembler to get the source code.</p>
@@ -1800,9 +1800,9 @@ TIImageTool will place the file into the currently open directory.</p>
 <h3>Serial bridge</h3>
 
 <p>The <em>serial bridge</em> is a special feature used in conjunction with 
-the serial emulation in MESS. It is used to establish a serial connection 
+the serial emulation in MAME. It is used to establish a serial connection 
 with another computer, in particular with a real TI or Geneve. The serial bridge
-consists of a server socket which communicates with MESS, and the serial library
+consists of a server socket which communicates with MAME, and the serial library
 using RXTX which operates a local serial interface. </p>
 
 <h4>Serial bridge setup</h4>
@@ -1810,15 +1810,15 @@ using RXTX which operates a local serial interface. </p>
 <ul>
 <li><em>Serial adapter</em>: Specify the serial port (something like /dev/ttyS0 in Linux or COM1 in Windows). 
 The selection lists all currently available interfaces.</li>
-<li><em>Port</em>: Port on which the process listens for data coming from MESS.
-You must specify the same port when starting MESS.</li>
+<li><em>Port</em>: Port on which the process listens for data coming from MAME.
+You must specify the same port when starting MAME.</li>
 </ul>
 </div>
 
 <p>If you get an error message <em>"No serial ports found"</em> then either you
 actually do not have a serial port, or all serial ports are already used.</p>
 
-<p>Assuming that the bridge uses port 10000 on the same computer where MESS
+<p>Assuming that the bridge uses port 10000 on the same computer where MAME
 is running, you have to specify this as follows:</p>
 <pre>
    mess ti99_4a -peb:slot6 tirs232 -serl1 socket.localhost:10000
@@ -1832,7 +1832,7 @@ java -jar tiimagetool.jar BRIDGE /dev/ttyS0 10000
 </pre>
 
 <p>Other than in the XModem scenario, you <em>cannot set parameters</em> of the serial 
-bridge. These are actually set by the connected MESS emulator, or, more precisely,
+bridge. These are actually set by the connected MAME emulator, or, more precisely,
 by the application running inside the emulator.</p>
 
 <p>With this bridge running, you can let the emulated TI/Geneve communicate
@@ -1897,6 +1897,12 @@ records in a fixed format file, but it must be set as little-endian (the only
 instance in the whole TI-99 world). Obviously some third-party DSR or utility
 program did not consider this. This check detects these L3 errors and allows
 you to have them fixed.</li>
+<li>TDF images (PC99) usually have a "pseudo CRC" field filled with F7F7, but
+they can also carry a true value, which is then checked in MAME. 
+Former releases of TIImageTool had a bug that created bad CRC values; this
+can be fixed by this Filesystem check. Only TDF images are checked. You can
+choose whether to fix the value, or whether to deactivate it by resetting to 
+F7F7.</li>
 </ul>
 
 <p>As for the "broken sectors" check, formatting procedures usually fill all sectors with
@@ -2067,7 +2073,7 @@ menu function.</p>
 <a name="footnotes"></a>
 <div class="footnotes">
 <h2>Footnotes</h2>
-<p><strong>CHD format</strong> is a container format used by the MESS emulator.
+<p><strong>CHD format</strong> is a container format used by the MAME emulator.
 It is used to store contents of mass storage devices like hard disks, CD-ROMs,
 Laserdisks, and more. The CHD format (short for "Compressed Hunks of Data") 
 allows for compressing the contents and for checking the integrity using checksums

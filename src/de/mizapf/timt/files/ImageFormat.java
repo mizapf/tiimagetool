@@ -218,5 +218,8 @@ public abstract class ImageFormat  {
 	abstract void flush() throws IOException;
 	
 	abstract void createEmptyImage(File newfile, int sides, int density, int tracks, boolean format) throws ImageException, FileNotFoundException, IOException;
-
+	
+	int checkCRC(boolean fix, boolean reset) throws IOException {	
+		return NONE;
+	}
 }

@@ -65,7 +65,7 @@ public class CheckFSAction extends Activity {
 		// Now report
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));			
 		if (broken.size()>0) bErrors = true;
-		else ps.println("\nNo underallocation errors\n");
+		else ps.println("No underallocation errors.\n");
 
 		for (AllocationGapList agl:broken) {
 
@@ -136,7 +136,7 @@ public class CheckFSAction extends Activity {
 		savedResp = -1;
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));			
 		if (alloc.size()>0) bErrors = true;
-		else ps.println("\nNo overallocation errors\n");
+		else ps.println("No overallocation errors.\n");
 		
 		for (AllocationDomain ad:alloc) {
 			if (ad.isUnassigned()) {
@@ -225,7 +225,7 @@ public class CheckFSAction extends Activity {
 		}
 
 		/* Part 3: Broken sectors */
-		ps.println("\n===========  Checking broken sectors ===========\n");
+		ps.println("===========  Checking broken sectors ===========\n");
 		savedResp = -1;
 		
 		ArrayList<SectorFaultList> brokensect = new ArrayList<SectorFaultList>();
@@ -235,7 +235,7 @@ public class CheckFSAction extends Activity {
 			bErrors = true;
 		}
 		else {
-			ps.println("\nNo sector data errors");
+			ps.println("No sector data errors.\n");
 		}
 			
 		for (SectorFaultList sfl:brokensect) {
@@ -295,7 +295,7 @@ public class CheckFSAction extends Activity {
 		}
 		
 		/* Part 4. L3 check. */
-		ps.println("\n===========  Checking L3 swap issue ===========\n");
+		ps.println("===========  Checking L3 swap issue ===========\n");
 		boolean changedL3 = false;
 		savedResp = -1;
 
@@ -305,7 +305,7 @@ public class CheckFSAction extends Activity {
 		
 		if (brokenL3.size()>0) bErrors = true;
 		else {
-			ps.println("\nNo L3 swap errors.");
+			ps.println("No L3 swap errors.\n");
 		}
 
 		JCheckBox cb2 = null;
@@ -348,7 +348,55 @@ public class CheckFSAction extends Activity {
 			}
 		}
 				
-		/* Done with the check. */
+		/* Part 5. CRC check. */
+		int badcrc = -1;
+		
+		try {
+			badcrc = ImageCheck.findCRCErrors(vol, false, false);
+		}
+		catch (IOException iox) {
+			iox.printStackTrace();
+		}
+		
+		if (badcrc != -1) {
+			ps.println("===========  Checking CRC issues (TDF only) ===========\n");
+			
+			if (badcrc > 0) {
+				ps.println("Found " + badcrc + " CRC errors");
+				JPanel jp = new JPanel();
+				jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
+				StringBuilder sbMsg = new StringBuilder();
+				sbMsg.append("<html>");
+				sbMsg.append("The disk image has sectors with CRC errors in the header or data part.");
+				sbMsg.append("<br>Total count: ").append(badcrc);
+				sbMsg.append("<br><br>Fix this issue?<br><br>");
+				sbMsg.append("</html>");
+				JLabel jl = new JLabel(sbMsg.toString());
+				jp.add(jl);
+				cb2 = new JCheckBox("Reset the CRC fields to F7F7");
+				jp.add(cb2);
+				nRet = JOptionPane.showConfirmDialog(m_parent, jp, "File system check", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				if (nRet == JOptionPane.CANCEL_OPTION) {
+					return;
+				}
+				if (nRet == JOptionPane.YES_OPTION) {
+					try {
+						bErrors = true;
+						ImageCheck.findCRCErrors(vol, true, cb2.isSelected());
+					}
+					catch (IOException iox) {
+						iox.printStackTrace();
+					}
+				}			
+			}
+			else {
+				ps.println("No CRC errors.");
+			}
+		}
+		
+		/**************************************************************   
+		            Done with the check. 
+		 **************************************************************/
 		if (bChangedAlloc || changedL3) {
 			nRet = JOptionPane.showConfirmDialog(m_parent, "Commit the changes to the image now?", "File system check", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (nRet == JOptionPane.OK_OPTION) {

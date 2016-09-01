@@ -288,4 +288,8 @@ public class ImageCheck {
 			}
 		}		
 	}
+	
+	public static int findCRCErrors(Volume image, boolean fix, boolean reset) throws IOException {
+		return image.checkCRC(fix, reset);
+	}
 }

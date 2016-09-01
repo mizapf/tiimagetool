@@ -531,5 +531,113 @@ class TrackDumpFormat extends ImageFormat {
 		FileOutputStream fos = new FileOutputStream(newfile);
 		fos.write(image, 0, image.length);
 		fos.close();
+	}
+
+	@Override
+	int checkCRC(boolean fix, boolean reset) throws IOException {	
+		
+		int count=0;
+	
+		if (fix) {
+			m_FileSystem.close();
+			m_FileSystem = new RandomAccessFile(m_sImageName, "rw");
+			// Flush the last track
+			m_FileSystem.seek(m_trackpos[m_currentTrack]);
+			m_FileSystem.write(m_abyTrack);
+		}
+		
+		for (int cylinder=0; cylinder < m_nCylinders; cylinder++) {
+			for (int head=0; head<2; head++) {
+
+				int track = (head==0)? cylinder : (2*m_nCylinders-1 - cylinder);	
+				m_currentTrack = track;
+				m_currentCylinder = cylinder;
+				m_currentHead = head;
+
+				m_abyTrack = new byte[m_tracklen[track]];
+		
+				m_FileSystem.seek(m_trackpos[track]);
+				m_FileSystem.readFully(m_abyTrack);
+				
+				// Reset to start
+				m_positionInTrack = 0;
+		
+				byte[] bSector = null;
+				byte[] bHeader = new byte[4];
+				int initcrc = 0;
+				int actualcrc = 0; 
+				boolean changed = false;
+				
+				while (m_positionInTrack < m_tracklen[track]) {
+					if (nextIDAMFound()) {
+						// For MFM we have an ident byte to consume
+						if (m_encoding==MFM) {
+							initcrc = 0xb230;
+						}
+						else initcrc = 0xef21;
+						
+						bHeader[0] = (byte)readBits(8);
+						bHeader[1] = (byte)readBits(8);
+						bHeader[2] = (byte)readBits(8);
+						bHeader[3] = (byte)readBits(8);
+						
+						int position = m_positionInTrack;
+						int crch = readBits(16);
+						
+						actualcrc = Utilities.crc16_get(bHeader, 0, 4, initcrc);
+						if (crch != 0xf7f7 && crch != actualcrc) {
+							if (fix) {
+								m_positionInTrack = position;
+								writeBits(reset? 0xf7f7 : actualcrc, 16);
+								changed = true;
+							}
+							else {
+								System.out.println("Bad header CRC at (" + bHeader[0] + "," + bHeader[1] + "," + bHeader[2]+ "): Expected " + Utilities.toHex(actualcrc, 4) + ", got " + Utilities.toHex(crch, 4));
+							}
+							count++;
+						}
+						
+						if (nextDAMFound()) {
+							int mark = m_value;  // the DAM for FM and MFM
+							if (m_encoding==MFM) {
+								initcrc = (mark==0xfb)? 0xe295 : 0xd2f6;   // f8 is the "deleted" mark
+							}
+							else {
+								initcrc = (mark==0xfb)? 0xbf84 : 0x8fe7;
+							}
+							
+							int pos = m_positionInTrack;
+							bSector = new byte[256];
+							readBits(bSector);
+							position = m_positionInTrack;
+							int crcd = readBits(16);
+							actualcrc = Utilities.crc16_get(bSector, 0, bSector.length, initcrc);
+							
+							if (crcd != 0xf7f7 && crcd != actualcrc) {
+								if (fix) {
+									m_positionInTrack = position;
+									writeBits(reset? 0xf7f7 : actualcrc, 16);
+									changed = true;
+								}
+								else {
+									System.out.println("Bad data CRC at (" + bHeader[0] + "," + bHeader[1] + "," + bHeader[2]+ "): Expected " + Utilities.toHex(actualcrc, 4) + ", got " + Utilities.toHex(crcd, 4));
+								}
+								count++;
+							}
+						}
+					}
+				}
+				// System.out.println("writing track " + m_currentTrack + " at position " + m_trackpos[m_currentTrack]);
+				if (changed) {
+					m_FileSystem.seek(m_trackpos[m_currentTrack]);
+					m_FileSystem.write(m_abyTrack);
+				}
+			}
+		}
+		if (fix) {
+			m_FileSystem.close();
+			m_FileSystem = new RandomAccessFile(m_sImageName, "r");
+		}
+		return count;
 	}	
 }
