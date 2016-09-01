@@ -69,7 +69,7 @@
 <h1>TIImageTool</h1>
 <p style="text-align:center">Easily manage TI-99 floppy and hard disk images</p>
 
-<div class="version">Version: <span style="font-weight:bold">2.21</span>; August 2016</div>
+<div class="version">Version: <span style="font-weight:bold">2.3</span>; September 2016</div>
 <div class="author">Author: Michael Zapf<br/>Contact: ti99@mizapf.de<br/>www.mizapf.de</div>
 
 <p style="text-align:center">Also see <span style="font-weight:bold">www.ninerpedia.org</span> for more technical
@@ -465,15 +465,18 @@ PC board. You can, however, transfer files using <a href="#importr">XModem</a>.<
 <a name="newfl"></a>
 <h4>New</h4>
 <div class="program">
-<p>Allows you to create
-new floppy disk images. You can decide between pre-formatted and blank image files.  </p>
+<p>Allows you to create new floppy disk images. You can decide between 
+pre-formatted and blank image files.</p>
+<p>Floppy image files may be created as sector images (v9t9), track images
+(pc99), or HFE images (Lotharek).</p> 
 <p>You have to choose a file name for the new image. If you create a sector dump
 format image (SDF), the file suffix "dsk" is appended (unless you provided it
-already). Track dump format files get a "dtk" suffix.</p>
+already). Track dump format files get a "dtk" suffix; HFE files get a "hfe"
+suffix.</p>
 <ul>
 <li><em>Disk name</em>: <a href="#valid">Valid</a> disk names are at most 10 characters long; the period
 character "." is not allowed.</li>
-<li><em>Image type</em>: Choose between Sector Dump Format (v9t9) and Track Dump Format (pc99)</li>
+<li><em>Image type</em>: Choose between Sector Dump Format (v9t9), Track Dump Format (pc99), and HFE Image (Lotharek)</li>
 <li><em>Formatting</em>: If you create a blank image you need to format it within the emulator before you can use
 it in TIImageTool.</li>
 <li><em>Sides, Density, tracks</em>: Parameters which determine the capacity of the image.</li>
@@ -2103,6 +2106,8 @@ during processing, which could be important if you run the emulator on a weaker 
 Note that the TDF format differs from the PC99 formats for single-sided disks. 
 If you intend to create disk images for the PC99 emulator, only use double-sided
 formats.</p>
+<p><strong>HFE images</strong> are images that represent the flux changes
+on the disk medium. They are used in the Lotharek Floppy Disk Emulator.</p>
 <p><strong>TIFILES</strong> is a format for the external storage of TI-99 file system
 files on PCs. TIFILES files contain the file contents and meta-information about the file,
 like the file type and the file structure. This information is required for

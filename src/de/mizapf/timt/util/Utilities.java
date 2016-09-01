@@ -215,8 +215,12 @@ public class Utilities {
 	}
 	
 	public static int crc16_get(byte aby[], int nOffset, int nLength) {
+		return crc16_get(aby, nOffset, nLength, 0xffff);
+	}
+
+	public static int crc16_get(byte aby[], int nOffset, int nLength, int init) {
 		// Big-endian, x^16+x^12+x^5+1 = (1) 0001 0000 0010 0001 = 0x1021
-		int rem = 0xffff;
+		int rem = init;
 		int n = 16;
 		// A popular variant complements rem here
 		int i;

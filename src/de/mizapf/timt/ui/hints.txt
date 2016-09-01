@@ -77,3 +77,4 @@ image file. Use <em>java -jar tiimagetool.jar CommandShell -h</em> to get more i
 that way you can paste BASIC listings into an image file.
 30 = output from the program, including error messages, can now be logged in
 a file; you can set the file name in the preferences.
+31 = you can directly read, write, and create image files for the Lotharek Floppy Disk Emulator

@@ -91,7 +91,7 @@ public class Volume {
 		sector0 = readSector(0);
 		abySect0 = sector0.getBytes();
 
-		if (m_Image instanceof SectorDumpFormat || m_Image instanceof TrackDumpFormat) {
+		if (m_Image instanceof SectorDumpFormat || m_Image instanceof TrackDumpFormat || m_Image instanceof HFEFormat) {
 			m_nType = FLOPPY;
 			if (!hasFloppyVib(abySect0) && bCheck) throw new ImageException(".HEAD");  
 
@@ -167,7 +167,7 @@ public class Volume {
 //		long time = m_Image.getLastModifiedTime();
 		// System.out.println("time = " + time + ", last mod = " + m_nLastMod);
 //		if (m_nLastMod < time) throw new ProtectedException("Volume has changed on disk; cannot write. Image will be closed.");
-		m_Image.writeSector(nNumber, abySector, (m_nDensity <2), bNeedReopen);
+		m_Image.writeSector(nNumber, abySector, bNeedReopen);
 //		m_nLastMod = m_Image.getLastModifiedTime();
 	}
 
@@ -605,65 +605,66 @@ public class Volume {
 	
 /*************************** Low-level routines *****************************/
 	
-	public static byte[] createImage(String volumeName, boolean blank, boolean sdf, int sides, int density, int tracks) throws IOException {
-		int[] tdftracklen = { 3253, 6872, 12992, 25232 };
-		int[] sdftracklen = { 2304, 4608, 9216, 18432 };
-		int tracklen;
-				
-		if (sdf) tracklen = sdftracklen[density];
-		else tracklen = tdftracklen[density];
-		
-		byte[] image = new byte[sides * tracks * tracklen];
-		Arrays.fill(image, (byte)0);
-		
-		if (!blank) {
-			int sectpertrack = (density+1)*9;
-			formatImage(image, sides, tracks, sectpertrack, density, sdf);
-			byte[] sector0 = createVib(volumeName, sides, density, tracks);
-			writeSectorInArray(image, sector0, sectpertrack, 0, 0, 0, sdf);
-			byte[] sector1 = new byte[256];
-			Arrays.fill(sector1, (byte)0);
-			writeSectorInArray(image, sector1, sectpertrack, 0, 0, 1, sdf);
-		}
-		return image;
-	}
-	
-	private static void formatImage(byte[] image, int sides, int tracksperside, int sectpertrack, int density, boolean sdf) {
-		for (int side=0; side < sides; side++) {
-			for (int track=0; track < tracksperside; track++) {
-				writeTrackInArray(image, density, tracksperside, sectpertrack, track, side, sdf); 
-			}
-		}
-	}	
-	
-	// TODO: replace by VolumeInformationBlock.createVib
-	private static byte[] createVib(String sName, int nSides, int nDensity, int nTracks) {
-		byte[] image = new byte[256];
-		Arrays.fill(image, 0, 10, (byte)' ');
-		System.arraycopy(sName.getBytes(), 0, image, 0, sName.getBytes().length);
-		int nSectorsPerTrack = 9 << nDensity;
-		int nSectors = nSides * nTracks * nSectorsPerTrack;
-		image[10] = (byte)(nSectors >> 8);
-		image[11] = (byte)(nSectors % 256);
-		image[12] = (byte)nSectorsPerTrack;
-		image[13] = 'D';
-		image[14] = 'S';
-		image[15] = 'K';
-		image[16] = (byte)0x20;
-		image[17] = (byte)nTracks;
-		image[18] = (byte)nSides;
-		image[19] = (byte)(nDensity+1);
-		for (int i=0x14; i < 0x38; i++) image[i] = (byte)0;
-		for (int i=0x38; i < 0x100; i++) image[i] = (byte)0xff;
-		
-		// Allocation bitmap
-		AllocationMap am = new AllocationMap(nSectors);
-		am.allocate(0);
-		if (am.getAUSize()==1) am.allocate(1);
+	public static void createFloppyImage(File newImageFile, String volumeName, int type, int sides, int density, int tracks, boolean format) throws IOException, ImageException {
 
-		byte[] abyMap = am.toBitField();
-		System.arraycopy(abyMap, 0, image, 0x38, abyMap.length);
-		return image;
+		ImageFormat image = null;
+		
+		switch (type) {
+		case ImageFormat.SECTORDUMP:
+			image = new SectorDumpFormat();
+			break;
+		case ImageFormat.TRACKDUMP:
+			image = new TrackDumpFormat();
+			break;
+		case ImageFormat.HFE:
+			image = new HFEFormat();
+			break;
+		}
+		
+		image.createEmptyImage(newImageFile, sides, density, tracks, format);		
+		
+		if (format) {
+			
+			// Load it and write sectors 0 and 1
+			image = ImageFormat.getImageFormat(newImageFile.getAbsolutePath(), SECTOR_LENGTH);
+			
+			// Sector 0
+			byte[] sector0 = new byte[SECTOR_LENGTH];
+			
+			Arrays.fill(sector0, 0, 10, (byte)' ');
+			System.arraycopy(volumeName.getBytes(), 0, sector0, 0, volumeName.getBytes().length);
+			
+			int sectorsPerTrack = 9 << density;
+			int nsectors = sides * tracks * sectorsPerTrack;
+			sector0[10] = (byte)(nsectors >> 8);
+			sector0[11] = (byte)(nsectors % 256);
+			sector0[12] = (byte)sectorsPerTrack;
+			sector0[13] = 'D';
+			sector0[14] = 'S';
+			sector0[15] = 'K';
+			sector0[16] = (byte)0x20;
+			sector0[17] = (byte)tracks;
+			sector0[18] = (byte)sides;
+			sector0[19] = (byte)(density+1);
+			for (int i=0x14; i < 0x38; i++) sector0[i] = (byte)0;
+			for (int i=0x38; i < 0x100; i++) sector0[i] = (byte)0xff;
+			
+			// Allocation bitmap
+			AllocationMap am = new AllocationMap(nsectors);
+			am.allocate(0);
+			if (am.getAUSize()==1) am.allocate(1);
+			
+			byte[] abyMap = am.toBitField();
+			System.arraycopy(abyMap, 0, sector0, 0x38, abyMap.length);
+			
+			// Sector 1
+			byte[] sector1 = new byte[SECTOR_LENGTH];
+			Arrays.fill(sector1, 0, SECTOR_LENGTH, (byte)0x00);
+			
+			image.writeSector(0, sector0, false);
+			image.writeSector(1, sector1, false);
+			image.close();
+		}
 	}
 	
 	private static void writeTrackInArray(byte[] image, int density, int tracksperside, int sectpertrack, int nTrack, int nSide, boolean sdf) {

@@ -14,22 +14,63 @@
 	You should have received a copy of the GNU General Public License
 	along with TIImageTool.	 If not, see <http://www.gnu.org/licenses/>.
 	
-	Copyright 2011 Michael Zapf
+	Copyright 2016 Michael Zapf
 	www.mizapf.de
 	
 ****************************************************************************/
 
 package de.mizapf.timt.files;
+import de.mizapf.timt.util.Utilities;
 
 import java.io.*;
 
 public class Sector {
 	byte[] m_abySector = null;
 	int m_nNumber = 0;
+	int m_cellOffset;
+	int m_crc;
+	boolean m_changed;
+	int m_crcinit;
+	int m_mark;
 	
 	public Sector(int nNumber, byte[] abySector) {
+		this(nNumber, abySector, -1, 0xffff, 0xfb);
+	}
+	
+	public Sector(int nNumber, byte[] abySector, int cellOffset, int initcrc, int mark) {
 		m_nNumber = nNumber;
-		m_abySector = abySector;
+		m_cellOffset = 0;
+		m_crcinit = initcrc;
+		m_mark = mark;
+		setData(abySector);
+		m_cellOffset = cellOffset;
+		clean();
+	}
+	
+	public void setData(byte[] bData) {
+		m_abySector = bData;
+		m_crc = Utilities.crc16_get(bData, 0, bData.length, m_crcinit);
+		m_changed = true;
+	}
+	
+	public int getMark() {
+		return m_mark;
+	}
+
+	public boolean changed() {
+		return m_changed;
+	}
+	
+	public void clean() {
+		m_changed = false;
+	}
+	
+	public int getPosition() {
+		return m_cellOffset;
+	}
+	
+	public int getCrc() {
+		return m_crc;
 	}
 	
 	public int getNumber() {

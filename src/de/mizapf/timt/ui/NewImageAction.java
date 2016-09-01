@@ -53,13 +53,26 @@ public class NewImageAction extends Activity {
 			return;
 		}
 		newimage.setVisible(true);
-		boolean bTDF = false;
+
+		Volume newVolume = null;
+		
 		if (newimage.confirmed()) {
+			
+			// Sanity checks
+			if (newimage.getImageType()==ImageFormat.TRACKDUMP) {
+				if (newimage.getSides()==1)
+				{
+					JOptionPane.showMessageDialog(m_parent, "Track dump images are two-sided only.", "Create error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}				
+				if (newimage.getTrackCount()==80)
+				{
+					JOptionPane.showMessageDialog(m_parent, "Track dump images are defined for 40 tracks only.", "Create error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+			}
+			
 			try {
-				byte[] abyImage = Volume.createImage(newimage.getDiskName(), !newimage.formatImage(), newimage.sectorDump(), 
-					newimage.getSides(), newimage.getDensity(), newimage.getTrackCount());
-				
-				bTDF = !newimage.sectorDump();			
 				JFileChooser jfc = null;
 				if (imagetool.getSourceDirectory("image")!=null) {
 					jfc = new JFileChooser(imagetool.getSourceDirectory("image"));
@@ -74,51 +87,48 @@ public class NewImageAction extends Activity {
 				jfc.setFileFilter(im);
 				
 				int nReturn = jfc.showSaveDialog(m_parent);
-				java.io.File file = null;
+				File file = null;
 				if (nReturn == JFileChooser.APPROVE_OPTION) {
 					imagetool.setProperty(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 					file = jfc.getSelectedFile();
 					int nSuffixPos = file.getName().indexOf(".");
-					if (nSuffixPos==-1 || nSuffixPos == file.getName().length()-1) { 
-						if (bTDF) {
-							if (!file.getName().endsWith(".dtk")) {
-								file = new java.io.File(file.getAbsolutePath() + ".dtk");
-							}
-						}
-						else {	
-							if (!file.getName().endsWith(".dsk")) {
-								file = new java.io.File(file.getAbsolutePath() + ".dsk");
-							}
+					if (nSuffixPos==-1 || nSuffixPos == file.getName().length()-1) {
+						if (!file.getName().endsWith(newimage.getImageTypeSuffix())) {
+							file = new File(file.getAbsolutePath() + newimage.getImageTypeSuffix());
 						}
 					}
 					
 					if (file.exists()) {		
-						int nRet = JOptionPane.showConfirmDialog(m_parent, "Image file already exists. Overwrite?", "New image", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE);
+						int nRet = JOptionPane.showConfirmDialog(m_parent, "Image file already exists. Overwrite?", "New image", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 						if (nRet == JOptionPane.NO_OPTION) return;
 					}
 					
-					Volume vol = imagetool.getAlreadyOpenedVolume(file.getAbsolutePath());
-					if (vol != null) {
+					if (imagetool.getAlreadyOpenedVolume(file.getAbsolutePath()) != null) {
 						JOptionPane.showMessageDialog(m_parent, "Volume with same file name already opened", "Illegal operation", JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					
 					imagetool.setSourceDirectory(file.getParentFile(), "image");
 					
-					FileOutputStream fos = new FileOutputStream(file);
-					fos.write(abyImage);
-					fos.close();		
-				}
+					Volume.createFloppyImage(file, 
+									newimage.getDiskName(),
+									newimage.getImageType(),
+									newimage.getSides(), 
+									newimage.getDensity(),
+									newimage.getTrackCount(),
+									newimage.formatImage());
 				
-				if (!newimage.formatImage()) {
-					JOptionPane.showMessageDialog(m_parent, 
-						"This image is unformatted; you must format it in an emulator first\nbefore you can use it here.", "Unformatted", JOptionPane.OK_OPTION);
 				}
-				else { 
-					if (file != null) {
-						Volume vol = new Volume(file.getAbsolutePath());
-						Directory root = vol.getRootDirectory();					
+				// Open it when it is initialized
+				if (file != null) {
+					if (newimage.formatImage()) {
+						newVolume = new Volume(file.getAbsolutePath());
+						Directory root = newVolume.getRootDirectory();					
 						imagetool.addDirectoryView(root);
+					}
+					else {
+						JOptionPane.showMessageDialog(m_parent, 
+							"This image is unformatted; you must format it in an emulator first\nbefore you can use it here.", "Unformatted", JOptionPane.OK_OPTION);
 					}
 				}
 			}

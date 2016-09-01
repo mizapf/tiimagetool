@@ -24,6 +24,8 @@ package de.mizapf.timt.files;
 import java.io.RandomAccessFile;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.io.File;
 
 class RawHDFormat extends ImageFormat {
 
@@ -61,7 +63,8 @@ class RawHDFormat extends ImageFormat {
 		m_nDensity = 0;
 	}
 	
-	private int readTrack(int nSectorNumber) throws IOException {
+	@Override
+	int readTrack(int nSectorNumber) throws IOException {
 		// TODO: NPX for SCSI
 		int nTrackNumber = (nSectorNumber / m_nSectorsPerTrack);			
 		int nTrackOffset = nTrackNumber * m_nTrackLength; 
@@ -116,9 +119,20 @@ class RawHDFormat extends ImageFormat {
 			m_nTotalSectors = Volume.MAXAU * nSectorsPerAU;
 	}
 	
+	@Override
+	Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+		byte[] abySector = new byte[m_nSectorLength];
+		// Get sector offset in track
+		//			System.out.println("Read sector " + nSectorNumber);
+		int[] offset = new int[2];
+		getOffset(nSectorNumber, offset);
+		System.arraycopy(m_abyTrack, offset[SECTOR], abySector, 0, m_nSectorLength);
+		return new Sector(nSectorNumber, abySector);
+	}
+
 	/** For Windows systems and access to the physical device we must
 		adjust to block boundaries. */
-	void writeSector(int nNumber, byte[] abySector, boolean bFM, boolean bNeedReopen) throws IOException, ImageException {
+	void writeSector(int nNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException {
 		// System.out.println("Writing sector " + nNumber);
 		try {
 			int[] offset = new int[2];
@@ -162,6 +176,14 @@ class RawHDFormat extends ImageFormat {
 		catch (EOFException eofx) {
 			throw new EOFException("Sector " + nNumber + " beyond image size");
 		}
+	}
+	
+	void flush() {
+		// Do nothing.
+	}
+	
+	// Not needed
+	void createEmptyImage(File newfile, int sides, int density, int tracks, boolean format) throws FileNotFoundException, IOException {
 	}
 }
 

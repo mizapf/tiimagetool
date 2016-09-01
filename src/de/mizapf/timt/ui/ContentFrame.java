@@ -134,6 +134,10 @@ public class ContentFrame extends JFrame implements ActionListener {
 		dispose();
 	}
 	
+	void append(String s) {
+		m_jep.append(s);
+	}
+	
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getActionCommand()==SAVEAS) {
 			JFileChooser jfc = new JFileChooser();

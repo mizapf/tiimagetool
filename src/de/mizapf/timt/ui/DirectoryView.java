@@ -188,6 +188,13 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 
 	public void close() {
 		if (m_frmOwn != null) m_frmOwn.dispose();
+		try {
+			m_dirCurrent.getVolume().close();
+		}
+		catch (IOException iox) {
+			System.err.println("Error when closing image: " + iox.getMessage());
+			iox.printStackTrace();
+		}
 	}
 	
 	private void reattach() {

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2011 Michael Zapf
+    Copyright 2016 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
@@ -24,11 +24,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+import de.mizapf.timt.files.ImageFormat;
+
 class NewImageDialog extends ToolDialog {
 	
 	JTextField 		m_tfName;
-	JRadioButton 	m_jrSDF;
-	JRadioButton 	m_jrTDF;
+	JComboBox<String> 		m_jcType;
 	JRadioButton 	m_jrFormatted;
 	JRadioButton 	m_jrBlank;
 	JRadioButton 	m_jrSingle;
@@ -36,6 +37,8 @@ class NewImageDialog extends ToolDialog {
 	JComboBox<String> 		m_jcDensity;
 	JRadioButton	m_jrTrack40;
 	JRadioButton 	m_jrTrack80;
+	
+	public final static String[] suffix = { ".dsk", ".dtk", ".hfe" };
 	
 	NewImageDialog(JFrame owner) {
 		super(owner, "Create new floppy image");
@@ -45,7 +48,7 @@ class NewImageDialog extends ToolDialog {
 	| 	Create new floppy image										|
 
 		Disk name			EMPTY________
-		Image type			* Sector Dump 		o Track Dump
+		Image type			|v Sector Dump|
 		Disk will be		* formatted			o blank
 		Sides				o Single			* Double
 		Density				|v Double|
@@ -60,13 +63,11 @@ class NewImageDialog extends ToolDialog {
 
 		m_tfName = putTextField(this, "Disk name", "EMPTY", 100, 100); 
 		
-		String[] asFormat = { "Sector dump", "Track dump" };
+		String[] asFormat = { "Sector dump", "Track dump", "HFE image" };
+		m_jcType = putComboBox(this, "Image type", asFormat, 0, 100);
+		
 		int[] anFormat = { 100, 100 };
-
-		JRadioButton[] arb1 = putRadioButtons(this, "Image type", 100, asFormat, anFormat, 0);
-		m_jrSDF = arb1[0];
-		m_jrTDF = arb1[1];
-
+		
 		String[] asDoFormat = { "formatted", "blank" };
 		JRadioButton[] arb2 = putRadioButtons(this, "Disk will be", 100, asDoFormat, anFormat, 0);
 		m_jrFormatted = arb2[0];
@@ -95,7 +96,13 @@ class NewImageDialog extends ToolDialog {
 	}
 	
 	int getDensity() {
-		return (m_jcDensity.getSelectedIndex());
+		switch (m_jcDensity.getSelectedIndex()) {
+			case 0: return ImageFormat.SINGLE_DENSITY;
+			case 1: return ImageFormat.DOUBLE_DENSITY;
+			case 2: return ImageFormat.HIGH_DENSITY;
+			case 3: return ImageFormat.ULTRA_DENSITY;
+		}				
+		return -1;
 	}
 	
 	int getSides() {
@@ -110,7 +117,16 @@ class NewImageDialog extends ToolDialog {
 		return m_tfName.getText();
 	}
 	
-	boolean sectorDump() {
-		return m_jrSDF.isSelected();
+	int getImageType() {
+		switch (m_jcType.getSelectedIndex()) {
+			case 0: return ImageFormat.SECTORDUMP;
+			case 1: return ImageFormat.TRACKDUMP;
+			case 2: return ImageFormat.HFE;
+		}
+		return -1;
+	}
+	
+	String getImageTypeSuffix() {
+		return suffix[m_jcType.getSelectedIndex()];
 	}
 }

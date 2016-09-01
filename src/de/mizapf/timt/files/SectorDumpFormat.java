@@ -22,20 +22,24 @@
 package de.mizapf.timt.files;
 
 import java.io.RandomAccessFile;
+import java.io.FileOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.io.File;
 
 class SectorDumpFormat extends ImageFormat {
 
 	static final int[][] sdfgeometry = { 
-		{ 92160, 1, 40, 9, 1 }, 
-		{ 184320, 2, 40, 9, 1 },
-	    { 327680, 2, 40, 16, 2 },
-		{ 368640, 2, 40, 18, 2 }, 
-		{ 655360, 2, 80, 16, 2 }, 
-		{ 737280, 2, 80, 18, 2 }, 
-		{ 1474560, 2, 80, 36, 3 }, 
-	    { 2949120, 2, 80, 72, 4 } };
+		{ 92160, 1, 40, 9 }, 
+		{ 184320, 2, 40, 9 },
+	    { 327680, 2, 40, 16 },
+		{ 368640, 2, 40, 18 }, 
+		{ 655360, 2, 80, 16 }, 
+		{ 737280, 2, 80, 18 }, 
+		{ 1474560, 2, 80, 36 }, 
+	    { 2949120, 2, 80, 72 } };
 		
 	static int vote(RandomAccessFile fileSystem) throws IOException {
 		long nLength = fileSystem.length();
@@ -59,40 +63,21 @@ class SectorDumpFormat extends ImageFormat {
 	SectorDumpFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
 		super(filesystem, sImageName, nSectorLength);
 	}
-	
+
+	SectorDumpFormat() {
+	}
+
 	public String getDumpFormatName() {
 		return "sector";
 	}
 	
-	private int readTrack(int nSectorNumber) throws IOException {
-		int nTrackNumber = (nSectorNumber / m_nSectorsPerTrack);			
-		int nTrackOffset = nTrackNumber * m_nTrackLength; 
-
-		if (nTrackNumber != m_nCurrentTrack) {
-			m_FileSystem.seek(nTrackOffset);
-			m_FileSystem.readFully(m_abyTrack);
-			m_nCurrentTrack = nTrackNumber;
-		}
-		return nTrackOffset;
-	}	
-
-	void getOffset(int nSectorNumber, int[] offset) throws IOException, ImageException {
-		int nTrackOffset = 0;
-		int nTrack = 0;
-		
-		if (nSectorNumber >= m_nTotalSectors)  throw new EOFException("Sector " + nSectorNumber + " beyond image size");
-		
-		offset[TRACK] = readTrack(nSectorNumber);
-
-		nSectorNumber = nSectorNumber % m_nSectorsPerTrack;
-		offset[SECTOR] = nSectorNumber * Volume.SECTOR_LENGTH;
-	}
-	
-	void setGeometry(boolean bSpecial) throws ImageException, IOException {
-		int format = -1;
+	@Override	
+	void setGeometry(boolean bSpecial) throws IOException, ImageException {
 		long nLength = m_FileSystem.length();
 		if (((nLength / 256) % 10)==3) nLength -= 768;
-
+		
+		int format = NONE;
+		
 		for (int i=0; i < sdfgeometry.length; i++) {
 			if (nLength == sdfgeometry[i][0]) {
 				format = i;
@@ -103,29 +88,229 @@ class SectorDumpFormat extends ImageFormat {
 			
 		m_nHeads = sdfgeometry[format][1];
 		m_nCylinders = sdfgeometry[format][2];
-		m_nSectorsPerTrack = sdfgeometry[format][3];
-		m_nDensity = sdfgeometry[format][4];
+		m_nDensity = 0;
 		
-		m_nTrackLength = Volume.SECTOR_LENGTH * m_nSectorsPerTrack;		
+		int tracklen = Volume.SECTOR_LENGTH * sdfgeometry[format][3];
+
+		m_trackpos = new int[m_nCylinders*2];
+		m_tracklen = new int[m_nCylinders*2];
 		
-		m_nTotalSectors = m_nHeads * m_nCylinders * m_nSectorsPerTrack;
+		int pos = 0;
+		for (int j=0; j < m_nCylinders*2; j++) {
+			m_trackpos[j] = pos;
+			m_tracklen[j] = tracklen;
+			pos += tracklen;
+		}
+		
+		m_encoding = (sdfgeometry[format][3]==9)? FM : MFM; 
+		m_nSectorsByFormat = NONE;
+		m_currentCylinder = NONE;
+		m_currentTrack = NONE;
+		m_currentHead = NONE;
+		m_positionInTrack = 0;
 	}
 	
-	void writeSector(int nNumber, byte[] abySector, boolean bFM, boolean bNeedReopen) throws IOException, ImageException {
-		try {
-			int[] offset = new int[2];
-			getOffset(nNumber, offset);
-			// Get the absolute offset to the sector
-			// Add the track offset to the sector offset
-			if (bNeedReopen) reopenForWrite();
-			m_FileSystem.seek(offset[TRACK] + offset[SECTOR]);
-			m_FileSystem.write(abySector);
-			if (bNeedReopen) reopenForRead();
+	@Override
+	int readTrack(int nSectorNumber) throws IOException, ImageException {
+		int secindex = -1;
+
+		Location loc = null;
+		if (nSectorNumber != 0) {
+			loc = getLocation(nSectorNumber);
 		}
-		catch (EOFException eofx) {
-			eofx.printStackTrace();
-			throw new EOFException("Sector " + nNumber + " beyond image size");
+		else {
+			loc = new Location(0, 0, 0, 0);
 		}
+		
+		// Do we have that track already?
+		if (m_currentCylinder == loc.cylinder && m_currentHead == loc.head) {
+			for (int i=0; i < m_sector.length; i++) {
+				if (m_sector[i].getNumber()==nSectorNumber) return i;
+			}
+			return NONE;
+		}
+		else {
+			// Write back the last track
+			flush();
+		}
+		
+		m_currentTrack = loc.track;
+		m_currentCylinder = loc.cylinder;
+		m_currentHead = loc.head;
+
+		m_abyTrack = new byte[m_tracklen[loc.track]];
+		
+		m_FileSystem.seek(m_trackpos[loc.track]);
+		m_FileSystem.readFully(m_abyTrack);
+		
+		// Reset to start
+		m_positionInTrack = 0;
+		
+		ArrayList<Sector> sectors = new ArrayList<Sector>();
+
+		int count=0;
+		byte[] bSector = null;
+		byte[] bHeader = new byte[4];
+		int initcrc = 0;
+		int sector = 0;
+		
+		// System.out.println("Track length = " + m_tracklen[loc.track] + ", track " + loc.track);
+		
+		while (m_positionInTrack < m_tracklen[loc.track]) {
+			// System.out.println("Position in track = " + m_positionInTrack +", tracklen = " + m_tracklen[loc.track]);
+			if (nextIDAMFound()) {
+				if (sector == loc.sector) secindex = count;
+				if (nextDAMFound()) {
+					int pos = m_positionInTrack;
+					bSector = new byte[Volume.SECTOR_LENGTH];
+					System.arraycopy(m_abyTrack, m_positionInTrack, bSector, 0, Volume.SECTOR_LENGTH);
+					m_positionInTrack += Volume.SECTOR_LENGTH;
+					
+					Sector sect = new Sector(loc.track*m_nSectorsByFormat + sector, bSector, pos, 0xffff, 0xfb); 
+					sectors.add(sect);
+					// System.out.println("loaded sector " + sect.getNumber() + " at track " + loc.track);
+					// System.out.println(sect);
+					sector++;
+					count++;
+				}
+			}	
+		}
+//		System.out.println("Found " + count + " sectors");
+		m_sector = sectors.toArray(new Sector[count]);
+		m_nSectorsByFormat = count;	
+		
+		if (count == 0) throw new ImageException("No sectors found on track");
+		
+		// Determine density
+		if (m_nDensity==0) {
+			if (m_encoding==FM) m_nDensity = 1;
+			else {
+				if (count <= 18) m_nDensity = 2;
+				else if (count <= 36) m_nDensity = 3;
+				else m_nDensity = 4;
+			}
+		}
+		
+		return secindex;
+	}	
+	
+	/** The sector dump format only contains the sector content, so we always
+		find the next IDAM until the end. */
+	private boolean nextIDAMFound() {
+		return (m_positionInTrack <= m_tracklen[m_currentTrack]-Volume.SECTOR_LENGTH);
+	}
+	
+	private boolean nextDAMFound() {
+		return (m_positionInTrack <= m_tracklen[m_currentTrack]-Volume.SECTOR_LENGTH);
+	}
+
+	/** We return the cached sector.
+	*/
+	@Override
+	Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+		if (nSectorNumber > 10000) throw new ImageException("Bad sector number: " + nSectorNumber); 
+		int secindex = readTrack(nSectorNumber);
+		if (secindex != NONE) {
+			return m_sector[secindex];
+		}
+		else throw new ImageException("Sector " + nSectorNumber + " not found");
+	}
+
+	@Override
+	void writeSector(int nSectorNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException {
+		int secindex = readTrack(nSectorNumber);
+		if (secindex == NONE) throw new ImageException("Sector " + nSectorNumber + " not found");
+		// Write the new data
+		// Don't forget to clone the bytes!
+		byte[] bNewcontent = new byte[256];
+		System.arraycopy(abySector, 0, bNewcontent, 0, 256);
+		m_sector[secindex].setData(bNewcontent);
+	}
+	
+	private void writeBits(byte[] bytes, int number) {
+		int actnumber = number/8;
+		if (m_positionInTrack + actnumber > m_abyTrack.length) 
+			actnumber = m_abyTrack.length - m_positionInTrack;
+		
+		System.arraycopy(bytes, 0, m_abyTrack, m_positionInTrack, actnumber);
+		m_positionInTrack += actnumber;
+	}
+
+	void flush() throws IOException {
+		boolean trackchanged = false;
+		if (m_currentTrack == NONE) return;
+		for (int i=0; i < m_sector.length; i++) {
+			if (m_sector[i].changed()) {
+				trackchanged = true;
+				m_positionInTrack = m_sector[i].getPosition();
+				writeBits(m_sector[i].getBytes(), Volume.SECTOR_LENGTH * 8);
+			}
+		}
+		if (trackchanged) {
+			// Write back the whole track
+			m_FileSystem = new RandomAccessFile(m_sImageName, "rw");		
+			m_FileSystem.seek(m_trackpos[m_currentTrack]);
+			m_FileSystem.write(m_abyTrack);
+			m_FileSystem = new RandomAccessFile(m_sImageName, "r");		
+		}
+	}
+
+	@Override
+	public void reopenForWrite() throws IOException {
+		// Don't do anything here
+	}
+	
+	@Override
+	public void reopenForRead() throws IOException {
+		// Don't do anything here
+	}	
+	// ===========================================================
+	// Formatting
+	// ===========================================================
+	
+	void formatTrack(int cylinder, int head, int density, int[] gap) {
+		// Sector content
+		byte[] sect = new byte[256];
+		for (int k=0; k < 256; k++) sect[k] = (byte)0xe5; 
+		writeBits(sect,256);			
+	}
+	
+	public void createEmptyImage(File newfile, int sides, int density, int cylinders, boolean format) throws FileNotFoundException, IOException {
+		
+		int tracklen = 2304 << density;
+		int pos = 0;
+
+		m_trackpos = new int[cylinders*sides];
+		m_tracklen = new int[cylinders*sides];
+		
+		for (int j=0; j < cylinders*sides; j++) {
+			m_trackpos[j] = pos;
+			m_tracklen[j] = tracklen;
+			pos += tracklen;
+		}
+		
+		m_abyTrack = new byte[tracklen];
+
+		// Allocate bytes in memory. We will write the array to the file at the end.
+		byte[] image = new byte[m_abyTrack.length * cylinders * sides];
+
+		if (format) {
+			for (int cyl = 0; cyl < cylinders; cyl++) {
+				for (int head=0; head < sides; head++) {
+					m_positionInTrack = 0;
+					formatTrack(cyl, head, density, null);
+				
+					// Copy the track into the image
+					int track = (head==0)? cyl : 2*cylinders-1-cyl; 
+					System.arraycopy(m_abyTrack, 0, image, m_trackpos[track], m_tracklen[track]);
+				}
+			}
+		}
+		
+		// Write the resulting image
+		FileOutputStream fos = new FileOutputStream(newfile);
+		fos.write(image, 0, image.length);
+		fos.close();
 	}
 }
 

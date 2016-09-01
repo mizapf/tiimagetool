@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2011 Michael Zapf
+    Copyright 2016 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
@@ -25,13 +25,35 @@ import java.io.RandomAccessFile;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.FileNotFoundException;
+import java.io.File;
 import de.mizapf.timt.util.Utilities;
 
 public abstract class ImageFormat  {
 
 	RandomAccessFile m_FileSystem;
 
+	/** Cached sectors of the current track. */
+	Sector[] m_sector;
+	int[] m_trackpos;
+	int[] m_tracklen;
+	int m_positionInTrack;
+
+	int m_encoding;
+	
 	String m_sImageName;
+	static final int NONE = -1;
+	
+	protected final static int FM = 0;
+	protected final static int MFM = 1;
+	
+	public final static int SECTORDUMP = 0;
+	public final static int TRACKDUMP = 1;
+	public final static int HFE = 2;
+	
+	public final static int SINGLE_DENSITY = 0;
+	public final static int DOUBLE_DENSITY = 1;
+	public final static int HIGH_DENSITY = 2;
+	public final static int ULTRA_DENSITY = 3;
 	
 	protected int m_nCylinders;
 	protected int m_nHeads;
@@ -49,8 +71,16 @@ public abstract class ImageFormat  {
 
 	protected static final int TRACK = 0;
 	protected static final int SECTOR = 1;
+	protected static final int HEAD = 2;
+	protected static final int CYLINDER = 3;
 
 	protected final static int NOTRACK = -1;
+
+	protected int m_currentCylinder = 0;
+	protected int m_currentTrack = 0;
+	protected int m_currentHead = 0;
+	protected int m_nSectorsByFormat;
+	protected int m_codeRate = 1;
 
 	protected ImageFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
 		m_FileSystem = filesystem;
@@ -59,6 +89,13 @@ public abstract class ImageFormat  {
 		m_nCurrentTrack = NOTRACK;
 		m_abyTrack = new byte[m_nTrackLength];
 		m_nSectorLength = nSectorLength;
+	}
+	
+	protected ImageFormat() {
+	}
+	
+	protected ImageFormat(File newfile) throws FileNotFoundException {
+		m_FileSystem = new RandomAccessFile(newfile, "rw");
 	}
 	
 	public int getCylinders() {
@@ -77,23 +114,16 @@ public abstract class ImageFormat  {
 		return m_nSectorLength;
 	}
 	
-	Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		byte[] abySector = new byte[m_nSectorLength];
-		// Get sector offset in track
-		//			System.out.println("Read sector " + nSectorNumber);
-		int[] offset = new int[2];
-		getOffset(nSectorNumber, offset);
-		System.arraycopy(m_abyTrack, offset[SECTOR], abySector, 0, m_nSectorLength);
-		return new Sector(nSectorNumber, abySector);
-	}
+	abstract Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException;
 	
-	abstract void writeSector(int nNumber, byte[] abySector, boolean bFM, boolean bNeedReopen) throws IOException, ImageException;
+	abstract void writeSector(int nNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException;
 	
 	int getDensity() {
 		return m_nDensity;
 	}
 	
 	void close() throws IOException {
+		flush();
 		m_FileSystem.close();
 	}
 	
@@ -126,6 +156,11 @@ public abstract class ImageFormat  {
 		if (MessCHDFormat.vote(fileSystem) > 50) {
 			return new MessCHDFormat(fileSystem, sFile, nSectorLength);
 		}
+
+		if (HFEFormat.vote(fileSystem) > 50) {
+			return new HFEFormat(fileSystem, sFile, nSectorLength);
+		}
+				
 		throw new ImageException("Unknown format or image corrupted");
 	}
 
@@ -141,7 +176,47 @@ public abstract class ImageFormat  {
 
 	abstract void setGeometry(boolean bSpecial) throws IOException, ImageException;
 			
-	abstract void getOffset(int nSectorNumber, int[] offset) throws IOException, ImageException;
+	/** Delivers the position on the image file by track and sector.
+		Result is returned as offset[TRACK], offset[SECTOR].
+	*/
+	Location getLocation(int nSectorNumber) throws IOException, ImageException {
+		if (m_nSectorsByFormat == NONE) {
+			// We do not know the number of sectors yet. Read track 0.
+			readTrack(0);
+		}
+		// Now we should know the sector count, so we can calculate the track and
+		// sector. The track number is counted from head 0, cylinder 0 ... max,
+		// then head 1, cylinder max ... 0.
+		
+		// The sector offset is redefined here as the sector number in the track
+		int sector = nSectorNumber % m_nSectorsByFormat;
+		
+		int track = nSectorNumber / m_nSectorsByFormat;
+		int cylinder = track;
+		int head = 0;
+		
+		if (track >= m_nCylinders) {
+			// Next head
+			cylinder = 2 * m_nCylinders - 1 - track;
+			head++;
+		}
+		if (cylinder < 0) throw new ImageException("Image defines more than two heads");
+
+		Location loc = new Location(cylinder, head, sector, track);
+		
+		// System.out.println("sector " + nSectorNumber + " in " + loc);
+		return loc;
+
+		// System.out.println("Sector " + nSectorNumber + " is in track " + loc.track + ", cyl=" + loc.cylinder + ", head=" + loc.head);
+		//System.out.println("m_header.number_of_track = " + m_header.number_of_track + ", nSectorNumber = " + nSectorNumber);
+	}	
+	
+	abstract int readTrack(int nSectorNumber) throws IOException, ImageException;
 	
 	abstract String getDumpFormatName();
+	
+	abstract void flush() throws IOException;
+	
+	abstract void createEmptyImage(File newfile, int sides, int density, int tracks, boolean format) throws ImageException, FileNotFoundException, IOException;
+
 }

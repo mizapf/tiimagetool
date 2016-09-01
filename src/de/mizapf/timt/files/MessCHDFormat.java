@@ -143,6 +143,7 @@
 
 package de.mizapf.timt.files;
 
+import java.io.File;
 import java.io.RandomAccessFile;
 import java.io.IOException;
 import java.io.EOFException;
@@ -384,7 +385,8 @@ public class MessCHDFormat extends ImageFormat {
 		m_nDensity = 0;
 	}
 
-	private int readTrack(int nSectorNumber) throws IOException {
+	@Override
+	protected int readTrack(int nSectorNumber) throws IOException {
 		return 0;
 	}	
 	
@@ -548,7 +550,18 @@ public class MessCHDFormat extends ImageFormat {
 		writeCurrentHunk(false);
 	}
 	
-	void writeSector(int nNumber, byte[] abySector, boolean bFM, boolean bNeedReopen) throws IOException, ImageException {
+	@Override
+	Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+		byte[] abySector = new byte[m_nSectorLength];
+		// Get sector offset in track
+		//			System.out.println("Read sector " + nSectorNumber);
+		int[] offset = new int[2];
+		getOffset(nSectorNumber, offset);
+		System.arraycopy(m_abyTrack, offset[SECTOR], abySector, 0, m_nSectorLength);
+		return new Sector(nSectorNumber, abySector);
+	}
+	
+	void writeSector(int nNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException {
 		try {
 			int[] offset = new int[2];
 			getOffset(nNumber, offset);
@@ -881,6 +894,14 @@ public class MessCHDFormat extends ImageFormat {
 		// We should now have 5 hunks in the byte array.
 		// 2*32 sectors + 1 hunk 
 		return baos.toByteArray();
+	}
+	
+	void flush() {
+		// Do nothing.
+	}
+	
+	// Not needed
+	void createEmptyImage(File newfile, int sides, int density, int tracks, boolean format) throws FileNotFoundException, IOException {
 	}
 }
 

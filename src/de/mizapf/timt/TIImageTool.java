@@ -72,7 +72,6 @@ import java.io.ByteArrayOutputStream;
 
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.PrintStream;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -105,8 +104,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.21";
-	public final static String DATE = "August 2016";
+	public final static String VERSION = "2.3";
+	public final static String DATE = "September 2016";
 	
 	private static final String TITLE = "TIImageTool";
 	
@@ -221,6 +220,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	// Recent list
 	List<String> m_recent;
 	
+	// LogStream
+	LogStream m_logger;
+	
 	// ===============================================
 	// Clipboard for cut-copy-paste
 	
@@ -244,6 +246,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	private static final Color HOVE = new Color(0, 230, 230);
 	
 	private static final String BACKGROUND = "background.jpg";
+	private static final String FRAMEICON = "frameicon.png";
 	
 	// ================================================
 	// Hints
@@ -512,21 +515,29 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		String name;
 		String content;
 		boolean withClear;
+		boolean withUpdate;
+		ContentFrame m_content;
 		
-		ContentShow(String sname, String scontent, boolean bWithClear) {
+		ContentShow(String sname, String scontent, boolean bWithClear, boolean bWithUpdate) {
 			name = sname;
 			content = scontent;
 			withClear = bWithClear;
+			withUpdate = bWithUpdate;
+		}
+
+		ContentShow(String sname, String scontent, boolean bWithClear) {
+			this(sname, scontent, bWithClear, false);
 		}
 		
 		public void run() {
-			ContentFrame cf = new ContentFrame(name, TIImageTool.this, withClear);
-			cf.createGui(content, contentFont);
+			m_content = new ContentFrame(name, TIImageTool.this, withClear);
+			m_content.createGui(content, contentFont);
 			Point loc = m_frmMain.getLocationOnScreen();		
-			cf.setLocation(loc.x+20, loc.y+20);
-			cf.setLocationByPlatform(true);
-			cf.setVisible(true);
-			cf.pack();
+			m_content.setLocation(loc.x+20, loc.y+20);
+			m_content.setLocationByPlatform(true);
+			m_content.setVisible(true);
+			if (withUpdate) m_logger.register(m_content);
+			m_content.pack();
 		}
 	}
 	
@@ -742,9 +753,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		
 		TIImageTool ie = new TIImageTool();
-		if (arg.length>0) {
+/*		if (arg.length>0) {
 			ie.openFromCommandLine(new java.io.File(arg[0]));
-		}		
+		} */		
 		ie.processUserInput();
 	}
 	
@@ -759,9 +770,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			try {
 				m_logFile = new java.io.File(sLogFile); 
 				FileOutputStream fos = new FileOutputStream(m_logFile, true); // append
-				PrintStream psConsole = new PrintStream(fos);
-				System.setOut(psConsole);
-				System.setErr(psConsole);
+				m_logger = new LogStream(fos);
+				System.setOut(m_logger);
+				System.setErr(m_logger);
 				if (m_logFile.length()>0) System.out.println("========================");
 			}
 			catch (FileNotFoundException fx) {
@@ -776,7 +787,17 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_frmMain.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		m_frmMain.addWindowListener(this);
 		m_frmMain.addComponentListener(this);
-			
+		
+		ImageIcon frameicon = null;
+		java.net.URL iconurl = ToolDialog.class.getResource(FRAMEICON);
+		if (iconurl != null) {
+			frameicon = new ImageIcon(iconurl);
+			m_frmMain.setIconImage(frameicon.getImage());
+		} 
+		else {
+			System.err.println("Error: Could not locate icon image in package " + iconurl);
+		}
+		
 		activities = new HashMap<String, Activity>();
 		m_clipboard = null;
 		m_cliploaded = false;
@@ -1179,12 +1200,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return m_bSerial;
 	}
 
-	private void openFromCommandLine(java.io.File file) {
+/*	private void openFromCommandLine(java.io.File file) {
 		OpenImageAction act = new OpenImageAction();
 		act.setLinks(this, m_frmMain);
 		act.openLine(file);
 	}
-	
+*/	
 	public Dimension getFrameSize() {
 		return m_frmMain.getSize();		
 	}
@@ -1641,7 +1662,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					line = br.readLine();
 					if (line != null) sbConsoleContent.append(line).append("\n");
 				} 
-				SwingUtilities.invokeLater(new ContentShow("Console output", sbConsoleContent.toString(), true));
+				SwingUtilities.invokeLater(new ContentShow("Console output", sbConsoleContent.toString(), true, true));
 			}
 			catch (IOException iox) {
 				System.setOut(System.out);
@@ -1656,9 +1677,11 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		if (m_logFile != null) {
 			try {
 				FileOutputStream fos = new FileOutputStream(m_logFile, false); // don't append
-				PrintStream psConsole = new PrintStream(fos);
-				System.setOut(psConsole);
-				System.setErr(psConsole);
+				m_logger = new LogStream(fos, m_logger.getContentFrame());
+				System.setOut(m_logger);
+				System.setErr(m_logger);		
+				if (m_logFile.length()>0) System.out.println("========================");
+				
 			}
 			catch (FileNotFoundException fx) {
 				System.setOut(System.out);
