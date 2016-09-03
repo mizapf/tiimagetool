@@ -19,37 +19,32 @@
     
 ****************************************************************************/
 
-package de.mizapf.timt.conn;
+package de.mizapf.timt.ui;
 import javax.swing.*;
 import java.awt.event.*;
 import java.awt.font.*;
 import java.awt.*;
 
-public class ProgressView extends JDialog implements ActionListener {
+public class SearchProgressView extends JDialog implements ActionListener {
 	
-	String m_sText;
-	JLabel m_jlBlockSize;
-	JLabel m_jlChecksum;	
-	JLabel m_jlBytes;
-	JLabel m_jlStatus;
+	JLabel m_jlCurrentFilename;
+	JLabel m_jlMatch;	
 	JFrame m_frmMain;
 	JButton m_btnStop;
+
 	int m_nColumnWidth;
 	boolean m_bStop;
 	
-	public ProgressView(String sTitle, JFrame frmMain) {
+	public SearchProgressView(String sTitle, JFrame frmMain) {
 		super(frmMain, sTitle, false);
 		m_frmMain = frmMain;
 	}
 	
 /*
-	| 	XModem upload/download progress										|
+	| 	Searching										|
 
-		Block size 				128
-		Integrity check 		Checksum / CRC16
-		
-		Bytes read / written	1234
-		Status					OK / Error
+		Current file:     [...]
+		Results found:    xxxx
 			
 				+---------------+	
 				|	Abort/close	|
@@ -60,35 +55,29 @@ public class ProgressView extends JDialog implements ActionListener {
 		setFont(font);
 
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		m_nColumnWidth = fm.stringWidth("Bytes transferred");
+		m_nColumnWidth = fm.stringWidth("Current fileXXXXX");
 		
 		int nHeight = getHeight(font, "B");
 		
 		m_bStop = false;
 		
-		m_jlBlockSize = new JLabel();
-		setBlockSize(0);
+		m_jlCurrentFilename = new JLabel();
+		m_jlCurrentFilename.setMinimumSize(new Dimension(m_nColumnWidth*3, 25));
+		m_jlCurrentFilename.setPreferredSize(new Dimension(m_nColumnWidth*3, 25));
+		setFilename("");
 		
-		m_jlBytes = new JLabel();
-		setTransferredBytes(0);
-		
-		m_jlChecksum = new JLabel();
-		setUseCRC16(false);
-		
-		m_jlStatus = new JLabel();
-		setStatus("-");
+		m_jlMatch = new JLabel();
+		setResultCount(0);
 		
 		m_btnStop = new JButton("");
 		setButtonText("Abort");
 		
 		add(Box.createVerticalStrut(10));		
-		createLine("Block size", nHeight, m_jlBlockSize);
-		createLine("Integrity check", nHeight, m_jlChecksum);
+		createLine("Current file", nHeight, m_jlCurrentFilename);
 		add(Box.createVerticalStrut(10));		
 
-		createLine("Bytes transferred", nHeight, m_jlBytes);
-		createLine("Status", nHeight, m_jlStatus);
-		
+		createLine("Matches found", nHeight, m_jlMatch);
+	
 		add(Box.createVerticalStrut(10));		
 	
 		Box box = new Box(BoxLayout.X_AXIS);		
@@ -121,22 +110,15 @@ public class ProgressView extends JDialog implements ActionListener {
 		return (int)Math.ceil(lm.getHeight()*1.03);
 	}
 	
-	void setBlockSize(int nValue) {
-		if (nValue==0) m_jlBlockSize.setText("-");
-		else m_jlBlockSize.setText(String.valueOf(nValue));
+	void setResultCount(int nValue) {
+		m_jlMatch.setText(String.valueOf(nValue));
 	}
 	
-	void setUseCRC16(boolean bUsed) {
-		if (bUsed) m_jlChecksum.setText("CRC16");
-		else m_jlChecksum.setText("Checksum");
-	}
-	
-	void setTransferredBytes(int nAmount) {
-		m_jlBytes.setText(String.valueOf(nAmount));
-	}
-	
-	void setStatus(String sText) {
-		m_jlStatus.setText(sText);
+
+	void setFilename(String sText) {
+		int len = sText.length();
+		if (len>30) sText = "..." + sText.substring(len-30);
+		m_jlCurrentFilename.setText(sText);
 	}
 	
 	void setButtonText(String sText) {

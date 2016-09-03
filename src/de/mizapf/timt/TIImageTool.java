@@ -62,6 +62,7 @@ import java.awt.Point;
 import java.awt.font.*;
 import java.awt.event.*;
 //
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.EOFException;
@@ -157,6 +158,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenuItem m_iCheck;
 	JMenuItem m_iToScsi;
 	JMenuItem m_iToHfdc;
+	JMenuItem m_iSearch;
 	JMenuItem m_iChangeCHDFormat;
 	JMenuItem m_iCHDToRaw;
 	JMenuItem m_iRawToCHD;
@@ -222,6 +224,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	// LogStream
 	LogStream m_logger;
+	
+	// Start image file
+	String m_startImage;
 	
 	// ===============================================
 	// Clipboard for cut-copy-paste
@@ -364,7 +369,11 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_mUtility.add(m_iInstallGenOS);
 			
 			m_mUtility.addSeparator();
+
+			m_iSearch = createMenuItem(new SearchAction());
+			m_mUtility.add(m_iSearch);
 			
+			m_mUtility.addSeparator();
 			m_iToHfdc = createMenuItem(new ConvertToHFDCAction());
 			m_mUtility.add(m_iToHfdc);
 			
@@ -418,6 +427,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			//		m_frmMain.repaint();
 			m_frames = new HashSet<JFrame>();
 
+			// Shall we open an image now?
+			if (m_startImage != null) {
+				OpenImageAction act = (OpenImageAction)getActivity("OPENIMAGE"); 
+				act.openLine(new File(m_startImage));
+			}
+			
 			// Let the hint window pop up on start
 			if (getPropertyBoolean(HINTSTART)) setUserInput("HINTS");
 		}
@@ -538,6 +553,29 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_content.setVisible(true);
 			if (withUpdate) m_logger.register(m_content);
 			m_content.pack();
+		}
+	}
+	
+	class SearchResultShow implements Runnable {
+	
+		String name;
+		SearchResult[] content;
+		SearchResultFrame m_content;
+		
+		SearchResultShow(String sname, SearchResult[] result) {
+			name = sname;
+			content = result;
+		}
+		
+		public void run() {
+			m_content = new SearchResultFrame(name, TIImageTool.this);
+			m_content.createGui(content, contentFont);
+			Point loc = m_frmMain.getLocationOnScreen();		
+			m_content.setLocation(loc.x+20, loc.y+20);
+			m_content.setLocationByPlatform(true);
+			m_content.setVisible(true);
+			m_content.pack();
+			m_content.toFront();
 		}
 	}
 	
@@ -753,9 +791,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		
 		TIImageTool ie = new TIImageTool();
-/*		if (arg.length>0) {
-			ie.openFromCommandLine(new java.io.File(arg[0]));
-		} */		
+		if (arg.length>0) ie.setStartImage(arg[0]);
+		else ie.setStartImage(null);
+
 		ie.processUserInput();
 	}
 	
@@ -899,6 +937,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 
 	public JFrame getMainFrame() {
 		return m_frmMain;
+	}
+	
+	private void setStartImage(String file) {
+		m_startImage = file;
 	}
 	
 	void saveHintSettings() {
@@ -1185,6 +1227,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return m_bAction;
 	}
 		
+	public Activity getActivity(String name) {
+		return activities.get(name);
+	}
+	
 	synchronized void setUserInput(Activity act) {
 		m_UserInput = act;
 		m_bAction = true;
@@ -1199,13 +1245,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public boolean offersSerialConnection() {
 		return m_bSerial;
 	}
-
-/*	private void openFromCommandLine(java.io.File file) {
-		OpenImageAction act = new OpenImageAction();
-		act.setLinks(this, m_frmMain);
-		act.openLine(file);
-	}
-*/	
+	
 	public Dimension getFrameSize() {
 		return m_frmMain.getSize();		
 	}
@@ -1600,6 +1640,14 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return null;
 	}
 	
+	public void closeVolume(Volume vol, DirectoryView closingView) throws IOException {
+		boolean stillInUse = false;
+		for (DirectoryView dv : m_Views) {
+			if (dv != closingView && dv.getVolume()==vol) stillInUse = true;
+		}
+		if (!stillInUse) vol.close();
+	}
+	
 	/** Open a new view. We cannot rely on the tab count to find out whether 
 		there is already a view, so we use a separate flag. */
 	public void addDirectoryView(Directory dir) throws FileExistsException {
@@ -1650,6 +1698,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	public void showTextContent(String name, String content) {
 		SwingUtilities.invokeLater(new ContentShow(name, content, false));		
+	}
+	
+	public void showSearchResult(String name, SearchResult[] content) {
+		SwingUtilities.invokeLater(new SearchResultShow(name, content));		
 	}
 	
 	public void showConsoleContent() {

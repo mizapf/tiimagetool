@@ -57,6 +57,7 @@ public abstract class Element implements Comparable<Element> {
 	
 	public final void setName(String sName) {
 		m_sName = sName;
+		if (m_sName != null && m_sName.length()>10) m_sName = m_sName.substring(0,10);
 	}
 
 	public boolean isProtected() {
@@ -79,9 +80,15 @@ public abstract class Element implements Comparable<Element> {
 	
 	public String getPathname() {
 		StringBuilder sb = new StringBuilder();
-		if (m_dirParent != null && !m_dirParent.isRootDirectory()) sb.append(m_dirParent.getName()).append(".");
+		if (m_dirParent != null && !m_dirParent.isRootDirectory()) {
+			sb.append(m_dirParent.getPathname());
+			if (m_dirParent instanceof Archive) sb.append("(arc)");
+			sb.append(".");
+		}
 		sb.append(m_sName);
-		return sb.toString(); 
+		String sRes = sb.toString();
+		if (sRes.contains("..")) sRes = "<invalid name>";
+		return sRes; 
 	}
 }
 

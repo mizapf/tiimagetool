@@ -67,7 +67,7 @@ public class Utilities {
 		for (int i=0; i < 10; i++) {
 			if (isPrintable((char)aby[i+nOffset])) abyCopy[i] = aby[i+nOffset];
 			else {
-				System.err.println("Unprintable character " + toHex(aby[i+nOffset],2) + " replaced by '.'");
+				// System.err.println("Unprintable character " + toHex(aby[i+nOffset],2) + " replaced by '.'");
 				abyCopy[i] = '.';
 			}
 		}

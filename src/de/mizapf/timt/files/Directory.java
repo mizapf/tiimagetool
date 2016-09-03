@@ -72,11 +72,23 @@ public class Directory extends Element {
 		setContainingDirectory(dirParent);
 		// Create files
 		Sector sectFiles = vol.readSector(m_nFileIndexSector);
+		int bad = 0;
 		for (int nFile : getFilePointers(sectFiles, vol.getAUSize())) {
-			Sector sectFile = vol.readSector(nFile);
-			TFile file = new TFile(vol, sectFile, this);
-			// if (file.getAllocatedSectors()==0) System.err.println("Warning: File " + file.getPathname() + " has no contents");
-			files.add(file);
+			try {
+				Sector sectFile = vol.readSector(nFile);
+				TFile file = new TFile(vol, sectFile, this);
+				// if (file.getAllocatedSectors()==0) System.err.println("Warning: File " + file.getPathname() + " has no contents");
+				files.add(file);
+			}
+			catch (ImageException ix) {
+				bad++;
+				System.err.println("Failed to add file at sector " + nFile);
+				if (bad > 10) {
+					String name = m_sName;
+					if (dirParent == null) name = "root";
+					throw new ImageException("Failed to read directory " + name + ": too many errors");
+				}
+			}
 		}
 		// Create directories
 		for (int nDir : getDirPointers(sect, vol.getAUSize())) {
@@ -123,12 +135,22 @@ public class Directory extends Element {
 			}
 		}
 		// Create files
+		int bad = 0;
 		Sector sectFiles = vol.readSector(m_nFileIndexSector);
 		for (int nFile : getFilePointers(sectFiles, 1)) {
 			// FDIR in floppies always uses sector numbers
 			Sector sectFile = vol.readSector(nFile);
-			TFile file = new TFile(vol, sectFile, this);
-			files.add(file);
+			try {
+				TFile file = new TFile(vol, sectFile, this);
+				files.add(file);
+			}
+			catch (ImageException ix) {
+				bad++;
+				System.err.println("Failed to add file at sector " + nFile);
+				if (bad > 10) {
+					throw new ImageException("Failed to read floppy image: File system damaged");
+				}
+			}	
 		}
 		m_Subdirs = new Directory[subdirs.size()];
 		subdirs.toArray(m_Subdirs);

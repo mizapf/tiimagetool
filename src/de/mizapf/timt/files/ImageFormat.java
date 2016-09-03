@@ -161,7 +161,7 @@ public abstract class ImageFormat  {
 			return new HFEFormat(fileSystem, sFile, nSectorLength);
 		}
 				
-		throw new ImageException("Unknown format or image corrupted");
+		throw new ImageException(sFile + ": Unknown format or image corrupted");
 	}
 
 	public void reopenForWrite() throws IOException {

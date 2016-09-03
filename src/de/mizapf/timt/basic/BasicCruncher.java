@@ -140,6 +140,7 @@ public class BasicCruncher {
 		
 		for (int i=0; i < aline.length; i++) {
 			BasicLine cmdline = crunch(aline[i], version);
+			if (cmdline.linenumber==0) continue; // filter out comment lines
 			int len = cmdline.content.length;
 			address = address - len - 2;
 			cmdline.setAddress(address);
@@ -331,7 +332,10 @@ d29e d645 ffe7
 		if (currentChar()>='0' && currentChar()<='9') {
 			m_linenumber = getLineNumber();
 		}
-		else throw new CrunchException(NOLINENO, "", 0, 0);
+		else {
+			m_linenumber = 0;
+			// throw new CrunchException(NOLINENO, "", 0, 0);
+		}
 
 		try {
 			// TODO: Check for end of input
@@ -450,7 +454,10 @@ d29e d645 ffe7
 		catch (IOException iox) {
 			iox.printStackTrace();
 		}
-		return new BasicLine(m_linenumber, baos.toByteArray());
+		BasicLine bl = new BasicLine(m_linenumber, baos.toByteArray());
+		if (m_linenumber==0 && bl.content[0]!=(byte)0x83 && bl.content[0]!=(byte)0x9a)
+			throw new CrunchException(NOLINENO, "", 0, 0);
+		return bl;
 	}
 	
 	boolean matches(String s, int i) {
@@ -673,12 +680,15 @@ d29e d645 ffe7
 		return sb.toString();
 	}
 	
+	/** Unquoted strings outside of DATA lines are uppercase */
 	private String getUnquotedString() {
 		StringBuilder sb = new StringBuilder();
 		boolean done = false;
 		while (!done) {
 			if (isValidForSymbol(currentChar())) {
-				sb.append(currentChar());
+				char ch = currentChar();
+				if (ch >= 97 && ch <=122) ch -= 32;
+				sb.append(ch);
 				done = advance(1);
 			}
 			else done = true;

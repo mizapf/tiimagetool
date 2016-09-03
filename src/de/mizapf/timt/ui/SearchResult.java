@@ -14,19 +14,27 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2011 Michael Zapf
+    Copyright 2015 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
-package de.mizapf.timt.files;
+package de.mizapf.timt.ui;
 
-public class ImageException extends Exception {
+public class SearchResult {
+	String image;
+	String path;
+	String match;
 	
-	public ImageException() {
-		super();
+	SearchResult(String imagename, String pathname, String found) {
+		image = imagename;
+		path = pathname;
+		match = found;
 	}
 	
-	public ImageException(String sReason) {
-		super(sReason);
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("image = ").append(image).append(", pathname = ").append(path);
+		return sb.toString();
 	}
 }
+

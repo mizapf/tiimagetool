@@ -51,7 +51,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	
 	JComponent m_head;
 	
-	private static final Color NORM = new Color(250,255,255);
+	static final Color NORM = new Color(250,255,255);
 	private static final Color COLTEXT = new Color(51,51,51);
 	private static final Color COLTEXTCONT = new Color(20,20,190);
 	private static final Color COLTEXTCUT = new Color(150,150,150);

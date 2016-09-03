@@ -10,7 +10,7 @@ deselect single ones at any time.
 preformatted or blank, by a few clicks (<em>File->New</em>).
 4 = the last 10 image files are available by a single click in the Open Recent
 menu item.
-5 = you can create ready-to-use hard disk images for use in MESS (<em>File->New</em>).
+5 = you can create ready-to-use hard disk images (CHD) for use in MAME under <em>File->New</em>.
 6 = we have full copy/paste support for file transfer between images, 
 directories, and even for export and import: Press Ctrl-C in a directory view 
 and you will notice that you can paste the file into your host file system. 
@@ -36,7 +36,8 @@ FRACTALS. Double-clicking on such a file opens the picture in a window.
 images, you can only create three directories inside the root directory and none
 in deeper levels.
 15 = there is a file system checker in the menu <em>Utility->Check filesystem</em> which
-checks for under-/over-/cross-allocation issues and for L3 record count errors.
+checks for under-/over-/cross-allocation issues, for L3 record count errors,
+and for CRC errors in track dump images.
 16 = there is a context menu which is displayed when you click the right mouse button within
 a directory view.
 17 = directory views can be detached from the main window so that you can easily
@@ -65,16 +66,18 @@ so that you do not have to enter them again.
 25 = you can create a Geneve floppy or hard boot disk with the menu function 
 <em>Utility->Install Geneve OS</em>. All necessary files, including GeneveOS, are 
 contained in this TIImageTool distribution. If you have the boot EPROM dump, 
-you can immediately fire up your MESS Geneve emulation.
-26 = you can create CHD files (MESS hard disk containers) from your plain
+you can immediately fire up your MAME Geneve emulation.
+26 = you can create CHD files (MAME hard disk containers) from your plain
 SCSI drive dump, and you can get a dump to be written back again.
-27 = TIImageTool provides the Serial Bridge feature, which allows MESS to
+27 = TIImageTool provides the Serial Bridge feature, which allows MAME to
 communicate with a real TI via a serial connection.
 28 = there is a command line mode in TIImageTool which can be used to get a 
 directory listing or to output a text file located in an
 image file. Use <em>java -jar tiimagetool.jar CommandShell -h</em> to get more information.
 29 = you can import BASIC programs from a text file or the built-in text editor;
-that way you can paste BASIC listings into an image file.
+just copy and paste a BASIC listing from a website into your image file.
 30 = output from the program, including error messages, can now be logged in
 a file; you can set the file name in the preferences.
-31 = you can directly read, write, and create image files for the Lotharek Floppy Disk Emulator
+31 = you can directly read, write, and create image files for the Lotharek Floppy Disk Emulator.
+32 = there is a Search feature in the Utility menu by which you can look
+for file names and even for file contents.

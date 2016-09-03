@@ -69,7 +69,7 @@ public class TFile extends Element {
 	protected final static int UPDLEN = 18;
 		
 	/** Also accessed by ImageManager. */
-	public TFile(byte[] abyTif) {
+	public TFile(byte[] abyTif) throws ImageException {
 		TIFiles tif = new TIFiles(abyTif);
 		m_sName = tif.getTFIName();
 		m_nRecordLength = tif.getRecordLength();
@@ -113,12 +113,12 @@ public class TFile extends Element {
 		m_bProtected = false;
 	}
 
-	private void checkL3() {
+	private void checkL3() throws ImageException {
 		m_bL3Flaw = false;
 		if (hasFixedRecordLength()) {
 			if (getRecordCount()==0) {
 				if (m_nAllocatedSectors > 0) {
-					System.err.print("File " + getName() + " is a fixed data file, but has 0 record count. ");
+					System.err.print(getVolume().getImageName() + ": File " + getName() + " is a fixed data file, but has 0 record count. ");
 					m_nNumberOfRecords = m_nRecordsPerSector * m_nAllocatedSectors;
 					System.err.println("Assuming record count = " + m_nNumberOfRecords + " from sectors = " +  m_nAllocatedSectors + " and records/sector = " + m_nRecordsPerSector + ".");
 				}
@@ -132,19 +132,20 @@ public class TFile extends Element {
 					// Check whether this is a little-endian error 
 					if (nTry < nMinRec || nTry > nMaxRec) {
 						// No, treat it as corrupt
-						System.err.println("File " + getPathname() + " has unplausible record count: " + getRecordCount() + " (0x" + Utilities.toHex(getRecordCount(), 4) + ")");
+						System.err.println(getVolume().getImageName() + ": File " + getPathname() + " has unplausible record count: " + getRecordCount() + " (0x" + Utilities.toHex(getRecordCount(), 4) + ")");
 						System.err.println("  Minimum record count = " + nMinRec + ", maximum record count = " + nMaxRec);
 						m_nNumberOfRecords = m_nRecordsPerSector * m_nAllocatedSectors;
 						System.err.println("  Assuming record count = " + m_nNumberOfRecords + " (0x" + Utilities.toHex(m_nNumberOfRecords, 4) + ") from sectors = " +  m_nAllocatedSectors + " and records/sector = " + m_nRecordsPerSector + ".");
 					}
 					else {
 						// Yes, swap it
-						System.err.println("File " + getName() + " has swapped L3 record count");
+						System.err.println(getVolume().getImageName() + ": File " + getName() + " has swapped L3 record count");
 						m_nNumberOfRecords = nTry;
 						m_bL3Flaw = true;
 					}
 				}
 			}
+			if (m_nNumberOfRecords > 1000000) throw new ImageException("Disk file system damaged; file descriptor record corrupt");
 		}
 	}
 	
@@ -1145,10 +1146,15 @@ public class TFile extends Element {
 		boolean bCompressed = false;
 		
 		byte[] content = getRawContent();
-		if (!isDisplay()) {
-			LZW lzw = new LZW(content);
-			content = lzw.uncompress();
-			bCompressed = true;
+		try {
+			if (!isDisplay()) {
+				LZW lzw = new LZW(content);
+				content = lzw.uncompress();
+				bCompressed = true;
+			}
+		}
+		catch (ArrayIndexOutOfBoundsException ax) {
+			throw new ImageException("Broken archive");
 		}
 		return new Archive(getVolume(), m_sName, getContainingDirectory(), content, this, bCompressed);
 	}

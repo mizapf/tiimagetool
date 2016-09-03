@@ -125,6 +125,7 @@ details.</p>
 <li><a href="#redir">View Console output</a></li>
 <li><a href="#check">Check filesystem</a></li>
 <li><a href="#genos">Install Geneve OS</a></li>
+<li><a href="#search">Search</a></li>
 <li><a href="#hfdc">Convert to HFDC</a></li>
 <li><a href="#scsi">Convert to SCSI</a></li>
 <li><a href="#chdformat">Change CHD format</a></li>
@@ -169,14 +170,12 @@ details.</p>
 
 <h2>New in this release</h2>
 <ul>
-<li>Redirect standard output / error channel to a file</li>
-<li>Open recent</li>
-<li>Fix copying of file sets with an empty file included</li>
-<li>Fix LONG format issue with small BASIC programs (programs that are too short cannot be saved as LONG)</li>
-<li>The file system check now verifies the L3 value and offers to correct it</li>
-<li>The file system check now logs its output in a report that can be viewed after completion</li>
-<li>The disassembler for PROGRAM files now offers an option to create a 
-file that can be assembled</li>
+<li>HFE (Lotharek) image handling</li>
+<li>Search for files and content</li>
+<li>Extended Basic programs can now be imported as lowercase and with interleaved non-line comments</li>
+<li>File system check also checks for CRC errors in track dump files and
+repairs them</li>
+<li>Live console output window</li>
 </ul>
 
 <a name="why"></a>
@@ -1693,7 +1692,7 @@ file names are lowercase. This option automatically converts the names to lowerc
 <li><em>Character replacement</em>: File names on the TI may contain characters 
 which are not allowed in PC file systems, like "/" or "\". You can determine
 which name is to be used for the file on the PC. The actual file name is stored inside the TIFILES
-file so that on import, the original file name will be restored.</p>
+file so that on import, the original file name will be restored.</li>
 </ul>
 </div>
 <p>For each directory on the TI image a directories is created in the target folder.
@@ -1913,6 +1912,7 @@ something is wrong. You should then check by yourself what might be the problem
 with this file.</p>
 
 <h3>Install Geneve OS</h3>
+<a name="genos"></a>
 <p>One of the problems you first encounter when you start up a Geneve (whether
 real or emulated) is that you will get an error message if no disk is inserted in 
 drive one, containing the operating system.</p>
@@ -1930,6 +1930,52 @@ located at root level; the other two files are put into the root directory.</p>
 directly boot the Geneve with this disk mounted as floppy disk 1, or with a hard disk as
 hard disk 1.</p>
 
+<h3>Search for files and content</h3>
+<a name="search"></a>
+<p>Have you ever desperately looked for a file? No idea what disk it was 
+stored on? - The search function in TIImageTool provides you with a flexible
+tool to find your files.</p>
+<p>Besides looking for file names, you can even search for content. For this
+search process, a copy of the file contents is searched, where all non-printable
+characters have been replaced by space characters. The original file is not affected. 
+Searching for content takes more time, but it may be the only way if you
+don't even remember the file name.</p>
+<p>During the search process, a progress window pops up that allows you to
+interrupt the process. It also informs you what image file is currently
+checked, and how many hits have been found at this time.</p>
+<p>Finally, a result window is displayed. When you click on a result, the
+image containing the match will be opened in the main window. The file
+may be contained in a subdirectory; you will have to navigate there manually.</p>
+
+<h4>Search parameters</h4>
+<div class="program">
+<ul>
+<li><em>Search text</em>: File name (or just a part) that you are looking for.
+For plain text searches, the matcher lists all files that contain this text.
+If the text is "EDI", file names like "EDIT1" or "SEDICI" will match.</li>
+<li><em>Regular expression</em>: When set, the search text is interpreted as
+a regular expression. If the search text is "ED.T", the dot represents any
+character, so files like "EDIT" or "EDUT" match, but not "EDIT1". See the 
+Java documentation (java.util.regex) for more examples.</li>
+<li><em>Search file names or content</em>: Look for a match in file names only
+or within file contents. In both cases you can opt for plain search or regular
+expression search.</li>
+<li><em>Include archive files</em>: Files that were packed with ARCHIVER can
+be searched, too - even nested archives. In this case, archive files are treated 
+as directories.</li>
+<li><em>Path to search</em>: Select folders or image files, or both, in any number.
+If you do not specify a search path, the search process is canceled.</li>
+<li><em>Limit extensions to</em>: When left blank, no restrictions apply, and all
+files are checked that are found in the path. Otherwise, only those files are
+checked that have a name that ends by one of the text strings, separated by commas.
+To search disk images only, use ".dsk,.dtk,.hfe".</li>
+<li><em>Include subdirectories</em>: When set, the search path will be recursively searched.
+Note that this may take quite long, depending on the size of your image collection.
+This setting only refers to your PC file system; directories inside the image
+files are always searched.</li>
+<li><em>Maximum hits</em>: Limits the number of search results.</li>
+</ul>
+</div>
 
 <p><a href="#top">Back to top</a></p>
 <hr>

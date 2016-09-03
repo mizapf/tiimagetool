@@ -71,7 +71,7 @@ class NewImageDialog extends ToolDialog {
 		String[] asDoFormat = { "formatted", "blank" };
 		JRadioButton[] arb2 = putRadioButtons(this, "Disk will be", 100, asDoFormat, anFormat, 0);
 		m_jrFormatted = arb2[0];
-		m_jrBlank = arb2[0];
+		m_jrBlank = arb2[1];
 
 		String[] asSides = { "single", "double" };
 		JRadioButton[] arb3 = putRadioButtons(this, "Sides", 100, asSides, anFormat, 1);
