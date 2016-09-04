@@ -24,12 +24,14 @@ public class CrunchException extends Exception {
 	String reason;
 	public int line;
 	public int pos;
+	public int textline;
 	
-	CrunchException(String detail, String what, int lineNumber, int position) {
+	CrunchException(String detail, String what, int lineNumber, int position, int tline) {
 		super(detail);
 		reason = what;
 		line = lineNumber;
 		pos = position;
+		textline = tline;
 	}
 }	
 

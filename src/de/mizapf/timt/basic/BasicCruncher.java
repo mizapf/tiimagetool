@@ -38,6 +38,8 @@ public class BasicCruncher {
 	
 	int m_count = 0;
 	
+	int m_textLine = 0;
+	
 	public static final int NORMAL = 1;
 	public static final int MERGE = 2;
 	public static final int LONG = 3;
@@ -139,7 +141,10 @@ public class BasicCruncher {
 		
 		byte[] abyTif = null;
 		
+		m_textLine = 0;
+		
 		for (int i=0; i < aline.length; i++) {
+			m_textLine++;
 			BasicLine cmdline = crunch(aline[i], version);
 			if (cmdline.linenumber==0) continue; // filter out comment lines
 			int len = cmdline.content.length;
@@ -201,7 +206,7 @@ d29e d645 ffe7
 			}
 			
 			byte[] prgbytes = baos.toByteArray();
-			if (prgbytes.length > 11584) throw new CrunchException(TOOLONG, "", 0, 0);
+			if (prgbytes.length > 11584) throw new CrunchException(TOOLONG, "", 0, 0, 0);
 			
 			abyTif = TIFiles.createTfi(prgbytes, filename, TFile.PROGRAM, 0, 0);
 		}
@@ -273,7 +278,7 @@ d29e d645 ffe7
 					// save with more than 256 bytes, which need two sectors,
 					// plus another sector for the LONG header, plus 0x80 bytes
 					// for the TIFILES header.
-					if (abyTif.length < 0x380) throw new CrunchException(TOOSHORT, "", 0, 0);
+					if (abyTif.length < 0x380) throw new CrunchException(TOOSHORT, "", 0, 0, 0);
 				}
 			}
 		}
@@ -349,7 +354,7 @@ d29e d645 ffe7
 				if (currentChar() >= '0') {
 					if (currentChar() <= '9') {
 						symbol = getFloatNumber();
-						if (alreadyNumVar) throw new CrunchException(MULTIPLE_VAR_NUM, symbol, m_linenumber, m_inloc);
+						if (alreadyNumVar) throw new CrunchException(MULTIPLE_VAR_NUM, symbol, m_linenumber, m_inloc, m_textLine);
 						alreadyNumVar = true;
 						baos.write(0xc8); // UNQUOTED
 						baos.write((byte)symbol.length());
@@ -366,7 +371,7 @@ d29e d645 ffe7
 								if (matches(symbol, i)) {
 									if ((BasicLine.tokenType[i] & BasicLine.DIRECT) != 0) {
 										System.err.println(ILLEGAL_IN_PRG);
-										throw new CrunchException(ILLEGAL_IN_PRG, symbol, m_linenumber, m_inloc);
+										throw new CrunchException(ILLEGAL_IN_PRG, symbol, m_linenumber, m_inloc, m_textLine);
 									}
 									token = i;
 								}
@@ -398,7 +403,7 @@ d29e d645 ffe7
 							}
 							else {
 								// not reserved; is a variable
-								if (alreadyNumVar) throw new CrunchException(MULTIPLE_VAR_NUM, symbol, m_linenumber, m_inloc);
+								if (alreadyNumVar) throw new CrunchException(MULTIPLE_VAR_NUM, symbol, m_linenumber, m_inloc, m_textLine);
 								alreadyNumVar = true;
 								// baos.write(0xc8); // UNQUOTED
 								// baos.write((byte)symbol.length());
@@ -410,7 +415,7 @@ d29e d645 ffe7
 							// Test for single char token and '::'
 							token = getSingleCharToken();
 							if (token == 0) {
-								throw new CrunchException(UNRECOGNIZED, symbol, m_linenumber, m_inloc);
+								throw new CrunchException(UNRECOGNIZED, symbol, m_linenumber, m_inloc, m_textLine);
 							}
 							else baos.write(token);
 						}
@@ -424,7 +429,7 @@ d29e d645 ffe7
 					else {
 						if (currentChar() == '.') {
 							symbol = getFloatNumber();
-							if (alreadyNumVar) throw new CrunchException(MULTIPLE_VAR_NUM, symbol, m_linenumber, m_inloc);
+							if (alreadyNumVar) throw new CrunchException(MULTIPLE_VAR_NUM, symbol, m_linenumber, m_inloc, m_textLine);
 							alreadyNumVar = true;
 							baos.write(0xc8); // UNQUOTED
 							baos.write((byte)symbol.length());
@@ -444,7 +449,7 @@ d29e d645 ffe7
 								// Test for single char token 
 								token = getSingleCharToken();
 								if (token==0) {
-									throw new CrunchException(UNRECOGNIZED, symbol, m_linenumber, m_inloc);
+									throw new CrunchException(UNRECOGNIZED, symbol, m_linenumber, m_inloc, m_textLine);
 								}
 								else baos.write(token);
 							}
@@ -459,7 +464,7 @@ d29e d645 ffe7
 		}
 		BasicLine bl = new BasicLine(m_linenumber, baos.toByteArray());
 		if (m_linenumber==0 && bl.content.length != 0 && bl.content[0]!=(byte)0x83 && bl.content[0]!=(byte)0x9a)
-			throw new CrunchException(NOLINENO, "", 0, 0);
+			throw new CrunchException(NOLINENO, "", 0, 0, m_textLine);
 		return bl;
 	}
 	
@@ -539,7 +544,7 @@ d29e d645 ffe7
 	private void callSubLine(int token, ByteArrayOutputStream baos) throws CrunchException, IOException {
 		baos.write(token);
 		skipSpace();
-		if (endOfLine()) throw new CrunchException(NOSUB, "", token, m_inloc);
+		if (endOfLine()) throw new CrunchException(NOSUB, "", token, m_inloc, m_textLine);
 		String symbol = getUnquotedString();
 		skipSpace();
 		baos.write(0xc8); // UNQUOTED
@@ -558,7 +563,7 @@ d29e d645 ffe7
 			int number = getLineNumber();
 			if (number == 0) {
 				m_inloc = loc;
-				throw new CrunchException(NOLINENO, "", token, m_inloc);
+				throw new CrunchException(NOLINENO, "", token, m_inloc, m_textLine);
 			}
 			loc = m_inloc;
 			baos.write(0xc9);  // LINENO
@@ -608,7 +613,7 @@ d29e d645 ffe7
 			}
 			else done = true;
 		}
-		if (number > 32767) throw new CrunchException(BADLINENO, String.valueOf(number), number, m_inloc);
+		if (number > 32767) throw new CrunchException(BADLINENO, String.valueOf(number), number, m_inloc, m_textLine);
 		return number;
 	}
 	
@@ -679,7 +684,7 @@ d29e d645 ffe7
 			}
 		}
 				
-		if (!secondQuote) throw new CrunchException(UNMATCHED_QUOTES, sb.toString(), m_linenumber, m_inloc);
+		if (!secondQuote) throw new CrunchException(UNMATCHED_QUOTES, sb.toString(), m_linenumber, m_inloc, m_textLine);
 		return sb.toString();
 	}
 	

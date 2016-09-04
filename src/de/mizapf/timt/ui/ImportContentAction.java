@@ -106,7 +106,17 @@ public class ImportContentAction extends Activity {
 						}
 						else {
 							cx.printStackTrace();
-							JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error in line " + cx.line + ", column " + cx.pos + "; use another BASIC version or save as text.", "BASIC error", JOptionPane.ERROR_MESSAGE);
+							if (cx.textline != 0) {
+								if (cx.line != 0) {
+									JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error in text line " + cx.textline + ", BASIC line " + cx.line + ", column " + cx.pos + "; use another BASIC version or save as text.", "BASIC error", JOptionPane.ERROR_MESSAGE);
+								}
+								else {
+									JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Parse error in text line " + cx.textline + "; use another BASIC version or save as text.", "BASIC error", JOptionPane.ERROR_MESSAGE);
+								}
+							}
+							else {
+								JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error in line " + cx.line + ", column " + cx.pos + "; use another BASIC version or save as text.", "BASIC error", JOptionPane.ERROR_MESSAGE);
+							}
 						}
 					}
 					
