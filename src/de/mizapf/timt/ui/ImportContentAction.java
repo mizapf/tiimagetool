@@ -105,6 +105,7 @@ public class ImportContentAction extends Activity {
 							JOptionPane.showMessageDialog(dvCurrent.getFrame(), cx.getMessage(), "BASIC error", JOptionPane.ERROR_MESSAGE);
 						}
 						else {
+							cx.printStackTrace();
 							JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error in line " + cx.line + ", column " + cx.pos + "; use another BASIC version or save as text.", "BASIC error", JOptionPane.ERROR_MESSAGE);
 						}
 					}

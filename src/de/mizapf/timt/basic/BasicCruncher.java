@@ -106,6 +106,7 @@ public class BasicCruncher {
 			}
 		}
 		catch (CrunchException cx) {
+			System.err.println(cx.getMessage() + ", line " + cx.line + ", column " + cx.pos);
 			// Try again for TI BASIC
 			try {
 				for (int i=0; i < 10 && i < aline.length; i++) {
@@ -343,6 +344,8 @@ d29e d645 ffe7
 				previous_token = token;
 				skipSpace();
 				String symbol = null;
+				// System.out.println("Single char = " + Utilities.toHex((int)currentChar(),2));
+				if (currentChar() == (char)EOL) break;
 				if (currentChar() >= '0') {
 					if (currentChar() <= '9') {
 						symbol = getFloatNumber();
@@ -455,7 +458,7 @@ d29e d645 ffe7
 			iox.printStackTrace();
 		}
 		BasicLine bl = new BasicLine(m_linenumber, baos.toByteArray());
-		if (m_linenumber==0 && bl.content[0]!=(byte)0x83 && bl.content[0]!=(byte)0x9a)
+		if (m_linenumber==0 && bl.content.length != 0 && bl.content[0]!=(byte)0x83 && bl.content[0]!=(byte)0x9a)
 			throw new CrunchException(NOLINENO, "", 0, 0);
 		return bl;
 	}
