@@ -22,16 +22,11 @@
 /*
 	TODOs for 2.x
 	-------------
-	[x] Drag and Drop
-	[x] Hints
-    [x] Import text as BASIC
+    [ ] Open EMULATE files 
     [ ] Open CF7
-    [ ] Search function
     [ ] Sector editor
-    [x] Fix import of CRLF in imported texts
-    [x] Fix plain dump for dis/fix 80 (ends too early)
     
-    New for 2.1
+    New for 2.1+
     [x] Redirect standard output
     [x] Open recent
     [x] Fix copying of file sets with an empty file included 
@@ -39,6 +34,12 @@
     [x] Fix L3 issue; add to CheckFS ("The file xx has a swapped L3 count (see manual). Shall this be fixed?") 
     [x] Enhanced filesystem check, opens text window for results
     [x] Create sparsely labeled disassembly for PRG files
+	[x] Drag and Drop
+	[x] Hints
+    [x] Import text as BASIC
+    [x] Search function
+    [x] Fix import of CRLF in imported texts
+    [x] Fix plain dump for dis/fix 80 (ends too early)
 */
 
 package de.mizapf.timt;
@@ -105,7 +106,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.3";
+	public final static String VERSION = "2.4b";
 	public final static String DATE = "September 2016";
 	
 	private static final String TITLE = "TIImageTool";

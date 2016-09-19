@@ -88,6 +88,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	JMenuItem m_iSaveDump;
 	JMenuItem m_iSendRem;
 	JMenuItem m_iChangeDirectory;
+	JMenuItem m_iToggleEmulate;
 	
 	Element m_clickedElement;
 
@@ -132,6 +133,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_iSaveDump = app.createMenuItem(new SavePlainAction());
 		m_iSendRem = app.createMenuItem(new ExportRemoteAction());
 		m_iChangeDirectory = m_app.createMenuItem(new ChangeDirectoryAction());
+		m_iToggleEmulate = m_app.createMenuItem(new ToggleEmulateAction());
 					
 		m_mEdit = app.getEditMenu();
 		
@@ -439,12 +441,21 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		if (selected.get(0).getName().equals("..")) selected.remove(0);
 		
 		// If we right-click on a directory or archive file, add the "change directory" action
-		if ((selected.size()==1) 
-			&& ((selected.get(0) instanceof Directory) 
+		boolean isEmulate = false;
+		if (selected.size()==1) {
+			if ((selected.get(0) instanceof Directory) 
 				|| ((selected.get(0) instanceof TFile) 
-					&& ((TFile)selected.get(0)).hasArchiveFormat()))) {
-			m_ctxmenu.add(m_iChangeDirectory);
-			m_ctxmenu.addSeparator();
+					&& ((TFile)selected.get(0)).hasArchiveFormat())) {
+				m_ctxmenu.add(m_iChangeDirectory);
+				m_ctxmenu.addSeparator();
+			}
+			if (selected.get(0) instanceof TFile) {
+				if (((TFile)selected.get(0)).isEmulateFile()) {
+					m_ctxmenu.add(m_iToggleEmulate);
+					m_ctxmenu.addSeparator();
+					isEmulate = true;
+				}
+			}
 		}		
 		
 		if (selected.size()==1) m_iDelete.setText("Delete");
@@ -463,19 +474,23 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_ctxmenu.add(m_iSelect);
 		m_ctxmenu.addSeparator();		
 		m_ctxmenu.add(m_iViewFIB);
-		m_ctxmenu.add(m_iViewText);
-		m_ctxmenu.add(m_iViewImage);
+		if (!isEmulate) m_ctxmenu.add(m_iViewText);
+		if (!isEmulate) m_ctxmenu.add(m_iViewImage);
 		m_ctxmenu.add(m_iViewDump); 
-		m_ctxmenu.add(m_iViewUtil); 
-		m_ctxmenu.add(m_iDisass); 
-		m_ctxmenu.add(m_iGPLDisass); 
-		m_ctxmenu.add(m_iList); 
+		if (!isEmulate) {
+			m_ctxmenu.add(m_iViewUtil); 
+			m_ctxmenu.add(m_iDisass); 
+			m_ctxmenu.add(m_iGPLDisass); 
+			m_ctxmenu.add(m_iList); 
+		}
 		m_ctxmenu.addSeparator();
 		m_ctxmenu.add(m_iSaveTfi);
 		m_ctxmenu.add(m_iSaveDump);
 		m_ctxmenu.add(m_iSendRem);
-		m_ctxmenu.addSeparator();
-		m_ctxmenu.add(m_iArchive);
+		if (!isEmulate) {
+			m_ctxmenu.addSeparator();
+			m_ctxmenu.add(m_iArchive);
+		}
 
 		if (selected.size() > 0) {
 			bArchive = true;

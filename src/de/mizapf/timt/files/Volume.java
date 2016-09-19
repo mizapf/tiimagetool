@@ -67,7 +67,7 @@ public class Volume {
 	int 		m_nSectorsPerAU = 0;
 	boolean 	m_bBufferedStep = false;
 	int 		m_nWritePrecomp;
-	int			m_nSectorDSK1;
+	int			m_nAUEmulate;
 	Time		m_tCreation;
 	
 	// Floppy-specific
@@ -124,7 +124,7 @@ public class Volume {
 			m_bBufferedStep = ((abySect0[0x11] & 0x80)==0x80);
 			m_nWritePrecomp = abySect0[0x11] & 0x7f;
 			m_tCreation = new Time(abySect0, 0x12);
-			m_nSectorDSK1 = Utilities.getInt16(abySect0, 0x1a);		
+			m_nAUEmulate = Utilities.getInt16(abySect0, 0x1a);		
 			
 			m_nReservedAUs = (abySect0[0x0d] << 6) & 0xffff;
 			if (m_nReservedAUs == 0) {
@@ -479,6 +479,18 @@ public class Volume {
 		return m_nTracksPerSide;
 	}
 	
+	public int getAUEmulateSector() {
+		return m_nAUEmulate * m_nSectorsPerAU;
+	}
+	
+	public void toggleEmulateFlag(int nSector) throws IOException, ImageException, ProtectedException {
+		if (getAUEmulateSector()==nSector) m_nAUEmulate = 0;
+		else m_nAUEmulate = nSector / m_nSectorsPerAU;
+		reopenForWrite();
+		update();
+		reopenForRead();
+	}
+	
 	public boolean isCHDImage() {
 		return m_Image instanceof MessCHDFormat;
 	}
@@ -572,7 +584,7 @@ public class Volume {
 				abyNewVIB[0x0f] = (byte)m_nReducedWriteCurrent;
 				abyNewVIB[0x10] = (byte)((((m_nSectorsPerAU-1)<<4)|(m_nHeads-1)) & 0xff);
 				abyNewVIB[0x11] = (byte)(((m_bBufferedStep? 0x80 : 0x00) | m_nWritePrecomp) & 0xff);
-				Utilities.setInt16(abyNewVIB, 0x1a, m_nSectorDSK1);
+				Utilities.setInt16(abyNewVIB, 0x1a, m_nAUEmulate);
 			}
 			else {
 				abyNewVIB[0x0c] = (byte)0;

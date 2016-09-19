@@ -460,7 +460,7 @@ public class TFile extends Element {
 		if ((m_byFlags & PROTECTED)!=0) sProt = "P";
 		String sFrag = " ";
 		if (isFragmented()) sFrag = "F";
-		return String.format(sPattern, getName(), getUsedSectors(), typeToString(m_byFlags), 
+		return String.format(sPattern, getName(), getUsedSectors(), typeToString(), 
 			nSize, sProt, sFrag, m_tCreation.toString(), m_tUpdate.toString());
 	}
 
@@ -745,15 +745,16 @@ public class TFile extends Element {
 	}
 
 	
-	public static String typeToString(byte by) {
-		if ((by & PROGRAM)!=0) return "Program";
-		if ((by & EMULATE)!=0) return "Emulate";
-		if ((by & VARIABLE)!=0) {
-			if ((by & INTERNAL)!=0) return "Int/Var";
+	public String typeToString() {
+		if (isActiveEmulateFile()) return "Emulate*";   // Emulate files are always PROGRAM files
+		if (isEmulateFile()) return "Emulate";          // Emulate files are always PROGRAM files
+		if (isProgram()) return "Program";
+		if (!hasFixedRecordLength()) {
+			if (!isDisplay()) return "Int/Var";
 			else return "Dis/Var";
 		}
 		else {
-			if ((by & INTERNAL)!=0) return "Int/Fix";
+			if (!isDisplay()) return "Int/Fix";
 			else return "Dis/Fix";
 		}
 	}
@@ -783,7 +784,11 @@ public class TFile extends Element {
 	public boolean isEmulateFile() {
 		return ((m_byFlags & EMULATE)!=0);
 	}
-
+	
+	public boolean isActiveEmulateFile() {
+		return (isEmulateFile() && getVolume().getAUEmulateSector()==getFIBLocation());
+	}
+	
 	public boolean isModified() {
 		return ((m_byFlags & MODIFIED)!=0);
 	}

@@ -341,7 +341,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 			
 			sCreation = file.getCreationTime().toString();
 			sUpdate = file.getUpdateTime().toString();
-			sType = TFile.typeToString(file.getFlags());
+			sType = file.typeToString();
 			sLength = String.valueOf(nSize); 
 			sProtected = file.isProtected()? "P":" ";
 			sFragmented = file.isFragmented()? "F" : " ";
@@ -398,7 +398,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		
 		addField(cnt, sFile,     col,  SwingConstants.LEFT,  m_dvCurrent.calcWidth("MOMOMOMOMO"), 10, font);
 		addField(cnt, sSectors,  col,  SwingConstants.RIGHT, m_dvCurrent.calcWidth("Sectors"), 10, font);
-		addField(cnt, sType,     col,  SwingConstants.LEFT,  m_dvCurrent.calcWidth("Program"), 10, font);
+		addField(cnt, sType,     col,  SwingConstants.LEFT,  m_dvCurrent.calcWidth("Emulate*"), 10, font);
 		addField(cnt, sLength,    col, SwingConstants.RIGHT, m_dvCurrent.calcWidth("XXXXXX"), 10, font);
 		addField(cnt, sProtected,  col,SwingConstants.LEFT,  m_dvCurrent.calcWidth("Prot"), 10, font);
 		addField(cnt, sFragmented, col,SwingConstants.LEFT,  m_dvCurrent.calcWidth("Frag"), 10, font);
