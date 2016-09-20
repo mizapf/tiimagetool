@@ -89,6 +89,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	JMenuItem m_iSendRem;
 	JMenuItem m_iChangeDirectory;
 	JMenuItem m_iToggleEmulate;
+	JMenuItem m_iExportEmulate;
 	
 	Element m_clickedElement;
 
@@ -134,7 +135,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_iSendRem = app.createMenuItem(new ExportRemoteAction());
 		m_iChangeDirectory = m_app.createMenuItem(new ChangeDirectoryAction());
 		m_iToggleEmulate = m_app.createMenuItem(new ToggleEmulateAction());
-					
+		m_iExportEmulate = m_app.createMenuItem(new ExportEmulateAction());
 		m_mEdit = app.getEditMenu();
 		
 		Volume vol = dir.getVolume();
@@ -371,7 +372,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		}			
 		
 		boolean bClipboard = m_app.clipboardNotEmpty();	
-		m_mEdit.activateMenuItems(true, bDirPossible, bClipboard, m_app.offersSerialConnection());
+		m_mEdit.activateMenuItems(true, bDirPossible, bClipboard, m_app.offersSerialConnection(), getVolume().isHFDCImage());
 	}
 	
 	public void windowActivated(WindowEvent we) {
@@ -452,6 +453,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			if (selected.get(0) instanceof TFile) {
 				if (((TFile)selected.get(0)).isEmulateFile()) {
 					m_ctxmenu.add(m_iToggleEmulate);
+					m_ctxmenu.add(m_iExportEmulate);
 					m_ctxmenu.addSeparator();
 					isEmulate = true;
 				}

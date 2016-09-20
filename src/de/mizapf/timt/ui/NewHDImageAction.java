@@ -400,7 +400,12 @@ public class NewHDImageAction extends Activity {
 								// System.out.println("cyl = " + parm.cylinders + ", sect = " + nSectors);
 							}
 							
-							JFileChooser jfc = new JFileChooser();
+							JFileChooser jfc = null;
+							if (imagetool.getSourceDirectory("image")!=null) {
+								jfc = new JFileChooser(imagetool.getSourceDirectory("image"));
+							}
+							else jfc = new JFileChooser();
+							
 							Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
 							if (dim!=null) jfc.setPreferredSize(dim);
 							

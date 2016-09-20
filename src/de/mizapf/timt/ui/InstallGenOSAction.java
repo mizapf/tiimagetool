@@ -33,9 +33,9 @@ import de.mizapf.timt.TIImageTool;
 
 public class InstallGenOSAction extends Activity {
 
-	private final static String SYSTEMSYS = "/ti/util/system_sys_redist.tfi";
-	private final static String LOADSYS = "/ti/util/load_sys_redist.tfi";
-	private final static String AUTOEXEC = "/ti/util/autoexec.txt";
+	private final static String SYSTEMSYS = "/de/mizapf/timt/util/system_sys_redist.tfi";
+	private final static String LOADSYS = "/de/mizapf/timt/util/load_sys_redist.tfi";
+	private final static String AUTOEXEC = "/de/mizapf/timt/util/autoexec.txt";
 	
 	public String getMenuName() {
 		return "Install Geneve OS";

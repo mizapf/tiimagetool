@@ -40,6 +40,7 @@ public class EditMenu extends JMenu {
 	JMenuItem m_iInsertBinary;
 	JMenuItem m_iInsertContent;
 	JMenuItem m_iInsertRemote;
+	JMenuItem m_iInsertEmulate;
 	JMenuItem m_iCreateDirectory;	
 	JMenuItem m_iCreateArchive;
 		
@@ -81,9 +82,11 @@ public class EditMenu extends JMenu {
 		add(m_iInsertContent);
 		m_iInsertRemote = createMenuItem(new ImportRemoteAction());
 		add(m_iInsertRemote);		
+		m_iInsertEmulate = createMenuItem(new ImportEmulateAction());
+		add(m_iInsertEmulate);		
 	}	
 		
-	public void activateMenuItems(boolean bOpenImage, boolean bDirPossible, boolean bClipboard, boolean bSerial) {
+	public void activateMenuItems(boolean bOpenImage, boolean bDirPossible, boolean bClipboard, boolean bSerial, boolean bHFDC) {
 				
 /*		if (bOpenImage) {
 			Volume vol = m_View.getVolume();
@@ -110,6 +113,7 @@ public class EditMenu extends JMenu {
 		m_iInsertBinary.setEnabled(bOpenImage);
 		m_iInsertContent.setEnabled(bOpenImage);
 		m_iInsertRemote.setEnabled(bOpenImage && bSerial);
+		m_iInsertEmulate.setEnabled(bOpenImage && bHFDC);
 		m_iCreateDirectory.setEnabled(bOpenImage && bDirPossible);
 		m_iCreateArchive.setEnabled(bOpenImage);
 	}	

@@ -1866,7 +1866,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		
 		if (bOpenImage) {
 			bImageIsSCSI = m_dvSelected.getVolume().isSCSIImage();
-			bImageIsHFDC = !m_dvSelected.getVolume().isFloppyImage() && !bImageIsSCSI;
+			bImageIsHFDC = m_dvSelected.getVolume().isHFDCImage();
 		}
 		boolean bAlways = true;
 		
@@ -1886,7 +1886,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_iSerialBridge.setEnabled(m_bSerial);
 
 		if (m_jtViews.getTabCount()==0) {
-			m_mEdit.activateMenuItems(false, false, false, m_bSerial);
+			m_mEdit.activateMenuItems(false, false, false, m_bSerial, bImageIsHFDC);
 		}
 		else {
 			m_dvSelected.activateEditMenu();

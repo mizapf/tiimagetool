@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2011 Michael Zapf
+    Copyright 2016 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
@@ -26,34 +26,48 @@ import java.awt.event.*;
 import java.util.*;
 import java.awt.font.*;
 
-class NewDirectoryDialog extends ToolDialog {
+class NewElementDialog extends ToolDialog {
 	
-	JTextField 		m_tfFileName;
+	JTextField	m_tfElementName;
+	String 		m_title;
+	String 		m_default;
+	String		m_hint;
 	
-	NewDirectoryDialog(JFrame owner) {
-		super(owner, "New directory");
+	NewElementDialog(JFrame owner, String title, String def, String hint) {
+		super(owner, title);
+		m_title = title;
+		m_default = def;
+		m_hint = hint;
 	}
 	
 /*
-	| 	New directory             								|
+	| 	XXX             								|
 		
-		Directory name [ ... ]
+		XXXXX name [ ... ]
 		
 			+-------+			+-----------+
 			|	OK	|			|	Cancel	|
 			+-------+           +-----------+
 */	
-	void createGui(Font font) {
+	void createGui() {
 		prepareGui();
-		determineWidth("Directory name:");
+		int nLabelWidth = determineFieldWidth("New element file name");
+
+		m_tfElementName = putTextField(this, m_title + " name", "", nLabelWidth, 0);
+		m_tfElementName.setText(m_default);
+		add(Box.createVerticalStrut(10));
+		if (m_hint != null) {	
+			putTextLine(this, m_hint, 0);
+			add(Box.createVerticalStrut(10));
+		}
+		else {
+			add(Box.createHorizontalStrut(300));			
+		}
 		
-		m_tfFileName = new JTextField();
-		m_tfFileName.setText("");
-		addLine("Directory name", m_tfFileName);
 		addButtons();	
 	}
 		
-	String getDirName() {
-		return m_tfFileName.getText().trim();
+	String getElementName() {
+		return m_tfElementName.getText().trim();
 	}
 }

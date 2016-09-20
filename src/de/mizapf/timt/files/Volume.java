@@ -258,6 +258,10 @@ public class Volume {
 		return m_nType == SCSI;
 	}
 	
+	public boolean isHFDCImage() {
+		return m_nType == HFDC;
+	}
+
 	public String getName() {
 		return m_sVolumeName;
 	}
@@ -486,9 +490,7 @@ public class Volume {
 	public void toggleEmulateFlag(int nSector) throws IOException, ImageException, ProtectedException {
 		if (getAUEmulateSector()==nSector) m_nAUEmulate = 0;
 		else m_nAUEmulate = nSector / m_nSectorsPerAU;
-		reopenForWrite();
 		update();
-		reopenForRead();
 	}
 	
 	public boolean isCHDImage() {

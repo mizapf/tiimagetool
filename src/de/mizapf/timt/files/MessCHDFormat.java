@@ -77,7 +77,15 @@
 
     V5 uncompressed map format:
 
-    [  0] UINT32 offset;        // starting offset / hunk size
+    [  0] UINT32 offset;        // starting offset div by hunk size
+
+    Metadata format:
+    
+    [  0] char   tag[4]
+    [  4] UINT8  flags
+    [  5] UINT24 length
+    [  8] UINT64 next
+    [ 16] UINT8  data[length]
     
 0000000: 4d43 6f6d 7072 4844 0000 007c 0000 0005  MComprHD...|....
 0000010: 0000 0000 0000 0000 0000 0000 0000 0000  ................
@@ -163,7 +171,7 @@ public class MessCHDFormat extends ImageFormat {
 	// We define hunks to be the tracks
 	
 	// This is wrong. Hunks are 4096 bytes, while tracks usually have 32*256 = 8192 bytes
-	// Why does it work at all? --- By getOffset, we only specify the sector number,
+	// Why does it work at all? --- By getSectorOffset, we only specify the sector number,
 	// and the track length is falsely assumed to be the hunk size, so *internally* it calculates
 	// a track number that is twice as high, thus we are actually located on the hunk number.
 	// That is, when we read sector 50, we should expect it on track 1, offset 18*256, but
@@ -172,11 +180,13 @@ public class MessCHDFormat extends ImageFormat {
 	// In that sense, this is actually not an issue, because it will yield the 
 	// correct result. However, we should check what happens for sector/track != 32 (possible?)
 	
+	// Let's keep it like this: Hunks are "logical tracks" of the CHD.
+	
 	int m_nCompression;
 	int m_nHeaderLength;
 	int m_nFlags;
 	
-	int m_nMapOffset;
+	long m_nMapOffset;
 	
 	int m_nTotalHunks;
 	long m_nMetaOffset;
@@ -184,6 +194,8 @@ public class MessCHDFormat extends ImageFormat {
 
 	byte m_byHunkFlags;
 	long m_nHunkOffset;
+	
+	long m_nAppendOffset;
 	
 	final static int METALENGTH = 16;	
 	final static int MAPENTRYSIZEv4 = 16;	
@@ -427,7 +439,7 @@ public class MessCHDFormat extends ImageFormat {
 			m_nCompression = Utilities.getInt32be(abyStart, 16);
 			if (m_nCompression != 0) throw new ImageException("Compressed images are not supported"); 		
 			
-			m_nMapOffset = Utilities.getInt32be(abyStart, 40);
+			m_nMapOffset    = Utilities.getInt64be(abyStart, 40);
 			m_nLogicalBytes = Utilities.getInt64be(abyStart, 32);
 			m_nMetaOffset   = Utilities.getInt64be(abyStart, 48);
 			m_nTrackLength  = Utilities.getInt32be(abyStart, 56);
@@ -475,6 +487,25 @@ public class MessCHDFormat extends ImageFormat {
 
 		m_nTotalSectors = m_nCylinders * m_nHeads * m_nSectorsPerTrack;
 
+		// Find out where the next position is for adding hunks
+		// Metadata at the end may need to be skipped
+		// Follow the linked list of metadata blobs
+		byte[] metadata = new byte[16];			
+		long nextOffset = m_nMetaOffset;
+		m_nAppendOffset = 1; 
+		
+//		System.out.println("MetaOffset = " + Utilities.toHex((int)m_nMetaOffset, 8));	
+		
+		while (nextOffset != 0 && nextOffset < m_nLogicalBytes) {
+//			System.out.println(Utilities.toHex((int)nextOffset, 8));
+			m_FileSystem.seek(nextOffset);
+			m_FileSystem.readFully(metadata);
+			
+			// Round up to the next hunk boundary
+			m_nAppendOffset = ((nextOffset + (m_nTrackLength - 1)) / m_nTrackLength) * m_nTrackLength;
+			nextOffset = Utilities.getInt64be(metadata, 8);
+		}
+//		System.out.println("append offset = " + Utilities.toHex((int)m_nAppendOffset, 8));					
 		// TODO: Check with format in VIB?
 	}
 	
@@ -520,7 +551,7 @@ public class MessCHDFormat extends ImageFormat {
 			if (crca != crci) throw new ImageException("Image corrupted: Calculated CRC (" + Utilities.toHex(crca,8) + ") differs from CRC on image (" + Utilities.toHex(crci,8) + ")");
 		}
 		if (m_nVersion == 5) {
-			m_FileSystem.seek(m_nHeaderLength + nHunk * 4);
+			m_FileSystem.seek(m_nMapOffset + nHunk * 4);
 			byte[] abyMap = new byte[4];
 			m_FileSystem.readFully(abyMap);
 			m_nHunkOffset = Utilities.getInt32be(abyMap, 0) * m_nTrackLength;
@@ -555,20 +586,19 @@ public class MessCHDFormat extends ImageFormat {
 		byte[] abySector = new byte[m_nSectorLength];
 		// Get sector offset in track
 		//			System.out.println("Read sector " + nSectorNumber);
-		int[] offset = new int[2];
-		getOffset(nSectorNumber, offset);
-		System.arraycopy(m_abyTrack, offset[SECTOR], abySector, 0, m_nSectorLength);
+		int secoff = getSectorOffset(nSectorNumber);
+		System.arraycopy(m_abyTrack, secoff, abySector, 0, m_nSectorLength);
 		return new Sector(nSectorNumber, abySector);
 	}
 	
 	void writeSector(int nNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException {
 		try {
-			int[] offset = new int[2];
-			getOffset(nNumber, offset);
-			System.arraycopy(abySector, 0, m_abyTrack, offset[SECTOR], Volume.SECTOR_LENGTH);
+			int secoff = getSectorOffset(nNumber);
+			System.arraycopy(abySector, 0, m_abyTrack, secoff, Volume.SECTOR_LENGTH);
 			writeCurrentHunk(bNeedReopen);
 		}
 		catch (EOFException eofx) {
+			eofx.printStackTrace();
 			throw new EOFException("Sector " + nNumber + " beyond image size");
 		}
 	}
@@ -606,11 +636,12 @@ public class MessCHDFormat extends ImageFormat {
 		}
 		else
 		{
-			int nMapPos = m_nHeaderLength + m_nCurrentTrack * 4;
+			long nMapPos = m_nMapOffset + m_nCurrentTrack * 4;
 			m_FileSystem.seek(nMapPos);
 			byte[] abyMap = new byte[4];
-			m_FileSystem.readFully(abyMap);
-			int nHunkNumber = Utilities.getInt32be(abyMap, 0); 
+			m_FileSystem.readFully(abyMap);	
+			int nHunkNumber = Utilities.getInt32be(abyMap, 0);
+			
 			m_nHunkOffset = nHunkNumber * m_nTrackLength;
 			if (nHunkNumber == 0) {
 				boolean bNull = true;
@@ -625,17 +656,23 @@ public class MessCHDFormat extends ImageFormat {
 				}
 				// System.out.println("Hunk " + m_nCurrentTrack + " was empty before, have to append after end of CHD image");
 				m_nHunkOffset = m_FileSystem.length();
+				
+				// If the file is shorter than the next hunk offset, use that offset
+				if (m_nHunkOffset < m_nAppendOffset) m_nHunkOffset = m_nAppendOffset;
+				
 				nHunkNumber = (int)(m_nHunkOffset / m_nTrackLength);
-				if ((nHunkNumber * m_nTrackLength) != m_nHunkOffset) throw new EOFException("Hunk position must be on track length boundary: " + Long.toHexString(m_nHunkOffset)); 
+				// System.out.println("nHunkNumber = " + nHunkNumber + ", m_nHunkOffset =  " + m_nHunkOffset + ", m_nTrackLength = " + m_nTrackLength);
+				if ((nHunkNumber * m_nTrackLength) != m_nHunkOffset) throw new EOFException("Invalid hunk position: " + Long.toHexString(m_nHunkOffset)); 
+
+				abyMap[0] = (byte)((nHunkNumber >> 24)&0xff);
+				abyMap[1] = (byte)((nHunkNumber >> 16)&0xff);
+				abyMap[2] = (byte)((nHunkNumber >> 8)&0xff);
+				abyMap[3] = (byte)(nHunkNumber & 0xff);
+				
+				if (bNeedReopen) reopenForWrite();
+				m_FileSystem.seek(nMapPos);
+				m_FileSystem.write(abyMap);
 			}
-			abyMap[0] = (byte)((nHunkNumber >> 24)&0xff);
-			abyMap[1] = (byte)((nHunkNumber >> 16)&0xff);
-			abyMap[2] = (byte)((nHunkNumber >> 8)&0xff);
-			abyMap[3] = (byte)(nHunkNumber & 0xff);
-			
-			if (bNeedReopen) reopenForWrite();
-			m_FileSystem.seek(nMapPos);
-			m_FileSystem.write(abyMap);			
 		}
 		
 //		System.out.println("seek to " + Utilities.toHex((int)m_nHunkOffset, 8));
@@ -645,12 +682,11 @@ public class MessCHDFormat extends ImageFormat {
 	}
 	
 	/** Sectors are always numbered from 0..max, i.e. we have LBA. */
-	void getOffset(int nSectorNumber, int[] offset) throws IOException, ImageException {
+	int getSectorOffset(int nSectorNumber) throws IOException, ImageException {
 		// Determine hunk
 		int nHunk = nSectorNumber * Volume.SECTOR_LENGTH / m_nTrackLength;
 		if (m_nCurrentTrack != nHunk) readHunk(nHunk);
-		offset[SECTOR] = (nSectorNumber * Volume.SECTOR_LENGTH) % m_nTrackLength;
-		offset[TRACK] = (int)(m_nHunkOffset & 0xffffffff);  // not needed
+		return (nSectorNumber * Volume.SECTOR_LENGTH) % m_nTrackLength;
 	}
 	
 	/** Create a new CHD image. */

@@ -550,6 +550,11 @@ public class Directory extends Element {
 			}
 		}
 
+		// Is this an EMULATE file?
+		if (file.isActiveEmulateFile()) {
+			m_Volume.toggleEmulateFlag(file.getFIBLocation());
+		}
+		
 		// Remove file from directory
 		if (bRemoveFromList) removeFromList(file);
 		// Remember to call commit!

@@ -499,6 +499,7 @@ public class PasteAction extends Activity {
 				}
 				catch (IOException iox) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error while reading or writing image (" + iox.getClass().getName() + ")", "Read error", JOptionPane.ERROR_MESSAGE);
+					iox.printStackTrace();
 				}
 				catch (IllegalOperationException ix) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Illegal operation while writing image: " + ix.getMessage(), "Illegal operation", JOptionPane.ERROR_MESSAGE);					

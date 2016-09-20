@@ -52,7 +52,7 @@ public class NewDirectoryAction extends Activity {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
 		// Create a simple dialog
-		FontMetrics fm = ((Graphics2D)(imagetool.getMainFrame().getGraphics())).getFontMetrics(TIImageTool.dialogFont);
+/*		FontMetrics fm = ((Graphics2D)(imagetool.getMainFrame().getGraphics())).getFontMetrics(TIImageTool.dialogFont);
 		FontRenderContext frc = ((Graphics2D)(imagetool.getMainFrame().getGraphics())).getFontRenderContext();
 		LineMetrics lm = TIImageTool.dialogFont.getLineMetrics("DIRECTORY", 0, 2, frc);
 		
@@ -68,12 +68,14 @@ public class NewDirectoryAction extends Activity {
 		jtName.setPreferredSize(new Dimension(nFieldWidth, nFieldHeight));
 		jtName.setMaximumSize(new Dimension(nFieldWidth, nFieldHeight));
 		jp.add(jtName);
-		
+	*/
+		NewElementDialog dirdia = new NewElementDialog(dvCurrent.getFrame(), "New directory", "NEWDIR", null);
+		dirdia.createGui();
+		dirdia.setVisible(true);
 		boolean ok = true;
 
-		int confirm = JOptionPane.showConfirmDialog(m_parent, jp, "Create new directory", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
-		if (confirm == JOptionPane.OK_OPTION) {
-			String sName = jtName.getText().trim();
+		if (dirdia.confirmed()) {	
+			String sName = dirdia.getElementName();
 			if (vol.isFloppyImage()) {
 				if (!dirCurrent.isRootDirectory()) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Floppy file systems can only have directories in the root directory.", "Illegal operation", JOptionPane.ERROR_MESSAGE);
@@ -97,14 +99,17 @@ public class NewDirectoryAction extends Activity {
 				catch (ImageFullException ifx) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "No space to create new directory: \"" + sName + "\".", "Illegal operation", JOptionPane.ERROR_MESSAGE);
 				}
+				catch (FileExistsException fx) {
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "There is already an element with that name.", "Illegal operation", JOptionPane.ERROR_MESSAGE);					
+				}
 				catch (Exception ex) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Failed to create new directory: \"" + sName + "\" (" + ex.getClass().getName() + ").", "Illegal operation", JOptionPane.ERROR_MESSAGE);
 					ex.printStackTrace();
 				}
+				imagetool.refreshPanel(vol);			
 			}
 		}
 		
-		imagetool.refreshPanel(vol);			
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 }

@@ -46,7 +46,10 @@ public class ToggleEmulateAction extends Activity {
 		Element elFirst = dvCurrent.getClickedElement();
 		try {
 			if (elFirst instanceof TFile) {
-				dvCurrent.getVolume().toggleEmulateFlag(((TFile)elFirst).getFIBLocation());
+				Volume vol = dvCurrent.getVolume();
+				vol.reopenForWrite();		
+				vol.toggleEmulateFlag(((TFile)elFirst).getFIBLocation());
+				vol.reopenForRead();
 			}
 			else {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "BUG: Toggle Emulate Action on element that is not a file: " + elFirst.getName(), "Internal error", JOptionPane.ERROR_MESSAGE); 		
