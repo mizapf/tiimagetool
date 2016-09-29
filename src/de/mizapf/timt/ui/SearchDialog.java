@@ -108,8 +108,7 @@ class SearchDialog extends ToolDialog {
 		box.add(Box.createHorizontalStrut(10));
 		JLabel jl = new JLabel("Path to search", SwingConstants.LEFT); 
 		jl.setFont(TIImageTool.dialogFont);
-		String lastPath = imagetool.getSourceDirectory("image").getAbsolutePath();
-		lastPath = "click to select";
+		String lastPath = "click to select";
 		add(Box.createVerticalStrut(20));
 
 		// Path setup
