@@ -50,10 +50,12 @@ public class ViewTextAction extends Activity {
 			if (selected instanceof TFile) {
 				try {
 					String sContent = ((TFile)selected).getTextContent();
-					if (Utilities.checkForText(sContent)==false) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File contains lots of unprintable characters; may be corrupt.", "Read error", JOptionPane.ERROR_MESSAGE); 					
-					}
-					else {
+					boolean showit = Utilities.checkForText(sContent);
+					if (!showit) {
+						int nRet = JOptionPane.showConfirmDialog(dvCurrent.getFrame(), "File contains lots of unprintable characters. Show anyway?", "Read problem", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+						showit = (nRet == JOptionPane.YES_OPTION); 
+					}					
+					if (showit) {
 						sContent = Utilities.sanitizeText(sContent);
 						imagetool.showTextContent(selected.getName(), sContent);  
 					}

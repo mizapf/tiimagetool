@@ -695,9 +695,11 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 					if (file.isTextFile()) {
 						sText = file.getTextContent();
 						if (Utilities.checkForText(sText)==false) {
-							JOptionPane.showMessageDialog(getFrame(), "File contains lots of unprintable characters; may be corrupt.", "Read error", JOptionPane.ERROR_MESSAGE); 					
-							frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-							return;
+							int nRet = JOptionPane.showConfirmDialog(getFrame(), "File contains lots of unprintable characters. Show anyway?", "Read problem", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+							if (nRet==JOptionPane.NO_OPTION) {
+								frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+								return;
+							}
 						}
 						sText = Utilities.sanitizeText(sText);
 					}
