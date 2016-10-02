@@ -80,7 +80,11 @@ public class SerialConnection {
 			m_sp = sp;
 		}
 		catch (UnsupportedCommOperationException ucx) {
-			throw new ConnectionException(sPort, "Serial port operation not supported: " + ucx.getMessage());
+			ucx.printStackTrace();
+			if (ucx.getMessage().contains("Invalid Parameter"))
+				throw new ConnectionException(sPort, "Serial interface does not support these settings.");
+			else
+				throw new ConnectionException(sPort, "Serial port operation not supported: " + ucx.getMessage());
 		}
 		catch (PortInUseException pux) {
 			throw new ConnectionException(sPort, "Serial port already in use");
@@ -96,6 +100,6 @@ public class SerialConnection {
 	}
 	
 	public void close() {
-		m_sp.close();
+		if (m_sp != null) m_sp.close();
 	}
 }

@@ -63,9 +63,9 @@ public class ConnectDialog extends ToolDialog implements ActionListener {
 		m_jcAdapters = new JComboBox<String>(asAdapters);
 		addLine("Serial adapter", m_jcAdapters);
 
-		String[] asSpeed = { "19200", "9600", "4800", "2400", "1200", "300", "110" }; 		
+		String[] asSpeed = { "57600", "38400", "19200", "9600", "4800", "2400", "1200", "300", "110" }; 		
 		m_jcSpeed = new JComboBox<String>(asSpeed);
-		m_jcSpeed.setSelectedIndex(1);
+		m_jcSpeed.setSelectedIndex(2);
 		addLine("Speed", m_jcSpeed);
 		
 		String[] asDatabits = { "8", "7" };
