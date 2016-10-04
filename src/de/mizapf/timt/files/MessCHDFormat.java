@@ -197,6 +197,8 @@ public class MessCHDFormat extends ImageFormat {
 	
 	long m_nAppendOffset;
 	
+	private int m_nTotalSectors;
+	
 	final static int METALENGTH = 16;	
 	final static int MAPENTRYSIZEv4 = 16;	
 	

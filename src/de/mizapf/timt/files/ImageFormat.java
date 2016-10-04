@@ -62,8 +62,6 @@ public abstract class ImageFormat  {
 
 	protected int m_nTrackLength;
 	
-	protected int m_nTotalSectors;
-	
 	protected int m_nDensity; // specific for floppies
 	
 	protected byte[] m_abyTrack;
@@ -85,7 +83,7 @@ public abstract class ImageFormat  {
 	protected ImageFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
 		m_FileSystem = filesystem;
 		m_sImageName = sImageName;
-		setGeometry(Utilities.isRawDevice(sImageName));
+		setGeometry(false /*Utilities.isRawDevice(sImageName)*/);
 		m_nCurrentTrack = NOTRACK;
 		m_abyTrack = new byte[m_nTrackLength];
 		m_nSectorLength = nSectorLength;
@@ -135,12 +133,15 @@ public abstract class ImageFormat  {
 	public static ImageFormat getImageFormat(String sFile, int nSectorLength) throws FileNotFoundException, IOException, ImageException {
 		RandomAccessFile fileSystem = new RandomAccessFile(sFile, "r");
 		
-		if (Utilities.isRawDevice(sFile)) {
+/*		if (Utilities.isRawDevice(sFile)) {
 			return new RawHDFormat(fileSystem, sFile, nSectorLength);
-		}
+		} */
 		
 		if (fileSystem.length()==0) throw new ImageException("Empty image");
 		
+		if (CF7VolumeFormat.vote(fileSystem) > 50) {
+			return new CF7VolumeFormat(fileSystem, sFile, nSectorLength);
+		}
 		if (SectorDumpFormat.vote(fileSystem) > 50) {
 			return new SectorDumpFormat(fileSystem, sFile, nSectorLength);
 		}
@@ -174,10 +175,23 @@ public abstract class ImageFormat  {
 		m_FileSystem = new RandomAccessFile(m_sImageName, "r");		
 	}
 
+	/** Set some parameters for this image, according to the format and the
+	    give file. Any kinds of members may be initialized here; at least, the
+	    following members must be set:
+	    - m_nSectorsByFormat
+	    - m_nCylinders
+	    - m_nHeads
+	    - m_nSectorLength
+	    - m_nTrackLength
+	    - m_nDensity
+	    - m_nTotalSectors
+	    @param bSpecial image is a special file (raw device content).
+	*/
 	abstract void setGeometry(boolean bSpecial) throws IOException, ImageException;
 			
 	/** Delivers the position on the image file by track and sector.
-		Result is returned as offset[TRACK], offset[SECTOR].
+		Result is returned as a Location instance.
+		Called by the floppy image types only.
 	*/
 	Location getLocation(int nSectorNumber) throws IOException, ImageException {
 		if (m_nSectorsByFormat == NONE) {

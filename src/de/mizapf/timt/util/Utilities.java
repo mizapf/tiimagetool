@@ -278,10 +278,10 @@ public class Utilities {
 		return sb.toString();
 	}	
 	
-	public static boolean isRawDevice(String sName) {
+/*	public static boolean isRawDevice(String sName) {
 		boolean bTest = sName.toLowerCase().startsWith("\\\\");
 		return bTest;
-	}
+	} */
 	
 	public static int[] guessAdvanced(int nCyl, int nHead, int nSect) {
 		int[] result = new int[2];

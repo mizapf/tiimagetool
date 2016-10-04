@@ -30,6 +30,7 @@ import java.io.File;
 class RawHDFormat extends ImageFormat {
 
 	private final static int BLOCKSIZE = 512;
+	private int m_nTotalSectors;
 	
 	static int vote(RandomAccessFile fileSystem) throws IOException, EOFException {
 		
