@@ -43,29 +43,29 @@ public class NewImageAction extends Activity {
 	}
 	
 	public void go() {
-		NewImageDialog newimage = new NewImageDialog(m_parent);
+		NewImageDialog newimagedia = new NewImageDialog(m_parent);
 
 		try {
-			newimage.createGui();
+			newimagedia.createGui();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 			return;
 		}
-		newimage.setVisible(true);
+		newimagedia.setVisible(true);
 
 		Volume newVolume = null;
 		
-		if (newimage.confirmed()) {
+		if (newimagedia.confirmed()) {
 			
 			// Sanity checks
-			if (newimage.getImageType()==ImageFormat.TRACKDUMP) {
-				if (newimage.getSides()==1)
+			if (newimagedia.getImageType()==ImageFormat.TRACKDUMP) {
+				if (newimagedia.getSides()==1)
 				{
 					JOptionPane.showMessageDialog(m_parent, "Track dump images are two-sided only.", "Create error", JOptionPane.ERROR_MESSAGE);
 					return;
 				}				
-				if (newimage.getTrackCount()==80)
+				if (newimagedia.getTrackCount()==80)
 				{
 					JOptionPane.showMessageDialog(m_parent, "Track dump images are defined for 40 tracks only.", "Create error", JOptionPane.ERROR_MESSAGE);
 					return;
@@ -93,8 +93,8 @@ public class NewImageAction extends Activity {
 					file = jfc.getSelectedFile();
 					int nSuffixPos = file.getName().indexOf(".");
 					if (nSuffixPos==-1 || nSuffixPos == file.getName().length()-1) {
-						if (!file.getName().endsWith(newimage.getImageTypeSuffix())) {
-							file = new File(file.getAbsolutePath() + newimage.getImageTypeSuffix());
+						if (!file.getName().endsWith(newimagedia.getImageTypeSuffix())) {
+							file = new File(file.getAbsolutePath() + newimagedia.getImageTypeSuffix());
 						}
 					}
 					
@@ -111,17 +111,17 @@ public class NewImageAction extends Activity {
 					imagetool.setSourceDirectory(file.getParentFile(), "image");
 					
 					Volume.createFloppyImage(file, 
-									newimage.getDiskName(),
-									newimage.getImageType(),
-									newimage.getSides(), 
-									newimage.getDensity(),
-									newimage.getTrackCount(),
-									newimage.formatImage());
+									newimagedia.getDiskName(),
+									newimagedia.getImageType(),
+									newimagedia.getSides(), 
+									newimagedia.getDensity(),
+									newimagedia.getTrackCount(),
+									newimagedia.formatImage());
 				
 				}
 				// Open it when it is initialized
 				if (file != null) {
-					if (newimage.formatImage()) {
+					if (newimagedia.formatImage()) {
 						newVolume = new Volume(file.getAbsolutePath());
 						Directory root = newVolume.getRootDirectory();					
 						imagetool.addDirectoryView(root);

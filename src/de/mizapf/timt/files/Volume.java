@@ -81,9 +81,30 @@ public class Volume {
 
 		Sector sector0 = null;
 		byte[] abySect0 = null;
-			
+		int number = -1;
+		
+		// Check whether we have a number at the end of the name
+		int volnumpos = sFile.lastIndexOf("#");
+		if (volnumpos > 0 && volnumpos < sFile.length()-1) {
+			try {
+				number = Integer.parseInt(sFile.substring(volnumpos+1));
+				sFile = sFile.substring(0, volnumpos);
+			}
+			catch (NumberFormatException nfx) {
+				// Did not work, so what. 
+			}
+		}
+				
 		// Get the image format
-		m_Image = ImageFormat.getImageFormat(sFile, SECTOR_LENGTH);
+		if (number > -1) {
+			// We have a CF7
+			ImageFormat format = ImageFormat.getImageFormat(sFile, SECTOR_LENGTH);
+			m_Image = ((CF7ImageFormat)format).getSubvolume(number);
+		}
+		else {
+			m_Image = ImageFormat.getImageFormat(sFile, SECTOR_LENGTH);
+		}
+		
 		m_nLastMod = m_Image.getLastModifiedTime();
 		
 		m_sImageFileName = sFile;
@@ -93,21 +114,31 @@ public class Volume {
 
 		if (m_Image instanceof SectorDumpFormat || m_Image instanceof TrackDumpFormat || m_Image instanceof HFEFormat) {
 			m_nType = FLOPPY;
-			if (!hasFloppyVib(abySect0) && bCheck) throw new ImageException(".HEAD");  
+			if (!hasFloppyVib(abySect0) && bCheck) throw new MissingHeaderException();  
 
 			// TODO: Check with image
 			m_nTotalSectors = Utilities.getInt16(abySect0, 0x0a);
-			m_nHeads = abySect0[0x12] & 0xff;
-			m_nTracksPerSide = abySect0[0x11] & 0xff;
 			
+			if (m_Image instanceof CF7VolumeFormat) {
+				// There may be inconsistencies with CF7 volumes.
+				// TODO: This should be checked; maybe offer to fix the volume?
+				m_nHeads = 2;
+				m_nTracksPerSide = 40;
+				m_nDensity = 2;
+			}
+			else {
+				m_nHeads = abySect0[0x12] & 0xff;
+				m_nTracksPerSide = abySect0[0x11] & 0xff;
+				m_nDensity = abySect0[0x13] & 0xff;		
+			}
+
+			m_nSectorsPerAU = (int)(m_nTotalSectors/1601) + 1;
 			m_bProtection = (abySect0[0x10]=='P');
-			
-			m_nSectorsPerAU = (int)(m_nTotalSectors/1600) + 1;
 			m_nReservedAUs = 0x21;
 			
 			m_allocMap = new AllocationMap(m_nTotalSectors / m_nSectorsPerAU, m_nSectorsPerAU, true);
 			m_allocMap.setMapFromBitfield(abySect0, 0x38, 0);
-			m_nDensity = abySect0[0x13] & 0xff;
+			
 			if (m_nDensity != m_Image.getDensity()) {
 				System.err.println("Density as provided by the VIB does not match density of the medium (" + m_nDensity + ", " + m_Image.getDensity() +")");
 			}
@@ -503,7 +534,7 @@ public class Volume {
 	
 	public String getFloppyFormat() {
 		StringBuilder sb = new StringBuilder();
-		sb.append((m_nHeads==02)? "DS" : "SS");
+		sb.append((m_nHeads==2)? "DS" : "SS");
 		switch (m_nDensity) {
 		case 0:
 		case 1:
@@ -635,7 +666,9 @@ public class Volume {
 			break;
 		}
 		
-		image.createEmptyImage(newImageFile, sides, density, tracks, format);		
+		int sectors = (density == ImageFormat.SINGLE_DENSITY)? 9 : 18; 
+		
+		image.createEmptyImage(newImageFile, sides, density, tracks, sectors, format);		
 		
 		if (format) {
 			

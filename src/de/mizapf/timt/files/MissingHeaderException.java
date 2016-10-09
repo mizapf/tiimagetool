@@ -18,41 +18,15 @@
     www.mizapf.de
     
 ****************************************************************************/
-package de.mizapf.timt.ui;
+package de.mizapf.timt.files;
 
-import java.io.*;
-
-/** Used with "Open recent". */  
-public class OpenOneImageAction extends OpenImageAction {
-
-	private String m_fileName;
-	private int m_number;
+public class MissingHeaderException extends ImageException {
 	
-	@Override
-	public int getKeyCode() {
-		return 0;
-	}
-
-	public OpenOneImageAction(String file, int number) {
-		m_fileName = file;
-		m_number = number;
+	public MissingHeaderException() {
+		super();
 	}
 	
-	@Override
-	public String getMenuName() {
-		return m_fileName;
-	}
-	
-	@Override
-	public String getActionName() {
-		return "OPENIMAGE" + m_number;
-	}
-		
-	// Used from the Menu
-	@Override
-	public void go() {
-		java.io.File[] selectedfiles = new java.io.File[1];
-		selectedfiles[0] = new File(m_fileName);		
-		open(selectedfiles);
+	public MissingHeaderException(String sReason) {
+		super(sReason);
 	}
 }

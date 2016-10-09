@@ -67,6 +67,9 @@ class DDData implements Transferable {
 			try {
 				lst = app.exportDirectory(dirCurrent, app.getTemporaryDirectory(), m_list, true);
 			}
+			catch (ReplaceTableException rx) {
+				rx.printStackTrace();
+			}
 			catch (InvalidNameException inx) {
 				inx.printStackTrace();
 			}

@@ -14,45 +14,45 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2011 Michael Zapf
+    Copyright 2016 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
 package de.mizapf.timt.ui;
 
+import javax.swing.*;
 import java.io.*;
+import java.awt.Dimension;
+import java.awt.event.KeyEvent;
 
-/** Used with "Open recent". */  
-public class OpenOneImageAction extends OpenImageAction {
+import de.mizapf.timt.files.*;
+import de.mizapf.timt.TIImageTool;
 
-	private String m_fileName;
-	private int m_number;
-	
-	@Override
-	public int getKeyCode() {
-		return 0;
-	}
+public class NewCF7ImageAction extends Activity {
 
-	public OpenOneImageAction(String file, int number) {
-		m_fileName = file;
-		m_number = number;
-	}
-	
-	@Override
 	public String getMenuName() {
-		return m_fileName;
+		return "Complete CF7 image ...";
 	}
 	
-	@Override
 	public String getActionName() {
-		return "OPENIMAGE" + m_number;
+		return "NEWCF7IMG";
 	}
-		
-	// Used from the Menu
-	@Override
+	
 	public void go() {
-		java.io.File[] selectedfiles = new java.io.File[1];
-		selectedfiles[0] = new File(m_fileName);		
-		open(selectedfiles);
+		NewCF7Dialog newimagedia = new NewCF7Dialog(m_parent, true);
+
+		try {
+			newimagedia.createGui();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return;
+		}
+		newimagedia.setVisible(true);
+
+		Volume newVolume = null;
+		
+		if (newimagedia.confirmed()) {
+		}
 	}
 }

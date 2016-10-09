@@ -142,6 +142,9 @@ public abstract class ImageFormat  {
 		if (CF7VolumeFormat.vote(fileSystem) > 50) {
 			return new CF7VolumeFormat(fileSystem, sFile, nSectorLength);
 		}
+		if (CF7ImageFormat.vote(fileSystem) > 50) {
+			return new CF7ImageFormat(fileSystem, sFile, nSectorLength);
+		}
 		if (SectorDumpFormat.vote(fileSystem) > 50) {
 			return new SectorDumpFormat(fileSystem, sFile, nSectorLength);
 		}
@@ -225,13 +228,19 @@ public abstract class ImageFormat  {
 		//System.out.println("m_header.number_of_track = " + m_header.number_of_track + ", nSectorNumber = " + nSectorNumber);
 	}	
 	
+	/** Read a track, given the number of a sector within that track.
+		@param nSectorNumber LBA number of the sector.
+		@return Index of the desired sector within its track.
+	*/
 	abstract int readTrack(int nSectorNumber) throws IOException, ImageException;
+	
+	abstract void formatTrack(int cylinder, int head, int sectors, int density, int[] gap);
 	
 	abstract String getDumpFormatName();
 	
 	abstract void flush() throws IOException;
 	
-	abstract void createEmptyImage(File newfile, int sides, int density, int tracks, boolean format) throws ImageException, FileNotFoundException, IOException;
+	abstract void createEmptyImage(File newfile, int sides, int density, int tracks, int sectors, boolean format) throws ImageException, FileNotFoundException, IOException;
 	
 	int checkCRC(boolean fix, boolean reset) throws IOException {	
 		return NONE;

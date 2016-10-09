@@ -31,6 +31,8 @@ import java.io.File;
 
 class SectorDumpFormat extends ImageFormat {
 
+	int m_maxSector;
+	
 	static final int[][] sdfgeometry = { 
 		{ 92160, 1, 40, 9 }, 
 		{ 184320, 2, 40, 9 },
@@ -62,6 +64,11 @@ class SectorDumpFormat extends ImageFormat {
 
 	SectorDumpFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
 		super(filesystem, sImageName, nSectorLength);
+		m_nSectorsByFormat = NONE;
+		m_currentCylinder = NONE;
+		m_currentTrack = NONE;
+		m_currentHead = NONE;
+		m_positionInTrack = 0;
 	}
 
 	SectorDumpFormat() {
@@ -103,11 +110,22 @@ class SectorDumpFormat extends ImageFormat {
 		}
 		
 		m_encoding = (sdfgeometry[format][3]==9)? FM : MFM; 
-		m_nSectorsByFormat = NONE;
-		m_currentCylinder = NONE;
-		m_currentTrack = NONE;
-		m_currentHead = NONE;
-		m_positionInTrack = 0;
+		m_maxSector = 11520;
+	}
+	
+	/** Overridden by CF7Format. */
+	void readFromImage(byte[] content, int offset) throws IOException {
+		m_FileSystem.seek(offset);
+		m_FileSystem.readFully(m_abyTrack);
+	}
+
+	/** Overridden by CF7Format. */	
+	void writeOnImage() throws IOException {
+		// Write back the whole track
+		m_FileSystem = new RandomAccessFile(m_sImageName, "rw");		
+		m_FileSystem.seek(m_trackpos[m_currentTrack]);
+		m_FileSystem.write(m_abyTrack);
+		m_FileSystem = new RandomAccessFile(m_sImageName, "r");		
 	}
 	
 	@Override
@@ -139,9 +157,7 @@ class SectorDumpFormat extends ImageFormat {
 		m_currentHead = loc.head;
 
 		m_abyTrack = new byte[m_tracklen[loc.track]];
-		
-		m_FileSystem.seek(m_trackpos[loc.track]);
-		m_FileSystem.readFully(m_abyTrack);
+		readFromImage(m_abyTrack, m_trackpos[loc.track]);
 		
 		// Reset to start
 		m_positionInTrack = 0;
@@ -185,8 +201,8 @@ class SectorDumpFormat extends ImageFormat {
 		if (m_nDensity==0) {
 			if (m_encoding==FM) m_nDensity = 1;
 			else {
-				if (count <= 18) m_nDensity = 2;
-				else if (count <= 36) m_nDensity = 3;
+				if (count <= 20) m_nDensity = 2;
+				else if (count <= 40) m_nDensity = 3;
 				else m_nDensity = 4;
 			}
 		}
@@ -208,7 +224,7 @@ class SectorDumpFormat extends ImageFormat {
 	*/
 	@Override
 	Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		if (nSectorNumber > 10000) throw new ImageException("Bad sector number: " + nSectorNumber); 
+		if (nSectorNumber >= m_maxSector) throw new ImageException("Bad sector number: " + nSectorNumber); 
 		int secindex = readTrack(nSectorNumber);
 		if (secindex != NONE) {
 			return m_sector[secindex];
@@ -248,10 +264,7 @@ class SectorDumpFormat extends ImageFormat {
 		}
 		if (trackchanged) {
 			// Write back the whole track
-			m_FileSystem = new RandomAccessFile(m_sImageName, "rw");		
-			m_FileSystem.seek(m_trackpos[m_currentTrack]);
-			m_FileSystem.write(m_abyTrack);
-			m_FileSystem = new RandomAccessFile(m_sImageName, "r");		
+			writeOnImage();
 		}
 	}
 
@@ -268,16 +281,19 @@ class SectorDumpFormat extends ImageFormat {
 	// Formatting
 	// ===========================================================
 	
-	void formatTrack(int cylinder, int head, int density, int[] gap) {
+	@Override
+	void formatTrack(int cylinder, int head, int sectors, int density, int[] gap) {
 		// Sector content
 		byte[] sect = new byte[256];
-		for (int k=0; k < 256; k++) sect[k] = (byte)0xe5; 
-		writeBits(sect,256);			
+		for (int secno = 0; secno < sectors; secno++) {
+			for (int k=0; k < 256; k++) sect[k] = (byte)0xe5; 
+			writeBits(sect, 256*8);
+		}
 	}
 	
-	public void createEmptyImage(File newfile, int sides, int density, int cylinders, boolean format) throws FileNotFoundException, IOException {
+	public void createEmptyImage(File newfile, int sides, int density, int cylinders, int sectors, boolean format) throws FileNotFoundException, IOException {
 		
-		int tracklen = 2304 << density;
+		int tracklen = sectors * 256;
 		int pos = 0;
 
 		m_trackpos = new int[cylinders*sides];
@@ -298,7 +314,7 @@ class SectorDumpFormat extends ImageFormat {
 			for (int cyl = 0; cyl < cylinders; cyl++) {
 				for (int head=0; head < sides; head++) {
 					m_positionInTrack = 0;
-					formatTrack(cyl, head, density, null);
+					formatTrack(cyl, head, sectors, density, null);
 				
 					// Copy the track into the image
 					int track = (head==0)? cyl : 2*cylinders-1-cyl; 

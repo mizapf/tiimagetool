@@ -26,7 +26,6 @@ import java.io.*;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.awt.Cursor;
-import de.mizapf.timt.TIImageTool;
 
 public class OpenImageAction extends Activity {
 
@@ -42,17 +41,15 @@ public class OpenImageAction extends Activity {
 		return "OPENIMAGE";
 	}
 		
+	/** Used by the command line. */
 	public void openLine(java.io.File file) {
 		java.io.File[] files = new java.io.File[1];
 		files[0] = file;
 		open(files);
 	}
 
-	private void open(java.io.File[] selectedfiles) {
+	protected void open(java.io.File[] selectedfiles) {
 		
-		// At this point we have a selected file.		
-				
-//		imagetool.setInsertMenuEnabled(false);
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
 		for (java.io.File imagefile : selectedfiles) {
@@ -60,25 +57,66 @@ public class OpenImageAction extends Activity {
 			try {
 				sAbsFile = imagefile.getAbsolutePath();
 				Volume vol = null;
+
+				// ============== Open the image
+				
+				// Do we have a CF7 image?
+				ImageFormat image = ImageFormat.getImageFormat(sAbsFile, Volume.SECTOR_LENGTH);
+				if (image instanceof CF7ImageFormat) {
+					// Find out how many volumes we have
+					
+					CF7ImageFormat cf7format = (CF7ImageFormat)image;
+					String[] volumes = cf7format.getVolumes();
+
+					// Ask the user which volume to open
+					CF7VolumeSelection select = new CF7VolumeSelection(m_parent);
+					select.setContent(volumes);
+					select.createGui();
+					select.setVisible(true);
+
+					if (select.confirmed()) {
+						int number = 0;
+						try {
+							number = select.getNumber();
+							// We're doing some tricks with the name so that
+							// the existing infrastructure gets along with it
+							sAbsFile = sAbsFile + "#" + number;
+						}
+						catch (NumberFormatException nx) {
+							JOptionPane.showMessageDialog(m_parent, "Invalid volume number", "Open error", JOptionPane.ERROR_MESSAGE);
+							continue;
+						}
+						if (number < 0) {
+							JOptionPane.showMessageDialog(m_parent, "Volume number cannot be negative", "Open error", JOptionPane.ERROR_MESSAGE);
+							continue;
+						}
+					}
+					else {
+						// System.out.println("not confirmed");
+						continue;
+					}
+				}
+
 				try {
 					vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
 					if (vol==null) vol = new Volume(sAbsFile);
 				}
-				catch (ImageException ix) {
-					if (ix.getMessage().equals(".HEAD")) {
-						int doCheck1 = JOptionPane.showConfirmDialog(m_parent, 
-							"Image file has floppy size, but missing floppy signature (DSK). Open anyway?", "Warning", JOptionPane.YES_NO_OPTION);
-						if (doCheck1 == JOptionPane.YES_OPTION) {
-							vol = new Volume(sAbsFile, false);
-						}
-						else continue;
+				catch (MissingHeaderException mx) {
+					int doCheck1 = JOptionPane.showConfirmDialog(m_parent, 
+						"Image file has floppy size, but no floppy signature (DSK). Open anyway?", "Warning", JOptionPane.YES_NO_OPTION);
+					if (doCheck1 == JOptionPane.YES_OPTION) {
+						vol = new Volume(sAbsFile, false);
 					}
-					else {
-						JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE);
-						continue;
-					}
+					// Be graceful, do as much as possible
+					else continue;
 				}
+				catch (ImageException ix) {
+					JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE);
+					continue;
+				}
+
 				Directory root = vol.getRootDirectory();	
+				// ============== 
 				
 				// Check for MaxAU bug and set the available menu options
 				if (vol.isSCSIImage()) {
@@ -110,12 +148,11 @@ public class OpenImageAction extends Activity {
 						}
 					}
 				}
+				
+				// Add a tab and show the root directory.
 				imagetool.addDirectoryView(root);
 				
 			}
-/*			catch (FileExistsException fxx) {
-				JOptionPane.showMessageDialog(m_parent, "Cannot open an image more than once.", "Illegal operation", JOptionPane.ERROR_MESSAGE);				
-			} */
 			catch (ImageException ix) {
 				JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE);
 			}
@@ -148,7 +185,7 @@ public class OpenImageAction extends Activity {
 		}
 		else jfc = new JFileChooser();
 		
-		Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+		Dimension dim = imagetool.getPropertyDim(imagetool.FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
 		ImageFileFilter im = new ImageFileFilter();
 		jfc.addChoosableFileFilter(im);
@@ -161,7 +198,7 @@ public class OpenImageAction extends Activity {
 			selectedfiles = jfc.getSelectedFiles();
 			java.io.File filePar = selectedfiles[0].getParentFile();
 			if (!filePar.getName().equals(".")) imagetool.setSourceDirectory(filePar, "image");  // sets the property only for non-UNC paths
-			imagetool.setProperty(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+			imagetool.setProperty(imagetool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 		}
 		else return;
 		

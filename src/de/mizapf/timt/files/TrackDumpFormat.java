@@ -395,15 +395,14 @@ class TrackDumpFormat extends ImageFormat {
 	// ===========================================================
 	// Formatting
 	// ===========================================================
-	
-	void formatTrack(int cylinder, int head, int density, int[] gap) {
+	@Override
+	void formatTrack(int cylinder, int head, int seccount, int density, int[] gap) {
 		int gapval0 = 0x4e;
 		int gapval1 = 0x4e;
 		m_positionInTrack = 0;
 		
 		// Start number
 		int sector = 0;
-		int seccount = 18;
 		int initcrc = 0;
 		
 		byte[] bHeader = new byte[4];
@@ -412,7 +411,6 @@ class TrackDumpFormat extends ImageFormat {
 			gapval0 = 0x00;
 			gapval1 = 0xff;
 			sector = (cylinder * 6) % 9;
-			seccount = 9;
 		}
 
 		// GAP 0
@@ -479,7 +477,7 @@ class TrackDumpFormat extends ImageFormat {
 		}
 	}
 	
-	public void createEmptyImage(File newfile, int sides, int density, int cylinders, boolean format) throws ImageException, FileNotFoundException, IOException {
+	public void createEmptyImage(File newfile, int sides, int density, int cylinders, int sectors, boolean format) throws ImageException, FileNotFoundException, IOException {
 		
 		if (density != SINGLE_DENSITY && density != DOUBLE_DENSITY) 
 			throw new ImageException("Density not supported by this floppy image format");
@@ -518,7 +516,7 @@ class TrackDumpFormat extends ImageFormat {
 			
 				for (int head=0; head < 2; head++) {
 					m_positionInTrack = 0;
-					formatTrack(cyl, head, density, (density==SINGLE_DENSITY)? gapsd : gapdd);
+					formatTrack(cyl, head, sectors, density, (density==SINGLE_DENSITY)? gapsd : gapdd);
 				
 					// Copy the track into the image
 					int track = (head==0)? cyl : 2*cylinders-1-cyl; 

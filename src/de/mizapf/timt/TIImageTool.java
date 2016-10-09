@@ -144,6 +144,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenu m_mNew;
 	JMenuItem m_iNewFloppy;
 	JMenuItem m_iNewHD;
+	JMenuItem m_iNewCF7Vol;
+	JMenuItem m_iNewCF7Img;
 	JMenuItem m_iOpen;
 	JMenu	  m_mOpenRecent;
 	JMenuItem m_iClose;
@@ -309,8 +311,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			m_iNewFloppy = createMenuItem(new NewImageAction());
 			m_iNewHD = createMenuItem(new NewHDImageAction());
+			m_iNewCF7Vol = createMenuItem(new NewCF7VolumeAction());
+			m_iNewCF7Img = createMenuItem(new NewCF7ImageAction());
 			m_mNew.add(m_iNewFloppy);
 			m_mNew.add(m_iNewHD);
+			m_mNew.add(m_iNewCF7Vol);
+			m_mNew.add(m_iNewCF7Img);
 			m_iOpen = createMenuItem(new OpenImageAction());
 			m_mFile.add(m_iOpen);
 
@@ -1318,6 +1324,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		try {
 			name = transliterate(name, ".", "_");
 		}
+		catch (ReplaceTableException rx) {
+			rx.printStackTrace();
+		}
 		catch (InvalidNameException ix) {
 			ix.printStackTrace();
 		}
@@ -1327,11 +1336,11 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return name;
 	}
 	
-	private String transliterate(String sExpFile, String sSubstSrc, String sSubstTar) throws InvalidNameException {
+	private String transliterate(String sExpFile, String sSubstSrc, String sSubstTar) throws ReplaceTableException, InvalidNameException {
 		StringBuilder sbNewFile = new StringBuilder();
 		if (sSubstSrc.length() > 0) {
 			if (sSubstTar.length() != sSubstSrc.length()) {
-				throw new InvalidNameException(".REPLACE");
+				throw new ReplaceTableException();
 			}
 			
 			for (int i=0; i < sExpFile.length(); i++) {
@@ -1361,7 +1370,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		Called from ExportImageAction and SaveTFIAction. Recursion inside. 
 		Delivers a list of File objects for DnD.
 	*/	
-	public List<java.io.File> exportDirectory(Directory dirCurrent, java.io.File iofBaseDir, List<Element> selected, boolean deleteOnExit) throws InvalidNameException, IOException, FileNotFoundException, ImageException {
+	public List<java.io.File> exportDirectory(Directory dirCurrent, java.io.File iofBaseDir, List<Element> selected, boolean deleteOnExit) throws ReplaceTableException, InvalidNameException, IOException, FileNotFoundException, ImageException {
 		List<java.io.File> lst = new ArrayList<java.io.File>();
 		
 		String value = getPropertyString(CONVERT, "/\\* __x");

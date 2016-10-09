@@ -46,7 +46,14 @@ public class ImageFileFilter extends FileFilter {
 			return sName.endsWith(".hd") || sName.endsWith(".chd") ||f.isDirectory();
 		}
 		else {
-			return sName.endsWith(".dsk") || sName.endsWith(".dtk") || sName.endsWith(".hfe") || sName.endsWith(".raw") || sName.endsWith(".hd") || sName.endsWith(".chd") ||f.isDirectory();
+			return sName.endsWith(".dsk") 
+				|| sName.endsWith(".dtk") 
+				|| sName.endsWith(".hfe") 
+				|| sName.endsWith(".raw") 
+				|| sName.endsWith(".hd") 
+				|| sName.endsWith(".chd") 
+				|| sName.endsWith(".cf7") 
+				|| f.isDirectory();
 		}
 	}
 }

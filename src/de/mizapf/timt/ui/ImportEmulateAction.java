@@ -85,13 +85,12 @@ public class ImportEmulateAction extends Activity {
 						vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
 						if (vol==null) vol = new Volume(sAbsFile);
 					}
+					catch (MissingHeaderException mx) {
+						JOptionPane.showMessageDialog(m_parent, "Image file does not have a floppy signature (DSK).", "Image error", JOptionPane.ERROR_MESSAGE);
+						continue;
+					}
 					catch (ImageException ix) {
-						if (ix.getMessage().equals(".HEAD")) {
-							JOptionPane.showMessageDialog(m_parent, "Image file does not have a floppy signature (DSK).", "Image error", JOptionPane.ERROR_MESSAGE);
-						}
-						else {
-							JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE);
-						}
+						JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE);
 						continue;
 					}
 					

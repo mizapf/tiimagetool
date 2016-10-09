@@ -109,13 +109,11 @@ public class SaveTFIAction extends Activity {
 			catch (IOException iox) { 
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getClass().getName(), "Error exporting file", JOptionPane.ERROR_MESSAGE);
 			}
+			catch (ReplaceTableException rx) {
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Replacement list mismatch, must have same number of characters.", "Export problem", JOptionPane.ERROR_MESSAGE);
+			}
 			catch (InvalidNameException ix) {
-				if (ix.getMessage().equals(".REPLACE")) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Replacement list mismatch, must have same number of characters.", "Export problem", JOptionPane.ERROR_MESSAGE);
-				}
-				else {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File name contains a character that cannot be used for the exported file.", "Export problem", JOptionPane.ERROR_MESSAGE);
-				}
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File name contains a character that cannot be used for the exported file.", "Export problem", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

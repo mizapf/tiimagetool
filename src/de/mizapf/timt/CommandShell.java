@@ -66,13 +66,12 @@ public class CommandShell {
 				try {
 					System.out.println(com.directory(arg[1], sSubdir, arg[0]));
 				}
+				catch (MissingHeaderException mx) {
+					System.err.println("Cannot open image file: Missing floppy signature (DSK)");
+					return;
+				}
 				catch (ImageException ix) {
-					if (ix.getMessage().equals(".HEAD")) {
-						System.err.println("Cannot open image file: Missing floppy signature (DSK)");
-					}
-					else {
-						System.err.println("Image error: " + ix.getMessage());						
-					}
+					System.err.println("Image error: " + ix.getMessage());						
 					return;
 				}
 				catch (FileNotFoundException fnfx) {

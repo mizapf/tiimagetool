@@ -939,8 +939,11 @@ public class MessCHDFormat extends ImageFormat {
 	}
 	
 	// Not needed
-	void createEmptyImage(File newfile, int sides, int density, int tracks, boolean format) throws FileNotFoundException, IOException {
+	void createEmptyImage(File newfile, int sides, int density, int tracks, int sectors, boolean format) throws FileNotFoundException, IOException {
 	}
+	
+	// Not needed
+	void formatTrack(int cylinder, int head, int seccount, int density, int[] gap) { }
 }
 
 

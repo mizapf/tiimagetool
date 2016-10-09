@@ -82,13 +82,11 @@ public class ExportImageAction extends Activity {
 			catch (IOException iox) { 
 				JOptionPane.showMessageDialog(m_parent, iox.getClass().getName(), "Error exporting file", JOptionPane.ERROR_MESSAGE);
 			}
+			catch (ReplaceTableException rx) {
+				JOptionPane.showMessageDialog(m_parent, "Replacement list mismatch, must have same number of characters.", "Export problem", JOptionPane.ERROR_MESSAGE);
+			}
 			catch (InvalidNameException ix) {
-				if (ix.getMessage().equals(".REPLACE")) {
-					JOptionPane.showMessageDialog(m_parent, "Replacement list mismatch, must have same number of characters.", "Export problem", JOptionPane.ERROR_MESSAGE);
-				}
-				else {
-					JOptionPane.showMessageDialog(m_parent, "File name contains a character that cannot be used for the exported file.", "Export problem", JOptionPane.ERROR_MESSAGE);
-				}
+				JOptionPane.showMessageDialog(m_parent, "File name contains a character that cannot be used for the exported file.", "Export problem", JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

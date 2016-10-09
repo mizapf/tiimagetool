@@ -779,15 +779,14 @@ Including padding: (length = 0c40) GAP4+=16
 =================
 
 */
-	
-	void formatTrack(int cylinder, int head, int density, int[] gap) {
+	@Override
+	void formatTrack(int cylinder, int head, int seccount, int density, int[] gap) {
 		m_lastDataBit = 0;
 		int gapval = 0x4e;
 		m_positionInTrack = 0;
 		
 		// Start number
 		int sector = 0;
-		int seccount = 18;
 		int initcrc = 0;
 		
 		byte[] bHeader = new byte[4];
@@ -797,7 +796,6 @@ Including padding: (length = 0c40) GAP4+=16
 			writePattern(0xf77a); // write IXAM
 			gapval = 0xff;
 			sector = (cylinder * 6) % 9;
-			seccount = 9;
 		}
 
 		// GAP 0
@@ -868,7 +866,7 @@ Including padding: (length = 0c40) GAP4+=16
 		}
 	}
 	
-	public void createEmptyImage(File newfile, int sides, int density, int tracks, boolean format) throws FileNotFoundException, IOException {
+	public void createEmptyImage(File newfile, int sides, int density, int tracks, int sectors, boolean format) throws FileNotFoundException, IOException {
 		
 		// Header
 		m_header = new HFEHeader(tracks, sides, density);
@@ -903,7 +901,7 @@ Including padding: (length = 0c40) GAP4+=16
 				
 				for (int head=0; head < 2; head++) {
 					m_currentHead = head;
-					formatTrack(cyl, head, density, (density==SINGLE_DENSITY)? gapsd : gapdd);
+					formatTrack(cyl, head, sectors, density, (density==SINGLE_DENSITY)? gapsd : gapdd);
 				}
 				
 				// Copy the track into the image
