@@ -59,8 +59,8 @@ class RawHDFormat extends ImageFormat {
 		return "sector";
 	}
 	
-	RawHDFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
-		super(filesystem, sImageName, nSectorLength);
+	RawHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		m_nDensity = 0;
 	}
 	

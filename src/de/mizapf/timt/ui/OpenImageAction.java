@@ -27,6 +27,8 @@ import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.awt.Cursor;
 
+import de.mizapf.timt.util.ImageCheck;
+
 public class OpenImageAction extends Activity {
 
 	public int getKeyCode() {
@@ -61,7 +63,7 @@ public class OpenImageAction extends Activity {
 				// ============== Open the image
 				
 				// Do we have a CF7 image?
-				ImageFormat image = ImageFormat.getImageFormat(sAbsFile, Volume.SECTOR_LENGTH);
+				ImageFormat image = ImageFormat.getImageFormat(sAbsFile);
 				if (image instanceof CF7ImageFormat) {
 					// Find out how many volumes we have
 					
@@ -100,6 +102,10 @@ public class OpenImageAction extends Activity {
 				try {
 					vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
 					if (vol==null) vol = new Volume(sAbsFile);
+					int[] geom = new int[5];
+					if (vol.isCF7Image() && ImageCheck.checkCF7Inconsistency(vol, geom)==true) {
+						JOptionPane.showMessageDialog(m_parent, "Inconsistent file system. You should run a file system check (Utilities).", "Open error", JOptionPane.WARNING_MESSAGE);
+					}
 				}
 				catch (MissingHeaderException mx) {
 					int doCheck1 = JOptionPane.showConfirmDialog(m_parent, 

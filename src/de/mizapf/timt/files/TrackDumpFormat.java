@@ -53,8 +53,8 @@ class TrackDumpFormat extends ImageFormat {
 		return 0;		
 	}
 	
-	TrackDumpFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
-		super(filesystem, sImageName, nSectorLength);
+	TrackDumpFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 	}
 	
 	TrackDumpFormat() {

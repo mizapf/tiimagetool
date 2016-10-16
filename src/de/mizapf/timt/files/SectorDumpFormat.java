@@ -62,8 +62,8 @@ class SectorDumpFormat extends ImageFormat {
 		return 0;		
 	}
 
-	SectorDumpFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
-		super(filesystem, sImageName, nSectorLength);
+	SectorDumpFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		m_nSectorsByFormat = NONE;
 		m_currentCylinder = NONE;
 		m_currentTrack = NONE;

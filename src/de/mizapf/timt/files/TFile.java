@@ -94,7 +94,7 @@ public class TFile extends Element {
 		m_nAllocatedSectors = Utilities.getInt16(aby, 0x0e);
 		m_nEOFOffset = aby[0x10] & 0xff;
 		m_nNumberOfRecords = Utilities.getInt16rev(aby, 0x12);
-		if (!vol.isFloppyImage()) {
+		if (!vol.isFloppyImage() && !vol.isCF7Image()) {
 			m_nAllocatedSectors += ((aby[0x26] & 0xf0)<<12);
 			m_nNumberOfRecords += ((aby[0x26] & 0x0f)<<16);
 			m_nFDIRAU = Utilities.getInt16(aby, 0x24);
@@ -158,7 +158,7 @@ public class TFile extends Element {
 		byte[] aby = sect.getBytes();
 		
 		do {
-			if (!vol.isFloppyImage()) {
+			if (!vol.isFloppyImage() && !vol.isCF7Image()) {
 				nNextFibAU = Utilities.getInt16(aby, 0x20);
 				if (nNextFibAU != 0) {
 					int nOffset = (aby[0x27] & 0x0f);
@@ -201,7 +201,7 @@ public class TFile extends Element {
 		int nEndValue = 0;
 		int nLastOffset = 0;
 		
-		if (vol.isFloppyImage()) {
+		if (vol.isFloppyImage() || vol.isCF7Image()) {
 			//	28	   29	  30	 31		32	33	34	35 36
 			//	n2n1   m1n3	  m3m2
 			//	for N = 0 n3 n2 n1
@@ -380,7 +380,7 @@ public class TFile extends Element {
 		System.arraycopy(m_tCreation.getBytes(), 0, aFibNew, 0x14, 4);
 		System.arraycopy(m_tUpdate.getBytes(), 0, aFibNew, 0x18, 4);
 
-		if (vol.isFloppyImage()) {
+		if (vol.isFloppyImage() || vol.isCF7Image()) {
 			// Floppy version
 
 			// clear all
@@ -444,7 +444,7 @@ public class TFile extends Element {
 	/** Rewrite the FIB. This is done to swap the L3 values (which have been swapped already on loading). **/
 	public void rewriteFIB() throws ProtectedException, IOException, ImageException {
 		Volume vol = getVolume();
-		int fdir = (vol.isFloppyImage())? 1 : (m_nFDIRAU * vol.getAUSize());
+		int fdir = (vol.isFloppyImage() || vol.isCF7Image())? 1 : (m_nFDIRAU * vol.getAUSize());
 		m_bL3Flaw = false;
 		writeFIB(m_anFIBSector[0], fdir); 
 	}
@@ -491,7 +491,7 @@ public class TFile extends Element {
 			nSector = current.start + nSectorInCluster;
 				
 			if (nClusterPointer==m_aCluster.length-1)	{ // last cluster
-				if (vol.isFloppyImage()) {
+				if (vol.isFloppyImage() || vol.isCF7Image()) {
 					// Interval bounds are precise
 					if (nSector == current.end + 1) throw new ImageException("Cannot find next sector for file " + getName());
 				}
@@ -546,7 +546,7 @@ public class TFile extends Element {
 			nSector = current.start + nSectorInCluster;
 				
 			if (nClusterPointer==m_aCluster.length-1)	{ // last cluster
-				if (vol.isFloppyImage()) {
+				if (vol.isFloppyImage() || vol.isCF7Image()) {
 					// Interval bounds are precise
 					if (nSector == current.end + 1) throw new ImageException("Cannot find next sector for file " + getName());
 				}

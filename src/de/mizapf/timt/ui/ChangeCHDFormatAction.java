@@ -72,7 +72,7 @@ public class ChangeCHDFormatAction extends Activity {
 		ImageFormat ifsource = null;
 		MessCHDFormat source = null;
 		try {
-			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath(), Volume.SECTOR_LENGTH);
+			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath());
 			if (!(ifsource instanceof MessCHDFormat)) {
 				JOptionPane.showMessageDialog(m_parent, "Not a MESS CHD image file.", "Invalid format error", JOptionPane.ERROR_MESSAGE);				
 				return;
@@ -168,7 +168,7 @@ public class ChangeCHDFormatAction extends Activity {
 		// and for each hunk read in the source, write the hunk into the target
 		boolean bOK = false;
 		try {
-			MessCHDFormat target = (MessCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath(), source.getSectorLength());
+			MessCHDFormat target = (MessCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath());
 			target.reopenForWrite();
 			// System.out.println("Hunks = " + source.getHunkCount());
 			for (int i=0; i < source.getHunkCount(); i++) {

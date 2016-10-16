@@ -80,13 +80,13 @@ public abstract class ImageFormat  {
 	protected int m_nSectorsByFormat;
 	protected int m_codeRate = 1;
 
-	protected ImageFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
+	protected ImageFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
 		m_FileSystem = filesystem;
 		m_sImageName = sImageName;
+		m_nSectorLength = Volume.SECTOR_LENGTH;
 		setGeometry(false /*Utilities.isRawDevice(sImageName)*/);
 		m_nCurrentTrack = NOTRACK;
 		m_abyTrack = new byte[m_nTrackLength];
-		m_nSectorLength = nSectorLength;
 	}
 	
 	protected ImageFormat() {
@@ -112,7 +112,10 @@ public abstract class ImageFormat  {
 		return m_nSectorLength;
 	}
 	
-	abstract Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException;
+	/** Reads a sector.
+		@param ImageException if the sector cannot be found.
+	*/
+	public abstract Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException;
 	
 	abstract void writeSector(int nNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException;
 	
@@ -130,7 +133,7 @@ public abstract class ImageFormat  {
 		return file.lastModified();
 	}
 	
-	public static ImageFormat getImageFormat(String sFile, int nSectorLength) throws FileNotFoundException, IOException, ImageException {
+	public static ImageFormat getImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
 		RandomAccessFile fileSystem = new RandomAccessFile(sFile, "r");
 		
 /*		if (Utilities.isRawDevice(sFile)) {
@@ -140,29 +143,29 @@ public abstract class ImageFormat  {
 		if (fileSystem.length()==0) throw new ImageException("Empty image");
 		
 		if (CF7VolumeFormat.vote(fileSystem) > 50) {
-			return new CF7VolumeFormat(fileSystem, sFile, nSectorLength);
+			return new CF7VolumeFormat(fileSystem, sFile);
 		}
 		if (CF7ImageFormat.vote(fileSystem) > 50) {
-			return new CF7ImageFormat(fileSystem, sFile, nSectorLength);
+			return new CF7ImageFormat(fileSystem, sFile);
 		}
 		if (SectorDumpFormat.vote(fileSystem) > 50) {
-			return new SectorDumpFormat(fileSystem, sFile, nSectorLength);
+			return new SectorDumpFormat(fileSystem, sFile);
 		}
 		
 		if (TrackDumpFormat.vote(fileSystem) > 50) {
-			return new TrackDumpFormat(fileSystem, sFile, nSectorLength);
+			return new TrackDumpFormat(fileSystem, sFile);
 		}
 		
 		if (RawHDFormat.vote(fileSystem) > 50) {
-			return new RawHDFormat(fileSystem, sFile, nSectorLength);
+			return new RawHDFormat(fileSystem, sFile);
 		}
 
 		if (MessCHDFormat.vote(fileSystem) > 50) {
-			return new MessCHDFormat(fileSystem, sFile, nSectorLength);
+			return new MessCHDFormat(fileSystem, sFile);
 		}
 
 		if (HFEFormat.vote(fileSystem) > 50) {
-			return new HFEFormat(fileSystem, sFile, nSectorLength);
+			return new HFEFormat(fileSystem, sFile);
 		}
 				
 		throw new ImageException(sFile + ": Unknown format or image corrupted");

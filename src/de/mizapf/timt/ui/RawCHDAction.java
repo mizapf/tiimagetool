@@ -229,7 +229,7 @@ public class RawCHDAction extends Activity {
 			boolean bOK = false;
 			int nHunkNumber = 0;
 			try {
-				MessCHDFormat target = (MessCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath(), nSectorLength);
+				MessCHDFormat target = (MessCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath());
 				target.reopenForWrite();
 				
 				// We have the allocation still from above

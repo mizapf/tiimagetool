@@ -61,7 +61,10 @@ public class ViewFIBAction extends Activity {
 					
 					// Analyse the contents
 					if (vol.isFloppyImage()) sb.append("\nFloppy image");
-					else sb.append("\nHard disk image");
+					else {
+						if (vol.isCF7Image()) sb.append("\nCF7 image");
+						else sb.append("\nHard disk image");
+					}
 					sb.append("\n");
 					
 					TFile myfile = (TFile)selected;
@@ -110,7 +113,7 @@ public class ViewFIBAction extends Activity {
 						for (Interval in : blocks) sb.append(in.toString()).append(" ");
 					}
 					
-					if (!vol.isFloppyImage()) {
+					if (!vol.isFloppyImage() && !vol.isCF7Image()) {
 						sb.append("\nPrevious FDR = ").append(Utilities.getInt16(content, 0x1e));
 						sb.append("\nNext FDR = ").append(Utilities.getInt16(content, 0x20));
 						sb.append("\nAllocated AU for this FDR = ").append(Utilities.getInt16(content, 0x22));

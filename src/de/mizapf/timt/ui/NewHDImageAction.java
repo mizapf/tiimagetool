@@ -449,7 +449,7 @@ public class NewHDImageAction extends Activity {
 									
 									ImageFormat ifsource = null;
 									try {
-										ifsource = ImageFormat.getImageFormat(file.getAbsolutePath(), Volume.SECTOR_LENGTH);
+										ifsource = ImageFormat.getImageFormat(file.getAbsolutePath());
 										if (!(ifsource instanceof MessCHDFormat)) {
 											JOptionPane.showMessageDialog(m_parent, "Not a MESS CHD image file.", "Invalid format error", JOptionPane.ERROR_MESSAGE);				
 											bValid = false;

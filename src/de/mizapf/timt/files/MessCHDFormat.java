@@ -394,8 +394,8 @@ public class MessCHDFormat extends ImageFormat {
 		return 100;
 	}
 
-	public MessCHDFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
-		super(filesystem, sImageName, nSectorLength);
+	public MessCHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		m_nDensity = 0;
 	}
 

@@ -76,14 +76,20 @@ public class NewDirectoryAction extends Activity {
 
 		if (dirdia.confirmed()) {	
 			String sName = dirdia.getElementName();
-			if (vol.isFloppyImage()) {
-				if (!dirCurrent.isRootDirectory()) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Floppy file systems can only have directories in the root directory.", "Illegal operation", JOptionPane.ERROR_MESSAGE);
-					ok = false;
-				}
-				if (vol.getRootDirectory().getDirectories().length>2) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot have more than three directories", "Illegal operation", JOptionPane.ERROR_MESSAGE);
-					ok = false;
+			if (vol.isCF7Image()) {
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "CF7 file sytem does not not support directories.", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+				ok = false;
+			}
+			else {
+				if (vol.isFloppyImage()) {
+					if (!dirCurrent.isRootDirectory()) {
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Floppy file systems can only have directories in the root directory.", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+						ok = false;
+					}
+					if (vol.getRootDirectory().getDirectories().length>2) {
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot have more than three directories", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+						ok = false;
+					}
 				}
 			}
 			

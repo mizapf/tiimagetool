@@ -207,7 +207,7 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 					fos.close();
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(this, "Error", "IOException: " + iox.getClass().getName(), JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(this, "IOException: " + iox.getClass().getName(), "Error", JOptionPane.ERROR_MESSAGE); 
 					return;
 				}
 			}

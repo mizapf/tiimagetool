@@ -44,6 +44,8 @@ public class CheckFSAction extends Activity {
 		AllocationMap allocMap = null;
 		boolean bChangedAlloc = false;
 		boolean bErrors = false;
+		boolean bChangedSector0 = false;
+		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		
 		PrintStream ps = new PrintStream(baos);
@@ -52,6 +54,64 @@ public class CheckFSAction extends Activity {
 		Volume vol = dv.getVolume();
 		JCheckBox cb = null;
 				
+		/* Part 0: Check CF7 inconsistency */
+		if (vol.isCF7Image()) {
+			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+			ps.println("===========  Checking CF7 inconsistency ===========\n");
+	
+			try {
+				int[] geom = new int[5];
+				boolean badcf7 = ImageCheck.checkCF7Inconsistency(vol, geom);
+				
+				if (badcf7) {
+					ps.println("The CF7 volume has inconsistent geometry data:\n");
+					ps.println("total sectors = " + geom[0]);
+					ps.println("tracks = " + geom[2]);
+					ps.println("heads = " + geom[1]);
+					ps.println("Sectors per track = " + geom[3]);
+					ps.println("density = " + geom[4] + "\n");
+					
+					StringBuilder sbMsg = new StringBuilder();
+					sbMsg.append("<html>");
+					sbMsg.append("The volume is a CF7 volume and should be defined with 1600 total sectors, ");
+					sbMsg.append("<br>2 heads, 20 sectors per track, and 40 tracks.");
+					sbMsg.append("<br><br>Instead, it defines ").append(geom[0]).append(" sectors, ").append(geom[1]).append(" heads, ");
+					sbMsg.append(geom[3]).append(" sectors per track, and ").append(geom[2]).append(" tracks.");
+					sbMsg.append("<br><br>Shall I fix this? You can free the additional space in the next step.");
+					sbMsg.append("</html>");
+					JPanel jp = new JPanel();		
+					JLabel jl = new JLabel(sbMsg.toString());
+					jp.add(jl);
+					nRet = JOptionPane.showConfirmDialog(m_parent, jp, "File system check", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+					
+					if (nRet == JOptionPane.YES_OPTION) {
+						bChangedSector0 = true;
+						vol.setGeometry(1600, 40, 2, 20, 2); 
+					}
+					else {
+						if (nRet == JOptionPane.CANCEL_OPTION) {
+							// Stop it, don't change anything
+							m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+							return;
+						}
+					}
+					bErrors = true;
+				}
+				else {
+					ps.println("No inconsistencies found\n");
+				}
+			}
+			catch (IOException iox) {
+				iox.printStackTrace();
+				ps.println("IOException: " + iox.getClass().getName() + ", " + iox.getMessage());
+			}
+			catch (ImageException ix) {
+				ix.printStackTrace();
+				ps.println("Image error: " + ix.getMessage());
+			}
+			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));			
+		}		
+		
 		/* Part 1: Check underallocation */
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		int savedResp = -1;		
@@ -88,7 +148,7 @@ public class CheckFSAction extends Activity {
 			if (savedResp == -1) {
 				JPanel jp = new JPanel();		
 				JLabel jl = new JLabel(sbMsg.toString());
-				
+				jp.add(jl);			
 				cb = new JCheckBox("Repeat my decision for all AUs to be allocated");
 				jp.add(cb);
 				nRet = JOptionPane.showConfirmDialog(m_parent, jp, "File system check", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
@@ -397,12 +457,13 @@ public class CheckFSAction extends Activity {
 		/**************************************************************   
 		            Done with the check. 
 		 **************************************************************/
-		if (bChangedAlloc || changedL3) {
+		if (bChangedSector0 || bChangedAlloc || changedL3) {
 			nRet = JOptionPane.showConfirmDialog(m_parent, "Commit the changes to the image now?", "File system check", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (nRet == JOptionPane.OK_OPTION) {
 //				if (vol.isFloppyImage()) {
 					try {
 						vol.reopenForWrite();
+						if (bChangedSector0) vol.update();
 						if (bChangedAlloc) vol.saveAllocationMap();
 						if (changedL3) {
 							// Write all affected sectors

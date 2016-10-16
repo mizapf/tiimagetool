@@ -43,6 +43,7 @@ public class Volume {
 	public final static int SCSI = 1;
 	public final static int HFDC = 2;
 	public final static int FLOPPY = 3;
+	public final static int CF7 = 4;
 	
 	public final static String PARENTDIR = "..";
 	
@@ -75,6 +76,8 @@ public class Volume {
 	int 		m_nDensity = 0;
 	boolean		m_bProtection = false;
 	
+	boolean		m_cf7Inconsistency;
+	
 	private String m_sImageFileName;
 	
 	public Volume(String sFile, boolean bCheck) throws FileNotFoundException, IOException, ImageException {
@@ -82,6 +85,7 @@ public class Volume {
 		Sector sector0 = null;
 		byte[] abySect0 = null;
 		int number = -1;
+		m_cf7Inconsistency = false;
 		
 		// Check whether we have a number at the end of the name
 		int volnumpos = sFile.lastIndexOf("#");
@@ -98,11 +102,11 @@ public class Volume {
 		// Get the image format
 		if (number > -1) {
 			// We have a CF7
-			ImageFormat format = ImageFormat.getImageFormat(sFile, SECTOR_LENGTH);
+			ImageFormat format = ImageFormat.getImageFormat(sFile);
 			m_Image = ((CF7ImageFormat)format).getSubvolume(number);
 		}
 		else {
-			m_Image = ImageFormat.getImageFormat(sFile, SECTOR_LENGTH);
+			m_Image = ImageFormat.getImageFormat(sFile);
 		}
 		
 		m_nLastMod = m_Image.getLastModifiedTime();
@@ -119,19 +123,16 @@ public class Volume {
 			// TODO: Check with image
 			m_nTotalSectors = Utilities.getInt16(abySect0, 0x0a);
 			
+			m_nHeads = abySect0[0x12] & 0xff;
+			m_nTracksPerSide = abySect0[0x11] & 0xff;
+			m_nDensity = abySect0[0x13] & 0xff;		
+
 			if (m_Image instanceof CF7VolumeFormat) {
+				m_nType = CF7;
 				// There may be inconsistencies with CF7 volumes.
 				// TODO: This should be checked; maybe offer to fix the volume?
-				m_nHeads = 2;
-				m_nTracksPerSide = 40;
-				m_nDensity = 2;
 			}
-			else {
-				m_nHeads = abySect0[0x12] & 0xff;
-				m_nTracksPerSide = abySect0[0x11] & 0xff;
-				m_nDensity = abySect0[0x13] & 0xff;		
-			}
-
+		
 			m_nSectorsPerAU = (int)(m_nTotalSectors/1601) + 1;
 			m_bProtection = (abySect0[0x10]=='P');
 			m_nReservedAUs = 0x21;
@@ -179,7 +180,7 @@ public class Volume {
 		
 		m_sVolumeName = Utilities.getString10(abySect0, 0);
 		
-		if (m_nType==FLOPPY)
+		if (m_nType==FLOPPY || m_nType==CF7)
 			m_dirRoot = new Directory(this, sector0);  // used for floppy
 		else 
 			m_dirRoot = new Directory(this, sector0, null);
@@ -201,7 +202,19 @@ public class Volume {
 		m_Image.writeSector(nNumber, abySector, bNeedReopen);
 //		m_nLastMod = m_Image.getLastModifiedTime();
 	}
-
+	
+	public void setGeometry(int total, int tracks, int heads, int sectors, int density) {
+		m_nTotalSectors = total;
+		m_nTracksPerSide = tracks;
+		m_nHeads = heads;
+		m_nSectorsPerTrack = sectors;
+		m_nDensity = density;
+	}
+	
+	public boolean hasCf7Inconsistency() {
+		return m_cf7Inconsistency;
+	}
+	
 	public void reopenForWrite() throws IOException {
 		m_Image.reopenForWrite();
 	}
@@ -258,7 +271,7 @@ public class Volume {
 	}
 
 	public void saveAllocationMap() throws IOException, ImageException, ProtectedException {
-		if (m_nType==FLOPPY) {
+		if (m_nType==FLOPPY || m_nType==CF7) {
 			// read sector 0 and paste map into locations
 			byte[] abySect0 = readSector(0).getBytes();
 			byte[] bitmap = m_allocMap.toBitField();
@@ -291,6 +304,10 @@ public class Volume {
 	
 	public boolean isHFDCImage() {
 		return m_nType == HFDC;
+	}
+	
+	public boolean isCF7Image() {
+		return m_nType == CF7;
 	}
 
 	public String getName() {
@@ -474,7 +491,7 @@ public class Volume {
 	public int getAllRequiredSectors(int nAUSize) {
 		// Sector 0 is already used for the root directory
 		// Allocation map is included in sector 0 for floppies
-		if (isFloppyImage()) return 0;
+		if (isFloppyImage() || isCF7Image()) return 0;
 		
 		int nAllocMapSectors = ((m_allocMap.getMaxAU()/8)-1) / SECTOR_LENGTH + 1; 
 		
@@ -574,7 +591,7 @@ public class Volume {
 
 		Utilities.setString(abyNewVIB, 0, getName(), 10);
 		
-		if (m_nType==FLOPPY) {
+		if (m_nType==FLOPPY || m_nType==CF7) {
 			Utilities.setInt16(abyNewVIB, 0x0a, m_nTotalSectors);
 			abyNewVIB[0x0c] = (byte)(m_nSectorsPerTrack & 0xff);
 			Utilities.setString(abyNewVIB, 0x0d, "DSK", 3);
@@ -583,16 +600,22 @@ public class Volume {
 			abyNewVIB[0x12] = (byte)(m_nHeads & 0xff);
 			abyNewVIB[0x13] = (byte)(m_nDensity & 0xff);
 
-			Directory[] dirs = m_dirRoot.getDirectories();
-			for (int i=0; i < 3; i++) {
-				if (i < dirs.length) {
-					Directory sub = dirs[i];
-					Utilities.setString(abyNewVIB, 0x14 + i*12, sub.getName(), 10);
-					Utilities.setInt16(abyNewVIB, 0x1e + i*12, sub.getFdrSector()); 					
+			if (m_nType==FLOPPY) {
+				Directory[] dirs = m_dirRoot.getDirectories();
+				for (int i=0; i < 3; i++) {
+					if (i < dirs.length) {
+						Directory sub = dirs[i];
+						Utilities.setString(abyNewVIB, 0x14 + i*12, sub.getName(), 10);
+						Utilities.setInt16(abyNewVIB, 0x1e + i*12, sub.getFdrSector()); 					
+					}
+					else {
+						for (int j=0; j < 12; j++) abyNewVIB[0x14 + j + i*12] = (byte)0;
+					}
 				}
-				else {
-					for (int j=0; j < 12; j++) abyNewVIB[0x14 + j + i*12] = (byte)0;
-				}
+			}
+			else {
+				// Clear the DIR area for CF7
+				for (int i=0x14; i<0x38; i++) abyNewVIB[i] = (byte)0x00;
 			}
 			byte[] map = m_allocMap.toBitField();
 			for (int j=0; j < map.length; j++) {
@@ -640,10 +663,10 @@ public class Volume {
 		writeSector(0, abyNewVIB, false);
 	}
 	
-	void update() throws IOException, ImageException, ProtectedException {
+	public void update() throws IOException, ImageException, ProtectedException {
 		// Write the allocation map and the VIB
 		writeVIB();
-		if (m_nType!=FLOPPY) {
+		if (m_nType!=FLOPPY && m_nType!=CF7) {
 			saveAllocationMap();
 		}		
 	}
@@ -673,7 +696,7 @@ public class Volume {
 		if (format) {
 			
 			// Load it and write sectors 0 and 1
-			image = ImageFormat.getImageFormat(newImageFile.getAbsolutePath(), SECTOR_LENGTH);
+			image = ImageFormat.getImageFormat(newImageFile.getAbsolutePath());
 			
 			// Sector 0
 			byte[] sector0 = new byte[SECTOR_LENGTH];

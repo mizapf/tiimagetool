@@ -82,7 +82,7 @@ public class ImageCheck {
 			// Check whether all FIBs of this file are allocated
 			for (int nFib : afib) {
 				int nAuFib = nFib / map.getAUSize();
-				ps.print(":  Sector " + nFib + " = FIB of file " + sbFullname.toString());
+				ps.print("Sector " + nFib + " = FIB of file " + sbFullname.toString());
 				if (!map.hasAllocated(nAuFib)) {
 					agl.addAU(nAuFib);
 					ps.println(":  ERROR: FIB at sector " + nFib + " not allocated");
@@ -124,7 +124,7 @@ public class ImageCheck {
 				broken.add(agl);
 			}
 			else {
-				ps.println(":  Sector " + ad[i].getDDRSector() + " = DDR of directory " + sbFullname.toString());
+				ps.println("Sector " + ad[i].getDDRSector() + " = DDR of directory " + sbFullname.toString());
 			}
 			// Recurse
 			StringBuilder sbNew = new StringBuilder();
@@ -134,6 +134,17 @@ public class ImageCheck {
 		}
 	}
 
+	public static boolean checkCF7Inconsistency(Volume vol, int[] geom) throws IOException, ImageException {
+		Sector sector0 = vol.readSector(0);
+		byte[] abySect0 = sector0.getBytes();
+		geom[0] = Utilities.getInt16(abySect0, 0x0a);
+		geom[1] = abySect0[0x12] & 0xff;  // heads
+		geom[2] = abySect0[0x11] & 0xff;  // tracks
+		geom[3] = abySect0[0x0c] & 0xff;  // sectors/track
+		geom[4] = abySect0[0x13] & 0xff;  // density
+		return (geom[0] != 1600) || (geom[1] != 2) || (geom[2] != 40) || (geom[3] != 20) || (geom[4] != 2);
+	}
+	
 	public static void checkL3(Directory dir, ArrayList<TFile> fileList) {
 		TFile[] aFile = dir.getFiles();
 		// For each file in this directory
@@ -256,7 +267,7 @@ public class ImageCheck {
 			for (int j=0; j < ainv.length; j++) {
 				if ((ainv[j].start <= au * nAuSize) && (au * nAuSize <= ainv[j].end)) {
 					alloc.addEntity(sFullname.toString());
-					ps.println(":  AU " + au + " belongs to " + sFullname.toString() + " (dirpos=" + pos + ", cluster=" + j + ")");
+					ps.println("AU " + au + " belongs to " + sFullname.toString() + " (dirpos=" + pos + ", cluster=" + j + ")");
 				}
 			}
 			pos++;
@@ -276,9 +287,9 @@ public class ImageCheck {
 	}
 	
 	public static void findAllocationFaults(Volume image, AllocationMap allocMap, ArrayList<AllocationDomain> list, PrintStream ps) {
-		boolean bLittle = image.isFloppyImage();
+		boolean bLittle = image.isFloppyImage() || image.isCF7Image();
 		int nMin = 2;
-		if (!image.isFloppyImage()) nMin = 32;
+		if (!image.isFloppyImage() && !image.isCF7Image()) nMin = 32;
 //		System.out.println("total AUs = " + image.getVib().getTotalNumberOfAUs());
 		for (int au=nMin; au < allocMap.getMaxAU(); au++) { 
 			if (allocMap.hasAllocated(au)) {

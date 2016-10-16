@@ -75,7 +75,7 @@ public class CHDRawAction extends Activity {
 		ImageFormat ifsource = null;
 		MessCHDFormat source = null;
 		try {
-			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath(), Volume.SECTOR_LENGTH);
+			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath());
 			if (!(ifsource instanceof MessCHDFormat)) {
 				JOptionPane.showMessageDialog(m_parent, "Not a MESS CHD image file.", "Invalid format error", JOptionPane.ERROR_MESSAGE);				
 				return;

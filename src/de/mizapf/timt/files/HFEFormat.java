@@ -279,8 +279,8 @@ class HFEFormat extends ImageFormat {
 	
 	static final int ENDOFTRACK = -1;
 	
-	HFEFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
-		super(filesystem, sImageName, nSectorLength);
+	HFEFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 	}
 	
 	HFEFormat(File file) throws FileNotFoundException {

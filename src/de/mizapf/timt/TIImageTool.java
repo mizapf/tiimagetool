@@ -22,8 +22,6 @@
 /*
 	TODOs for 2.x
 	-------------
-    [ ] Open EMULATE files 
-    [ ] Open CF7
     [ ] Sector editor
     
     New for 2.1+
@@ -40,6 +38,8 @@
     [x] Search function
     [x] Fix import of CRLF in imported texts
     [x] Fix plain dump for dis/fix 80 (ends too early)
+    [x] Open EMULATE files 
+    [x] Open CF7
 */
 
 package de.mizapf.timt;
@@ -71,6 +71,7 @@ import java.io.FileOutputStream;
 import java.io.FileInputStream;
 import java.io.DataInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.RandomAccessFile;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -147,7 +148,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenuItem m_iNewCF7Vol;
 	JMenuItem m_iNewCF7Img;
 	JMenuItem m_iOpen;
-	JMenu	  m_mOpenRecent;
+	JMenu     m_mOpenRecent;
 	JMenuItem m_iClose;
 	JMenuItem m_iCloseAll;
 	JMenuItem m_iExport;
@@ -159,10 +160,14 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenu m_mUtility;
 	JMenuItem m_iConsole;
 	JMenuItem m_iCheck;
+	JMenuItem m_iSectorEdit;
 	JMenuItem m_iToScsi;
 	JMenuItem m_iToHfdc;
 	JMenuItem m_iSearch;
 	JMenuItem m_iChangeCHDFormat;
+	JMenuItem m_iReadCF;
+	JMenuItem m_iWriteCF;
+	JMenuItem m_iFormatCF;
 	JMenuItem m_iCHDToRaw;
 	JMenuItem m_iRawToCHD;
 	JMenuItem m_iInstallGenOS;
@@ -374,13 +379,22 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_mUtility.add(m_iCheck);
 			m_iInstallGenOS = createMenuItem(new InstallGenOSAction());
 			m_mUtility.add(m_iInstallGenOS);
+			m_iSectorEdit = createMenuItem(new SectorEditAction());
+			m_mUtility.add(m_iSectorEdit);
 			
 			m_mUtility.addSeparator();
-
+			
 			m_iSearch = createMenuItem(new SearchAction());
 			m_mUtility.add(m_iSearch);
 			
 			m_mUtility.addSeparator();
+			m_iReadCF = createMenuItem(new ReadCFCardAction());
+			m_mUtility.add(m_iReadCF);	
+			m_iWriteCF = createMenuItem(new WriteCFCardAction());
+			m_mUtility.add(m_iWriteCF);	
+			m_iFormatCF = createMenuItem(new FormatCFCardAction());
+			m_mUtility.add(m_iFormatCF);	
+
 			m_iToHfdc = createMenuItem(new ConvertToHFDCAction());
 			m_mUtility.add(m_iToHfdc);
 			
@@ -586,6 +600,28 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 	}
 	
+	class SectorEditorShow implements Runnable {
+	
+		ImageFormat m_image;
+		SectorEditFrame m_edit;
+		String m_name;
+		
+		SectorEditorShow(String name, ImageFormat image) {
+			m_name = name;
+			m_image = image;
+		}
+		
+		public void run() {
+			m_edit = new SectorEditFrame(m_name, m_image, TIImageTool.this);
+			m_edit.createGui(contentFont);
+			Point loc = m_frmMain.getLocationOnScreen();		
+			m_edit.setLocation(loc.x+20, loc.y+20);
+			m_edit.setLocationByPlatform(true);
+			m_edit.setVisible(true);
+			m_edit.pack();
+			m_edit.toFront();
+		}
+	}
 	// ===================================================================
 	// Inner classes
 	// ===================================================================
@@ -1714,6 +1750,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		SwingUtilities.invokeLater(new SearchResultShow(name, content));		
 	}
 	
+	public void showSectorEditor(String name, ImageFormat image) {
+		SwingUtilities.invokeLater(new SectorEditorShow(name, image));		
+	}
+
 	public void showConsoleContent() {
 		if (m_logFile != null) {
 			StringBuilder sbConsoleContent = new StringBuilder();

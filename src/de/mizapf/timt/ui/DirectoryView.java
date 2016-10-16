@@ -365,7 +365,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 
 	public void activateEditMenu() {
 		boolean bDirPossible = true;
-		if (getVolume().isFloppyImage()) {
+		if (getVolume().isFloppyImage() || getVolume().isCF7Image()) {
 			Directory dirCurrent = getDirectory(); 
 			if (!dirCurrent.isRootDirectory()) bDirPossible = false;
 			if (dirCurrent.getDirectories().length>2) bDirPossible = false;
@@ -408,7 +408,8 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_ctxmenu.add(m_iPaste);
 		// We have to enable paste, otherwise pasting from outside by Ctrl-v does not work
 		m_iPaste.setEnabled(true /* m_app.clipboardNotEmpty() */);
-		if (vol.isFloppyImage() && (!m_dirCurrent.isRootDirectory() || m_dirCurrent.getDirectories().length>2)) m_iNewDirectory.setEnabled(false); 
+		if (vol.isCF7Image() || (vol.isFloppyImage() && (!m_dirCurrent.isRootDirectory() || m_dirCurrent.getDirectories().length>2))) 
+			m_iNewDirectory.setEnabled(false); 
 		else m_iNewDirectory.setEnabled(true);
 //		m_dvSelected.backpaintEntryLines();
 		

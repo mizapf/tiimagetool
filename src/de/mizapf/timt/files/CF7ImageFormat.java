@@ -46,8 +46,8 @@ public class CF7ImageFormat extends ImageFormat {
 		else return 0;
 	}
 	
-	public CF7ImageFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
-		super(filesystem, sImageName, nSectorLength);
+	public CF7ImageFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		
 		// Find volumes
 		byte[] header = new byte[32];
@@ -89,7 +89,7 @@ public class CF7ImageFormat extends ImageFormat {
 	}
 	
 	CF7VolumeFormat getSubvolume(int number) throws IOException, ImageException {
-		return new CF7VolumeFormat(m_FileSystem, m_sImageName, m_nSectorLength, number);
+		return new CF7VolumeFormat(m_FileSystem, m_sImageName, number);
 	}
 	
 	@Override	

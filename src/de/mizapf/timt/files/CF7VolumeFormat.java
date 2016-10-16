@@ -48,13 +48,13 @@ class CF7VolumeFormat extends SectorDumpFormat {
 		return (nLength == 409600)? 100 : 0;
 	}
 	
-	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength) throws IOException, ImageException {
-		super(filesystem, sImageName, nSectorLength);
+	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		m_separate = true;
 	}
 
-	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName, int nSectorLength, int volnumber) throws IOException, ImageException {
-		super(filesystem, sImageName, nSectorLength);
+	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName, int volnumber) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		m_separate = false;
 		m_volumeNumber = volnumber;
 		int volsize = 1600 * 256 * 2;
