@@ -41,10 +41,15 @@ public class SectorEditFrame extends JFrame implements ActionListener {
 	JComponent m_head;
 	JPanel m_jp;
 	
-	JButton m_btnStart;
-	JButton m_btnBack;
+	JButton m_btnBegin;
+	JButton m_btnPrev;
 	JButton m_btnNext;
 	JButton m_btnEnd;
+	
+	JLabel[] m_jlByteContent;
+	JLabel[] m_jlAsciiContent;
+	
+	int m_currentSector = 0;
 	
 	private static final String FONTED = Font.MONOSPACED;
 
@@ -59,6 +64,115 @@ public class SectorEditFrame extends JFrame implements ActionListener {
 	private static final String SAVEAS = "saveas";
 	private static final String WRITE = "write";
 	private static final String CLOSE = "close"; 
+
+	private static final String BEGIN = "begin"; 
+	private static final String END = "end"; 
+	private static final String PREV = "prev";
+	private static final String NEXT = "next";
+
+	class FieldListener implements ActionListener {
+		SectorEditFrame m_sef;
+		JTextField m_tf;
+		
+		FieldListener(SectorEditFrame sef, JTextField tf) {
+			m_sef = sef;
+			m_tf = tf;
+		}
+		
+		public void actionPerformed(ActionEvent ae) {
+			try {
+				String fieldInput = m_tf.getText().trim();
+				int secno = 0;
+				boolean hex = fieldInput.startsWith("0x"); 
+				if (hex) secno = Integer.parseInt(fieldInput.substring(2), 16);
+				else secno = Integer.parseInt(fieldInput);
+				m_sef.goToSector(secno);
+			}
+			catch (NumberFormatException nfx) {
+				nfx.printStackTrace();
+			}
+			catch (IOException iox) {
+				iox.printStackTrace();
+			}
+			catch (ImageException ix) {
+				ix.printStackTrace();
+			}
+		}
+	}
+	
+	class ByteListener implements MouseListener, KeyListener {
+		
+		SectorEditFrame m_sef;
+		int m_offset;
+		JLabel m_jl;
+		
+		ByteListener(SectorEditFrame sef, JLabel jl, int offset) {
+			m_sef = sef;
+			m_offset = offset;
+			m_jl = jl;
+		}
+		
+		public void mouseClicked(MouseEvent ae) {
+			// Do this in the SEF
+			// Unfocus other label
+			m_jl.requestFocus();
+			m_jl.setBackground(Color.YELLOW);
+		}
+
+		public void mouseEntered(MouseEvent act) { }
+		public void mouseExited(MouseEvent act) { }
+		public void mousePressed(MouseEvent act) { }
+		public void mouseReleased(MouseEvent act) { }
+		
+		public void keyPressed(KeyEvent ke) {	}
+		public void keyReleased(KeyEvent ke) {	}
+		public void keyTyped(KeyEvent ke) {
+			char ch = ke.getKeyChar();
+			switch (ch) {
+			case 10:
+			case 13: System.out.println("RETURN"); break;
+			case 27: System.out.println("ESC"); break;
+			default: System.out.println((int)ch);
+			}
+		}
+	}
+		
+	class AsciiListener implements MouseListener, KeyListener {
+		
+		SectorEditFrame m_sef;
+		int m_offset;
+		JLabel m_jl;
+		
+		AsciiListener(SectorEditFrame sef, JLabel jl, int offset) {
+			m_sef = sef;
+			m_offset = offset;
+			m_jl = jl;
+		}
+		
+		public void mouseClicked(MouseEvent ae) {
+			// Do this in the SEF
+			// Unfocus other label
+			m_jl.requestFocus();
+			m_jl.setBackground(Color.YELLOW);
+		}
+
+		public void mouseEntered(MouseEvent act) { }
+		public void mouseExited(MouseEvent act) { }
+		public void mousePressed(MouseEvent act) { }
+		public void mouseReleased(MouseEvent act) { }
+		
+		public void keyPressed(KeyEvent ke) {	}
+		public void keyReleased(KeyEvent ke) {	}
+		public void keyTyped(KeyEvent ke) {
+			char ch = ke.getKeyChar();
+			switch (ch) {
+			case 10:
+			case 13: System.out.println("RETURN"); break;
+			case 27: System.out.println("ESC"); break;
+			default: System.out.println((int)ch);
+			}
+		}
+	}
 
 	public SectorEditFrame(String name, ImageFormat image, TIImageTool app) {
 		super(name);
@@ -123,22 +237,27 @@ public class SectorEditFrame extends JFrame implements ActionListener {
 		m_tfSector.setMinimumSize(new Dimension(100,0));
 		m_tfSector.setPreferredSize(new Dimension(2*nLabelWidth,0));
 		m_tfSector.setMaximumSize(new Dimension(100,2*fm.getHeight()));
+		m_tfSector.addActionListener(new FieldListener(this, m_tfSector));
 		
-		m_btnStart = new JButton("|<<");
-		m_btnStart.addActionListener(this);
-		m_btnBack = new JButton("<");
-		m_btnBack.addActionListener(this);
+		m_btnBegin = new JButton("|<<");
+		m_btnBegin.addActionListener(this);
+		m_btnBegin.setActionCommand(BEGIN);
+		m_btnPrev = new JButton("<");
+		m_btnPrev.addActionListener(this);
+		m_btnPrev.setActionCommand(PREV);
 		m_btnNext = new JButton(">");
 		m_btnNext.addActionListener(this);
+		m_btnNext.setActionCommand(NEXT);
 		m_btnEnd = new JButton(">>|");
 		m_btnEnd.addActionListener(this);
+		m_btnEnd.setActionCommand(END);
 
 		firstLine.add(jlSect);
 		firstLine.add(Box.createHorizontalStrut(10));
 		firstLine.add(m_tfSector);
 		firstLine.add(Box.createHorizontalStrut(20));
-		firstLine.add(m_btnStart);
-		firstLine.add(m_btnBack);
+		firstLine.add(m_btnBegin);
+		firstLine.add(m_btnPrev);
 		firstLine.add(m_btnNext);
 		firstLine.add(m_btnEnd);
 		firstLine.add(Box.createHorizontalGlue());
@@ -159,18 +278,32 @@ public class SectorEditFrame extends JFrame implements ActionListener {
 		jpAscii.setLayout(new GridLayout(16,16));
 		jpAscii.setBackground(Color.WHITE);
 		
-		JLabel[] jlByteContent = new JLabel[256];
-		JLabel[] jlAsciiContent = new JLabel[256];
+		m_jlByteContent = new JLabel[256];
+		m_jlAsciiContent = new JLabel[256];
 		
 		Font mono = Font.decode(m_app.contentFont);
 		Font byteFont = mono.deriveFont((float)(mono.getSize() * 1.5));
 		for (int i=0; i < 256; i++) {
-			jlByteContent[i] = new JLabel("00");
-			jlAsciiContent[i] = new JLabel(".");
-			jpBytes.add(jlByteContent[i]);
-			jpAscii.add(jlAsciiContent[i]);
-			jlByteContent[i].setFont(byteFont);
-			jlAsciiContent[i].setFont(byteFont);
+			m_jlByteContent[i] = new JLabel("00");
+			m_jlByteContent[i].setFocusable(true);
+			ByteListener bl = new ByteListener(this, m_jlByteContent[i], i);
+			m_jlByteContent[i].addMouseListener(bl);
+			m_jlByteContent[i].addKeyListener(bl);
+			m_jlByteContent[i].setFont(byteFont);
+			m_jlByteContent[i].setOpaque(true);
+			m_jlByteContent[i].setBackground(Color.WHITE);
+
+			m_jlAsciiContent[i] = new JLabel(".");
+			m_jlAsciiContent[i].setFocusable(true);
+			AsciiListener al = new AsciiListener(this, m_jlAsciiContent[i], i);
+			m_jlAsciiContent[i].addMouseListener(al);
+			m_jlAsciiContent[i].addKeyListener(al);
+			m_jlAsciiContent[i].setFont(byteFont);
+			m_jlAsciiContent[i].setOpaque(true);
+			m_jlAsciiContent[i].setBackground(Color.WHITE);
+			
+			jpBytes.add(m_jlByteContent[i]);
+			jpAscii.add(m_jlAsciiContent[i]);
 		}
 		
 		FontMetrics fm1 = ((Graphics2D)(m_app.getMainFrame().getGraphics())).getFontMetrics(byteFont);
@@ -185,12 +318,7 @@ public class SectorEditFrame extends JFrame implements ActionListener {
 		try {
 			char ch;
 			byte[] sect0 = getSector(0);
-			for (int i = 0; i < 256; i++) {
-				jlByteContent[i].setText(Utilities.toHex(sect0[i],2));
-				if (sect0[i] > 31 && sect0[i] < 127) ch = (char)sect0[i];
-				else ch = '.';
-				jlAsciiContent[i].setText(String.valueOf(ch));
-			}
+			showContent(sect0);
 		}
 		catch (IOException iox) {
 			iox.printStackTrace();
@@ -216,6 +344,21 @@ public class SectorEditFrame extends JFrame implements ActionListener {
 			m_sectormap.put(new Integer(i), sect);
 		}
 		return sect.getBytes();
+	}
+	
+	void showContent(byte[] content) {
+		char ch = 0;
+		for (int i = 0; i < 256; i++) {
+			m_jlByteContent[i].setText(Utilities.toHex(content[i],2));
+			if (content[i] > 31 && content[i] < 127) ch = (char)content[i];
+			else ch = '.';
+			m_jlAsciiContent[i].setText(String.valueOf(ch));
+		}
+	}
+	
+	void goToSector(int i) throws IOException, ImageException {
+		m_currentSector = i;
+		showContent(getSector(i));
 	}
 	
 	Box createLine(String left, String right, Color col, boolean title) {
@@ -288,7 +431,42 @@ public class SectorEditFrame extends JFrame implements ActionListener {
 			else {
 				if (ae.getActionCommand()==WRITE) {
 					// Write back
-				}				
+				}
+				else {
+					try {
+						int last = m_currentSector;
+						if (ae.getActionCommand()==BEGIN) {
+							m_currentSector = 0;
+						}
+						else {
+							if (ae.getActionCommand()==PREV) {
+								if (m_currentSector > 0) m_currentSector--;
+								showContent(getSector(m_currentSector));
+							}
+							else {
+								if (ae.getActionCommand()==NEXT) {
+									m_currentSector++;
+									showContent(getSector(m_currentSector));
+								}
+								else {
+									if (ae.getActionCommand()==END) {
+										System.out.println("Last sector");
+									}
+								}
+							}
+						}
+						if (last != m_currentSector) {
+							m_tfSector.setText(String.valueOf(m_currentSector));
+							showContent(getSector(m_currentSector));
+						}
+					}
+					catch (IOException iox) {
+						iox.printStackTrace();
+					}
+					catch (ImageException ix) {
+						ix.printStackTrace();
+					}
+				}
 			}
 		}
 	}

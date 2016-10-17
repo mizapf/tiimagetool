@@ -584,7 +584,7 @@ public class MessCHDFormat extends ImageFormat {
 	}
 	
 	@Override
-	Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
 		byte[] abySector = new byte[m_nSectorLength];
 		// Get sector offset in track
 		//			System.out.println("Read sector " + nSectorNumber);

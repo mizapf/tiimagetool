@@ -130,7 +130,7 @@ class TrackDumpFormat extends ImageFormat {
 	/** We return the cached sector.
 	*/
 	@Override
-	Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
 		if (nSectorNumber > 10000) throw new ImageException("Bad sector number: " + nSectorNumber); 
 		int secindex = readTrack(nSectorNumber);
 		if (secindex != NONE) {
