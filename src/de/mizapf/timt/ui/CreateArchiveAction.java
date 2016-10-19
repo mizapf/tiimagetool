@@ -26,6 +26,7 @@ import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.awt.Cursor;
 import java.util.List;
+import java.util.ArrayList;
 import java.io.IOException;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.util.*;
@@ -75,20 +76,32 @@ public class CreateArchiveAction extends Activity {
 			// Create an empty archive
 			byte flags = ad.useCompression()? TFile.INTERNAL : (byte)0x00;
 			byte[] abyEmpty = Archive.createEmptyArchive(ad.useCompression());
+
 			byte[] abyTfi = TIFiles.createTfi(abyEmpty, ad.getArchiveName(), flags, 128, 0);
 			TFile arkf = null;
 			
 			try {
+				// Caution: We must not change the directory while elements
+				// are selected.
+				// Copy the files into an array first
+				List<TFile> forArc = new ArrayList<TFile>();
+				for (Element selected : dvCurrent.getSelectedEntries()) {
+					if (selected instanceof TFile) {
+						forArc.add((TFile)selected);
+					}
+				}
+
+				// then add the archive
+				// FIXME: Must be more efficient. Think about an archive creation
+				// outside of a volume.
 				arkf = dirCurrent.insertFile(abyTfi, null, false);
 				ark = arkf.unpackArchive();
 
-				for (Element selected : dvCurrent.getSelectedEntries()) {
-					if (selected instanceof TFile) {
-						// Insert into archive
-						TIFiles tfi = TIFiles.createFromFile((TFile)selected);
-						ark.insertFile(tfi.toByteArray(), null, false);
-					}
+				for (TFile file : forArc) {
+					TIFiles tfi = TIFiles.createFromFile(file);
+					ark.insertFile(tfi.toByteArray(), null, false);
 				}
+				// FIXME: Element selection must be improved (select/deselect) 
 			}
 			catch (InvalidNameException inx) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot put file " + inx.getMessage() + " into archive.", "Archive error", JOptionPane.ERROR_MESSAGE); 	
