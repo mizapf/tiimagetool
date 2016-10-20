@@ -320,6 +320,62 @@ public class Archive extends Directory {
 		return afNew;
 	}
 	
+	/** Used when creating an archive. This is more efficient since it 
+		compresses the archive only after adding all files. 
+	*/		
+	public void insertFiles(TIFiles[] files, String sNewFilename, boolean bReopen) throws ProtectedException, IOException, InvalidNameException, ImageFullException, ImageException, FileExistsException {
+		if (isProtected()) throw new ProtectedException("Archive is read-only");
+
+		if (m_Files.length>=127) {
+			throw new ImageFullException("No space left in archive. File maximum reached.");
+		}
+
+		int nSectors = 0;
+
+		// Add all files here before compressing
+		for (TIFiles tifile : files) {
+			byte[] abyTif = tifile.toByteArray();
+			TFile fileNew = new TFile(abyTif);
+	
+			nSectors = (abyTif.length - 128)/Volume.SECTOR_LENGTH;
+			// System.out.println("Needs " + nSectors + " sectors (without FIB)");
+			
+			// New file name
+			String sContName = sNewFilename;
+			if (sNewFilename==null) {
+				sContName = fileNew.getName();
+				if (sContName==null) {
+					throw new ImageException("File name missing in TIFILES file. Please provide a file name.");
+				}
+			}
+			
+			// Already there?
+			sContName = sContName.trim();
+			for (TFile file:m_Files) {
+				if (file.getName().trim().equals(sContName))
+					throw new FileExistsException(sContName);
+			}
+			
+			if (!TFile.validName(sContName)) throw new InvalidNameException(sContName); 
+			
+			// System.out.println("Insert a new file " + sContName); 
+			ArchiveFile afNew = new ArchiveFile(abyTif, 128, sContName, fileNew.getRecordLength(), fileNew.getFlags(), 
+				fileNew.getRecordsPerSector(), fileNew.getEOFOffset(), fileNew.getRecordCount(), fileNew.getAllocatedSectors(), this);
+			
+			// Add the file to this archive; gets sorted automatically
+			addToList(afNew);			
+		}
+		
+		// For archives, we now have to rebuild the byte array
+		m_abyOldContent = m_abyContent;
+		Directory dirParent = getContainingDirectory();
+		// Compression happens here
+		m_abyContent = rebuild();
+
+		// System.out.println(Utilities.hexdump(0, 0, m_abyContent, m_abyContent.length, false));
+		m_fBase = dirParent.updateFile(m_fBase, m_abyContent, (m_abyContent.length/256)*2, bReopen);
+	}	
+	
 	public String getFullPathname() {
 		return m_dirParent.getFullPathname() + "." + getName() + " (Archive)";
 	}

@@ -132,7 +132,7 @@ public class ViewImageAction extends Activity {
 		}
 		catch (FormatException fx) {
 			try {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), sel.getName() + ": Not an image file; showing plain dump", "Read error", JOptionPane.INFORMATION_MESSAGE);
+//				JOptionPane.showMessageDialog(dvCurrent.getFrame(), sel.getName() + ": Not an image file; showing plain dump", "Read error", JOptionPane.INFORMATION_MESSAGE);
 				byte[] content = sel.getRawContent();
 				imagetool.showTextContent(sel.getName(), Utilities.hexdump(0, 0, content, content.length, false));
 			}

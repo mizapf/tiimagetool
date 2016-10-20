@@ -37,7 +37,7 @@ import de.mizapf.timt.TIImageTool;
 /**
 	Heading plus JList below
 */
-public class DirectoryPanel extends JComponent implements ListCellRenderer<Element>, ListSelectionListener {
+public class DirectoryPanel extends JComponent implements ListCellRenderer<Element> /*, ListSelectionListener */ {
 
 	DirectoryView m_dvCurrent;
 	JList<Element> m_Listing;
@@ -277,7 +277,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	//    ListSelectionListener
 	// =============================================================
 
-	public void valueChanged(ListSelectionEvent lse) {
+/*	public void valueChanged(ListSelectionEvent lse) {
 		int minIndex = lse.getFirstIndex();
 		int maxIndex = lse.getLastIndex();
 		if (!lse.getValueIsAdjusting()) {
@@ -285,7 +285,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 			// Source is JList
 			System.out.println("Selected index = " + m_Listing.getSelectedIndex());
 		}		
-	}
+	} */
 	
 	/** Returns the element where the pointer stopped. */
 	Element getLastSelected() {

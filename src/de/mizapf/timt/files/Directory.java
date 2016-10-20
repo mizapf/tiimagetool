@@ -738,7 +738,7 @@ public class Directory extends Element {
 	
 	protected boolean containsInList(TFile file) {
 		for (int i=0; i < m_Files.length; i++) {
-			if (file.equals(m_Files[i])) return true;
+			if (file.getName().equals(m_Files[i].getName())) return true;
 		}
 		return false;
 	}
@@ -756,7 +756,7 @@ public class Directory extends Element {
 		int poso = 0;
 		int posn = 0;
 		while (poso < aold.length) {
-			if (aold[poso].equals(delfile)) poso++;
+			if (aold[poso].getName().equals(delfile.getName())) poso++;
 			else m_Files[posn++] = aold[poso++];
 		}
 	}
@@ -767,7 +767,7 @@ public class Directory extends Element {
 		int poso = 0;
 		int posn = 0;
 		while (poso < aold.length) {
-			if (aold[poso].equals(deldir)) poso++;
+			if (aold[poso].getName().equals(deldir.getName())) poso++;
 			else m_Subdirs[posn++] = aold[poso++];
 		}
 	}
@@ -816,13 +816,23 @@ public class Directory extends Element {
 
 	// =========================================================================
 	
+	/** Only called by Archives for updating the archive file in this directory. */
 	protected TFile updateFile(TFile file, byte[] abySectorContent, int nNewL3, boolean bReopen) throws IOException, ImageException, InvalidNameException, ProtectedException {
 		// Keep the old file as a TIFiles image
-		byte[] abyTfiNew = TIFiles.createTfi(abySectorContent, file.getName(), file.getFlags(), file.getRecordLength(), nNewL3); 
+		TIFiles tfiOld = TIFiles.createFromFile(file);
+		byte[] abyTfiNew = TIFiles.createTfi(abySectorContent, file.getName(), file.getFlags(), file.getRecordLength(), nNewL3);
 		// System.out.println("Deleting old file " + file.getName());
 		deleteFile(file, true);
 		// System.out.println("Inserting new file");
-		TFile fNew = insertFile(abyTfiNew, null, bReopen);
+		TFile fNew = null;
+		try {
+			fNew = insertFile(abyTfiNew, null, bReopen);
+		}
+		catch (ImageFullException ifx) {
+			// Restore old version
+			fNew = insertFile(tfiOld.toByteArray(), null, bReopen);
+			throw ifx;
+		}
 		return fNew;
 	}
 

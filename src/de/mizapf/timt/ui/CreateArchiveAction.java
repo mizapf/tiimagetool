@@ -84,30 +84,36 @@ public class CreateArchiveAction extends Activity {
 				// Caution: We must not change the directory while elements
 				// are selected.
 				// Copy the files into an array first
-				List<TFile> forArc = new ArrayList<TFile>();
+				List<TIFiles> forArc = new ArrayList<TIFiles>();
 				for (Element selected : dvCurrent.getSelectedEntries()) {
 					if (selected instanceof TFile) {
-						forArc.add((TFile)selected);
+						forArc.add(TIFiles.createFromFile((TFile)selected));
 					}
 				}
-
+				TIFiles[] aforarc = new TIFiles[forArc.size()];
+				forArc.toArray(aforarc);			
+				
 				// then add the archive
-				// FIXME: Must be more efficient. Think about an archive creation
-				// outside of a volume.
 				arkf = dirCurrent.insertFile(abyTfi, null, false);
 				ark = arkf.unpackArchive();
 
-				for (TFile file : forArc) {
-					TIFiles tfi = TIFiles.createFromFile(file);
-					ark.insertFile(tfi.toByteArray(), null, false);
-				}
+				ark.insertFiles(aforarc, null, false);
 				// FIXME: Element selection must be improved (select/deselect) 
 			}
 			catch (InvalidNameException inx) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot put file " + inx.getMessage() + " into archive.", "Archive error", JOptionPane.ERROR_MESSAGE); 	
 			}
 			catch (ImageFullException ifx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot put file into archive; image full.", "Archive error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Not enough space to save archive.", "Archive error", JOptionPane.ERROR_MESSAGE);
+				// Remove ark again
+				try {	
+					dirCurrent.deleteFile(arkf, true);
+					dirCurrent.commit(true);
+				}
+				catch (Exception e) {
+					// Do your best, we don't expect any issue here
+					e.printStackTrace();
+				}
 			}
 			catch (ImageException ix) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image corrupt: " + ix.getMessage(), "Archive error", JOptionPane.ERROR_MESSAGE);
