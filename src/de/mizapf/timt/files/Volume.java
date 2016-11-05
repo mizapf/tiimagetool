@@ -194,12 +194,12 @@ public class Volume {
 		return m_Image.readSector(nSectorNumber);
 	}
 	
-	public void writeSector(int nNumber, byte[] abySector, boolean bNeedReopen) throws ProtectedException, IOException, ImageException {
+	public void writeSector(int nNumber, byte[] abySector) throws ProtectedException, IOException, ImageException {
 		if (isProtected()) throw new ProtectedException("Volume is write-protected");
 //		long time = m_Image.getLastModifiedTime();
 		// System.out.println("time = " + time + ", last mod = " + m_nLastMod);
 //		if (m_nLastMod < time) throw new ProtectedException("Volume has changed on disk; cannot write. Image will be closed.");
-		m_Image.writeSector(nNumber, abySector, bNeedReopen);
+		m_Image.writeSector(nNumber, abySector);
 //		m_nLastMod = m_Image.getLastModifiedTime();
 	}
 	
@@ -276,7 +276,7 @@ public class Volume {
 			byte[] abySect0 = readSector(0).getBytes();
 			byte[] bitmap = m_allocMap.toBitField();
 			System.arraycopy(bitmap, 0, abySect0, 0x38, bitmap.length);
-			writeSector(0, abySect0, false);
+			writeSector(0, abySect0);
 		}
 		else {
 			// create new contents for sectors 1-31
@@ -289,7 +289,7 @@ public class Volume {
 					nLength = bitmap.length - (i-1)*256;
 				}
 				System.arraycopy(bitmap, (i-1)*256, sector, 0, nLength);
-				writeSector(i, sector, false);
+				writeSector(i, sector);
 			}
 		}
 	}
@@ -660,7 +660,7 @@ public class Volume {
 				j=j+2;
 			}			
 		}
-		writeSector(0, abyNewVIB, false);
+		writeSector(0, abyNewVIB);
 	}
 	
 	public void update() throws IOException, ImageException, ProtectedException {
@@ -731,8 +731,8 @@ public class Volume {
 			byte[] sector1 = new byte[SECTOR_LENGTH];
 			Arrays.fill(sector1, 0, SECTOR_LENGTH, (byte)0x00);
 			
-			image.writeSector(0, sector0, false);
-			image.writeSector(1, sector1, false);
+			image.writeSector(0, sector0);
+			image.writeSector(1, sector1);
 			image.close();
 		}
 	}

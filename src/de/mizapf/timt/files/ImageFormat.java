@@ -67,6 +67,8 @@ public abstract class ImageFormat  {
 	protected byte[] m_abyTrack;
 	protected int m_nCurrentTrack; 
 
+	protected int m_nTotalSectors;
+	
 	protected static final int TRACK = 0;
 	protected static final int SECTOR = 1;
 	protected static final int HEAD = 2;
@@ -79,6 +81,7 @@ public abstract class ImageFormat  {
 	protected int m_currentHead = 0;
 	protected int m_nSectorsByFormat;
 	protected int m_codeRate = 1;
+
 
 	protected ImageFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
 		m_FileSystem = filesystem;
@@ -112,12 +115,17 @@ public abstract class ImageFormat  {
 		return m_nSectorLength;
 	}
 	
+	public int getTotalSectors() {
+		return m_nTotalSectors;
+	}
+	
 	/** Reads a sector.
 		@param ImageException if the sector cannot be found.
 	*/
 	public abstract Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException;
 	
-	abstract void writeSector(int nNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException;
+	/** Write a sector. Is public for SectorEditFrame. */
+	public abstract void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException;
 	
 	int getDensity() {
 		return m_nDensity;
@@ -209,6 +217,10 @@ public abstract class ImageFormat  {
 		// then head 1, cylinder max ... 0.
 		
 		// The sector offset is redefined here as the sector number in the track
+		
+		if (m_nTotalSectors != 0 && nSectorNumber > m_nTotalSectors) 
+			throw new ImageException("Sector number too high (max " + (m_nTotalSectors -1) + ").");
+		
 		int sector = nSectorNumber % m_nSectorsByFormat;
 		
 		int track = nSectorNumber / m_nSectorsByFormat;
@@ -220,7 +232,7 @@ public abstract class ImageFormat  {
 			cylinder = 2 * m_nCylinders - 1 - track;
 			head++;
 		}
-		if (cylinder < 0) throw new ImageException("Image defines more than two heads");
+		if (cylinder < 0) throw new ImageException("Broken image; seems to imply more than two heads");
 
 		Location loc = new Location(cylinder, head, sector, track);
 		
@@ -241,7 +253,7 @@ public abstract class ImageFormat  {
 	
 	abstract String getDumpFormatName();
 	
-	abstract void flush() throws IOException;
+	public abstract void flush() throws IOException;
 	
 	abstract void createEmptyImage(File newfile, int sides, int density, int tracks, int sectors, boolean format) throws ImageException, FileNotFoundException, IOException;
 	

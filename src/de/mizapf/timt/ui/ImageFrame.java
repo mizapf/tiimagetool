@@ -166,9 +166,14 @@ public class ImageFrame extends JFrame {
 		ImagePanel imp = new ImagePanel(bi, dim1);
 		Container cont = getContentPane(); 
 		cont.setLayout(new BoxLayout(cont, BoxLayout.Y_AXIS));
-		add(imp);		
-		pack();		
+		add(imp);
+
+		Point loc = m_app.getMainFrame().getLocationOnScreen();		
+		setLocation(loc.x+20, loc.y+20);
+		setLocationByPlatform(true);
 		setVisible(true);
+		pack();
+		toFront();		
 	}
 	
 	/*

@@ -24,7 +24,7 @@ import de.mizapf.timt.util.Utilities;
 
 import java.io.*;
 
-public class Sector {
+public class Sector implements Cloneable {
 	byte[] m_abySector = null;
 	int m_nNumber = 0;
 	int m_cellOffset;
@@ -47,9 +47,19 @@ public class Sector {
 		clean();
 	}
 	
+	public Object clone() {
+		byte[] content = new byte[m_abySector.length];
+		System.arraycopy(m_abySector, 0, content, 0, m_abySector.length);
+		return new Sector(m_nNumber, content, m_cellOffset, m_crc, m_mark);
+	}
+	
 	public void setData(byte[] bData) {
 		m_abySector = bData;
 		m_crc = Utilities.crc16_get(bData, 0, bData.length, m_crcinit);
+		m_changed = true;
+	}
+	
+	public void dirty() {
 		m_changed = true;
 	}
 	

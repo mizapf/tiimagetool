@@ -433,7 +433,7 @@ public class TFile extends Element {
 			
 		}
 		// write the new FIB (always sector number)
-		vol.writeSector(nSectorNumber, aFibNew, false);
+		vol.writeSector(nSectorNumber, aFibNew);
 	}
 	
 	/** Does this file have a swapped L3 count? */

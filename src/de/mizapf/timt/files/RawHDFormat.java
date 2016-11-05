@@ -133,7 +133,8 @@ class RawHDFormat extends ImageFormat {
 
 	/** For Windows systems and access to the physical device we must
 		adjust to block boundaries. */
-	void writeSector(int nNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException {
+	@Override
+	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
 		// System.out.println("Writing sector " + nNumber);
 		try {
 			int[] offset = new int[2];
@@ -168,18 +169,16 @@ class RawHDFormat extends ImageFormat {
 
 			// Copy the block in the track into the buffer to be written
 			System.arraycopy(m_abyTrack, nBlockOff, abyNewBlock, 0, BLOCKSIZE);
-
-			if (bNeedReopen) reopenForWrite();
+			
 			m_FileSystem.seek(nPos);
 			m_FileSystem.write(abyNewBlock);
-			if (bNeedReopen) reopenForRead();
 		}
 		catch (EOFException eofx) {
 			throw new EOFException("Sector " + nNumber + " beyond image size");
 		}
 	}
 	
-	void flush() {
+	public void flush() {
 		// Do nothing.
 	}
 	

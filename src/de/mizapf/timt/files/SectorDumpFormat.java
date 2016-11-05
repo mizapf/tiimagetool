@@ -207,6 +207,9 @@ class SectorDumpFormat extends ImageFormat {
 			}
 		}
 		
+		// Now we know the last sector	
+		if (m_nTotalSectors == 0) m_nTotalSectors = m_nSectorsByFormat * m_nCylinders * m_nHeads;
+
 		return secindex;
 	}	
 	
@@ -233,7 +236,7 @@ class SectorDumpFormat extends ImageFormat {
 	}
 
 	@Override
-	void writeSector(int nSectorNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException {
+	public void writeSector(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
 		int secindex = readTrack(nSectorNumber);
 		if (secindex == NONE) throw new ImageException("Sector " + nSectorNumber + " not found");
 		// Write the new data
@@ -252,7 +255,7 @@ class SectorDumpFormat extends ImageFormat {
 		m_positionInTrack += actnumber;
 	}
 
-	void flush() throws IOException {
+	public void flush() throws IOException {
 		boolean trackchanged = false;
 		if (m_currentTrack == NONE) return;
 		for (int i=0; i < m_sector.length; i++) {

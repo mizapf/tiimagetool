@@ -72,6 +72,8 @@ public class SectorEditAction extends Activity {
 			}
 			else {
 				ImageFormat iform = ImageFormat.getImageFormat(sAbsFile);
+				java.io.File filePar = selectedFile.getParentFile();
+				imagetool.setSourceDirectory(filePar, "image");
 				imagetool.showSectorEditor(selectedFile.getName(), iform);
 			}
 		}

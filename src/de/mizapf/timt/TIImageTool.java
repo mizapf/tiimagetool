@@ -22,7 +22,6 @@
 /*
 	TODOs for 2.x
 	-------------
-    [ ] Sector editor
     
     New for 2.1+
     [x] Redirect standard output
@@ -40,6 +39,7 @@
     [x] Fix plain dump for dis/fix 80 (ends too early)
     [x] Open EMULATE files 
     [x] Open CF7
+    [x] Sector editor
 */
 
 package de.mizapf.timt;

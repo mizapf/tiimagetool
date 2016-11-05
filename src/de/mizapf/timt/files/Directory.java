@@ -527,7 +527,7 @@ public class Directory extends Element {
 					System.out.println("Error when writing contents of " + getName() + ": Writing to cluster " 
 						+ intv + " failed at sector " + nSect + "; contents.length = " + contents.length + ", offset = " + offset);
 				}
-				vol.writeSector(nSect, aby, false);
+				vol.writeSector(nSect, aby);
 				offset += Volume.SECTOR_LENGTH;
 			}
 		}
@@ -852,7 +852,7 @@ public class Directory extends Element {
 		
 		if (!m_Volume.isFloppyImage() && !m_Volume.isCF7Image()) Utilities.setInt16(abyNew, 254, m_nDDRSector / m_Volume.getAUSize());
 		// System.out.println("Writing the index record at " + m_nFileIndexSector);
-		m_Volume.writeSector(m_nFileIndexSector, abyNew, false);		
+		m_Volume.writeSector(m_nFileIndexSector, abyNew);		
 	}
 	
 	/** Writes a new directory descriptor record. */
@@ -908,7 +908,7 @@ public class Directory extends Element {
 			}
 			
 			// write the new DDR
-			m_Volume.writeSector(nSector, aDDRNew, false);
+			m_Volume.writeSector(nSector, aDDRNew);
 		}
 		// else: Root directory of HD: will be written on next update
 	}

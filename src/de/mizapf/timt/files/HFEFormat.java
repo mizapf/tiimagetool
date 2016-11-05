@@ -208,6 +208,8 @@ class HFEFormat extends ImageFormat {
 			track0s0_encoding = bytes[23] & 0xff;
 			track0s1_altencoding = (bytes[24]==((byte)0x00));
 			track0s1_encoding = bytes[25] & 0xff;
+			
+			m_nHeads = number_of_side;
 		}		
 		
 		public String toString() {
@@ -445,6 +447,9 @@ class HFEFormat extends ImageFormat {
 		m_sector = sectors.toArray(new Sector[count]);
 		m_nSectorsByFormat = count;	
 		
+		// Now we know the last sector	
+		if (m_nTotalSectors == 0) m_nTotalSectors = m_nSectorsByFormat * m_nCylinders * m_nHeads;
+		
 		return secindex;
 	}
 	
@@ -462,7 +467,7 @@ class HFEFormat extends ImageFormat {
 	}
 	
 	@Override
-	void writeSector(int nSectorNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException {
+	public void writeSector(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
 		int secindex = readTrack(nSectorNumber);
 		if (secindex == NONE) throw new ImageException("Sector " + nSectorNumber + " not found");
 		// Write the new data
@@ -477,7 +482,7 @@ class HFEFormat extends ImageFormat {
 
 	/** Write the track back into the image file.
 	*/
-	void flush() throws IOException {
+	public void flush() throws IOException {
 		boolean trackchanged = false;
 		if (m_currentCylinder == NONE) return;
 		for (int i=0; i < m_sector.length; i++) {

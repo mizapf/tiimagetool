@@ -196,9 +196,7 @@ public class MessCHDFormat extends ImageFormat {
 	long m_nHunkOffset;
 	
 	long m_nAppendOffset;
-	
-	private int m_nTotalSectors;
-	
+		
 	final static int METALENGTH = 16;	
 	final static int MAPENTRYSIZEv4 = 16;	
 	
@@ -588,16 +586,19 @@ public class MessCHDFormat extends ImageFormat {
 		byte[] abySector = new byte[m_nSectorLength];
 		// Get sector offset in track
 		//			System.out.println("Read sector " + nSectorNumber);
+
+		if (nSectorNumber >= m_nTotalSectors) throw new ImageException("Sector number too high (max " + (m_nTotalSectors-1) + ").");
 		int secoff = getSectorOffset(nSectorNumber);
 		System.arraycopy(m_abyTrack, secoff, abySector, 0, m_nSectorLength);
 		return new Sector(nSectorNumber, abySector);
 	}
 	
-	void writeSector(int nNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException {
+	@Override
+	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
 		try {
 			int secoff = getSectorOffset(nNumber);
 			System.arraycopy(abySector, 0, m_abyTrack, secoff, Volume.SECTOR_LENGTH);
-			writeCurrentHunk(bNeedReopen);
+			writeCurrentHunk(false);
 		}
 		catch (EOFException eofx) {
 			eofx.printStackTrace();
@@ -934,7 +935,7 @@ public class MessCHDFormat extends ImageFormat {
 		return baos.toByteArray();
 	}
 	
-	void flush() {
+	public void flush() {
 		// Do nothing.
 	}
 	

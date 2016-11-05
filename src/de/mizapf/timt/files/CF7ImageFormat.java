@@ -127,7 +127,7 @@ public class CF7ImageFormat extends ImageFormat {
 	}
 	
 	@Override
-	void writeSector(int nNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException {
+	void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
 	}
 }
 

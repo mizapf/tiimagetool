@@ -89,13 +89,13 @@ class TrackDumpFormat extends ImageFormat {
 			tracklen = 6872;
 		}
 		
-		int heads = 2;
+		m_nHeads = 2;
 		if (tracklen==0) throw new ImageException("Unknown or corrupted format");
 		
 		int cylinders = (int)((m_FileSystem.length()/tracklen)/2);
 		if (cylinders < 30) {
 			System.err.println("One-sided format; not complying to standard");
-			heads = 1;
+			m_nHeads = 1;
 			cylinders = cylinders*2;
 		}
 		
@@ -120,7 +120,7 @@ class TrackDumpFormat extends ImageFormat {
 		m_currentCylinder = NONE;
 		m_currentTrack = NONE;
 		m_currentHead = NONE;
-		m_positionInTrack = 0;		
+		m_positionInTrack = 0;	
 	}
 
 	public String getDumpFormatName() {
@@ -142,7 +142,7 @@ class TrackDumpFormat extends ImageFormat {
 	}
 
 	@Override
-	void writeSector(int nSectorNumber, byte[] abySector, boolean bNeedReopen) throws IOException, ImageException {
+	public void writeSector(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
 		int secindex = readTrack(nSectorNumber);
 		if (secindex == NONE) throw new ImageException("Sector " + nSectorNumber + " not found");
 		// Write the new data
@@ -258,7 +258,10 @@ class TrackDumpFormat extends ImageFormat {
 				else m_nDensity = 4;
 			}
 		}
-		
+
+		// Now we know the last sector	
+		if (m_nTotalSectors == 0) m_nTotalSectors = m_nSectorsByFormat * m_nCylinders * m_nHeads;
+
 		return secindex;
 	}
 	
@@ -362,7 +365,7 @@ class TrackDumpFormat extends ImageFormat {
 		m_positionInTrack += actnumber;
 	}
 	
-	void flush() throws IOException {
+	public void flush() throws IOException {
 		boolean trackchanged = false;
 		if (m_currentTrack == NONE) return;
 		for (int i=0; i < m_sector.length; i++) {
