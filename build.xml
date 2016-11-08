@@ -7,6 +7,7 @@
 <property name="build" value="build"/>
 <property name="dist"  value="dist"/>
 <property name="ext"  value="ext"/>
+<property name="util"  value="util"/>
 
 <!-- property name="build.compiler" value="classic"/ -->
 
@@ -76,12 +77,10 @@
    
 <target name="ship" depends="srczip, dist">
    <delete file="${src}/tiimagetool.zip"/>
-
    <copy file="${src}/de/mizapf/timt/LICENSE" todir="${dist}"/>
    <copy file="${src}/de/mizapf/timt/README" todir="${dist}"/>
    <copy file="${src}/src.zip" todir="${dist}"/>
    <copy file="${dist}/lib/tiimagetool.jar" todir="${dist}"/>
-   
    <zip destfile="${dist}/tiimagetool.zip" basedir="${dist}"
    includes="src.zip tiimagetool.jar LICENSE README" />
 </target>

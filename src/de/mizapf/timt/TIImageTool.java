@@ -23,6 +23,14 @@
 	TODOs for 2.x
 	-------------
     
+	New for 2.4
+    [x] Open EMULATE files 
+    [x] Open CF7
+    [x] Sector editor
+    [ ] Split help file
+    [ ] Read/Write CF7 card
+    [ ] New dialog for CHDRaw/RawCHD (from SearchDialog)	
+	
     New for 2.1+
     [x] Redirect standard output
     [x] Open recent
@@ -37,9 +45,6 @@
     [x] Search function
     [x] Fix import of CRLF in imported texts
     [x] Fix plain dump for dis/fix 80 (ends too early)
-    [x] Open EMULATE files 
-    [x] Open CF7
-    [x] Sector editor
 */
 
 package de.mizapf.timt;

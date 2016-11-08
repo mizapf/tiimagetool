@@ -106,7 +106,7 @@ public class CF7ImageFormat extends ImageFormat {
 	}	
 	
 	@Override
-	void flush() throws IOException {
+	public void flush() throws IOException {
 	}
 	
 	@Override
@@ -127,7 +127,7 @@ public class CF7ImageFormat extends ImageFormat {
 	}
 	
 	@Override
-	void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
 	}
 }
 
