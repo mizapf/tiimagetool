@@ -42,9 +42,7 @@ class SearchDialog extends ToolDialog {
 	File[] m_selectedFiles;
 	JTextField m_tfValidExtensions;
 	JTextField m_tfMaxHits;
-	
-	private static final String DISKSICON = "disks.png";
-	
+		
 	SearchDialog(JFrame owner, TIImageTool timt) {
 		super(owner, "Search files");
 		imagetool = timt;

@@ -40,6 +40,8 @@ public class ToolDialog extends JDialog implements ActionListener {
 	protected JButton	m_btnOK;
 	protected JButton	m_btnCancel;
 	
+	protected static final String DISKSICON = "disks.png";
+	
 	protected ToolDialog(JFrame owner, String sTitle) {
 		super(owner, sTitle, true);
 		m_frmMain = owner;

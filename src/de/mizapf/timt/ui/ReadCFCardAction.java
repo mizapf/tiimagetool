@@ -60,15 +60,21 @@ public class ReadCFCardAction extends Activity {
 			commandString = "/usr/bin/kdesu /usr/bin/xterm";
 		}
 		
-		// TODO: Present a dialog window with these defaults; to be saved in Properties.
-		
-		try {
-			Process p = runtime.exec(commandString);
-		}
-		catch (IOException iox) {
-			// Linux: java.io.IOException: Cannot run program "xxx": error=2, Datei oder Verzeichnis nicht gefunden
-			// Windows: java.io.IOException: Cannot run program "xxx": CreateProcess error=2, Das System kann die angegebene Datei nicht finden
-			JOptionPane.showMessageDialog(m_parent, "Cannot run device dump command; please check the command path and whether it is installed at all.", "Error executing CF card reading", JOptionPane.ERROR_MESSAGE);
+		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, isWindows);
+
+		rwd.createGui(imagetool.boldFont);
+		rwd.setVisible(true);
+
+		if (rwd.confirmed()) {
+			
+			try {
+				Process p = runtime.exec(commandString);
+			}
+			catch (IOException iox) {
+				// Linux: java.io.IOException: Cannot run program "xxx": error=2, Datei oder Verzeichnis nicht gefunden
+				// Windows: java.io.IOException: Cannot run program "xxx": CreateProcess error=2, Das System kann die angegebene Datei nicht finden
+				JOptionPane.showMessageDialog(m_parent, "Cannot run device dump command; please check the command path and whether it is installed at all.", "Error executing CF card reading", JOptionPane.ERROR_MESSAGE);
+			}
 		}
 
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
