@@ -115,8 +115,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.4b";
-	public final static String DATE = "October 2016";
+	public final static String VERSION = "2.3.5";
+	public final static String DATE = "November 2016";
 	
 	private static final String TITLE = "TIImageTool";
 	
