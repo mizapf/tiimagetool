@@ -43,7 +43,14 @@ public class FormatCFCardAction extends Activity {
 	
 	public void go() {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		JOptionPane.showMessageDialog(m_parent, "Not implemented", "Format CF", JOptionPane.ERROR_MESSAGE);
+		FormatCFDialog fcfd = new FormatCFDialog(m_parent, imagetool);
+
+		fcfd.createGui(imagetool.boldFont);
+		fcfd.setVisible(true);
+
+		if (fcfd.confirmed()) {
+		}
+
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 }

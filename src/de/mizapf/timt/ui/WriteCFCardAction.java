@@ -43,7 +43,44 @@ public class WriteCFCardAction extends Activity {
 	
 	public void go() {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		JOptionPane.showMessageDialog(m_parent, "Not implemented", "Write CF", JOptionPane.ERROR_MESSAGE);
+//		JOptionPane.showMessageDialog(m_parent, "Not implemented", "Read CF", JOptionPane.ERROR_MESSAGE);
+
+		Runtime runtime = Runtime.getRuntime();
+		
+		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+		
+		// Do not pack dd.exe into the TIMT distribution but tell the user
+		// where to find it
+				
+		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, isWindows, false);
+
+		rwd.createGui(imagetool.boldFont);
+		rwd.setVisible(true);
+
+		if (rwd.confirmed()) {
+			String[] commands = rwd.getCommandLine();	
+			try {
+				for (String s: commands) System.out.println("command = " + s);
+				Process p = runtime.exec(commands, null, null); 
+				p.waitFor();
+				int exit = p.exitValue();
+				if (exit == 0) {
+					JOptionPane.showMessageDialog(m_parent, "CF card written successfully.", "CF card writing", JOptionPane.INFORMATION_MESSAGE);
+				}
+				else {
+					JOptionPane.showMessageDialog(m_parent, "Could not write the CF card. Maybe the path was wrong.", "CF card writing", JOptionPane.ERROR_MESSAGE);
+				}
+			}
+			catch (IOException iox) {
+				// Linux: java.io.IOException: Cannot run program "xxx": error=2, Datei oder Verzeichnis nicht gefunden
+				// Windows: java.io.IOException: Cannot run program "xxx": CreateProcess error=2, Das System kann die angegebene Datei nicht finden
+				JOptionPane.showMessageDialog(m_parent, "Cannot run device dump command; please check the command path and whether it is installed at all.", "Error executing CF card reading", JOptionPane.ERROR_MESSAGE);
+			}
+			catch (InterruptedException ix) {
+				ix.printStackTrace();
+			}
+		}
+
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 }

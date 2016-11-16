@@ -1,6 +1,11 @@
 contentfont=output:s:Font for program code
 lookandfeel=general:s:Look and feel
 tempdir=paths:p:Temporary directory
+cfcard=cfcard:p:Default CF card path
+ddpath=cfcard:p:Default dd command
+bsize=cfcard:s:Transfer block size
+supath=cfcard:u:Graphical sudo command
+copath=cfcard:u:chown command
 lower=export:b:Convert file name to lowercase
 suffix=export:s:Add file name suffix
 convert=export:s:Char conversion rules
@@ -12,4 +17,4 @@ basicver=output:b:LIST by Extended Basic style
 tfifilter=import:b:Suggest TIFILES file filter 
 newframe=general:b:Open image file in own frame
 escape=output:s:Replace unprintable characters by
-logging=general:s:Log console output to file
+logging=output:s:Log console output to file

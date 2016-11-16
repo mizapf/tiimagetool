@@ -40,6 +40,15 @@ public class ToolDialog extends JDialog implements ActionListener {
 	protected JButton	m_btnOK;
 	protected JButton	m_btnCancel;
 	
+	protected static final int DEVLINE = 1;
+	protected static final int FILELINE = 2;
+	protected static final int DDLINE = 3;
+	protected static final int SULINE = 4;
+	protected static final int COLINE = 5;
+	protected static final String CFICON = "cfcard1.png";
+	protected static final String IMGICON = "imgicon1.png";
+	protected static final String PRGICON = "gear1.png";
+	
 	protected static final String DISKSICON = "disks.png";
 	
 	protected ToolDialog(JFrame owner, String sTitle) {
@@ -313,6 +322,68 @@ public class ToolDialog extends JDialog implements ActionListener {
 		return arb;
 	}
 
+	protected void addChoiceLine(int nColumnWidth, String prompt, int line, JTextField textField, int width) {
+
+		JButton button = null;
+			
+		Box box = new Box(BoxLayout.X_AXIS);
+		box.add(Box.createHorizontalStrut(10));
+		JLabel jl = new JLabel(prompt, SwingConstants.LEFT);
+		jl.setFont(TIImageTool.dialogFont);
+
+		// Path setup
+		// Prompt
+		jl.setMinimumSize(new Dimension(nColumnWidth, 25));
+		if (nColumnWidth!=0) {
+			jl.setPreferredSize(new Dimension(nColumnWidth, 25));
+			jl.setMaximumSize(new Dimension(nColumnWidth, 25));
+		}
+		box.add(jl);
+		box.add(Box.createHorizontalStrut(10));
+		
+		// Button
+		ImageIcon diskicon = null;
+		java.net.URL iconurl = null;
+		switch (line) {
+		case DEVLINE: 
+			iconurl = ToolDialog.class.getResource(CFICON);
+			break;
+		case FILELINE: 
+			iconurl = ToolDialog.class.getResource(IMGICON);
+			break;
+		case DDLINE: 
+			iconurl = ToolDialog.class.getResource(PRGICON);
+			break;
+		}
+
+		if (iconurl != null) {
+			diskicon = new ImageIcon(iconurl);
+			button = new JButton(diskicon);
+		} 
+		else {
+			System.err.println("Error: Could not locate icon image in package " + iconurl);
+			button = new JButton("Choose");
+		}
+		
+		button.setActionCommand(String.valueOf(line));
+		button.addActionListener(this);
+		button.setMinimumSize(new Dimension(width, 32));
+		button.setPreferredSize(new Dimension(width, 32));
+		button.setMaximumSize(new Dimension(width, 32));
+		box.add(button);
+		box.add(Box.createHorizontalStrut(10));
+		
+		// Selected path
+		textField.setEditable(false);
+		textField.setFont(TIImageTool.dialogFont);
+		textField.setMinimumSize(new Dimension(300, 20));
+		textField.setMaximumSize(new Dimension(1000, 20));
+
+		box.add(textField);
+		box.add(Box.createHorizontalStrut(10));
+		
+		add(box);
+	}
 	
 	public boolean confirmed() {
 		return m_bSet;

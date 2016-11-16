@@ -37,6 +37,8 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 	Map<String,JComponent> m_entries;
 	int m_fieldWidth;
 	
+	JTabbedPane m_tabs;
+	
 	PreferencesDialog(JFrame owner, TIImageTool app) {
 		super(owner, "Preferences");
 		m_app = app;
@@ -66,28 +68,33 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 		
 		// Sample text
 		m_fieldWidth = fm.stringWidth("javax.swing.plaf.metal.MetalLookAndFeel");
+
+		m_entries = new HashMap<String,JComponent>();
+
+		m_tabs = new JTabbedPane();
+		m_tabs.addTab("General", createTab("general"));
+		m_tabs.addTab("Paths", createTab("paths"));
+		m_tabs.addTab("CF Card", createTab("cfcard"));
+		m_tabs.addTab("Output", createTab("output"));
+		m_tabs.addTab("Importing", createTab("import"));
+		m_tabs.addTab("Exporting", createTab("export"));
 		
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
-		m_entries = new HashMap<String,JComponent>();
-		
-		showPreferenceFields("General preferences", "general");
-		showPreferenceFields("Paths", "paths");
-		showPreferenceFields("Output", "output");
-		showPreferenceFields("Importing", "import");
-		showPreferenceFields("Exporting", "export");
-
+		add(Box.createVerticalStrut(10));
+		add(m_tabs);
+		add(Box.createVerticalStrut(10));
 		addButtons();
 	}
 	
-	private void showPreferenceFields(String title, String category) {
+	private JPanel createTab(String category) {
 		java.util.List<String> prefs = m_app.getPreferences(category);
 		JComponent jc = null;		
 		String value = null;
-
-		add(Box.createVerticalStrut(10));		
-		putTextLine(this, "!" + title, 0);
-		add(Box.createVerticalStrut(7));		
-		add(Box.createVerticalGlue());
+		JPanel tabPanel = new JPanel();
+		tabPanel.setLayout(new BoxLayout(tabPanel, BoxLayout.Y_AXIS));
+		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+		
+		tabPanel.add(Box.createVerticalStrut(10));	
 		
 		for (String s : prefs) {
 			String name = m_app.getPreferenceLabel(s);
@@ -95,24 +102,35 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 			switch (type) {
 			case 's':
 				value = m_app.getPropertyString(s);
-				jc = putTextField(this, name, value, m_nColumnWidth, m_fieldWidth);
+				jc = putTextField(tabPanel, name, value, m_nColumnWidth, m_fieldWidth);
 				m_entries.put(s, jc);
 				break;
 			case 'b':
 				boolean selected = m_app.getPropertyBoolean(s);
-				jc = putCheckBox(this, name, selected, m_nColumnWidth);
+				jc = putCheckBox(tabPanel, name, selected, m_nColumnWidth);
 				m_entries.put(s, jc);
 				break;					
 			case 'p':
 				value = m_app.getPropertyString(s);
-				jc = putTextField(this, name, value, m_nColumnWidth, m_fieldWidth);
+				jc = putTextField(tabPanel, name, value, m_nColumnWidth, m_fieldWidth);
 				m_entries.put(s, jc);
+				break;
+			case 'u':
+				if (!isWindows) {
+					value = m_app.getPropertyString(s);
+					jc = putTextField(tabPanel, name, value, m_nColumnWidth, m_fieldWidth);
+					m_entries.put(s, jc);
+				}
 				break;
 			default:
 				System.err.println("Unknown preference type: " + type);
 				break;
 			}
 		}
+		tabPanel.add(Box.createVerticalStrut(10));
+		tabPanel.add(Box.createVerticalGlue());	
+
+		return tabPanel;
 	}
 	
 	Map<String,JComponent> getSettings() {

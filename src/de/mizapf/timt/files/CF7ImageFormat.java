@@ -42,6 +42,7 @@ public class CF7ImageFormat extends ImageFormat {
 		fileSystem.readFully(header);
 
 		// Check for the DSK signature in the first volume
+		// Note that only every second byte is used in the CF7 format
 		if (header[0x1a] == 'D' && header[0x1c] == 'S' && header[0x1e] == 'K') return 70;
 		else return 0;
 	}

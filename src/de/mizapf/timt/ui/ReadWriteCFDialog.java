@@ -24,7 +24,7 @@ import javax.swing.*;
 import de.mizapf.timt.TIImageTool;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
+import java.io.*;
 import java.util.ArrayList;
 
 class ReadWriteCFDialog extends ToolDialog {
@@ -33,16 +33,20 @@ class ReadWriteCFDialog extends ToolDialog {
 	JFrame m_parent;
 	boolean m_windows;
 	JTextField m_tfDevice;
-	JButton m_btnFileChooser;
-		
-	ReadWriteCFDialog(JFrame owner, TIImageTool timt, boolean windows) {
-		super(owner, "Search files");
+	JTextField m_tfImageFile;
+	JTextField m_tfddpath;
+	boolean m_read;
+	
+	JTextField m_tfCommandLine;
+			
+	ReadWriteCFDialog(JFrame owner, TIImageTool timt, boolean windows, boolean read) {
+		super(owner, read? "Reading CF card" : "Writing CF card");
 		imagetool = timt;
 		m_parent = owner;
 		m_windows = windows;
+		m_read = read;
 	}	
 	
-	public void createGui(Font font) {
 /*
 	| 	Read / Write CF card								|
 
@@ -62,76 +66,145 @@ class ReadWriteCFDialog extends ToolDialog {
 				|	OK	|			|	Cancel	|
 				+-------+           +-----------+
 */	
+	public void createGui(Font font) {
+
 		prepareGui();
+
+		// ======================
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 		int nColumnWidth = fm.stringWidth("Flash card device path (like \"/dev/sdc\")");
 
-		// ======================
-		ImageIcon diskicon = null;
-		java.net.URL iconurl = ToolDialog.class.getResource(DISKSICON);
-		if (iconurl != null) {
-			diskicon = new ImageIcon(iconurl);
-			m_btnFileChooser = new JButton(diskicon);
-		} 
-		else {
-			System.err.println("Error: Could not locate icon image in package " + iconurl);
-			m_btnFileChooser = new JButton("Choose");
+		if (m_read) {
+			putTextLine(this, "!Reading a Compact Flash card to an image file", 0);
+			add(Box.createVerticalStrut(10));
+			if (m_windows) {
+				putTextLine(this, "TIImageTool uses the program \"dd.exe\" to copy the contents of the CF card to an image file. Please specify the drive letter", 0);
+				putTextLine(this, "of your CF card, the name of the image file where the CF contents shall be copied to, and where the dd.exe program is located.", 0);
+				putTextLine(this, "See the Preferences in the File menu to change the defaults for the fields.", 0);  
+			}
+			else {
+				putTextLine(this, "TIImageTool uses the dd program to copy the contents of a CF card to an image file. Please specify the device name", 0);
+				putTextLine(this, "of your CF card (like /dev/sdc, without partition number), and the image file on your hard disk where the CF contents",0 );
+				putTextLine(this, "shall be copied to. See the Preferences in the File menu to change the defaults for the fields.", 0);  
+				add(Box.createVerticalStrut(10));
+				putTextLine(this, "Access to the raw device requires elevated privileges. For KDE this can be done by using the kdesu command.", 0);
+				putTextLine(this, "Check your OS and desktop environment for the appropriate command. You can set it in the Preferences.", 0);			
+			}
+			add(Box.createVerticalStrut(10));
+			putTextLine(this, "Please check the flash card specification. Since you are about to read it, nothing serious should happen on error.", 0);  
 		}
+		else { // Writing on CF
+			putTextLine(this, "!Writing an image file to a Compact Flash card", 0);
+			add(Box.createVerticalStrut(10));
+			if (m_windows) {
+				putTextLine(this, "TIImageTool uses the program \"dd.exe\" to write the contents of an image file to a CF card. Please specify the image file", 0); 
+				putTextLine(this, "on your hard disk, the drive letter of your CF card where the image shall be written to, and where the dd.exe program is located.", 0);
+				putTextLine(this, "See the Preferences in the File menu to change the defaults for the fields.", 0);  
+			}
+			else {
+				putTextLine(this, "TIImageTool uses the \"dd\" program to write the contents of an image file to a CF card. Please specify the image file", 0);
+				putTextLine(this, "on your hard disk, and the device name of your CF card where the image shall be written to (like /dev/sdc, without partition",0);
+				putTextLine(this, "number).	 See the Preferences in the File menu to change the presets for the fields.", 0);  
+				add(Box.createVerticalStrut(10));
+				putTextLine(this, "Access to the raw device requires elevated privileges. For KDE this can be done by using the kdesu command.", 0);
+				putTextLine(this, "Check your OS and desktop environment for the appropriate command. You can set it in the Preferences.", 0);			
+			}
+			add(Box.createVerticalStrut(10));
+			putTextLine(this, "!Double check the flash card specification. In the worst case, you could accidentally overwrite", 0);
+			putTextLine(this, "!your system hard disk and destroy your whole computer setup and lose all files!", 0);
+		}		
 		
-		m_btnFileChooser.addActionListener(this);
-		
-		Box box = new Box(BoxLayout.X_AXIS);
-		box.add(Box.createHorizontalStrut(10));
-		JLabel jl = null;
-		if (m_windows) {
-			jl = new JLabel("Flash card drive name (like \"e:\")", SwingConstants.LEFT);
-		}
-		else {
-			jl = new JLabel("Flash card device path (like \"/dev/sdc\")", SwingConstants.LEFT);
-		}
-		jl.setFont(TIImageTool.dialogFont);
-		String lastPath = "click to select";
-		add(Box.createVerticalStrut(20));
+		add(Box.createVerticalStrut(10));
+		putTextLine(this, "Before you click on OK, have a final look at the last field. It reflects the command line that will be executed", 0);
+		putTextLine(this, "and can be modified as desired.", 0);
 
-		// Path setup
-		// Prompt
-		jl.setMinimumSize(new Dimension(nColumnWidth, 25));
-		if (nColumnWidth!=0) {
-			jl.setPreferredSize(new Dimension(nColumnWidth, 25));
-			jl.setMaximumSize(new Dimension(nColumnWidth, 25));
-		}
-		box.add(jl);
-		box.add(Box.createHorizontalStrut(10));
+		add(Box.createVerticalStrut(10));
+
+		String devprompt = (m_windows)? "Flash card drive name (like \"e:\")" : "Flash card device path (like \"/dev/sdc\")";
+		String lastPath = imagetool.getPropertyString(imagetool.CFCARD);
+		String fileprompt = "File name for CF image";
+		m_tfImageFile = new JTextField(m_read? "click to select (suggested: *.cf7 suffix)" : "click to select");
 		
-		// Button
-		m_btnFileChooser.setMinimumSize(new Dimension(35, 32));
-		m_btnFileChooser.setPreferredSize(new Dimension(35, 32));
-		m_btnFileChooser.setMaximumSize(new Dimension(35, 32));
-		box.add(m_btnFileChooser);
-		box.add(Box.createHorizontalStrut(10));
-		
-		// Selected path
-		int nPathWidth = fm.stringWidth(lastPath);
 		m_tfDevice = new JTextField(lastPath);
-		m_tfDevice.setEditable(false);
-		m_tfDevice.setFont(TIImageTool.dialogFont);
-		m_tfDevice.setMinimumSize(new Dimension(nPathWidth, 20));
-		m_tfDevice.setMaximumSize(new Dimension(1000, 20));
 
-		box.add(m_tfDevice);
-		box.add(Box.createHorizontalStrut(10));
-		
-		add(box);
-		
-		// ======================
-		
+		if (m_read) {
+			addChoiceLine(nColumnWidth, devprompt, DEVLINE, m_tfDevice, 45);
+			add(Box.createVerticalStrut(10));
+			addChoiceLine(nColumnWidth, fileprompt, FILELINE, m_tfImageFile, 32);
+			add(Box.createVerticalStrut(10));
+		}
+		else {
+			addChoiceLine(nColumnWidth, fileprompt, FILELINE, m_tfImageFile, 32);
+			add(Box.createVerticalStrut(10));
+			addChoiceLine(nColumnWidth, devprompt, DEVLINE, m_tfDevice, 45);
+			add(Box.createVerticalStrut(10));
+		}
+				
+		m_tfCommandLine = putTextField(this, "Command line", "", nColumnWidth, 0);
+		setupCommand();
 		add(Box.createVerticalGlue());
-
 		addButtons();		
 	}
-	
+
+	private void setupCommand() {
+		StringBuilder sb = new StringBuilder();
+		String cfcard = m_tfDevice.getText();
+		String image = m_tfImageFile.getText();
+		String command = "";
+		String user = "";
+		String chown = "";
+		String elevate = "";
+		String bsize = "";
+		
+		// We don't need this for Windows. Linux and Mac can only access the
+		// flash card as root, and the dump file must be given to the current
+		// user afterwards.
+		if (!m_windows) {
+			elevate = imagetool.getPropertyString(imagetool.SUPATH);
+			chown = imagetool.getPropertyString(imagetool.COPATH);
+			user = System.getProperty("user.name");
+		}
+		
+		command = imagetool.getPropertyString(imagetool.DDPATH);
+		bsize = imagetool.getPropertyString(imagetool.BSIZE);
+		
+		if (!cfcard.equals("click to select") 
+			&& !image.startsWith("click to select") 
+			&& !command.equals("click to select")) {
+
+			if (elevate.length()>0) sb.append(elevate).append(" -c \"");
+			sb.append(command).append(" ");
+			sb.append("if=");
+			if (m_read) {
+				// Add the special path prefix for Windows raw devices
+				if (m_windows) sb.append("\\\\.\\");
+				sb.append(cfcard).append(" ");
+				sb.append("of=").append(image).append(" ");
+			}
+			else {
+				sb.append(image).append(" ");
+				sb.append("of=");
+				if (m_windows) sb.append("\\\\.\\");
+				sb.append(cfcard).append(" ");
+			}
+			sb.append("bs=").append(bsize);			
+			
+			// For Linux and Mac, we have to add a chown command afterwards, 
+			// or our dump file will belong to root
+			// For writing there is nothing to do
+			if (!m_windows && m_read) {
+				sb.append("; ").append(chown).append(" ").append(user).append(" ").append(image);
+			}
+			
+			// Closing quote
+			if (elevate.length()>0) sb.append("\"");
+		}
+		m_tfCommandLine.setText(sb.toString());
+	}
+		
 	@Override
 	public void actionPerformed(ActionEvent ae) {
+		JFileChooser jfc = null;
 		if (ae.getSource()==m_btnOK) {
 			m_bSet = true;
 			dispose();
@@ -140,9 +213,27 @@ class ReadWriteCFDialog extends ToolDialog {
 			m_bSet = false;
 			dispose();
 		}
-		if (ae.getSource()==m_btnFileChooser) {
-			JFileChooser jfc = null;
-			jfc = new JFileChooser();
+		if (ae.getActionCommand().equals(String.valueOf(DEVLINE))) {
+			String lastPath = imagetool.getPropertyString(imagetool.CFCARD);
+			if (lastPath != null && lastPath.length() > 0) {
+				try {
+					if (m_windows) {
+						jfc = new JFileChooser();
+						File dummy_file = new File(new File("C:\\").getCanonicalPath());
+						jfc.setCurrentDirectory(dummy_file);
+						jfc.changeToParentDirectory();
+					}
+					else {
+						File lastFile = new File(lastPath);
+						jfc = new JFileChooser(lastFile.getParentFile());
+					}
+				}
+				catch (IOException iox) {
+					iox.printStackTrace();
+				}
+			}
+			else jfc = new JFileChooser(); 
+
 			if (m_windows) jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			else jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			
@@ -153,8 +244,87 @@ class ReadWriteCFDialog extends ToolDialog {
 			
 			if (nReturn == JFileChooser.APPROVE_OPTION) {
 				File file = jfc.getSelectedFile();
-				m_tfDevice.setText(file.getAbsolutePath());
+				if (m_windows) {
+					String dev = file.getAbsolutePath();
+					// Strip off the trailing backslash
+					if (dev.endsWith(File.separator)) {
+						dev = dev.substring(0, dev.length() - File.separator.length());
+					}
+					m_tfDevice.setText(dev);
+				}
+				else {
+					m_tfDevice.setText(file.getAbsolutePath());
+				}
+			}
+			setupCommand();
+		}
+		if (ae.getActionCommand().equals(String.valueOf(FILELINE))) {
+			jfc = new JFileChooser();
+			jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			
+			Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+			if (dim!=null) jfc.setPreferredSize(dim);
+			
+			int nReturn = jfc.showOpenDialog(m_parent);
+			
+			if (nReturn == JFileChooser.APPROVE_OPTION) {
+				File file = jfc.getSelectedFile();
+				m_tfImageFile.setText(file.getAbsolutePath());
+			}
+			setupCommand();
+		}
+		if (ae.getActionCommand().equals(String.valueOf(DDLINE))) {
+			String sLastDD = imagetool.getPropertyString(imagetool.DDPATH);
+			
+			if (sLastDD != null && sLastDD.length() > 0) {
+				if (m_windows) {
+					jfc = new JFileChooser();
+				}
+				else {
+					File lastDD = new File(sLastDD);
+					jfc = new JFileChooser(lastDD);
+				}				
+			}
+			else jfc = new JFileChooser(); 
+
+			jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			
+			Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+			if (dim!=null) jfc.setPreferredSize(dim);
+			
+			int nReturn = jfc.showOpenDialog(m_parent);
+			
+			if (nReturn == JFileChooser.APPROVE_OPTION) {
+				File file = jfc.getSelectedFile();
+				m_tfddpath.setText(file.getAbsolutePath());
+				imagetool.setProperty(imagetool.DDPATH, file.getAbsolutePath());
+			}
+			setupCommand();
+		}
+	}
+	
+	String[] getCommandLine() {
+		String sLine = m_tfCommandLine.getText();
+		boolean inQuotes = false;
+		StringBuilder sb = new StringBuilder();
+		
+		ArrayList<String> cmds = new ArrayList<String>();
+		char c = 0;
+		
+		for (int i=0; i < sLine.length(); i++) {
+			c = sLine.charAt(i);
+			if (c == '\"') {
+				inQuotes = !inQuotes;
+				continue;
+			}
+			if (c != ' ' || inQuotes) sb.append(c);
+			else {
+				cmds.add(sb.toString());
+				sb.setLength(0);
 			}
 		}
+		if (c=='\"') cmds.add(sb.toString());  // we had no chance to write the remainder
+		String[] result = cmds.toArray(new String[cmds.size()]);		
+		return result;
 	}
 }

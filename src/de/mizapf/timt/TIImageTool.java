@@ -29,7 +29,10 @@
     [x] Sector editor
     [ ] Split help file
     [ ] Read/Write CF7 card
+    [ ] Format CF7
     [ ] New dialog for CHDRaw/RawCHD (from SearchDialog)	
+    [x] Split properties settings into tabs
+    [x] Fix double output in Console
 	
     New for 2.1+
     [x] Redirect standard output
@@ -126,6 +129,11 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String FILEDIALOG = "fdialogsize";
 	public final static String SOURCEDIR = "sourcedir";
 	public final static String EXPLOWER = "lower";
+	public final static String CFCARD = "cfcard";
+	public final static String DDPATH = "ddpath";
+	public final static String SUPATH = "supath";
+	public final static String COPATH = "copath";
+	public final static String BSIZE = "bsize";
 	public final static String CONVERT = "convert";
 	public final static String UNDERSCORE = "underscore";
 	public final static String SUFFIX = "suffix";
@@ -398,7 +406,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_iWriteCF = createMenuItem(new WriteCFCardAction());
 			m_mUtility.add(m_iWriteCF);	
 			m_iFormatCF = createMenuItem(new FormatCFCardAction());
-			m_mUtility.add(m_iFormatCF);	
+			m_mUtility.add(m_iFormatCF);
 
 			m_iToHfdc = createMenuItem(new ConvertToHFDCAction());
 			m_mUtility.add(m_iToHfdc);
@@ -1057,10 +1065,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 
 	private void loadProperties() {
-		String sFile = null;
 
-		if (System.getProperty("os.name").startsWith("Windows")) sFile="tiimagetool.prop";
-		else sFile = ".tiimagetoolrc";
+		boolean windows = System.getProperty("os.name").startsWith("Windows");
+		String sFile = (windows)? "tiimagetool.prop" : ".tiimagetoolrc";
 				
 		// Load the property texts
 		m_propNames = new Properties();
@@ -1086,7 +1093,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		catch (FileNotFoundException fx) {
 			// Try to get the value and pre-set it if not available 
-			setDefaults();
+			setDefaults(windows);
 			saveProperties(); // No properties
 			return;
 		}
@@ -1098,7 +1105,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			System.err.println("Error loading properties ... using defaults.");
 		}
 		
-		setDefaults();
+		setDefaults(windows);
 		
 		try {
 			fr.close();
@@ -1109,11 +1116,15 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 	}
 	
-	private void setDefaults() {
+	private void setDefaults(boolean windows) {
 		getPropertyString(CONVERT, "/\\* __x");
 		getPropertyString(SUFFIX, ".tfi");
 		getPropertyString(UNDERSCORE, "true");		
 		getPropertyString(EXPLOWER, "true");	
+		getPropertyString(CFCARD, (windows)? "e:" : "/dev/sdc");
+		getPropertyString(DDPATH, (windows)? "" : "/usr/bin/dd");
+		getPropertyString(COPATH, (windows)? "" : "/usr/bin/chown");
+		getPropertyString(BSIZE, "4096");
 		getPropertyString(CONVERT, "true");	
 		getPropertyString(KEEPNAME, "false");	
 		getPropertyString(FORCEUPPER, "true");	

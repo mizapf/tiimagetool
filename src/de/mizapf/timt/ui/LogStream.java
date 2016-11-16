@@ -46,19 +46,20 @@ public class LogStream extends PrintStream {
 	}
 	
 	@Override
-	public void println(String s) {
-		super.println(s);
-		if (m_cf != null) {
-			m_cf.append(s);
-			m_cf.append("\n");
-		}
-	}
-
-	@Override
 	public void print(Object obj) {
 		super.print(obj);
 		if (m_cf != null) {
 			m_cf.append(obj.toString());
+		}
+	}
+	
+	/** All println methods call print; newLine. Accordingly, we must only
+	    copy the contents into the frame for print. */
+	@Override
+	public void println(String s) {
+		super.println(s);
+		if (m_cf != null) {
+			m_cf.append("\n");
 		}
 	}
 
