@@ -15,6 +15,9 @@
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
     Copyright 2011 Michael Zapf
+    
+    GRAPHX decoder by henrik.w (aka HackMac)
+    
     www.mizapf.de
     
 ****************************************************************************/
@@ -38,6 +41,7 @@ public class ImageFrame extends JFrame {
 	static final int YAPP = 3;
 	static final int AUSTRI = 4;
 	static final int FRACTALS = 5;
+	static final int GRAPHX = 6;
 
 	TIImageTool m_app;
 	
@@ -159,6 +163,11 @@ public class ImageFrame extends JFrame {
 			bi = ImageIO.read(new ByteArrayInputStream(abyResult));
 			if (dim == null) dim = new Dimension(bi.getWidth(), bi.getHeight());
 			break;
+		case GRAPHX:
+			abyResult = graphxToBMP();
+			bi = ImageIO.read(new ByteArrayInputStream(abyResult));
+			if (dim == null) dim = new Dimension(bi.getWidth(), bi.getHeight());
+			break;
 		}
 
 		int nHeight = (int)(nWidth * 0.75);
@@ -175,7 +184,7 @@ public class ImageFrame extends JFrame {
 		pack();
 		toFront();		
 	}
-	
+
 	/*
 		TODO: Use additional query dialog (ambiguous format definition)
 		Flag = 9e seems to be MyArt G6 as well.
@@ -502,6 +511,88 @@ public class ImageFrame extends JFrame {
 		// System.out.println(Utilities.hexdump(0, 0, abyResult, abyResult.length, false));	
 		return abyResult;
 	}
+
+	/** 
+		GraphX format 
+	*/
+	byte[] graphxToBMP() throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		baos.write('B');
+		baos.write('M');
+		writeInt32le(baos, 14+40+(2*4)+0x1800);	// BMP size
+		writeInt32le(baos, 0);	// always 0
+		writeInt32le(baos, 14+40+(2*4));	// picture data offset
+		
+		writeInt32le(baos, 40);	// Header length					
+		writeInt32le(baos, 256);	// width
+		writeInt32le(baos, -192);	// height
+		writeInt16le(baos, 1);	// planes
+		writeInt16le(baos, 1);	// bit count
+		writeInt32le(baos, 0);	// compression
+		writeInt32le(baos, 0x1800);	// image size
+		writeInt32le(baos, 0);	// X pixels per meter
+		writeInt32le(baos, 0);	// Y pixels per meter
+		writeInt32le(baos, 2);	// color table entries
+		writeInt32le(baos, 0);	// all colors used
+		
+		// Color table entries
+		writeInt32le(baos, 0x00ffffff);
+		writeInt32le(baos, 0x00000000);
+		
+		// Now add the lines
+		final byte[] pixMap = new byte[256*192/8];
+	    int pixMapOffset = 0;
+	    
+		int nOffset = 3;
+		boolean pixelOn = true;	// Set this flag to false to invert the resulting picture
+		int patternCode = 0;
+	    boolean decodingDone = false;
+		do {
+			int rawByte = m_abyContent[nOffset++];
+			decodingDone = rawByte == 0x1b;
+			if (!decodingDone) {
+				if (0x20 > rawByte) {
+					// Usually this never happens. This case can be used to detect an incorrect file format.
+				} else {
+					rawByte -= 0x20;
+					if (pixelOn) {
+						do {
+							int pattern = (1 << (16-patternCode)) - 1;
+							if (rawByte < (0x10 - patternCode)) {
+								patternCode += rawByte;
+								int invPattern = ~((1 << (16-patternCode)) - 1) & 0xffff;
+								pattern &= invPattern;
+								pixMap[pixMapOffset] |= (pattern >> 8) & 0xff;
+								pixMap[pixMapOffset+1] |= pattern & 0xff;
+								break;
+							}
+							pixMap[pixMapOffset++] |= (pattern >> 8) & 0xff;
+							pixMap[pixMapOffset++] |= pattern & 0xff;
+							decodingDone = pixMapOffset >= 0x1800;
+							for (rawByte += patternCode - 0x10; rawByte >= 0x10; rawByte -= 0x10) {
+								pixMap[pixMapOffset++] = (byte) 0xff;
+								pixMap[pixMapOffset++] = (byte) 0xff;
+							}
+							decodingDone = pixMapOffset >= 0x1800;
+							patternCode = 0;
+						} while (rawByte < 0x10 && pixMapOffset < 0x1800);
+					} else {
+						rawByte += patternCode;
+						pixMapOffset += (rawByte / 0x10) * 2;
+						decodingDone = pixMapOffset >= 0x1800;
+						patternCode = rawByte % 0x10;
+					}
+					
+					pixelOn = !pixelOn;
+				}
+			}
+		} while (!decodingDone);
+		baos.write(pixMap);
+		
+		byte[] abyResult = baos.toByteArray();
+		//System.out.println(Utilities.hexdump(0, 0, abyResult, abyResult.length, true));	
+		return abyResult;
+	}
 	
 	private void setInt32le(byte[] aby, int nPos, int n) {
 		aby[nPos] = (byte)(n & 0xff);
@@ -636,6 +727,13 @@ public class ImageFrame extends JFrame {
 			return MYART;
 		}
 		// else System.out.println("Failed RLE check");
+
+		// System.out.println("Check GraphX");
+		if ((m_nRecLength == 128) &&
+			(m_abyContent[0] == (byte)0x1b) && (m_abyContent[1] == 'G') && (m_abyContent[2] == 'H')) {
+			return GRAPHX;
+		}
+		// else System.out.println("Failed GraphX check");
 		
 		throw new FormatException(m_sName, "is not a picture format");
 	}

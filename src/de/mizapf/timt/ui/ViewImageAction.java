@@ -146,5 +146,9 @@ public class ViewImageAction extends Activity {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
 			}
 		}
+		catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error when rendering the image", "Read error", JOptionPane.ERROR_MESSAGE);			
+		}
 	}
 }

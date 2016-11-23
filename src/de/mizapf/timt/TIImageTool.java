@@ -29,7 +29,7 @@
     [x] Sector editor
     [ ] Split help file
     [x] Rename volume
-    [ ] Add graphic format
+    [x] Add GRAPHX format
     [x] Read/Write CF7 card
     [x] Format CF7
     [x] New dialog for CHDRaw/RawCHD (from SearchDialog)	
