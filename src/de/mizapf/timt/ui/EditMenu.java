@@ -35,6 +35,7 @@ public class EditMenu extends JMenu {
 	JMenuItem m_iPastem;
 	JMenuItem m_iDeletem;
 	JMenuItem m_iRenamem;
+	JMenuItem m_iRenamevm;
 	JMenuItem m_iSelectm;
 	JMenuItem m_iInsert;
 	JMenuItem m_iInsertBinary;
@@ -63,6 +64,8 @@ public class EditMenu extends JMenu {
 		addSeparator();
 		m_iRenamem = createMenuItem(new RenameAction());
 		add(m_iRenamem);
+		m_iRenamevm = createMenuItem(new RenameVolumeAction());
+		add(m_iRenamevm);
 		addSeparator();	
 		m_iSelectm = createMenuItem(new SelectAllAction());
 		add(m_iSelectm);
@@ -108,6 +111,7 @@ public class EditMenu extends JMenu {
 		m_iDeletem.setEnabled(bOpenImage);
 		m_iSelectm.setEnabled(bOpenImage);
 		m_iRenamem.setEnabled(bOpenImage);
+		m_iRenamevm.setEnabled(bOpenImage);
 		
 		m_iInsert.setEnabled(bOpenImage);
 		m_iInsertBinary.setEnabled(bOpenImage);

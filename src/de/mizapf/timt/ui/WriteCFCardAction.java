@@ -34,7 +34,7 @@ import de.mizapf.timt.TIImageTool;
 public class WriteCFCardAction extends Activity {
 	
 	public String getMenuName() {
-		return "Write CF7 card ...";
+		return "Write Compact Flash card ...";
 	}
 	
 	public String getActionName() {
@@ -43,15 +43,10 @@ public class WriteCFCardAction extends Activity {
 	
 	public void go() {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//		JOptionPane.showMessageDialog(m_parent, "Not implemented", "Read CF", JOptionPane.ERROR_MESSAGE);
-
 		Runtime runtime = Runtime.getRuntime();
 		
 		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-		
-		// Do not pack dd.exe into the TIMT distribution but tell the user
-		// where to find it
-				
+						
 		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, isWindows, false);
 
 		rwd.createGui(imagetool.boldFont);

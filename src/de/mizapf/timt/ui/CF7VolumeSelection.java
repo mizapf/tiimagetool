@@ -52,7 +52,12 @@ class CF7VolumeSelection extends ToolDialog {
 		
 		// Click occured on panel.
 		public void mouseClicked(MouseEvent act) {
-			select.setNumber(number);
+			if (act.getClickCount()>=2) {
+				select.setNumberAndGo(number);
+			}
+			else {
+				select.setNumber(number);
+			}
 		}		
 	}	
 
@@ -130,6 +135,12 @@ class CF7VolumeSelection extends ToolDialog {
 	
 	void setNumber(int num) {
 		m_tfVolumeNumber.setText(String.valueOf(num));
+	}
+	
+	void setNumberAndGo(int num) {
+		setNumber(num);
+		m_bSet = true;
+		dispose();
 	}
 	
 	Box addEntry(int number, int width, String sName) {

@@ -37,6 +37,10 @@ class ReadWriteCFDialog extends ToolDialog {
 	JTextField m_tfddpath;
 	boolean m_read;
 	
+	private final static int DEV = 1;
+	private final static int FILE = 2;
+	private final static int DD = 3;
+	
 	JTextField m_tfCommandLine;
 			
 	ReadWriteCFDialog(JFrame owner, TIImageTool timt, boolean windows, boolean read) {
@@ -110,7 +114,7 @@ class ReadWriteCFDialog extends ToolDialog {
 				putTextLine(this, "Check your OS and desktop environment for the appropriate command. You can set it in the Preferences.", 0);			
 			}
 			add(Box.createVerticalStrut(10));
-			putTextLine(this, "!Double check the flash card specification. In the worst case, you could accidentally overwrite", 0);
+			putTextLine(this, "!Double check the flash card device name. In the worst case, you could accidentally overwrite", 0);
 			putTextLine(this, "!your system hard disk and destroy your whole computer setup and lose all files!", 0);
 		}		
 		
@@ -123,20 +127,27 @@ class ReadWriteCFDialog extends ToolDialog {
 		String devprompt = (m_windows)? "Flash card drive name (like \"e:\")" : "Flash card device path (like \"/dev/sdc\")";
 		String lastPath = imagetool.getPropertyString(imagetool.CFCARD);
 		String fileprompt = "File name for CF image";
+		String ddprompt = "Path to DD.EXE program";
 		m_tfImageFile = new JTextField(m_read? "click to select (suggested: *.cf7 suffix)" : "click to select");
 		
 		m_tfDevice = new JTextField(lastPath);
 
 		if (m_read) {
-			addChoiceLine(nColumnWidth, devprompt, DEVLINE, m_tfDevice, 45);
+			addChoiceLine(nColumnWidth, devprompt, DEVLINE, DEV, m_tfDevice, 45);
 			add(Box.createVerticalStrut(10));
-			addChoiceLine(nColumnWidth, fileprompt, FILELINE, m_tfImageFile, 32);
+			addChoiceLine(nColumnWidth, fileprompt, FILELINE, FILE, m_tfImageFile, 32);
 			add(Box.createVerticalStrut(10));
 		}
 		else {
-			addChoiceLine(nColumnWidth, fileprompt, FILELINE, m_tfImageFile, 32);
+			addChoiceLine(nColumnWidth, fileprompt, FILELINE, FILE, m_tfImageFile, 32);
 			add(Box.createVerticalStrut(10));
-			addChoiceLine(nColumnWidth, devprompt, DEVLINE, m_tfDevice, 45);
+			addChoiceLine(nColumnWidth, devprompt, DEVLINE, DEV, m_tfDevice, 45);
+			add(Box.createVerticalStrut(10));
+		}
+		
+		if (m_windows) {
+			m_tfddpath = new JTextField(imagetool.getPropertyString(imagetool.DDPATH));
+			addChoiceLine(nColumnWidth, ddprompt, DDLINE, DD, m_tfddpath, 45);
 			add(Box.createVerticalStrut(10));
 		}
 				
@@ -213,7 +224,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			m_bSet = false;
 			dispose();
 		}
-		if (ae.getActionCommand().equals(String.valueOf(DEVLINE))) {
+		if (ae.getActionCommand().equals(String.valueOf(DEV))) {
 			String lastPath = imagetool.getPropertyString(imagetool.CFCARD);
 			if (lastPath != null && lastPath.length() > 0) {
 				try {
@@ -258,7 +269,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			}
 			setupCommand();
 		}
-		if (ae.getActionCommand().equals(String.valueOf(FILELINE))) {
+		if (ae.getActionCommand().equals(String.valueOf(FILE))) {
 			jfc = new JFileChooser();
 			jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			

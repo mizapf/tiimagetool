@@ -49,6 +49,7 @@ public abstract class ImageFormat  {
 	public final static int SECTORDUMP = 0;
 	public final static int TRACKDUMP = 1;
 	public final static int HFE = 2;
+	public final static int CF7VOLUME = 3;
 	
 	public final static int SINGLE_DENSITY = 0;
 	public final static int DOUBLE_DENSITY = 1;

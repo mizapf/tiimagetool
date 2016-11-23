@@ -304,7 +304,6 @@ public class TFile extends Element {
 	}
 		
 	public static boolean validName(String sName) {
-		boolean bLegel = true;
 		if (sName==null) return false;
 		byte[] abyName = sName.getBytes();
 		for (int i=0; i < abyName.length; i++) {

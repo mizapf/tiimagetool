@@ -33,7 +33,7 @@ import java.util.ArrayList;
 public class ReadCFCardAction extends Activity {
 	
 	public String getMenuName() {
-		return "Read CF7 card ...";
+		return "Read Compact Flash card ...";
 	}
 	
 	public String getActionName() {
@@ -42,14 +42,9 @@ public class ReadCFCardAction extends Activity {
 	
 	public void go() {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-//		JOptionPane.showMessageDialog(m_parent, "Not implemented", "Read CF", JOptionPane.ERROR_MESSAGE);
-
 		Runtime runtime = Runtime.getRuntime();
 		
 		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-		
-		// Do not pack dd.exe into the TIMT distribution but tell the user
-		// where to find it
 				
 		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, isWindows, true);
 
@@ -59,14 +54,12 @@ public class ReadCFCardAction extends Activity {
 		if (rwd.confirmed()) {
 			String[] commands = rwd.getCommandLine();	
 			try {
-				for (String s: commands) System.out.println("command = " + s);
+				// for (String s: commands) System.out.println("command = " + s);
 				Process p = runtime.exec(commands, null, null); 
 				p.waitFor();
 				int exit = p.exitValue();
 				if (exit == 0) {
 					JOptionPane.showMessageDialog(m_parent, "CF card read successfully.", "CF card reading", JOptionPane.INFORMATION_MESSAGE);
-					// Now add a chown for Unix systems
-					
 				}
 				else {
 					JOptionPane.showMessageDialog(m_parent, "Could not read the CF card. Maybe the path was wrong.", "CF card reading", JOptionPane.ERROR_MESSAGE);

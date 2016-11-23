@@ -28,6 +28,7 @@ import java.awt.Cursor;
 import javax.swing.JOptionPane;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.File;
 
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.TIImageTool;
@@ -44,79 +45,20 @@ public class CHDRawAction extends Activity {
 	}
 	
 	public void go() {
-		java.io.File selectedfile = null;
-		JOptionPane.showMessageDialog(m_parent, "First step: Select a CHD file as input.", "Export", JOptionPane.INFORMATION_MESSAGE);
-		
-		JFileChooser jfc = null;
-		if (imagetool.getSourceDirectory("image")!=null) {
-			jfc = new JFileChooser(imagetool.getSourceDirectory("image"));
-		}
-		else jfc = new JFileChooser();
-		
-		Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
-		if (dim!=null) jfc.setPreferredSize(dim);
-		ImageFileFilter im = new ImageFileFilter();
-		im.setOnlyHD();
-		jfc.addChoosableFileFilter(im);
-		jfc.setFileFilter(im);
-		jfc.setMultiSelectionEnabled(false);
-		
-		int nReturn = jfc.showOpenDialog(m_parent);
-		
-		if (nReturn == JFileChooser.APPROVE_OPTION) {
-			selectedfile = jfc.getSelectedFile();
-			java.io.File filePar = selectedfile.getParentFile();
-			if (!filePar.getName().equals(".")) imagetool.setSourceDirectory(filePar, "image");  // sets the property only for non-UNC paths
-			imagetool.setProperty(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
-		}
-		else return;
-		
-		String sImageFile = selectedfile.getName();
-		ImageFormat ifsource = null;
-		MessCHDFormat source = null;
-		try {
-			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath());
-			if (!(ifsource instanceof MessCHDFormat)) {
-				JOptionPane.showMessageDialog(m_parent, "Not a MESS CHD image file.", "Invalid format error", JOptionPane.ERROR_MESSAGE);				
-				return;
-			}
-			source = (MessCHDFormat)ifsource;
-		}
-		catch (FileNotFoundException fnfx) {
-			JOptionPane.showMessageDialog(m_parent, "Input file not found: " + fnfx.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
-			return;
-		}
-		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_parent, "IO error: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
-			return;
-		}
-		catch (ImageException ix) {
-			JOptionPane.showMessageDialog(m_parent, "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
-			return;
-		}		
-		
-		CHDRawDialog expdialog = new CHDRawDialog(m_parent);
+		CHDRawDialog expdialog = new CHDRawDialog(m_parent, imagetool);
 		expdialog.createGui(imagetool.boldFont);
-		expdialog.setImageFile(sImageFile);
-		
-		// Calculate the size
-		int nSize = source.getHunkCount() * 0x1000;
-		expdialog.setImageSize(String.valueOf(nSize) + " bytes (" + String.valueOf(nSize/1048576) + " MiB)");
 		expdialog.setVisible(true);
 		
 		boolean bOK = false;
-		java.io.File fileTarget = null;
+		
 		if (expdialog.confirmed()) {
-			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-			
-			JFileChooser jfc1 = new JFileChooser();
-			Dimension dim1 = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
-			if (dim1!=null) jfc1.setPreferredSize(dim1);
-						
-			int nReturn1 = jfc1.showSaveDialog(m_parent);
-			if (nReturn1 == JFileChooser.APPROVE_OPTION) {
-				imagetool.setProperty(TIImageTool.FILEDIALOG, jfc1.getWidth() + "x" + jfc1.getHeight());
-				fileTarget = jfc1.getSelectedFile();
+			if (!expdialog.validSelection()) {
+				JOptionPane.showMessageDialog(m_parent, "Missing raw or CHD file specification", "Conversion error", JOptionPane.ERROR_MESSAGE);		
+			}
+			else {
+				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+				MessCHDFormat source = expdialog.getCHD();
+				File fileTarget = expdialog.getTargetFile();	
 				
 				try {
 					DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileTarget));

@@ -315,7 +315,7 @@ public class Volume {
 	}
 	
 	public String getDeviceName() {
-		if (isFloppyImage()) return "DSK1";
+		if (isFloppyImage() || isCF7Image()) return "DSK1";
 		else {
 			if (isSCSIImage()) return "SCS1";
 			else return "HDS1";
@@ -585,6 +585,16 @@ public class Volume {
 		m_nType = nType;
 	}
 	
+	public void renameVolume(String newName) throws IOException, ImageException, ProtectedException, InvalidNameException {
+		if (newName == null || newName.length()==0 || newName.length()>10) throw new InvalidNameException("Name must be 1 to 10 characters long");
+		if (newName.indexOf(".")!=-1) throw new InvalidNameException("Period not allowed in volume name");
+	
+		m_sVolumeName = newName;
+		reopenForWrite();
+		update();
+		reopenForRead();
+	}
+	
 	public void writeVIB() throws IOException, ImageException, ProtectedException {
 		// Create a new VIB
 		byte[] abyNewVIB = new byte[256];
@@ -677,6 +687,8 @@ public class Volume {
 
 		ImageFormat image = null;
 		
+		int sectorsPerTrack = 9 << density;
+
 		switch (type) {
 		case ImageFormat.SECTORDUMP:
 			image = new SectorDumpFormat();
@@ -687,11 +699,13 @@ public class Volume {
 		case ImageFormat.HFE:
 			image = new HFEFormat();
 			break;
+		case ImageFormat.CF7VOLUME:
+			image = new CF7VolumeFormat();
+			sectorsPerTrack = 20;
+			break;
 		}
 		
-		int sectors = (density == ImageFormat.SINGLE_DENSITY)? 9 : 18; 
-		
-		image.createEmptyImage(newImageFile, sides, density, tracks, sectors, format);		
+		image.createEmptyImage(newImageFile, sides, density, tracks, sectorsPerTrack, format);		
 		
 		if (format) {
 			
@@ -704,7 +718,6 @@ public class Volume {
 			Arrays.fill(sector0, 0, 10, (byte)' ');
 			System.arraycopy(volumeName.getBytes(), 0, sector0, 0, volumeName.getBytes().length);
 			
-			int sectorsPerTrack = 9 << density;
 			int nsectors = sides * tracks * sectorsPerTrack;
 			sector0[10] = (byte)(nsectors >> 8);
 			sector0[11] = (byte)(nsectors % 256);

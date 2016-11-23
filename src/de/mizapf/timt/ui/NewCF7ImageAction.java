@@ -42,17 +42,12 @@ public class NewCF7ImageAction extends Activity {
 		NewCF7Dialog newimagedia = new NewCF7Dialog(m_parent, true);
 
 		try {
-			newimagedia.createGui();
+			newimagedia.createGui(imagetool.boldFont);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 			return;
 		}
 		newimagedia.setVisible(true);
-
-		Volume newVolume = null;
-		
-		if (newimagedia.confirmed()) {
-		}
 	}
 }

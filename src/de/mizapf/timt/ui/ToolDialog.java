@@ -63,20 +63,27 @@ public class ToolDialog extends JDialog implements ActionListener {
 	}
 	
 	protected void addButtons() {
+		addButtons(false);
+	}
+		
+	protected void addButtons(boolean onlyOK) {
 		add(Box.createVerticalStrut(10));		
 		Box box7 = new Box(BoxLayout.X_AXIS);		
 		m_btnOK = new JButton("OK");
 		m_btnOK.addActionListener(this);
-		m_btnCancel = new JButton("Cancel");
-		m_btnCancel.addActionListener(this);
 		m_btnOK.setPreferredSize(new Dimension(100, 25));
-		m_btnCancel.setPreferredSize(new Dimension(100, 25));
 		box7.add(Box.createHorizontalGlue());		
 		box7.add(Box.createHorizontalStrut(10));		
 		box7.add(m_btnOK);
-		box7.add(Box.createHorizontalStrut(10));		
-		box7.add(m_btnCancel);
-		box7.add(Box.createHorizontalStrut(10));		
+
+		if (!onlyOK) {
+			m_btnCancel = new JButton("Cancel");
+			m_btnCancel.addActionListener(this);
+			m_btnCancel.setPreferredSize(new Dimension(100, 25));
+			box7.add(Box.createHorizontalStrut(10));		
+			box7.add(m_btnCancel);
+			box7.add(Box.createHorizontalStrut(10));		
+		}
 		box7.add(Box.createHorizontalGlue());		
 		add(box7);		
 		add(Box.createVerticalStrut(10));		
@@ -84,7 +91,7 @@ public class ToolDialog extends JDialog implements ActionListener {
 		pack();
 		setLocationRelativeTo(getParent());
 	}
-		
+	
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getSource()==m_btnOK) {
 			m_bSet = true;
@@ -322,7 +329,7 @@ public class ToolDialog extends JDialog implements ActionListener {
 		return arb;
 	}
 
-	protected void addChoiceLine(int nColumnWidth, String prompt, int line, JTextField textField, int width) {
+	protected void addChoiceLine(int nColumnWidth, String prompt, int line, int number, JTextField textField, int width) {
 
 		JButton button = null;
 			
@@ -365,7 +372,7 @@ public class ToolDialog extends JDialog implements ActionListener {
 			button = new JButton("Choose");
 		}
 		
-		button.setActionCommand(String.valueOf(line));
+		button.setActionCommand(String.valueOf(number));
 		button.addActionListener(this);
 		button.setMinimumSize(new Dimension(width, 32));
 		button.setPreferredSize(new Dimension(width, 32));

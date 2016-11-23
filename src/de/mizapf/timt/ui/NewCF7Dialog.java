@@ -28,106 +28,81 @@ import de.mizapf.timt.files.ImageFormat;
 
 class NewCF7Dialog extends ToolDialog {
 	
-	JTextField 		m_tfName;
-	JComboBox<String> 		m_jcType;
-	JRadioButton 	m_jrFormatted;
-	JRadioButton 	m_jrBlank;
-	JRadioButton 	m_jrSingle;
-	JRadioButton 	m_jrDouble;
-	JComboBox<String> 		m_jcDensity;
-	JRadioButton	m_jrTrack40;
-	JRadioButton 	m_jrTrack80;
-	boolean			m_fullImage;
-	
-	public final static String[] suffix = { ".dsk", ".cf7" };
+	JTextField 		m_tfVolumeName;
+	boolean   m_fullImage;
 	
 	NewCF7Dialog(JFrame owner, boolean fullImage) {
-		super(owner, "Create new CF7 image");
+		super(owner, "Create new external CF7 volume");
 		m_fullImage = fullImage;
 	}
 	
 /*
-	| 	Create new CF7 image										|
+	| 	Create new external CF7 volume										|
 
-	    Create new         o complete CF7 image    * single CF7 volume
-		Image or volume name			EMPTY________
-
-        Number of allocated volumes   [ 4 ]
-        Number of formatted volumes   [ 4 ]
+		This is a single volume for a CF7-formatted card. You can copy
+		its contents into a CF7 image by using the usual file views
+		(copy/paste or drag-and-drop) or by using the tool dsk2cf.exe
+		for your CF7 device. A volumes has 1600 sectors and resembles a
+		disk image in sector dump format.
 		
+		Note that you can work on CF7 images in TIImageTool directly. You 
+		do not need an external volume file unless you want to store it
+		as a separate file.
+		
+		See also the Utilities menu.
+		
+		Volume name			EMPTY________
+	
 				+-------+			+-----------+
 				|	OK	|			|	Cancel	|
 				+-------+           +-----------+
 */	
-	public void createGui() {
+	public void createGui(Font font) {
 		prepareGui();
 
-		m_tfName = putTextField(this, "Disk name", "EMPTY", 100, 100); 
-		
-		String[] asFormat = { "Sector dump", "Track dump", "HFE image" };
-		m_jcType = putComboBox(this, "Image type", asFormat, 0, 100);
-		
-		int[] anFormat = { 100, 100 };
-		
-		String[] asDoFormat = { "formatted", "blank" };
-		JRadioButton[] arb2 = putRadioButtons(this, "Disk will be", 100, asDoFormat, anFormat, 0);
-		m_jrFormatted = arb2[0];
-		m_jrBlank = arb2[1];
+		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
+		int nColumnWidth = fm.stringWidth("Volume name");
 
-		String[] asSides = { "single", "double" };
-		JRadioButton[] arb3 = putRadioButtons(this, "Sides", 100, asSides, anFormat, 1);
-		m_jrSingle = arb3[0];
-		m_jrDouble = arb3[1];
-
-		String[] asOptions = { "Single", "Double", "High", "Ultra" };
-		m_jcDensity = putComboBox(this, "Density", asOptions, 1, 100);
-		
-		String[] asTracks = { "40", "80" };
-		JRadioButton[] arb4 = putRadioButtons(this, "Tracks", 100, asTracks, anFormat, 0);
-		m_jrTrack40 = arb4[0];
-		m_jrTrack80 = arb4[1];
-
+		if (m_fullImage) {
+			putTextLine(this, "If you want to create a new image for a CF7 card,", 0);
+			add(Box.createVerticalStrut(10));
+			putTextLine(this, "!please use the functions in the \"Utility\" menu.", 0);
+			add(Box.createVerticalStrut(10));
+			putTextLine(this, "Short explanation: Compact Flash cards sometimes offer less than the exact amount of", 0);
+			putTextLine(this, "memory as printed on their casing, so you may get into trouble when copying the image", 0);
+			putTextLine(this, "on the CF card.", 0);
+			add(Box.createVerticalStrut(10));
+			putTextLine(this, "Hence, you should use the \"Read Compact Flash Card\" function first, which produces", 0);
+			putTextLine(this, "an image file, then format the volumes as desired with \"Format CF7\". This way, you", 0);
+			putTextLine(this, "will get an image that suits your CF card; copy it to the CF card with \"Write Compact", 0);
+			putTextLine(this, "Flash Card\" finally.", 0);
+		}
+		else {
+			putTextLine(this, "This is a single volume for a CF7-formatted card. You can copy its contents into a", 0);
+			putTextLine(this, "CF7 image by using the usual file views (copy/paste or drag-and-drop) or by using the", 0);
+			putTextLine(this, "tool dsk2cf.exe for your CF7 device. A volumes has 1600 sectors and resembles a", 0);
+			putTextLine(this, "floppy disk image in sector dump format.", 0);
+			add(Box.createVerticalStrut(10));
+			putTextLine(this, "!You can work on CF7 images in TIImageTool directly.", 0);
+			add(Box.createVerticalStrut(10));
+			putTextLine(this, "You do not need an external volume file unless you want to store it", 0);
+			putTextLine(this, "as a separate file.", 0);
+			add(Box.createVerticalStrut(10));
+			putTextLine(this, "See also the \"Utility\" menu.", 0);
+			add(Box.createVerticalStrut(10));
+			m_tfVolumeName = putTextField(this, "Volume name", "", nColumnWidth, 0);
+		}
+		add(Box.createVerticalStrut(10));
 		add(Box.createVerticalGlue());
 
-		addButtons();
-	}
-	
-	int getTrackCount() {
-		return m_jrTrack40.isSelected()? 40:80;
-	}
-	
-	int getDensity() {
-		switch (m_jcDensity.getSelectedIndex()) {
-			case 0: return ImageFormat.SINGLE_DENSITY;
-			case 1: return ImageFormat.DOUBLE_DENSITY;
-			case 2: return ImageFormat.HIGH_DENSITY;
-			case 3: return ImageFormat.ULTRA_DENSITY;
-		}				
-		return -1;
-	}
-	
-	int getSides() {
-		return m_jrSingle.isSelected()? 1:2;
-	}
-	
-	boolean formatImage() {
-		return m_jrFormatted.isSelected();
+		addButtons(m_fullImage);
 	}
 	
 	String getDiskName() {
-		return m_tfName.getText();
-	}
-	
-	int getImageType() {
-		switch (m_jcType.getSelectedIndex()) {
-			case 0: return ImageFormat.SECTORDUMP;
-			case 1: return ImageFormat.TRACKDUMP;
-			case 2: return ImageFormat.HFE;
-		}
-		return -1;
+		return m_tfVolumeName.getText();
 	}
 	
 	String getImageTypeSuffix() {
-		return suffix[m_jcType.getSelectedIndex()];
+		return ".dsk";
 	}
 }

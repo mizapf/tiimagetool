@@ -28,9 +28,11 @@
     [x] Open CF7
     [x] Sector editor
     [ ] Split help file
-    [ ] Read/Write CF7 card
-    [ ] Format CF7
-    [ ] New dialog for CHDRaw/RawCHD (from SearchDialog)	
+    [x] Rename volume
+    [ ] Add graphic format
+    [x] Read/Write CF7 card
+    [x] Format CF7
+    [x] New dialog for CHDRaw/RawCHD (from SearchDialog)	
     [x] Split properties settings into tabs
     [x] Fix double output in Console
 	
@@ -408,12 +410,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_iFormatCF = createMenuItem(new FormatCFCardAction());
 			m_mUtility.add(m_iFormatCF);
 
+			m_mUtility.addSeparator();
 			m_iToHfdc = createMenuItem(new ConvertToHFDCAction());
 			m_mUtility.add(m_iToHfdc);
 			
 			m_iToScsi = createMenuItem(new ConvertToSCSIAction());
 			m_mUtility.add(m_iToScsi);
-			m_mUtility.addSeparator();
 			
 			m_iChangeCHDFormat = createMenuItem(new ChangeCHDFormatAction());
 			m_mUtility.add(m_iChangeCHDFormat);

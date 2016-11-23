@@ -48,6 +48,9 @@ class CF7VolumeFormat extends SectorDumpFormat {
 		return (nLength == 409600)? 100 : 0;
 	}
 	
+	CF7VolumeFormat() {
+	}
+
 	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
 		super(filesystem, sImageName);
 		m_separate = true;

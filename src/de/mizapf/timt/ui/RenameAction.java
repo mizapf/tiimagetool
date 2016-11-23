@@ -37,11 +37,11 @@ public class RenameAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return "Rename...";
+		return "Rename element ...";
 	}
 	
 	public String getActionName() {
-		return "RENAME";
+		return "RENAMEEL";
 	}
 	
 	public void go() {

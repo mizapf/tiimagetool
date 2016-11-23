@@ -35,7 +35,7 @@ class NewHDImageDialog extends ToolDialog implements ActionListener, FocusListen
 	JTextField		m_tfHeads;
 	JTextField		m_tfSectors;
 	JComboBox<String> m_jcSectorLength;
-	JComboBox<String> m_jcCHDVersion;
+//	JComboBox<String> m_jcCHDVersion;
 
 	JLabel			m_jlSize;
 	
@@ -114,8 +114,8 @@ Default values:
 		String[] asOpti = { "256", "512" };
 		m_jcSectorLength = putComboBox(this, "Sector length", asOpti, 0, nColumnWidth);
 
-		String[] asOptio = { "4", "5" };
-		m_jcCHDVersion = putComboBox(this, "MESS CHD version", asOptio, 1, nColumnWidth);
+//		String[] asOptio = { "4", "5" };
+//		m_jcCHDVersion = putComboBox(this, "MESS CHD version", asOptio, 1, nColumnWidth);
 		
 		m_chbFormat = putCheckBox(this, "Format hard disk", true, nColumnWidth);
 		m_chbFormat.addActionListener(this);
@@ -138,7 +138,7 @@ Default values:
 		String[] asOptions = { "HFDC", "SCSI" };
 		m_jcFilesystem = putComboBox(m_jpAdvanced, "File system", asOptions, 0, nColumnWidth);
 
-		m_chbBuffered = putCheckBox(m_jpAdvanced, "Buffered step", false, nColumnWidth);
+		m_chbBuffered = putCheckBox(m_jpAdvanced, "Buffered step", true, nColumnWidth);
 		add(m_jpAdvancedFrame);
 		add(Box.createVerticalStrut(10));
 
@@ -278,8 +278,7 @@ Default values:
 	}
 	
 	public int getCHDVersion() {
-		int[] aVer = { 4, 5 };
-		return aVer[m_jcCHDVersion.getSelectedIndex()];
+		return 5;
 	}
 	
 	public FormatParameters getFormatParameters() {

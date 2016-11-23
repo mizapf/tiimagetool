@@ -42,7 +42,7 @@ public class NewCF7VolumeAction extends Activity {
 		NewCF7Dialog newimagedia = new NewCF7Dialog(m_parent, false);
 
 		try {
-			newimagedia.createGui();
+			newimagedia.createGui(imagetool.boldFont);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -53,6 +53,70 @@ public class NewCF7VolumeAction extends Activity {
 		Volume newVolume = null;
 		
 		if (newimagedia.confirmed()) {
+			// Copied from NewImageAction
+			try {
+				JFileChooser jfc = null;
+				if (imagetool.getSourceDirectory("image")!=null) {
+					jfc = new JFileChooser(imagetool.getSourceDirectory("image"));
+				}
+				else jfc = new JFileChooser();
+				
+				Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+				if (dim!=null) jfc.setPreferredSize(dim);
+				
+				ImageFileFilter im = new ImageFileFilter();
+				jfc.addChoosableFileFilter(im);
+				jfc.setFileFilter(im);
+				
+				int nReturn = jfc.showSaveDialog(m_parent);
+				File file = null;
+				if (nReturn == JFileChooser.APPROVE_OPTION) {
+					imagetool.setProperty(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+					file = jfc.getSelectedFile();
+					int nSuffixPos = file.getName().indexOf(".");
+					if (nSuffixPos==-1 || nSuffixPos == file.getName().length()-1) {
+						if (!file.getName().endsWith(newimagedia.getImageTypeSuffix())) {
+							file = new File(file.getAbsolutePath() + newimagedia.getImageTypeSuffix());
+						}
+					}
+					
+					if (file.exists()) {		
+						int nRet = JOptionPane.showConfirmDialog(m_parent, "Image file already exists. Overwrite?", "New image", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+						if (nRet == JOptionPane.NO_OPTION) return;
+					}
+					
+					if (imagetool.getAlreadyOpenedVolume(file.getAbsolutePath()) != null) {
+						JOptionPane.showMessageDialog(m_parent, "Volume with same file name already opened", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					
+					imagetool.setSourceDirectory(file.getParentFile(), "image");
+					
+					Volume.createFloppyImage(file, 
+									newimagedia.getDiskName(),
+									ImageFormat.CF7VOLUME,
+									2, 
+									ImageFormat.DOUBLE_DENSITY,
+									40,
+									true);
+				
+				}
+				// Open it when it is initialized
+				if (file != null) {
+					newVolume = new Volume(file.getAbsolutePath());
+					Directory root = newVolume.getRootDirectory();					
+					imagetool.addDirectoryView(root);
+				}
+			}
+			catch (FileNotFoundException fnfx) {
+				fnfx.printStackTrace();
+			}
+			catch (ImageException ix) {
+				JOptionPane.showMessageDialog(m_parent, "Error opening new image: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE);				
+			}
+			catch (IOException iox) {
+				JOptionPane.showMessageDialog(m_parent, "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE);
+			}
 		}
 	}
 }
