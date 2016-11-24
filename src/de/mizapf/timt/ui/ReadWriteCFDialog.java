@@ -217,6 +217,9 @@ class ReadWriteCFDialog extends ToolDialog {
 	public void actionPerformed(ActionEvent ae) {
 		JFileChooser jfc = null;
 		if (ae.getSource()==m_btnOK) {
+			/* 
+			 * TODO: Check if command line has content and check if output file is set. Disable OK button if not.
+			 */
 			m_bSet = true;
 			dispose();
 		}
@@ -314,8 +317,18 @@ class ReadWriteCFDialog extends ToolDialog {
 		}
 	}
 	
+	String[] getWrappedCommandLine() {
+		String shellScript = m_tfCommandLine.getText();
+		if (shellScript.isEmpty()) return null;
+		
+		String[] retVal = {"/usr/bin/osascript", "-e", "do shell script \"" + shellScript + "\" with administrator privileges"};
+		return retVal;
+	}
+	
 	String[] getCommandLine() {
 		String sLine = m_tfCommandLine.getText();
+		if (sLine.isEmpty()) return null;
+		
 		boolean inQuotes = false;
 		StringBuilder sb = new StringBuilder();
 		
