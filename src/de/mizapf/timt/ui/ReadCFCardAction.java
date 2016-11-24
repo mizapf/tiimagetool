@@ -44,7 +44,11 @@ public class ReadCFCardAction extends Activity {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		Runtime runtime = Runtime.getRuntime();
 		
+		/* 
+		 * TODO: Use enum type to handle various system types.
+		 */
 		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+		boolean isMac = System.getProperty("os.name").startsWith("Mac");
 				
 		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, isWindows, true);
 
@@ -52,26 +56,31 @@ public class ReadCFCardAction extends Activity {
 		rwd.setVisible(true);
 
 		if (rwd.confirmed()) {
-			String[] commands = rwd.getCommandLine();	
-			try {
-				// for (String s: commands) System.out.println("command = " + s);
-				Process p = runtime.exec(commands, null, null); 
-				p.waitFor();
-				int exit = p.exitValue();
-				if (exit == 0) {
-					JOptionPane.showMessageDialog(m_parent, "CF card read successfully.", "CF card reading", JOptionPane.INFORMATION_MESSAGE);
+			String[] commands = isMac ? rwd.getWrappedCommandLine(false) : rwd.getCommandLine();
+			if (commands == null || commands.length < 3) {
+				JOptionPane.showMessageDialog(m_parent, "Abord command. Command line was not set up correctly.", "CF card reading", JOptionPane.ERROR_MESSAGE);
+			} else {
+				try {
+					// for (String s: commands) System.out.println("command = " + s);
+					Process p = runtime.exec(commands, null, null); 
+					p.waitFor();
+					int exit = p.exitValue();
+					if (exit == 0) {
+						JOptionPane.showMessageDialog(m_parent, "CF card read successfully.", "CF card reading", JOptionPane.INFORMATION_MESSAGE);
+					}
+					else {
+						JOptionPane.showMessageDialog(m_parent, "Could not read the CF card. Maybe the path was wrong.", "CF card reading", JOptionPane.ERROR_MESSAGE);
+					}
 				}
-				else {
-					JOptionPane.showMessageDialog(m_parent, "Could not read the CF card. Maybe the path was wrong.", "CF card reading", JOptionPane.ERROR_MESSAGE);
+				catch (IOException iox) {
+					// iox.printStackTrace();
+					// Linux: java.io.IOException: Cannot run program "xxx": error=2, Datei oder Verzeichnis nicht gefunden
+					// Windows: java.io.IOException: Cannot run program "xxx": CreateProcess error=2, Das System kann die angegebene Datei nicht finden
+					JOptionPane.showMessageDialog(m_parent, "Cannot run device dump command; please check the command path and whether it is installed at all.", "Error executing CF card reading", JOptionPane.ERROR_MESSAGE);
 				}
-			}
-			catch (IOException iox) {
-				// Linux: java.io.IOException: Cannot run program "xxx": error=2, Datei oder Verzeichnis nicht gefunden
-				// Windows: java.io.IOException: Cannot run program "xxx": CreateProcess error=2, Das System kann die angegebene Datei nicht finden
-				JOptionPane.showMessageDialog(m_parent, "Cannot run device dump command; please check the command path and whether it is installed at all.", "Error executing CF card reading", JOptionPane.ERROR_MESSAGE);
-			}
-			catch (InterruptedException ix) {
-				ix.printStackTrace();
+				catch (InterruptedException ix) {
+					ix.printStackTrace();
+				}
 			}
 		}
 
