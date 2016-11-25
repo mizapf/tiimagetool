@@ -309,7 +309,10 @@ class ReadWriteCFDialog extends ToolDialog {
 			
 			if (nReturn == JFileChooser.APPROVE_OPTION) {
 				File file = jfc.getSelectedFile();
-				m_tfImageFile.setText(file.getAbsolutePath());
+				String filename = file.getAbsolutePath();
+				// TODO: I think that there are more special cases to catch
+				filename = filename.replaceAll(" ", "\\\\ ").replaceAll(":", "\\\\:").replaceAll("\\*", "\\\\*");
+				m_tfImageFile.setText(filename);
 			}
 			setupCommand();
 		}
@@ -359,7 +362,7 @@ class ReadWriteCFDialog extends ToolDialog {
 		 * Usually newly written CF-Cards cannot be mounted by macOS due to the change of the legacy CF7 file format. Therefore generally
 		 * no (re)mount is necessary.
 		 */
-		shellScript = "diskutil unmountDisk " + cfcard + "; " + shellScript + (doWriting? "" : "; diskutil mountDisk " + cfcard);
+		shellScript = "/usr/sbin/diskutil unmountDisk " + cfcard + "; " + shellScript.replaceAll("\\\\", "\\\\\\\\") + (doWriting? "" : "; /usr/sbin/diskutil mountDisk " + cfcard);
 		String[] retVal = {"/usr/bin/osascript", "-e", "do shell script \"" + shellScript + "\" with administrator privileges"};
 		return retVal;
 	}
