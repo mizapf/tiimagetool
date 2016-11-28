@@ -35,6 +35,7 @@
     [x] New dialog for CHDRaw/RawCHD (from SearchDialog)	
     [x] Split properties settings into tabs
     [x] Fix double output in Console
+    [ ] Fix Drag and drop
 	
     New for 2.1+
     [x] Redirect standard output

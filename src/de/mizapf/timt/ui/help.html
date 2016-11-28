@@ -31,7 +31,7 @@
 			font-size:30pt;
 			color:#333333;
 			text-align:center; }
-	h2 { font-family:sans-serif; margin:10 0 5 0; }
+	h2 { font-family:sans-serif; margin:10 0 10 0; }
 	h3 { font-family:sans-serif; margin:15 0 3 0; }
 	h4 { font-family:sans-serif; margin:10 0 0 0; padding: 2 10 2 10; font-size:14pt; background-color:#adbdc0 }
 
@@ -80,17 +80,16 @@ details.</p>
 <h2>Main topics</h2>
 
 <table class="main">
-<tr><td><a href="#why">Preliminaries</a></td><td><a href="#license">License</a></td></tr>
+<tr><td><a href="#why">Objectives</a></td><td><a href="#license">License</a></td></tr>
 <tr><td><a href="#bugs">Bugs and errors</a></td><td><a href="#disclaimer">Disclaimer</a></td></tr>
-<tr><td><a href="#comments">Comments</a></td><td> </td></tr>
-<tr><td><a href="#formats">Supported formats</a></td><td><a href="#usage">General usage</a></td></tr>
-<tr><td><a href="#draganddrop">Dragging and dropping</a></td></tr>
-<tr><td> </td><td> </td></tr>
+<tr><td><a href="#comments">Comments</a></td><td><a href="#usage">General usage</a></td></tr>
+<tr><td><a href="#formats">Supported formats</a></td><td><a href="#draganddrop">Dragging and dropping</a></td></tr>
 <tr><td><a href="#diskimages">Floppy disk image handling</a></td><td><a href="#files">File management</a></td></tr>
 <tr><td><a href="#hddisk">Hard disk image handling</a></td><td><a href="#viewing">Viewing contents</a></td></tr>
+<tr><td><a href="#cf7handling">Compact Flash (CF7) handling</a></td><td><a href="#disassemb">Disassembling</a></td></tr>
 <tr><td><a href="#expimp">Export and import</a></td><td><a href="#utilities">Utilities</a></td></tr>
 <tr><td><a href="#archiving">Archive support</a></td><td><a href="#serial">Serial connections</a></td></tr>
-<tr><td><a href="#disassemb">Disassembling</a></td><td></td></tr>
+<tr><td><a href="#secedit">Sector editing</a></td><td> </td></tr>
 </table>
 <hr>
 
@@ -101,8 +100,9 @@ details.</p>
 <ul class="contents">
 <li>File menu</li>
 <ul class="contents">
-<li><a href="#newfl">New floppy</a>/<a href="#newhd">hard disk</a> image</li>
+<li><a href="#newfl">New floppy</a>/<a href="#newhd">hard disk</a>/<a href="#newcf7">CF/</a>image</li>
 <li><a href="#open">Open</a></li>
+<li><a href="#openrec">Open recent file</a></li>
 <li><a href="#close">Close (all)</a></li>
 <li><a href="#export">Export image</a></li>
 <li><a href="#pref">Preferences</a></li>
@@ -111,21 +111,27 @@ details.</p>
 <li>Edit menu</li>
 <ul class="contents">
 <li><a href="#cut">Cut, Copy, Paste, Delete</a></li>
-<li><a href="#rename">Rename</a></li>
+<li><a href="#renameel">Rename element</a></li>
+<li><a href="#renamevol">Rename volume</a></li>
 <li><a href="#select">Select all</a></li>
 <li><a href="#newdir">New directory</a></li>
 <li><a href="#newarch">Create archive</a></li>
 <li><a href="#importf">Import files</a></li>
+<li><a href="#importb">Import plain binary files</a></li>
 <li><a href="#importt">Import from text editor</a></li>
-<li><a href="#importt">Import binary content</a></li>
 <li><a href="#importr">Import from remote</a></li>
+<li><a href="#importe">Import as emulate files</a></li>
 </ul>
 <li>Utility menu</li>
 <ul class="contents">
 <li><a href="#redir">View Console output</a></li>
 <li><a href="#check">Check filesystem</a></li>
 <li><a href="#genos">Install Geneve OS</a></li>
+<li><a href="#secedit">Edit sectors</a></li>
 <li><a href="#search">Search</a></li>
+<li><a href="#readcf">Read Compact Flash card</a></li>
+<li><a href="#writecf">Write Compact Flash card</a></li>
+<li><a href="#formatcf">Format CF7 volumes</a></li>
 <li><a href="#hfdc">Convert to HFDC</a></li>
 <li><a href="#scsi">Convert to SCSI</a></li>
 <li><a href="#chdformat">Change CHD format</a></li>
@@ -145,13 +151,14 @@ details.</p>
 <ul class="contents">
 <li><a href="#enterdir">Enter</a></li>
 <li><a href="#cut">Cut, Copy, Paste, Delete</a></li>
-<li><a href="#rename">Rename</a></li>
+<li><a href="#renameel">Rename Element</a></li>
 <li><a href="#selectall">Select all</a></li>
 <li><a href="#viewing">Views</a> (text, plain, util); also see <a href="#escaping">Unprintable characters</a></li>
 <li><a href="#dis">Disassemble</a></li>
 <li><a href="#dis">GPL Disassemble</a></li>
 <li><a href="#list">List BASIC program</a></li>
-<li><a href="#save">Save as TIFILES</a>, plain dump</li>
+<li><a href="#save">Save as TIFILES</a></li>
+<li><a href="#savepl">Save as plain dump</a></li>
 <li><a href="#sendrem">Send to remote</a></li>
 <li><a href="#archiving">Archive</a></li>
 </ul>
@@ -170,12 +177,8 @@ details.</p>
 
 <h2>New in this release</h2>
 <ul>
-<li>HFE (Lotharek) image handling</li>
-<li>Search for files and content</li>
-<li>Extended Basic programs can now be imported as lowercase and with interleaved non-line comments</li>
-<li>File system check also checks for CRC errors in track dump files and
-repairs them</li>
-<li>Live console output window</li>
+<li>Sector editor</li>
+<li>Compact Flash / CF7 handling</li>
 </ul>
 
 <a name="why"></a>
@@ -195,7 +198,7 @@ the emulated system performs write operations, and so we can copy files on the
 image, delete them, and also read them. But multi-system emulators like MAME
 simply cannot implement all the handling for every single system.</p>
 <p>TIImageTool is a program which allows you to create and modify TI disk
-images in a well-known, intuitive way, including common file management features
+images in an intuitive way, including common file management features
 that we know from PC systems. Disk images can be created with different sizes, 
 files can be copied from one disk to another, files can be imported and exported, 
 and file systems can be checked for errors.</p>
@@ -225,18 +228,25 @@ uses the <a href="#rxtx">RXTX</a> serial library, so you have to install this li
 want to use the bridge. If you do not install it, you can use all features 
 of TIImageTool without limitations except for the serial connection which will
 then be unavailable.</p>
+<p>If you want to work with Compact Flash cards that are used with the CF7
+expansion system (or the <em>nanoPEB</em>), you also need a program to read
+directly from a storage device. This program is called <strong>dd</strong>,
+and it is already part of every Linux distribution or MacOS, but not of 
+a normal Windows installation. You have to download the <strong>DD for Windows</strong>
+program; it is simply one EXE file that you should store at a location that
+you easily remember. You can set the path to DD.EXE in the preferences.</p>
 
 <a name="starting"></a>
 <h2>Starting</h2>
-<p>You can start TIImageTool by double-clicking the JAR file (if the JAR file
+<p>TIImageTool is started by double-clicking the JAR file (if the JAR file
 type is associated to the Java Runtime Environment). Alternatively, you can start
 the program on the command line</p>
-<div class="code">java -jar tiimagetool.jar [image_file]</div>
-<p>If you provide the optional <em>image_file</em> argument, TIImageTool will
-directly open the image on startup.</p>
-<p>You can also start the serial bridge without launching the rest of the 
-program by using the command line:</p>
-<div class="code">java -jar tiimagetool.jar BRIDGE serial_device socket_port</div>
+<div class="code">java -jar tiimagetool.jar [<em>imageFile</em>]</div>
+<p>If you provide the optional <em>imageFile</em> argument, TIImageTool will
+directly open the image on startup. In case you simply want to use the serial bridge feature without all the 
+other things, you can pass the BRIDGE argument in the command line like this: 
+</p>
+<div class="code">java -jar tiimagetool.jar BRIDGE <em>serialDevice</em> <em>socketPort</em></div>
 <p>Please see below (<a href="#serial">serial bridge</a>) for more details.</p>
 
 <a name="formats"></a>
@@ -246,12 +256,19 @@ program by using the command line:</p>
 <ul>
 <li>Sector dump format (also known as "v9t9" format)</li>
 <li>Track dump format (aka "PC99" format)</li>
+<li>HFE format (aka "Lotharek" format)</li>
 </ul>
 <div><strong>Hard disk image formats</strong></div>
 <ul>
 <li>Raw hard disk format (same as sector dump format but for hard disks)</li>
 <li>MAME CHD format (Compressed Hunks of Data, a MAME-specific format for mass storage media)</li>
 </ul>
+<div><strong>Compact flash format</strong></div>
+<ul>
+<li>CF7 image format (whole card)</li>
+<li>CF7 volume format (single volume on the CF7 image)</li>
+</ul>
+
 <p>All these formats can be used directly, including reading and writing operations.
 Files and directories may be moved or copied between images of different formats.
 The different formats are only visible to some lower layer of TIImageTool and 
@@ -272,27 +289,29 @@ also for dual licensing considerations.</p>
 
 <a name="bugs"></a>
 <h2>Bugs and errors</h2>
-<p>Although everyone does his or her best, to err remains human. I have added 
-a huge load of new features to the previous version of TIImageTool, certainly
-testing everything several times in different ways. But it's just impossible to
+<p>Although everyone does his or her best, to err remains human. Every new
+release of TIImageTool has added a set of new features, everything certainly
+tested several times in different ways. But it is just impossible to
 ensure that everything works as expected.</p>
 <p>So if you find something weird going on with TIImageTool, here are some suggestions:</p>
 <ul>
-<li>Probably the program works correctly, and you just understood one of its functions differently. Read
-the appropriate section of this manual, or contact me by mail (see below).</li>
+<li>Probably the program works correctly, and you just understood one 
+of its functions in a different way. Read the appropriate section of this manual, 
+or contact me by mail (see below).</li>
 <li>If you encounter trouble while writing on your images, make sure your images are not
 write-protected.</li>
 <li>If the program seems to hang (mouse pointer shows a "wait state"), check if
 some dialog window waits for your input. If not, you should restart the program
 in a command line. Watch if there is some output in 
-the command line which reads like an error message and report it to me.</li>
+the command line which reads like an error message and report it to me.
+You can also activate the console output logging to a file, and open the 
+console window in the Utility menu.</li>
 </ul>
-<p>In all cases, if you need help please contact me at <strong>ti99@mizapf.de</strong>. It is
-most helpful for me to find the cause of the problem if you provide me with a 
-detailed description what you did before the error appeared. So if it seems to
-you as if there is a problem, first try to reproduce the problem, so my chances
-are better to quickly find it. In case of doubt, contact me, don't try to live
-with the problem.</p>
+<p>In any case, if you need help please contact me at <strong>ti99@mizapf.de</strong>. 
+The more detailed your problem description is, the easier it is for me to
+track the source of the issue. Tell me exactly what you did when the problem
+occured, or even better, try to reproduce the problem. Just do not try to 
+silently get along with it.</p>
 <p><strong>Suggestions</strong> are always welcome. Also tell me if some program behavior
 is obviously correct as described but feels surprising, awkward, or not useful for you. 
 I cannot promise to consider all of your inputs but if your point convinces me
@@ -323,16 +342,18 @@ remain unchanged.</p>
 <a name="comments"></a>
 <h2>Comments from the author</h2>
 <p>My motivation for writing TIImageTool emerged when I managed to copy all 
-of my old TI floppy disks to PC image files; then I was in need of a tool which allowed 
+of my old TI floppy disks to PC image files in order to use them in MESS
+(today MAME). At that point I was in need of a tool which allowed 
 me to quickly check whether all images have been correctly
-copied. MAME offers a tool named <em>imgtool</em>, but it is a text-only command line tool, and its main
-usage seems to be to create new images. After I added the track dump format
+copied. MAME offers a tool named <em>imgtool</em>, but it is a text-only 
+command line tool, and its main use case seems the creation of new images. 
+After I added the track dump format
 to the TI-99 emulation in MAME, I should have added that support to imgtool as
 well. imgtool is a good tool if you are working with many different emulations
 in MAME, but it cannot cover all features that one would like to have for one 
 specific platform.</p>
 
-<p>So I started with TIImageTool in 2010, first as a pure command 
+<p>I started with TIImageTool in 2010, first as a pure command 
 line tool. Later I added a graphical user interface. During the following years
 I added more and more features, like multi-disk support and cut-copy-paste 
 capabilities, hard disk operations, and archive support.</p> 
@@ -342,23 +363,26 @@ editor as my favorite programming environment (small, fast, useful). The
 background image was created by using <em>GIMP</em>, based on
 a screenshot of the Master Title Screen.</p>
 
+<hr>
+
 <a name="usage"></a>
 <h2>General usage</h2>
-<p>The typical usage is to open one or more images using the open function in the
-file menu and to view, move, copy, or save files stored inside the images. </p>
-<p>When an image is loaded its contents are displayed in an own <strong>tab</strong>
-in a format similar to the directory displays in the TI or Geneve. You can
+<p>As the most typical use case, you open one or more image files by the open 
+function in the file menu and view, move, copy, or save files stored inside those images. </p>
+<p>When an image is loaded, its contents are displayed in an own <strong>tab</strong>
+in a format similar to the directory displays known from the TI or Geneve. You can
 open more than one image, and each image gets its own tab. You can also open an
 image more than once for a comfortable file transfer on the same image. 
-You can certainly do file operations (like moving or copying) across different
-tabs.
-</p>
-<p>With the 2.0 release, you can <strong>detach</strong> tabs from the main 
-window. When you close the detached windows, they become tabs of the main window 
-again, unless you close the main window, which shuts down all open windows at once.
-</p>
-<p>In general, we call a directory listing of an image a <strong>view</strong>. 
-Thus, views can appear as tabs of the main window, or as separate windows.</p>
+File operations may involve a single tab, but also another tab, when you copy
+or move files from one image to another. You can open an image more than
+once, hence getting multiple tabs for the same image.
+<p>Tabs may be <strong>detached</strong> from the main window, which means 
+they are shown as separate windows. When you close the detached windows, they 
+again become tabs of the main window, unless you close the main window, 
+which shuts down all open windows at once. Using different windows makes it
+easy to copy or move files, using the drag-and-drop feature. In general, 
+we call a directory listing of an image a <strong>view</strong>. 
+Using this terminology we can say that views can appear as tabs of the main window, or as separate windows.</p>
 
 <p>Within the directory content display you can open files by <strong>double-clicking</strong>
 the left mouse button over the entry. TIImageTool will choose a suitable display format (text 
@@ -369,32 +393,33 @@ parent directory entry ("..").</p>
 files. Selection is done in the usual way by moving the mouse pointer over an
 entry and by left-clicking on it (marking it). If you want to do single file operations 
 you do not need to mark the file first; you can immediately double-click it 
-or use the context menu.</p>
+or click the right mouse button to let the <strong>context menu</strong> show up.</p>
 <p>Selection of multiple files or directories is done by left-clicking while
 pressing the <strong>Shift</strong> or <strong>Ctrl</strong> key on the keyboard.
 The Shift key allows you to select a range (starting at the last selected entry)
-while Ctrl is provided for separate selections.</p>
+while Ctrl is used for separate selections.</p>
 <p>Available operations depend on the selected entries. For instance, if you
 select multiple text files you can open each one of them in one go. If you select
 a BASIC file and a text file together, however, there are less options because
 you cannot list a text file. The program determines which options may be reasonable
 to use for the current selection.</p>
 <p>According to the available operations, menu items become selectable or 
-become deactivated. Thus the <em>close</em> menu option is only available if
+become deactivated. For instance, the <em>close</em> menu option is only available if
 an image has been opened.</p>
 <p>Many operations are available via the <strong>context menu</strong>. This
 menu is shown when you right-click a directory entry (right mouse button) or when
 you right-click on a free space on the directory tab. All this is done in a
-way which should be quite well-known for people using modern operating systems 
+way which should be quite familiar for people using modern operating systems 
 like Linux, MacOS, or Windows.</p>
 
 <p>All operations are performed <strong>immediately</strong> on the image. 
-There is <strong>no undo</strong> feature in TIImageTool yet.</p> 
+There is <strong>no undo</strong> feature in TIImageTool yet. One exception
+is the sector editor where all changes are kept in memory until they
+are explicitly copied to disk.</p> 
 
 <a name="draganddrop"></a>
 <h2>Dragging and dropping</h2>
-<p>One of the most notable enhancements of release 2.0 is the <strong>Drag-and-Drop support</strong> (DnD).
-You can now easily move or copy files between images, between directories,
+<p>With the <strong>Drag-and-Drop support</strong> (DnD) you can easily move or copy files between images, between directories,
 or even between an image and the PC file system and vice versa. The DnD support is based on the DnD implementation in Java Swing. It implements
 all common gestures, but has some few limitations that you should be aware of.</p>
 <p>In most cases, DnD is simply done by clicking on a file, holding the mouse
@@ -415,14 +440,17 @@ way as your files. One exception though, you cannot drag a directory into anothe
 directory on a floppy disk, since the floppy disk file system does not support
 nested directories.</p>
 <p>Finally, what happens when you pull your file out of TIImageTool? - 
-This will indeed be handled as an <strong>export</strong> operation, and you can
-again handle one or more files or directories in one go. The exported files
-will appear as TIFILES files on the file system.</p>
-<p>You can even drag files into TIImageTool from your file system. Simply try
-to pull a text file, or maybe a BASIC program? I guess it is better you just
-have a try before I continue with long explanations.</p>
-<p>One limitation of the export feature is that you can only copy files and
-directories from the image file to the external file system; moving is not
+This will be handled as an <strong>export</strong> operation, and also here,
+you can select multiple files or directories and export them in one go. The exported files
+will appear as TIFILES files in the PC file system.</p>
+<p>The opposite direction means <strong>importing</strong>, and you can achieve it
+using DnD by dragging a file from the PC file system into TIImageTool. If the
+file to be imported is a TIFILES file, all file metadata are retrieved and
+automatically set for the newly imported file. If the file is a plain binary file
+or a text file, you will be asked for the missing information. Maybe you should
+just try it before I try to explain it with a lot of words.</p>
+<p>One limitation of the export feature is that you can only <em>copy</em> files and
+directories from the image file to the external file system; <em>moving</em> is not
 possible even though your file explorer will offer you the option to move. This
 is a limitation of the Java DnD support.</p>
 
@@ -433,10 +461,12 @@ is a limitation of the Java DnD support.</p>
 <h2>Context menu functions</h2>
 
 <p>The context menu pops up when you click the right mouse button over an 
-entry of the directory. Its contents depend on the entry - BASIC files, for 
-instance, cause the <em>List BASIC</em> feature to become active. The "free space"
-of the directory tab offers a own context menu which contains options to 
-create new entries or to paste copied files into this directory.</p>
+entry of the directory. The set of active selections depends on the selection:
+For instance, when you click on a BASIC file, the option to <em>List BASIC</em>
+becomes active.</p>
+<p>You can also click in the free space below the last file; this will open 
+a context menu for the volume itself, which contains items to create new
+files or directories, or to paste copied files into this directory.</p>
 
 <p><a href="#top">Back to top</a></p>
 
@@ -505,7 +535,8 @@ Any change you commit to one of the copies is reflected in all others
 immediately.</p>
 </div>
 
-<p>If you work with a small set of image files the "Open recent" feature considerably speeds up your work.</p>
+<p>The "Open recent" feature considerably speeds up your work when you usually
+use a limited set of different images.</p>
 
 <h4>Open recent file</h4>
 <div class="program">
@@ -568,6 +599,9 @@ parameter declares the block size in bytes, which may be set to 256 as the
 real sector size, but using a higher value speeds up the copy process (multiple
 sectors will be read in one go).</p>
 
+<p>You can read more about working with external devices in the section 
+<a href="#cf7handling">Compact Flash handling</a>.</p>
+
 <h3>MAME CHD</h3>
 <p>CHD means <em>Compressed Hunks of Data</em> which implies one of its 
 original uses: to allow to pack contents of mass storage media in a comparably 
@@ -580,18 +614,12 @@ content these properties are useful. Apart from that, the CHD container adds
 important information about the drive geometry (cylinders, heads,
 sectors per track).</p>
 
-<p><strong>CHD versions</strong></p>
 <p>CHD has evolved along many versions; the current version is 5. It introduced
 a very useful feature: The size of the image can be minimized even without 
 compressing. All tracks that are completely filled with 0 are not stored. There
 is a map at the beginning of the container, and when the system looks up the
 pointer to a desired track and gets a 0, it automatically creates an empty 
 track image filled with zeros.</p>
-<p>TIImageTool supports versions 4 and 5 of CHD. MAME itself does not
-accept older formats, which means that every now and then you will have to 
-upgrade the format of your CHD containers. TIImageTool allows you to change
-the version of the CHD container, even to downgrade, although this is only 
-reasonable when you want to use the image with an earlier MAME release.</p>
 
 <p>You can also extract the contents of a CHD container into a raw image; you
 will need this when you want to write contents back to your real TI/Geneve hard drive.
@@ -601,42 +629,41 @@ zeros. As said above, this may greatly reduce the size of your image.</p>
 
 <p>When you create a blank hard disk with MAME tools or with TIImageTool without
 formatting, you must format it inside the emulation (e.g. with the 
-Myarc Disk Manager). However, you will notice that the CHD will grown to its 
-maximum size at once. The formatting tools in the emulation write a test 
-pattern on the disk, and the CHD support in MAME cannot know that this
-is merely a test pattern. However, this can be "fixed" because 
-TIImageTool can convert this test pattern to zeros if the respective sectors on the hard disks
+<em>Myarc Disk Manager</em>). However, after formatting the CHD container will
+have grown to the maximum size, so the CHD format may not utilize its space-saving
+feature. The reason is that the Disk Manager writes test patterns on the hard 
+disk which the CHD does not know about, so it assumes that these patterns are
+user data. This can be "fixed" by TIImageTool which can convert this test 
+pattern to zeros if the respective sectors on the hard disks
 are not allocated for files.</p>
 
 <h3>Hard disk parameters</h3>
 <p>There are two groups of parameters for hard disk usage: the geometry, and 
-technical parameters</p>
+technical parameters.</p>
 <p><strong>Geometry</strong></p>
 <ul>
-<li><em>Cylinders</em>: For floppy drives usually called tracks, but as 
-hard disks are usually built up by stacking multiple single disks, the tracks
-on top of each other are called a cylinder. The number of cylinders is determined
-by mechanical properties of the drive, so each drive has its specific count of cylinders.
-The number of cylinders is typically indicated on the case of the drive. The once
-famous ST-225 drive from Seagate had 615 cylinders, which is used as a default
+<li><em>Cylinders</em>: Basically the same as "tracks" for floppy disks, with
+the exception that a cylinder is the set of all tracks (from each head) at the
+same distance from the spindle. The number of cylinders is determined
+by the mechanical properties of the drive, so each drive has its specific count 
+of cylinders. The number of cylinders is typically indicated on the case of the drive. The once
+famous ST-225 drive from Seagate has 615 cylinders, which is used as a default
 in TIImageTool. You can define <strong>up to 2048</strong> cylinders.
 </li>
-<li><em>Heads</em>: For floppy drives we usually speak about <em>sides</em>, but
+<li><em>Heads</em>: For floppy drives we usually talk about <em>sides</em>, but
 again, we have multiple disks in a hard disk case, so there are also multiple
 heads. You can have <strong>up to 16</strong> heads, and in this program we
 also require their number to be even (always using both sides of a disk).</li>
 <li><em>Sectors per track</em>: On floppy disks, sectors could be defined at any
 location on the track (<em>soft-sectored</em>), but hard disks may be designed to
 have sectors at specific locations. Therefore the number of sectors per track
-can be considered defined by geometry. We can have <strong>up to 256</strong> sectors per track, 
+can be considered as defined by its geometry. We can have <strong>up to 256</strong> sectors per track, 
 but commonly we find 32 sectors per track.</li>
 <li><em>Sector length</em>: This is rather a matter of formatting, not of
 specific geometric constraints. Sector lengths for MFM drives and SCSI drives 
 as used in the TI/Geneve environments are always <strong>256 bytes</strong>.
 Only the IDE drives as used with the IDE adapter are created with 512 bytes as
 commonly used in the PC world, but this is not yet supported in TIImageTool.</li>
-<li><em>MAME CHD version</em>: You can set version 4 or 5, but 5 is highly 
-recommended because current MAME releases only support version 5.</li>
 </ul>
 
 <p>SCSI drives do not expose these geometric data to the outside world, other
@@ -667,8 +694,8 @@ in the drive. Can be set in a range of 0-7 and depends on the mechanics of the d
 stated, MAME currently does not support SCSI.</li>
 <li><em>Buffered step</em>: Some drives were able to buffer step pulses for their
 heads, so the controller was not required to do single steps but to output a sequence
-of step pulses, and then listened to a line called <em>seek complete</em>. Older
-drives did not have such a buffer, so we leave this box unchecked by default.</li>
+of step pulses, and then listened to a line called <em>seek complete</em>. The
+default is true, since only very old drives came without buffered steps.</li>
 </ul>
 
 <p>All these technical parameters may be safely left with their defaults. The only
@@ -690,9 +717,6 @@ decide between pre-formatted and blank image files.</p>
 even when you plan to create a SCSI image. This is required for the MAME CHD container.</li>
 <li><em>Sector length</em>: For HFDC and SCSI, the sector length must be 256. In a
 later revision there may be support for IDE drives with 512 bytes per sector.</li>
-<li><em>MAME CHD version</em>: You can create CHD images for versions 4 and 5, 
-but you must use the appropriate version for the MAME release you plan to use.
-Current releases only support version 5.</li>
 <li><em>Format hard disk</em>: Create the file system on the image. If you want
 to use an emulation-internal tool for formatting, uncheck the box.</li>
 <li><em>Advanced options</em>: Activating this box unfolds a set of detail
@@ -740,11 +764,11 @@ choose an image file from your file system.</p>
 <h4>Extract raw from CHD</h4>
 <div class="program">
 <ul>
-<li><em>Source CHD</em>: You first have to specify the CHD container from which you want to extract
-the contents. The dialog window is a reminder that you will <strong>not</strong> extract from one of the
-currently open volume but that you have to specify a volume from the PC file system.</li>
-<li><em>Required space</em>: Tells you how much space this extraction will require.</li>
-<li><em>Target file</em>: Specify the target file name.</li>
+<li><em>File name for CHD image (from)</em>: Specify the CHD container from which you want to extract
+the contents.</li>
+<li><em>File name for raw contents (to)</em>: Specify the file name that will 
+be used for the contents of the hard disk image.</li>
+<li><em>Export size will be</em>: Tells you how much space this extraction will require.</li>
 </ul>
 </div>
 
@@ -752,42 +776,36 @@ currently open volume but that you have to specify a volume from the PC file sys
 <h3>Importing contents into a new CHD container</h3>
 <p>Importing requires some information that is not contained in the raw contents.
 This information (the <em>metadata</em>) inform MAME about the geometry of the
-drive even when it is not formatted yet.</p>
-<p>Also here, you do not operate on the currently open images.</p>
+drive even when it is not formatted yet. As above, you do not operate on the currently open images.</p>
 
 <h4>Import from raw</h4>
 <div class="program">
 <ul>
-<li><em>Source CHD</em>: You first have to specify the raw file which contains
+<li><em>File name for raw contents (from)</em>: Specify the raw file which contains
 the sector contents.</li>
-<li><em>Parameters</em></li>
-<ul>
-<li><em>Target CHD version</em>: You should use the default (5). The v4 format
-can only be used with earlier MAME versions.</li>
+<li><em>File name for CHD image (to)</em>: Specify the new CHD file that will
+receive the contents of the raw file.</li>
 <li><em>Fill unallocated space with zeros</em>: Tracks filled with zeros are not
-stored in a v5 container; this may allow the container to shrink considerably.</li>
+stored in a CHD container; this may allow the container to shrink considerably.</li>
 <li><em>Target parameters</em>: You cannot change these parameters. They are 
-computed from the size of the input file in a way to yield plausible values.</li>
-</ul>
-<li><em>Target file name</em>: Provide the name by which the CHD container shall be
-stored.</li>
+computed from the size of the input file.</li>
 </ul>
 </div>
 
 <p>The new CHD container is stored on the PC drive, but it is not automatically 
 opened. You can open it <a href="#open">as usual</a>.</p>
 
-<p>The CHD container may be <strong>much smaller</strong> than you expected. MAME
-CHD v5 containers do not store tracks which are filled with zeros. However, if you
+<p>The CHD container may be <strong>much smaller</strong> than you expected.
+CHD containers do not store tracks which are filled with zeros. However, if you
 format the drive within the emulation, test patterns will make the CHD expand to 
 its full size.</p>
-
-<h3>Converting between HFDC and SCSI file system</h3>
 <p>When you import raw data into a new CHD, TIImageTool fetches the geometry values
 from sector 0. If the raw image has a SCSI file system, we need to guess proper
 geometry values. This should not cause any problems, as there are no checks
 for known geometries. However, keep in mind that you cannot use SCSI images
-in MAME at this time (0.159).</p>
+in MAME at this time (version 0.179).</p>
+
+<h3>Converting between HFDC and SCSI file system</h3>
 <p>You can change the file system from SCSI to HFDC and back. You will lose the
 geometry and technical parameters when you convert it to SCSI, and you have to
 define them when you convert to HFDC.</p>
@@ -828,7 +846,7 @@ multiple of 512 sectors. This allows us to cleanly divide the total sector numbe
 the geometry values. If you know different values you can change them manually.</p>
 
 <p>This function also checks for <em>invalid MaxAU</em> values. These invalid values 
-are caused by a bug of a formatter in earlier MDOS versions. When found, the
+are caused by a bug of a formatter in earlier GeneveOS versions. When found, the
 program will replace all of these values by the correct maximum value.</p>
 
 <p>Converting to HFDC is required only if you want to use a SCSI image with the HFDC. 
@@ -864,41 +882,170 @@ see that the heading contains the line <em>Directory of SCS1</em>.</p>
 <hr>
 <!-- -------------------------------------------------------------------- -->
 
-<h2>Direct device access</h2>
+<a name="cf7handling"></a>
+<h2>Compact Flash handling</h2>
+<p>Compact Flash cards offer a high storage capacity in a small casing, at 
+least compared to conventional hard disk drives and floppy disks. Nowadays,
+CF cards are getting rarer because SD cards have become superior in capacity,
+performance, and handling.</p>
+<p>CF cards are nevertheless interesting for TI users, since there is a peripheral
+device that has gained much popularity, the <em>nanoPEB</em>. It makes use of
+a CF card to emulate a floppy drive (or even several of them) by defining
+a set of <em>volumes</em> that can be mounted as desired and which appears
+as a floppy disk for the TI system.</p>
 
-<p>We cannot access floppy drives directly from TIImageTool, as we cannot 
-configure the PC floppy controller from within Java. Another interesting use
-case would be to gain direct access to devices like SCSI drives or Flash 
-ROM cards: </p>
+<a name="cf7gen"></a>
+<h3>General considerations</h3>
+<p>CF cards come in various sizes - from 128 MiB, to 512 MiB, 1 or several GiB.
+However, only in rare cases the CF cards provide the amount of memory printed
+on their casing. This is because a certain portion of the memory is retained
+for replacing defect sectors. This has some ugly consequences. If we have 256 MiB image file, it is not
+certain whether it can be written on a 256 MiB card. This also means that
+we may fail to copy a 256 MiB card to another one of the (seemingly) same size.</p>
+<p>For this reason, the typical approach for creating new images is not 
+recommended here. For instance, if we create a 256 MiB image to be later written
+on a CF card, we may find out that it won't fit. Instead, we set up a 
+different way: </p>
+<ul>
+<li>First download the contents of an existing CF card and store them as an image file.</li>
+<li>Then modify its contents as desired.</li>
+<li>Finally write back the image to the CF card.</li>
+</ul>
+</p>The job of transferring the data from or to the device is done by an external program: <strong>dd</strong>. While dd is part
+of all Linux distributions and also of MacOS, Windows users will not find it
+on their drives. You have to download <strong>dd for Windows</strong> from the web; as of 2016, the address
+is <a href="http://www.chrysocome.net/dd">http://www.chrysocome.net/dd</a>.</p>
+
+<p>Linux does not allow a normal user to directly access the CF card device. 
+In order to get the required privileges, Linux systems must run the
+dd command as root, and this can be achieved by a special command before.
+In a shell this command is known as <strong>sudo</strong>, but we need the
+corresponding command for the graphical desktop:</p>
 
 <ul>
-<li>We have a SCSI hard drive which is normally attached to a SCSI card in the
-TI peripheral system, like the WHTech SCSI or the ASCSI card. This SCSI drive
-can easily be hooked on a PC SCSI adaptor.</li>
-<li>Flash cards can be accessed as simply as SCSI drives, but they do not need
-a dedicated SCSI controller. Flash cards are also used with various compact flash
-extensions for the TI.</li>
+<li>KDE: The command is <strong>kdesu</strong>.</li>
+<li>Gnome: The command is <strong>gksu</strong>.</li>
 </ul>
 
-<p>In earlier releases of TIImageTool, a feature called <b>Open device</b> 
-was available. This feature was removed with release 2.2 for the following
-reasons:</p>
+<p><strong>MacOS</strong> offers a similar concept by the command <strong>osascript</strong>
+(thanks to Henrik Wedekind for donating these lines to TIImageTool).
+After copying the CF contents to the local filesystem, we have to change
+the ownership of the file, as it still belongs to root. That is, a <strong>chown</strong>
+command is executed at last.</p>
 
-<ul>
-<li>When run in <b>Windows</b>, opening the device for read/write is not possible,
-despite various suggestions in technical forums. This means you would only
-be able to read the device but you could not commit any changes.</li>
-<li>When run in <b>Linux</b> or <b>MacOS</b>, you need permission to access the device 
-directly. Running TIImageTool is not recommended to be run by root. Also,
-changing the permissions of the device for direct user access is a high security 
-risk.</li>
+<p>In <strong>Windows</strong>, no privilege escalation is required, so there is nothing
+like kdesu, gksu, osascript, or chown that you have to deal with.</p>
+
+<p>The paths for all of these commands can be set in the <a href="#pref">Preferences</a>.</p>
+
+<p>If everything worked correctly, you should have got a file with the
+complete contents of the CF card. Note that we did not yet talk about the 
+CF7 format - the contents of the CF card are plainly copied, so they may
+have any format or just none. If this image represents a CF7 card, you can now open this file with the
+usual <a href="#open">open</a> operation. The same is true for a HFDC or SCSI
+backup. If the contents are not recognized, you have to format one or more
+CF7 volumes to make use of them.</p>
+
+<p>After working on the file, you should write it back on the CF card so that
+the card can be used in the nanoPEB. Writing is done again with the <strong>dd</strong>
+command, so be sure you entered the correct drive letter of your CF card.
+<strong>Double-check the drive letter!</strong> If you accidentally use a drive letter that is assigned
+to one of your hard disk drives, you will erase its contents and possibly
+destroy your PC installation.</p>
+
+<h3>Using CF cards as a hard drive</h3>
+<p>Although CF cards usually offer far too much space to be used for a 
+TI file system, we can make use of them as cheap and handy backup media. Maybe
+you also have a way to connect a CF card to your TI system by some expansion
+card.</p>
+
+<p>In this situation, you just need to copy the CF contents to an image file. 
+For example, your CF card is accessible as drive <strong>e:</strong> in 
+Windows (your situation may be different) or as a device
+<strong>/dev/sdc</strong> in Linux, and the target image file should be <strong>cfcopy.raw</strong>
+in your PC file system. After reading, you can <a href="#open">open</a> the cfcopy.raw file in TIImageTool
+with open and perform all desired operations.</p>
+
+<p>When you are done with editing, you just need to write the image file (here <strong>cfcopy.raw</strong>)
+back to the CF card.</p>
+
+<h3>Using CF7-formatted cards</h3>
+
+<p>CF7-formatted CF cards consist of a sequence of <strong>volumes</strong>,
+each representing a virtual floppy disk with 400 KiB size (1600 sectors). 
+The nanoPEB allows the user to mount one volume per virtual disk drive, where
+the volumes are enumerated from 1 to a maximum number, determined by the 
+size of the card. That is, volume 1 occupies the first 400 KiB, volume 2
+occupies the next 400 KiB, and so on until the space is exhausted.</p>
+<p>Volumes must be formatted before they can be used, similar to the other
+media like floppy disks and hard disks. It is not necessary to format all
+volumes on the card, however. Since all volumes are 400 KiB in size, there
+is no reason why we would have to format all preceding volumes to be able
+to open the next one.</p>
+<p>There is one exception. For TIImageTool to be able to determine the format,
+volume 1 must be formatted. If not, you cannot open the CF7 image; this 
+can be easily fixed by formatting the first volume.</p>
+<p>Volumes may be stored as <strong>separate dsk files</strong>, and as such
+they share their format with the sector dumps of floppy disks, with the exception
+that they have 1600 sectors. Apart from that, they just behave like a floppy
+disk image, but you cannot create directories on them.</p>
+<p>Separate volumes are not really needed when you work with TIImageTool: You
+can always open a volume inside a CF7 card without having to extract it to
+a file. However, the nanoPEB device provides two utility programs to handle
+such separate volumes: <strong>cf2dsk.exe</strong> copies a volume to a
+separate file, while <strong>dsk2cf.exe</strong> imports a volume from a
+separate file into a CF card. So if you have a CF7 device like the nanoPEB,
+you may have those separate volumes, and you should be able to work with
+them with TIImageTool.</p>
+<p>Another advantage of separate volumes is that you can easily send them
+to other users by E-mail or upload them to a server - without the need to send your complete CF7 image.</p>
+
+<a name="newcf7"></a>
+<h4>New CF7 volume</h4>
+<div class="program">
+<p>Allows you to create a new, separate CF7 volume.</p> 
+<li><em>Volume name</em>: <a href="#valid">Valid</a> disk names are at most 10 characters long; the period
+character "." is not allowed.</li>
 </ul>
+</div>
 
-<p>The <b>recommended practice</b> is to create an image file from your Flash ROM 
-card or other device by a separate tool (like <b>dd</b> in Linux, <b>WinDD</b> or <b>RawWrite</b> 
-in Windows). Then use TIImageTool to work on this image, change it, and write
-it back with the external tool.
+<p>Formatted volumes are automatically opened after creation. Please keep in mind
+that at this point, a separate volume does not belong to a CF7 image yet. There
+is no particular function to import a volume into a CF7 image, but it is
+quite easy to achieve this with the common TIImageTool operations: Just open the separate
+volume and the target CF7 image, and copy and paste all files from one to another.</p>
+
+<p>You may be surprised by this one:</p>
+
+<h4>New CF7 image</h4>
+<div class="program">
+<p>Does <em>not</em> allow you to create a new CF7 image. Instead, you should 
+use the functions that are available in the <em>Utility menu</em>.</p>
+</ul>
+</div>
+
+<p>For an explanation see the section on <a href="#cf7gen">general considerations</a>.
+
+<p>Concerning CF7 cards, there are two situations to be distinguished. When you
+attempt to <em>open a CF7 volume</em>, it is opened just like any other floppy
+image. When you attempt to open a <em>CF7 image</em> which represents the whole
+CF card, you have to specify which volume you are interested in. A dialog
+window is displayed which shows the available, formatted volumes in this image.
 </p>
+
+<a name="open"></a>
+<h4>Open</h4>
+<div class="program">
+<p>(CF7 volume) Opens a separate CF7 volume in a new tab.</p>
+<p>(CF7 image) Presents a list of defined, formatted volumes of this image
+file, then opens the volume that you select by single click and Return, or
+by double click.</p> 
+</div>
+
+<p>For each open operation you can only select one volume to be opened, since
+there is no multi-item selection capability in this dialog. You can, however, 
+repeat the open action and open one more volume each time.</p>
+
 <p><a href="#top">Back to top</a></p>
 <hr>
 
@@ -1853,7 +2000,7 @@ lock file in /var/lock (when using Linux).</p>
 <a name="utilmenu"></a>
 <a name="utilities"></a>
 <h2>Utilities</h2>
-<p>Many of the features have been explained above; here are the remaining three
+<p>Many of the features have been explained above; here are the remaining 
 points.</p>
 
 <a name="redir"></a>
@@ -1864,12 +2011,13 @@ does not clear the log file. You can clear the file by the menu selection
 <strong>Clear content</strong> in the <strong>File</strong> menu of the
 log output window.
 </p>
-<p>The window only shows the contents of the log file at the point of opening.
-It is <strong>not a live view</strong>. If you want to see the output 
-immediately, you should remove the file name in the Preferences, thus 
-redirecting the output back to the standard output and error channels. You 
-can see the output when you start TIImageTool in a console, not if you start 
-it by mouse click.
+<p>The window shows the contents of the log file at the point of opening 
+and is updated when new entries are added. If you prefer to see the output
+in the console from where you launched TIImageTool, you must remove the file 
+name in the Preferences, thus 
+redirecting the output back to the standard output and error channels. Of course,
+you do not see any output when you start TIImageTool by double-clicking its
+symbol on the desktop; in this case you should enter a log file name.
 </p>
 
 <a name="check"></a>
@@ -1930,8 +2078,8 @@ located at root level; the other two files are put into the root directory.</p>
 directly boot the Geneve with this disk mounted as floppy disk 1, or with a hard disk as
 hard disk 1.</p>
 
-<h3>Search for files and content</h3>
 <a name="search"></a>
+<h3>Search for files and content</h3>
 <p>Have you ever desperately looked for a file? No idea what disk it was 
 stored on? - The search function in TIImageTool provides you with a flexible
 tool to find your files.</p>
@@ -1976,6 +2124,90 @@ files are always searched.</li>
 <li><em>Maximum hits</em>: Limits the number of search results.</li>
 </ul>
 </div>
+
+<a name="cf7read"></a>
+<h3>Read Compact Flash card</h3>
+
+<p>TODO</p>
+
+<a name="cf7write"></a>
+<h3>Write Compact Flash card</h3>
+
+<p>TODO</p>
+
+<a name="cf7format"></a>
+<h3>Format CF7 volumes</h3>
+
+<p>TODO</p>
+
+<a name="secedit"></a>
+<h3>Sector editing</h3>
+
+<p>If your disk images are created and updated correctly, everything you 
+possibly want to do is already covered by the previous functions. But what if
+your image is broken? A similar situation occurs when you discover that there is a flaw in the
+file information block of a file, and you know you just have to change a few
+values to make it work again.</p>
+<p>As a <em>1337 h4xx0r</em> (leetspeak for "elite hacker", go look it up, I
+won't explain everything) you certainly know what to do. You use your
+favorite hex editor and change those bad values. On the TI there are some
+good programs for that, and on the PC you could, for example, use <strong>ghex</strong>.</p>
+
+<p>This will work, but only for the simple cases of DSK images. The reason
+is that not all images contain the sector contents in a simple, direct way.
+Remember that the DSK files (sector dump) are just a concatenation of
+sector contents from the first to the last sector. The DTK format (track dumps)
+are a bit trickier: You have to locate the sector first, then change the
+value, then remember to fix the CRC value of the sector, or you will get 
+CRC errors. And for the HFE format, none of that will work, because this 
+format just contains MFM level changes. Good luck with finding out the MFM 
+encoding of your changes...</p>
+
+<p>Accordingly, the sector editor of TIImageTool works <strong>on top of</strong>
+the image format; this means you can actually edit the sector bytes, but the format
+implementation will take care of writing the appropriate changes to the image.
+</p>
+
+<p><strong>You cannot edit the sectors of an open image.</strong> No, you 
+wouldn't like it, really. Just close it before you try to edit it, which means
+all tabs for that image.</p>
+
+<ul>
+<li>Select the image file to be sector-edited.</li>
+</ul>
+
+<p>When the image has been successfully opened, the contents of the first sector
+(sector 0) are displayed. On the left side there is the hex byte representation,
+while on the right side you should see an ASCII byte display. Only characters
+are shown that are printable; all others are shown as periods. That means,
+generally you will see a lot of periods on the right side.</p>
+
+<p>There are four input widgets at the top:</p>
+
+<ul>
+<li>Sector: Enter the sector number and press Return; this will load and 
+display the desired sector. When you add the prefix "0x", the sector number
+will be interpreted as a hex number. </li>
+<li>First: Pressing this button lets the editor jump back to sector 0.</li>
+<li>Previous: This button lets the editor move one sector back until it 
+reaches sector 0.</li>
+<li>Next: Advance one sector. When the last sector is reached, do not move.</li>
+<li>Last: Jump to the end of the image.</li>
+</ul>
+
+<p>When you click into the hex or ASCII display, a yellow cursor will appear.
+You can now change the values of one byte or of several successive bytes.
+Watch how the other display is immediately updated when you change values. 
+Pressing Return in the editor windows lets you advance to the next byte.
+Pressing ESC leaves the editing mode, and the cursor disappears.</p>
+
+<p>Changes are <strong>not committed</strong> to the image file until you
+select <em>Save changes to image</em>. If you close the window before saving, you
+are warned that there are unsaved changes. If you feel like having done something
+stupid, you can always revert the original contents of the sector, but only
+when the edits have not been saved yet. You find this feature in the menu as well.</p>
+
+<p>Finally, you can save the sector contents to a file as a textual hexdump.</p>
 
 <p><a href="#top">Back to top</a></p>
 <hr>

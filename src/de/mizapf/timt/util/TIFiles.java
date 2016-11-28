@@ -426,6 +426,7 @@ public class TIFiles {
 	
 	public static String getName(byte[] content) {
 		byte[] abyName = new byte[10];
+		if (content.length < 26) return TIFiles.NOHEADER;
 		System.arraycopy(content, 16, abyName, 0, 10);
 		String sContName = new String(abyName, java.nio.charset.Charset.forName("ISO-8859-1"));
 		if (hasHeader(content)) {

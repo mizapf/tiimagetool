@@ -88,7 +88,7 @@ class DDTransferHandler extends TransferHandler {
 	
 	public boolean canImport(TransferHandler.TransferSupport support) {
 		DataFlavor[] adf = support.getDataFlavors(); 
-		
+				
 		if (support.isDataFlavorSupported(DDData.elementCollection)) {
 			return true;
 		}
@@ -118,6 +118,9 @@ class DDTransferHandler extends TransferHandler {
 				int action = 0;
 				if (support.isDrop()) {
 					action = support.getDropAction();
+					// action = 1 for CTRL
+					// action = 2 for Shift or no key
+					// System.out.println("drop action = " + support.getDropAction() + ", user drop action = " + support.getUserDropAction());
 					Element last = m_panel.getLastSelected();
 					String elname = last.getName();
 					if (elname != null && elname.equals("..")) {

@@ -288,7 +288,7 @@ public class Assembler {
 			arg1 = createArgument((opcode>>4)&0x0003, opcode & 0x000f, sym2);
 			arg2 = new LineArgument(T_REG, (opcode>>6)&0x000f);
 			// XOPs have a count
-			if ((opcode & 0x2c00)==0x2c00) arg2.setAddressingType(T_COUNT);		
+			if ((opcode & 0xfc00)==0x2c00) arg2.setAddressingType(T_COUNT);		
 			if (arg1==null) bInvalid = true;
 			break;
 			
