@@ -27,7 +27,6 @@
     [x] Open EMULATE files 
     [x] Open CF7
     [x] Sector editor
-    [ ] Split help file
     [x] Rename volume
     [x] Add GRAPHX format
     [x] Read/Write CF7 card
@@ -36,6 +35,8 @@
     [x] Split properties settings into tabs
     [x] Fix double output in Console
     [ ] Fix Drag and drop
+    [ ] Base address for plain dump
+    [ ] Split help file
 	
     New for 2.1+
     [x] Redirect standard output
