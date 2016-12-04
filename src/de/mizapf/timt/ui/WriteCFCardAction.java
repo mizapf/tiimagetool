@@ -57,10 +57,11 @@ public class WriteCFCardAction extends Activity {
 		rwd.setVisible(true);
 
 		if (rwd.confirmed()) {
-			String[] commands = isMac ? rwd.getWrappedCommandLine() : rwd.getCommandLine();
+			String[] commands = isMac? rwd.getMacCommandLine(true) : rwd.getCommandLine();
 			if (commands == null || commands.length < 3) {
-				JOptionPane.showMessageDialog(m_parent, "Abord command. Command line was not set up correctly.", "CF card reading", JOptionPane.ERROR_MESSAGE);
-			} else {
+				JOptionPane.showMessageDialog(m_parent, "Abort command. Command line was not set up correctly.", "CF card writing", JOptionPane.ERROR_MESSAGE);
+			} 
+			else {
 				try {
 					// for (String s: commands) System.out.println("command = " + s);
 					Process p = runtime.exec(commands, null, null); 
@@ -77,7 +78,7 @@ public class WriteCFCardAction extends Activity {
 					// iox.printStackTrace();
 					// Linux: java.io.IOException: Cannot run program "xxx": error=2, Datei oder Verzeichnis nicht gefunden
 					// Windows: java.io.IOException: Cannot run program "xxx": CreateProcess error=2, Das System kann die angegebene Datei nicht finden
-					JOptionPane.showMessageDialog(m_parent, "Cannot run device dump command; please check the command path and whether it is installed at all.", "Error executing CF card reading", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, "Cannot run device dump command; please check the command path and whether it is installed at all.", "Error executing CF card writing", JOptionPane.ERROR_MESSAGE);
 				}
 				catch (InterruptedException ix) {
 					ix.printStackTrace();
