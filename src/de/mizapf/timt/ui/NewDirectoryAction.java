@@ -76,7 +76,7 @@ public class NewDirectoryAction extends Activity {
 
 		if (dirdia.confirmed()) {	
 			String sName = dirdia.getElementName();
-			if (vol.isCF7Image()) {
+			if (vol.isCF7Volume()) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "CF7 file sytem does not not support directories.", "Illegal operation", JOptionPane.ERROR_MESSAGE);
 				ok = false;
 			}

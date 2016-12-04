@@ -237,9 +237,11 @@ class SearchDialog extends ToolDialog {
 		if (sValid != null && sValid.length()>0) {
 			ext = sValid.split(",");
 		}
-		for (int i=0; i < ext.length; i++) {
-			String extn = ext[i].trim();
-			if (extn.length()>0) list.add(extn);
+		if (ext != null) {
+			for (int i=0; i < ext.length; i++) {
+				String extn = ext[i].trim();
+				if (extn.length()>0) list.add(extn);
+			}
 		}
 		String[] res = new String[list.size()];
 		list.toArray(res);

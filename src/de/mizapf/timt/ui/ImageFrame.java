@@ -16,7 +16,7 @@
     
     Copyright 2011 Michael Zapf
     
-    GRAPHX decoder by henrik.w (aka HackMac)
+    RLE-128 decoder by Henrik Wedekind
     
     www.mizapf.de
     
@@ -41,7 +41,7 @@ public class ImageFrame extends JFrame {
 	static final int YAPP = 3;
 	static final int AUSTRI = 4;
 	static final int FRACTALS = 5;
-	static final int GRAPHX = 6;
+	static final int RLE128 = 6;
 
 	TIImageTool m_app;
 	
@@ -163,8 +163,8 @@ public class ImageFrame extends JFrame {
 			bi = ImageIO.read(new ByteArrayInputStream(abyResult));
 			if (dim == null) dim = new Dimension(bi.getWidth(), bi.getHeight());
 			break;
-		case GRAPHX:
-			abyResult = graphxToBMP();
+		case RLE128:
+			abyResult = rle128ToBMP();
 			bi = ImageIO.read(new ByteArrayInputStream(abyResult));
 			if (dim == null) dim = new Dimension(bi.getWidth(), bi.getHeight());
 			break;
@@ -513,9 +513,9 @@ public class ImageFrame extends JFrame {
 	}
 
 	/** 
-		GraphX format 
+		RLE128 format 
 	*/
-	byte[] graphxToBMP() throws IOException {
+	byte[] rle128ToBMP() throws IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		baos.write('B');
 		baos.write('M');
@@ -728,10 +728,10 @@ public class ImageFrame extends JFrame {
 		}
 		// else System.out.println("Failed RLE check");
 
-		// System.out.println("Check GraphX");
+		// System.out.println("Check RLE128");
 		if ((m_nRecLength == 128) &&
 			(m_abyContent[0] == (byte)0x1b) && (m_abyContent[1] == 'G') && (m_abyContent[2] == 'H')) {
-			return GRAPHX;
+			return RLE128;
 		}
 		// else System.out.println("Failed GraphX check");
 		

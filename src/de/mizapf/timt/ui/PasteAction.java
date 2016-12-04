@@ -152,7 +152,7 @@ public class PasteAction extends Activity {
 							break;
 						}
 						
-						if (bSameImage && (volSource.isFloppyImage() || volSource.isCF7Image())) {
+						if (bSameImage && (volSource.isFloppyImage() || volSource.isCF7Volume())) {
 							sError = "Cannot move directories on the same floppy image";
 						}
 						else {
@@ -315,7 +315,7 @@ public class PasteAction extends Activity {
 
 					Directory dirStep = dirTarget;
 					
-					if (volTarget.isCF7Image()) {
+					if (volTarget.isCF7Volume()) {
 						sError = "CF7 file system does not support directories.";
 					}
 					else {
@@ -577,7 +577,7 @@ public class PasteAction extends Activity {
 		
 		Directory[] dirs = dir.getDirectories();
 		
-		if (dirTarget.getVolume().isCF7Image()) throw new IllegalOperationException("Cannot copy a directory into a CF7 image");
+		if (dirTarget.getVolume().isCF7Volume()) throw new IllegalOperationException("Cannot copy a directory into a CF7 image");
 		if (dirs.length !=0 && dirTarget.getVolume().isFloppyImage()) throw new IllegalOperationException("Cannot copy a directory into a directory on a floppy");
 		// Now recurse. We cannot have any more FileExistsException here
 		// if the source file system is correct (even if not, the sets will

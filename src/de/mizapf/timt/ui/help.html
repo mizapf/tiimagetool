@@ -131,7 +131,7 @@ details.</p>
 <li><a href="#search">Search</a></li>
 <li><a href="#readcf">Read Compact Flash card</a></li>
 <li><a href="#writecf">Write Compact Flash card</a></li>
-<li><a href="#formatcf">Format CF7 volumes</a></li>
+<li><a href="#formatcf7">Format CF7 volumes</a></li>
 <li><a href="#hfdc">Convert to HFDC</a></li>
 <li><a href="#scsi">Convert to SCSI</a></li>
 <li><a href="#chdformat">Change CHD format</a></li>
@@ -161,8 +161,8 @@ details.</p>
 <li><a href="#savepl">Save as plain dump</a></li>
 <li><a href="#sendrem">Send to remote</a></li>
 <li><a href="#archiving">Archive</a></li>
-</ul>
-
+<li><a href="#emulateact">Toggle emulate flag</a></li>
+<li><a href="#emulatesave">Save as DSK image</a></li>
 </ul>
 <li><a href="#command">Command line</a></li>
 <ul class="contents">
@@ -535,6 +535,7 @@ Any change you commit to one of the copies is reflected in all others
 immediately.</p>
 </div>
 
+<a name="openrec"></a>
 <p>The "Open recent" feature considerably speeds up your work when you usually
 use a limited set of different images.</p>
 
@@ -819,6 +820,7 @@ and import them again into a new CHD.</li>
 </ul>
 <p></p>
 
+<a name="hfdc"></a>
 <p><strong>Convert to HFDC</strong></p>
 <p>The volume information block (VIB) of a hard disk image differs between HFDC and
 SCSI systems: For the HFDC, the VIB contains cylinder/head/sector information
@@ -826,7 +828,6 @@ SCSI systems: For the HFDC, the VIB contains cylinder/head/sector information
 do not define a geometry. Converting to HFDC means that you have to supply the
 geometry data by yourself.</p>
 
-<a name="hfdc"></a>
 <h4>Define geometry</h4>
 <div class="program">
 <ul>
@@ -854,13 +855,13 @@ For current MAME versions, only the HFDC controller is emulated. Later MAME
 versions may include a SCSI emulation so that this conversion may become
 obsolete.</p>
 
+<a name="scsi"></a>
 <p><strong>Convert to SCSI</strong></p>
 <p>This is the inverse process to the conversion to HFDC. Here the geometry
 data are discarded. This may be necessary when you want to write an image back to a SCSI
 drive and continue to use it by a real SCSI controller (ASCSI or WHTech) attached
 to your TI or Geneve.</p>
 
-<a name="scsi"></a>
 <h4>Notifications</h4>
 <div class="program">
 You may get one of these notifications.
@@ -1024,7 +1025,7 @@ use the functions that are available in the <em>Utility menu</em>.</p>
 </ul>
 </div>
 
-<p>For an explanation see the section on <a href="#cf7gen">general considerations</a>.
+<p>For an explanation see the section on <a href="#cf7gen">general considerations</a>.</p>
 
 <p>Concerning CF7 cards, there are two situations to be distinguished. When you
 attempt to <em>open a CF7 volume</em>, it is opened just like any other floppy
@@ -1033,7 +1034,7 @@ CF card, you have to specify which volume you are interested in. A dialog
 window is displayed which shows the available, formatted volumes in this image.
 </p>
 
-<a name="open"></a>
+<a name="opencf7"></a>
 <h4>Open</h4>
 <div class="program">
 <p>(CF7 volume) Opens a separate CF7 volume in a new tab.</p>
@@ -1118,10 +1119,10 @@ the same name, you will be asked to choose another name.</p>
 This means that when you copy a directory to another image, the complete 
 contents will be copied as well.</p>
 
-<a name="rename"></a>
+<a name="renameel"></a>
 <p>Files and directories can be renamed.</p>
 
-<h4>Rename</h4>
+<h4>Rename element</h4>
 <div class="program">
 <p>If you select multiple files or directories, this function is iteratively
 performed for each one.</p>
@@ -1133,6 +1134,22 @@ input is checked for validity and whether the name is already used.</p>
 <p>You will notice that after renaming the contents will appear re-sorted. The TI file
 systems use sorted lists of files and directories, so it is an error if the
 list is not displayed as sorted.</p>
+
+<a name="renamevol"></a>
+<p>Volumes can also be renamed.</p>
+
+<h4>Rename volume</h4>
+<div class="program">
+<p>You can rename the currently open volume. This is also the recommended
+way to change the volume names of CF7 volumes inside a CF7 image.</p>
+<p>
+<em>New name</em>: Provide a <a href="#valid">valid</a> name. There is no auto-renaming scheme. The
+input is checked for validity.</p>
+</div>
+
+<p>After the rename operation you should immediate notice that the volume
+name has changed above the directory listing.</p>
+
 
 <h3>New directory</h3>
 <p>Hard disks and also floppy disks may have directories to structure their
@@ -1267,7 +1284,7 @@ contents into the editor frame.</p>
 
 <a name="imageview"></a>
 <h3>View as image</h3>
-<p>TIImageTool recognizes three image formats:</p>
+<p>TIImageTool recognizes four image formats:</p>
 <ul>
 <li>TI-ARTIST format: Consists of two PROGRAM files which are dumps of the pattern
 table and of the color table in video RAM. Both files are expected to be 6 KiB long each.
@@ -1279,6 +1296,7 @@ are some variants, most notably the YAPP format, which is also detected and
 properly displayed.</li>
 <li>FRACTALS! format: Single file of DIS/FIX 255 format, used with the FRACTALS!
 program, a program written by me ... long time ago when fractals was fab.</li>
+<li>RLE-128 format: Single file of DIS/FIX 128 format, run length-encoded, to be loaded with MAX-RLE.</li>
 </ul>
 
 <h3>View as UTIL/GK dump</h3>
@@ -1433,7 +1451,7 @@ the file to compute a key</strong> to look up the values, so you can rename the 
 the image, and the values are still correctly found.</p>
 
 <p>The hints make use of memory location specifications. We make use of the 
-term <em>location</em> as a generalized form of an <em>address</em>
+term <em>location</em> as a generalized form of an <em>address</em>.</p>
 
 <ul>
 <li><em>Absolute address</em>: specifies the actual memory address. Examples: 837C, 0x837c, >837C, X837C,
@@ -1586,6 +1604,15 @@ text(2152,2159),data(215C,216E)
 <hr>
 
 <a name="enterdir"></a>
+<h3>Directories</h3>
+<p>Viewing a directory is simply done by double-clicking on its name, or by 
+selecting <em>Enter</em> in the context menu. Note that directories are
+always listed at the beginning of the contents, and that they are shown in
+blue colored text, like the archive files. To close the view, you can either
+completely close the tab, or you enter the parent directory "..". The root directory
+has no parent.
+</p>
+
 <h3>Archive files</h3>
 <p>As long as they are not open, archive files are treated just like files - you
 can view their contents as a plain dump. However, you can open them by double-clicking
@@ -1599,15 +1626,6 @@ adding "_ARK". You can change this suggestion if there are already files in the
 directory with that name.</p>
 <p>Find more about this feature in the <a href="#archiving">Archive support</a>
 section.</p>
-
-<h3>Directories</h3>
-<p>Viewing a directory is simply done by double-clicking on its name, or by 
-selecting <em>Enter</em> in the context menu. Note that directories are
-always listed at the beginning of the contents, and that they are shown in
-blue colored text, like the archive files. To close the view, you can either
-completely close the tab, or you enter the parent directory "..". The root directory
-has no parent.
-</p>
 <p><a href="#top">Back to top</a></p>
 
 <hr>
@@ -1727,7 +1745,7 @@ DIS/VAR 80 in this part lacks the transformation of text lines.</li>
 <p>Also new to this release, TIImageTool will try to find out whether the 
 imported file is a BASIC program. For this purpose it looks at the first ten lines (or less)
 and tries to parse them for TI BASIC and then for Extended Basic. When successful,
-it offers you a modified import dialog.<p>
+it offers you a modified import dialog.</p>
 
 <div class="program">
 <ul>
@@ -1785,6 +1803,7 @@ the corresponding special character.</li>
 found. For instance, the umlaut characters are usually mapped 
 to {, |, and } in the German versions of TI Writer.</p>
 
+<a name="importb"></a>
 <h3>Importing binary files</h3>
 <p>Usually you should always have a proper TIFILES header when importing. However,
 you may probably want to import a plain binary file (for instance, a dump from 
@@ -1806,6 +1825,40 @@ your SCSI drive to a SCSI adapter, or you transfer the files via a serial connec
 and by this way you can send files from the TI where you have to run a suitable
 terminal program like TELCO or PORT.</p>
 <p>See more on that in the section on <a href="#serial">serial connections</a>.</p>
+
+<a name="importe"></a>
+<h3>Import as emulate files</h3>
+<p>The HFDC (Hard and Floppy Disk Controller) from Myarc allows for mounting a
+file on the hard disk as a floppy disk; the file must be an image of that 
+disk like the sector dumps that we have on the PC file system. This is useful
+for situations where a program expects all data to be on the disk in drive DSK1.
+This was not an issue before the hard disks showed up, but proved to be a 
+nuisance because you could store all your floppy disks on the hard disk, but
+you could not use them because they still searched files 
+on the physical DSK1 drive.</p>
+<p>TIImageTool offers this feature to create an <em>emulate file</em> on the
+hard disk image. These files are indicated by the <em>Emulate</em> type in the
+directory view. You can import any floppy disk image to the currently open
+hard disk directory view.</p>
+<p>You can certainly have more than one emulate file on your hard disk; the
+one that is marked as <em>active</em> will then take the role of the DSK1
+drive. If you want to get access to the physical drive, you have to deactivate 
+the emulate file again.</p>
+
+<h4>Import as emulate file</h4>
+<div class="program">
+<ul>
+<li><em>New emulate file name</em>: Set the name of the file to be imported 
+into the currently open directory. The proposed name is the volume name
+of the image. The name must be a <a href="#valid">valid</a> file name.</li>
+</ul>
+</div>
+
+<p>You can select multiple files to be imported as emulate files. In order
+to activate one of them you have to use the <a href="#emulateact">Toggle emulate flag</a> 
+function in the context menu. Also, in order to save the emulate file as a disk image again, you can use the
+context menu on that file and select the <a href="#emulatesave">Save as DSK image</a>
+function.</p>
 
 <hr>
 
@@ -1891,8 +1944,25 @@ a file to a remote system, usually another TI or Geneve running a suitable
 application, using XModem. In this version you can only send a single file, not
 a list of files.</p>
 <p>Find more on remote communication in the <a href="#serial">serial</a> section</p>
-<p><a href="#top">Back to top</a></p>
 
+<a name="emulateact"></a>
+<h3>Toggle emulate flag</h3>
+<p>An emulate file can be used as a target for redirecting all DSK1 accesses 
+to the physical drive. It is a sector dump of the contents of a floppy drive.
+Since there may be more than one emulate file, one of them must be marked
+as active. If no emulate file is active, the real floppy drive becomes
+visible again. You can use this option to toggle the flag on a single
+emulate file, or to remove the flag from another emulate file in order to 
+set it on the currently selected file.</p>
+
+<a name="emulatesave"></a>
+<h3>Save as DSK image</h3>
+<p>The reverse operation from <a href="#importe">importing as an emulate file</a>
+is to save the emulate file as a disk image again. You have to choose the
+target directory and file name. The result will be a sector dump image.
+</p>
+
+<p><a href="#top">Back to top</a></p>
 <hr>
 
 <!-- -------------------------------------------------------------------- -->
@@ -2050,6 +2120,13 @@ Former releases of TIImageTool had a bug that created bad CRC values; this
 can be fixed by this Filesystem check. Only TDF images are checked. You can
 choose whether to fix the value, or whether to deactivate it by resetting to 
 F7F7.</li>
+<li>If the image is a CF7 volume, the geometry data are checked for consistency.
+A CF7 volume, when created as a part of a CF7 image, should be a floppy disk-like
+volume with 1600 sectors, organized as 40 tracks, 20 sectors per track, and 
+two sides. Disks can be imported into the CF7 image as a new volume with the 
+<strong>dsk2cf.exe</strong> tool, but this tool does not adapt the original
+disk geometry when importing it into the CF7 image, and so the number of
+available sectors is wrong. This can be fixed by this check.</li>
 </ul>
 
 <p>As for the "broken sectors" check, formatting procedures usually fill all sectors with
@@ -2059,8 +2136,8 @@ indeed appear purposefully within the file, in most cases this is an indication 
 something is wrong. You should then check by yourself what might be the problem
 with this file.</p>
 
-<h3>Install Geneve OS</h3>
 <a name="genos"></a>
+<h3>Install Geneve OS</h3>
 <p>One of the problems you first encounter when you start up a Geneve (whether
 real or emulated) is that you will get an error message if no disk is inserted in 
 drive one, containing the operating system.</p>
@@ -2125,20 +2202,129 @@ files are always searched.</li>
 </ul>
 </div>
 
-<a name="cf7read"></a>
+<a name="readcf"></a>
 <h3>Read Compact Flash card</h3>
+<p>In section <a href="#cf7handling">Compact Flash handling</a> we already
+learned about the considerations concerning the access to a compact flash card,
+be it a CF7 card or an ordinary card that contains a copy of a TI hard disk
+file system.</p>
+<p>With this function the contents of a flash card are read to a file on the
+PC file system. This resulting image file can then be modified and written
+back to a CF card.</p>
+<p>The Read function does not care about the data structure on the CF card,
+it simply creates a copy of the contents, so you can use it both for working
+with CF7 or non-CF7 formats.</p>
 
-<p>TODO</p>
+<h4>Reading a Compact Flash card to an image file</h4>
+<div class="program">
+<ul>
+<li><strong>Flash card device path</strong>: In Windows systems this is the
+drive letter with trailing colon that is associated to the Flash card (like <em>h:</em>).
+Make sure that you do not accidentally use the letter of a disk drive of your
+PC. In Unix-like systems, the device path is usually a name like <em>/dev/sdc</em>, <em>/dev/sdd</em> or
+similar. Some Flash card readers offer several slots with a letter or path for each one, 
+so you may have to try which one is correct. Do not use a device path that belongs to your system
+hard drive.</li>
+<li><strong>File name for CF image</strong>: The name of the target image file.</li>
+<li><strong>Path to DD.EXE program</strong> (Windows only): Path where you 
+stored the DD.EXE program from the <em>DD for Windows</em> utility. After 
+you select it with the file dialog, the path is saved as a <a href="#pref">preference</a> and
+serves as a default for the next time.</li>
+<li><strong>Command line</strong>: The command that is about to be 
+executed is shown here for a final check. Please review this line
+carefully.</li>
+</ul>
+</div>
+
+<p>In Unix-like systems there is no editable field for the dd command here.
+You can set it in the <a href="#pref">preferences</a>. The reason for not
+offering a field here is that the command is usually installed as a system tool,
+so the position is determined by your operating system, and it is not in the
+user's responsibility.</p>
 
 <a name="cf7write"></a>
 <h3>Write Compact Flash card</h3>
 
-<p>TODO</p>
+<p>In section <a href="#cf7handling">Compact Flash handling</a> we already
+learned about the considerations concerning the access to a compact flash card,
+be it a CF7 card or an ordinary card that contains a copy of a TI hard disk
+file system.</p>
+<p>With this function the contents of a file are written to a CF card. The
+file may be a hard disk image file or a CF7 image. Usually the file has been
+copied from the same CF card and edited with TIImageTool.</p>
+<p>The Write function does not care about the data structure of the file,
+it simply copies its contents to the CF card. You can use it both for working
+with CF7 or non-CF7 formats.</p>
 
-<a name="cf7format"></a>
+<h4>Writing an image to a Compact Flash card</h4>
+<div class="program">
+<ul>
+<li><strong>File name for CF image</strong>: The name of the origin image file.</li>
+<li><strong>Flash card device path</strong>: In Windows systems this is the
+drive letter with trailing colon that is associated to the Flash card (like <em>h:</em>).
+Make sure that you do not accidentally use the letter of a disk drive of your
+PC. In Unix-like systems, the device path is usually a name like <em>/dev/sdc</em>, <em>/dev/sdd</em> or
+similar. Some Flash card readers offer several slots with a letter or path for each one, 
+so you may have to try which one is correct. Do not use a device path that belongs to your system
+hard drive.</li>
+<li><strong>Path to DD.EXE program</strong> (Windows only): Path where you 
+stored the DD.EXE program from the <em>DD for Windows</em> utility. After 
+you select it with the file dialog, the path is saved as a <a href="#pref">preference</a> and
+serves as a default for the next time.</li>
+<li><strong>Command line</strong>: The command that is about to be 
+executed is shown here for a final check. Please review this line
+carefully.</li>
+</ul>
+</div>
+
+<p>Please keep in mind that writing to a CF card is a <strong>critical</strong> operation. If 
+you select the wrong drive letter or path, you will overwrite the selected 
+drive which may, in the worst case, be your system drive. You would then
+lose all data on the drive and make it necessary to reinstall your computer
+system from scratch.</p>
+
+<a name="formatcf7"></a>
 <h3>Format CF7 volumes</h3>
 
-<p>TODO</p>
+<p>In order to use the CF card as a CF7 image, you must create <strong>volumes</strong>
+on this image. Note that we are not working on the CF card itself but on its
+copy. After formatting you must <a href="#writecf">write</a> the image back to
+the CF card.</p> 
+<p>Volumes are addressed by numbers. The first volume on the CF7 card has number 1;
+it must be formatted so that TIImageTool is able to recognize it as a CF7 image.
+This can be done by this function.</p>
+
+<p>Every volume is exactly 400 KiB long. When you want to <a href="#opencf7">open</a>
+a volume from this image, you will be presented its number and volume name 
+in a list of formatted volumes.</p>
+
+<h4>Formatting volumes on a CF7 card</h4>
+<div class="program">
+<ul>
+<li><strong>File name for CF image</strong>: The name of the CF7 image file. This 
+file is usually the result of <a href="#readcf">reading</a> a CF card.</li>
+<li><strong>Highest volume number</strong>: For information, this read-only
+field shows the highest volume number for this CF7 image file.</li>
+<li><strong>Numbers of volumes to be formatted</strong>: Provide a list
+of volume numbers to be formatted. All data on these volumes will be lost,
+and the volumes become available for use. The volume numbers can be single 
+numbers, or intervals like <em>10-19</em>, and both variants may be freely
+used as a comma-separated list (like <em>1,3-5,10,12-29</em>). The lowest
+volume number is 1.</li>
+<li><strong>Volume names</strong>: Volume name to be used for the volumes
+to be formatted. If the name contains one or more number signs (#), these
+are replaced with the volume number. A single number sign will be replaced
+by the number with the minimum number of digits, while a sequence of n number
+signs denote the volume number with n digits, padded with zeros on the left
+if required, and clipped to the left for longer numbers. You can only use
+one contiguous sequence of number signs in the name. Example: VOLUME### creates
+the name VOLUME052 for volume number 52.</li>
+</ul>
+</div>
+
+<p>Unlike the read and write CF functions, the format CF7 function does not 
+require the DD tool. However, when you want to copy the results to a CF
+card, you will need the DD tool.</p>
 
 <a name="secedit"></a>
 <h3>Sector editing</h3>
@@ -2292,39 +2478,70 @@ can choose the font of the content display.</p>
 <h4>Preferences</h4>
 <div class="program">
 <p>You can set properties which are saved to disk and loaded the next time you
-start TIImageTool.
+start TIImageTool. The preferences are divided into categories.</p>
+<p><strong>General</strong></p>
 <ul>
+<li><em>Open image in own frame</em>: When set, newly opened image files will
+be shown in a "detached" window instead of in a tabbed pane of the main window.</li>
 <li><em>Look and feel</em>: Setting for the look-and-feel of the Swing components. The default
 is the <em>Metal Look-and-Feel</em>.</li>
 <li><em>Show hints on startup</em>: When set, hints will be shown on each program start.
 If you change your mind, you can modify this setting any time.</li>
-<li><em>Open image in own frame</em>: When set, newly opened image files will
-be shown in a "detached" window instead of in a tabbed pane of the main window.</li>
-<li><em>Log console output to file</em>: File name of the log file in which error 
-outputs are stored. You can set a relative path (which depends on the folder in which 
-you start TIImageTool), or an absolute path. When this field is empty, the output
-is directed to the standard output and error channel.</li>
+</ul>
+<p><strong>Paths</strong></p>
+<ul>
 <li><em>Temporary directory</em>: In order to support the Drag-and-Drop export functionality,
 TIImageTool must first export the files into the file system and then move/copy them. 
 A folder will be created inside this path; this folder will them be cleaned on 
 program end.</li>
-<li><em>Font for program code</em>: You can choose the font to be used for content display.
-This should be a monospaced font like Courier.</li>
-<li><em>Replace unprintable characters by</em>: a single character will be used to replace each unprintable character; a
-character with a following percent produces an escape sequence.</li>
+</ul>
+<p><strong>CF card</strong></p>
+<ul>
+<li><em>dd command</em>: The external command used to access the CF card. For Unix-like
+systems this is usually <em>/use/bin/dd</em>. For Windows systems this field should
+contain the path to the <em>DD for Windows</em> tool. The value can be changed here
+or from the CF card read/write dialog.</li>
+<li><em>Transfer block size</em>: Used for the DD command. The default is 4096 bytes;
+you can choose different sizes, but the default should be good for most cases.</li>
+<li><em>Default CF card path</em>: For Unix-like systems this looks like <em>/dev/sdX</em>;
+for Windows systems a device letter with colon is used (like <em>h:</em>).</li>
+<li><em>chown command (Linux/MacOS only)</em>: The chown command is used to change the
+ownership of the file that is produced by the dd command. The path is usually <em>/usr/bin/chown</em>.</li>
+<li><em>Graphical sudo command (Linux/MacOS only)</em>: In order to execute the
+dd command, elevated privileges are required. In a shell, the sudo command would
+be used, but since TIImageTool must be run on a graphical desktop, a graphical
+version of sudo is required. This tool depends on the desktop; for KDE use
+<em>/usr/bin/kdesu</em>, for Gnome use <em>/usr/bin/gksu</em>. </li>
+</ul>
+<p><strong>Output</strong></p>
+<ul>
+<li><em>Log console output to file</em>: File name of the log file in which error 
+outputs are stored. You can set a relative path (which depends on the folder in which 
+you start TIImageTool), or an absolute path. When this field is empty, the output
+is directed to the standard output and error channel.</li>
 <li><em>LIST by Extended Basic style</em>: The BASIC file listing is compatible with
 Extended Basic. This particularly refers to the output of a sequence of colons (:).</li>
-<li><em>Force uppercase names</em>: When importing, file names will be uppercased if needed.</li>
-<li><em>Ignore name in TIFILES header</em>: Always create the TI file name from the external file name.</li>
+<li><em>Replace unprintable characters by</em>: a single character will be used to replace each unprintable character; a
+character with a following percent produces an escape sequence.</li>
+<li><em>Font for program code</em>: You can choose the font to be used for content display.
+This should be a monospaced font like Courier.</li>
+</ul>
+<p><strong>Importing</strong></p>
+<ul>
 <li><em>Suggest TIFILES file filter</em>: When importing, apply a filter to the directory view so that
 only files with the .tfi or .tifiles extension are shown.</li>
-<li><em>Convert file name to lowercase</em>: On export, create lowercase file names for the external file system.</li>
+<li><em>Force uppercase names</em>: When importing, file names will be uppercased if needed.</li>
+<li><em>Ignore name in TIFILES header</em>: Always create the TI file name from the external file name.</li>
+</ul>
+<p><strong>Exporting</strong></p>
+<ul>
+<li><em>Add file name suffix</em>: Add this suffix to export file names. May be left blank.</li>
 <li><em>Char conversion rules</em>: Two strings separated by a blank. The first string enumerates all characters
 to be converted; the right string enumerates the replacement characters. The default is /\* __x, which means that
 slashes and backslashes are converted to underscores, while the asterisk becomes an x.</li>
 <li><em>Replace underscore by dot</em>: Another export conversion rule. All underscores are replaced by dots. This
 rule is applied before the conversion.</li>
-<li><em>Add file name suffix</em>: Add this suffix to export file names. May be left blank.</li>
+<li><em>Convert file name to lowercase</em>: On export, create lowercase file names for the external file system.</li>
 </ul>
 </div>
 

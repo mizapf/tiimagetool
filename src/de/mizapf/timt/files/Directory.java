@@ -312,7 +312,7 @@ public class Directory extends Element {
 		// *sector* 1 (not AU). If the AU size is bigger, no additional sectors
 		// are used as it is contained in the AU of sector 0.
 
-		if (m_Volume.isFloppyImage() || m_Volume.isCF7Image()) {
+		if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
 			if (isRootDirectory() && nAUSize==1) nReqAU = 2;
 			// not root -> no separate DDR
 			// root but AUsize > 1 -> included in AU 0 
@@ -431,7 +431,7 @@ public class Directory extends Element {
 		// write back the directory index
 		
 		// Allocate a FIB
-		Interval[] aFIB = m_Volume.findFreeSpace(1, (m_Volume.isFloppyImage() || m_Volume.isCF7Image())? 1 : 64);
+		Interval[] aFIB = m_Volume.findFreeSpace(1, (m_Volume.isFloppyImage() || m_Volume.isCF7Volume())? 1 : 64);
 		if (aFIB == null) {
 			throw new ImageFullException("No space left on volume. Cannot create file entry in directory.");
 		}
@@ -601,7 +601,7 @@ public class Directory extends Element {
 		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
 		// Should be prevented before, or the directory will get lost by moveoutDir
 		if (m_Volume.isFloppyImage()) throw new ImageException("Cannot move directories on floppies");
-		if (m_Volume.isCF7Image()) throw new ImageException("Cannot move directories on CF7 images");
+		if (m_Volume.isCF7Volume()) throw new ImageException("Cannot move directories on CF7 images");
 		if (containsInList(dir)) throw new FileExistsException(dir.getName());
 		addToList(dir);
 		dir.setContainingDirectory(this);
@@ -631,7 +631,7 @@ public class Directory extends Element {
 		}
 		
 		Directory dirNew = null;
-		if (m_Volume.isFloppyImage() || m_Volume.isCF7Image()) {
+		if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
 			if (!isRootDirectory()) throw new IllegalOperationException("Floppy file systems only allow for root subdirectories");
 			if (m_Subdirs.length>2) throw new IllegalOperationException("Floppy file systems only allow for a maximum of 3 root subdirectories");
 
@@ -696,7 +696,7 @@ public class Directory extends Element {
 		
 		// No more files or subdirectories in dir. Now delete dir itself.
 		m_Volume.deallocate(new Interval(dir.getFdrSector(), dir.getFdrSector()));
-		if (!m_Volume.isFloppyImage() && !m_Volume.isCF7Image()) {
+		if (!m_Volume.isFloppyImage() && !m_Volume.isCF7Volume()) {
 			m_Volume.deallocate(new Interval(dir.getDDRSector(), dir.getDDRSector()));
 		}
 	}
@@ -806,7 +806,7 @@ public class Directory extends Element {
 			// Write the DDR of the renamed directory
 			dir.writeDDR();
 			// Write the DDR of this directory
-			if (m_Volume.isFloppyImage() || m_Volume.isCF7Image()) {
+			if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
 				m_Volume.writeVIB();
 			}
 			else writeDDR();			
@@ -842,7 +842,7 @@ public class Directory extends Element {
 		byte[] abyNew = new byte[256];
 		Arrays.fill(abyNew, 0, 0x100, (byte)0x00);
 
-		int nDiv = (m_Volume.isFloppyImage() || m_Volume.isCF7Image())? 1 : m_Volume.getAUSize();
+		int nDiv = (m_Volume.isFloppyImage() || m_Volume.isCF7Volume())? 1 : m_Volume.getAUSize();
 		int i=0;
 		
 		for (TFile file:m_Files) {
@@ -850,7 +850,7 @@ public class Directory extends Element {
 			i = i+2;
 		}
 		
-		if (!m_Volume.isFloppyImage() && !m_Volume.isCF7Image()) Utilities.setInt16(abyNew, 254, m_nDDRSector / m_Volume.getAUSize());
+		if (!m_Volume.isFloppyImage() && !m_Volume.isCF7Volume()) Utilities.setInt16(abyNew, 254, m_nDDRSector / m_Volume.getAUSize());
 		// System.out.println("Writing the index record at " + m_nFileIndexSector);
 		m_Volume.writeSector(m_nFileIndexSector, abyNew);		
 	}
@@ -860,7 +860,7 @@ public class Directory extends Element {
 		byte[] aDDRNew = null;
 		int nSector = 0;
 		
-		if (m_Volume.isFloppyImage() || m_Volume.isCF7Image()) {
+		if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
 			// Nothing changes
 			return;
 		}

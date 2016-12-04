@@ -306,7 +306,7 @@ public class Volume {
 		return m_nType == HFDC;
 	}
 	
-	public boolean isCF7Image() {
+	public boolean isCF7Volume() {
 		return m_nType == CF7;
 	}
 
@@ -315,7 +315,7 @@ public class Volume {
 	}
 	
 	public String getDeviceName() {
-		if (isFloppyImage() || isCF7Image()) return "DSK1";
+		if (isFloppyImage() || isCF7Volume()) return "DSK1";
 		else {
 			if (isSCSIImage()) return "SCS1";
 			else return "HDS1";
@@ -491,7 +491,7 @@ public class Volume {
 	public int getAllRequiredSectors(int nAUSize) {
 		// Sector 0 is already used for the root directory
 		// Allocation map is included in sector 0 for floppies
-		if (isFloppyImage() || isCF7Image()) return 0;
+		if (isFloppyImage() || isCF7Volume()) return 0;
 		
 		int nAllocMapSectors = ((m_allocMap.getMaxAU()/8)-1) / SECTOR_LENGTH + 1; 
 		

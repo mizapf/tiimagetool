@@ -103,7 +103,7 @@ public class OpenImageAction extends Activity {
 					vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
 					if (vol==null) vol = new Volume(sAbsFile);
 					int[] geom = new int[5];
-					if (vol.isCF7Image() && ImageCheck.checkCF7Inconsistency(vol, geom)==true) {
+					if (vol.isCF7Volume() && ImageCheck.checkCF7Inconsistency(vol, geom)==true) {
 						JOptionPane.showMessageDialog(m_parent, "Inconsistent file system. You should run a file system check (Utilities).", "Open error", JOptionPane.WARNING_MESSAGE);
 					}
 				}

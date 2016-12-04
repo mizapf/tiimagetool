@@ -24,6 +24,7 @@ import javax.swing.JScrollPane;
 import javax.swing.WindowConstants;
 import javax.swing.JFrame;
 import javax.swing.event.HyperlinkListener;
+import javax.swing.JViewport;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,6 +77,12 @@ public class HelpFrame extends JFrame implements HyperlinkListener {
 		m_jep.setFont(Font.decode(FONTHLP));
 		JScrollPane jp = new JScrollPane(m_jep);
 		cntEditor.add(jp);
+
+//		int scrollMode = JViewport.SIMPLE_SCROLL_MODE;
+		int scrollMode = JViewport.BACKINGSTORE_SCROLL_MODE;
+//		int scrollMode = JViewport.BLIT_SCROLL_MODE;      // default, distorts output
+		jp.getViewport().setScrollMode(scrollMode);
+		
 		jp.setPreferredSize(new Dimension(800,600));
 		m_jep.setCaretPosition(0);
 		setLocationByPlatform(true);

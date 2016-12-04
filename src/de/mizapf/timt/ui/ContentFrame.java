@@ -129,8 +129,8 @@ public class ContentFrame extends JFrame implements ActionListener {
 		cntEditor.setPreferredSize(new Dimension(800,600));
 		m_jep.setCaretPosition(0);
 		
-//		int scrollMode = JViewport.SIMPLE_SCROLL_MODE;
-		int scrollMode = JViewport.BACKINGSTORE_SCROLL_MODE;
+		int scrollMode = JViewport.SIMPLE_SCROLL_MODE;
+//		int scrollMode = JViewport.BACKINGSTORE_SCROLL_MODE;
 //		int scrollMode = JViewport.BLIT_SCROLL_MODE;      // default, distorts output
 		jp.getViewport().setScrollMode(scrollMode);
 	}

@@ -55,7 +55,7 @@ public class CheckFSAction extends Activity {
 		JCheckBox cb = null;
 				
 		/* Part 0: Check CF7 inconsistency */
-		if (vol.isCF7Image()) {
+		if (vol.isCF7Volume()) {
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			ps.println("===========  Checking CF7 inconsistency ===========\n");
 	
