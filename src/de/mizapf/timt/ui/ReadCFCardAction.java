@@ -16,7 +16,9 @@
     
     Copyright 2016 Michael Zapf
     www.mizapf.de
-    
+   
+    MacOS additions by Henrik Wedekind 2016
+
 ****************************************************************************/
 package de.mizapf.timt.ui;
 

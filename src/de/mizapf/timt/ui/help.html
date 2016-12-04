@@ -2084,7 +2084,7 @@ log output window.
 <p>The window shows the contents of the log file at the point of opening 
 and is updated when new entries are added. If you prefer to see the output
 in the console from where you launched TIImageTool, you must remove the file 
-name in the Preferences, thus 
+name in the <a href="#pref">Preferences</a>, thus 
 redirecting the output back to the standard output and error channels. Of course,
 you do not see any output when you start TIImageTool by double-clicking its
 symbol on the desktop; in this case you should enter a log file name.
@@ -2518,11 +2518,13 @@ version of sudo is required. This tool depends on the desktop; for KDE use
 <li><em>Log console output to file</em>: File name of the log file in which error 
 outputs are stored. You can set a relative path (which depends on the folder in which 
 you start TIImageTool), or an absolute path. When this field is empty, the output
-is directed to the standard output and error channel.</li>
+is directed to the standard output and error channel. Changes to this field require you to
+restart TIImageTool to become effective.</li>
 <li><em>LIST by Extended Basic style</em>: The BASIC file listing is compatible with
 Extended Basic. This particularly refers to the output of a sequence of colons (:).</li>
 <li><em>Replace unprintable characters by</em>: a single character will be used to replace each unprintable character; a
-character with a following percent produces an escape sequence.</li>
+character with a following percent produces an escape sequence. In the latter case, the default "~%" 
+produces the character sequence "~e4" for a byte of hex value E4.</li>
 <li><em>Font for program code</em>: You can choose the font to be used for content display.
 This should be a monospaced font like Courier.</li>
 </ul>

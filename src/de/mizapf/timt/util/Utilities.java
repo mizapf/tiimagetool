@@ -22,6 +22,7 @@
 package de.mizapf.timt.util;
 import java.nio.charset.*;
 import de.mizapf.timt.files.Time;
+import de.mizapf.timt.files.FormatException;
 import java.io.*;
 
 public class Utilities {
@@ -125,6 +126,10 @@ public class Utilities {
 		return (unprintable * 5 < s.length());
 	}
 	
+	public static boolean checkForText(byte[] aby) {
+		return checkForText(aby, aby.length);
+	}
+	
 	public static boolean checkForText(byte[] aby, int len) {
 		int unprintable = 0;
 		int ch = 0;
@@ -151,12 +156,59 @@ public class Utilities {
 		return "\n";
 	}
 	
-	public static String sanitizeText(String s) {
-		StringBuilder sb = new StringBuilder();
-		for (int i=0; i < s.length(); i++) {
-			if (s.charAt(i) < 32 && s.charAt(i) != 10 && s.charAt(i) != 13) sb.append(".");
-			else sb.append(s.charAt(i));
+	public static String sanitizeText(byte[] strbyte, String sEscape) throws FormatException {
+		if (sEscape.length() < 1 || sEscape.length() > 2) {
+			throw new FormatException("", "Invalid escape specification (see manual)");
 		}
+
+		char chEscape = sEscape.charAt(0);
+		boolean bEscape = (sEscape.length() == 2);
+		boolean bUnprintable = false;
+		
+		if (bEscape && sEscape.charAt(1) != '%') {
+			throw new FormatException("", "Invalid escape specification (see manual)");
+		}
+
+		StringBuilder sb = new StringBuilder();
+		for (int i=0; i < strbyte.length; i++) {
+			char c = (char)strbyte[i];
+			if (c == chEscape) sb.append(c).append(c);
+			else {
+				if (isPrintable(c)) sb.append(c);
+				else {
+					System.out.println("Unprintable character at position " + i + ": code " + Utilities.toHex(strbyte[i],2));
+					bUnprintable = true;
+					if (bEscape) sb.append(chEscape).append(Utilities.toHex(strbyte[i], 2));
+					else sb.append(chEscape);
+				}
+			}				
+		}
+		return sb.toString();
+	}
+		
+	public static String sanitizeChar(byte strbyte, String sEscape) throws FormatException {
+		if (sEscape.length() < 1 || sEscape.length() > 2) {
+			throw new FormatException("", "Invalid escape specification (see manual)");
+		}
+
+		char chEscape = sEscape.charAt(0);
+		boolean bEscape = (sEscape.length() == 2);
+		boolean bUnprintable = false;
+		
+		if (bEscape && sEscape.charAt(1) != '%') {
+			throw new FormatException("", "Invalid escape specification (see manual)");
+		}
+
+		StringBuilder sb = new StringBuilder();
+		char c = (char)strbyte;
+		if (c == chEscape) sb.append(c).append(c);
+		else {
+			if (isPrintable(c)) sb.append(c);
+			else {
+				if (bEscape) sb.append(chEscape).append(Utilities.toHex(strbyte, 2));
+				else sb.append(chEscape);
+			}
+		}				
 		return sb.toString();
 	}
 	

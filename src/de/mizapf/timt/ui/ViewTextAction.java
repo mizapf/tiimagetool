@@ -49,14 +49,14 @@ public class ViewTextAction extends Activity {
 		for (Element selected : dvCurrent.getSelectedEntries()) {
 			if (selected instanceof TFile) {
 				try {
-					String sContent = ((TFile)selected).getTextContent();
-					boolean showit = Utilities.checkForText(sContent);
+					byte[] content = ((TFile)selected).getRecordContent();
+					boolean showit = Utilities.checkForText(content, content.length);
 					if (!showit) {
 						int nRet = JOptionPane.showConfirmDialog(dvCurrent.getFrame(), "File contains lots of unprintable characters. Show anyway?", "Read problem", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 						showit = (nRet == JOptionPane.YES_OPTION); 
 					}					
 					if (showit) {
-						sContent = Utilities.sanitizeText(sContent);
+						String sContent = Utilities.sanitizeText(content, imagetool.getPropertyString(imagetool.ESCAPE));
 						imagetool.showTextContent(selected.getName(), sContent);  
 					}
 				}

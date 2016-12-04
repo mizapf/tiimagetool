@@ -49,12 +49,13 @@ public class ListAction extends Activity {
 		String sText = "no content or no BASIC file";			
 		Volume vol = dvCurrent.getVolume();
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		String escape = imagetool.getPropertyString(TIImageTool.ESCAPE);
 
 		for (Element selected : dvCurrent.getSelectedEntries()) {
 			if (selected instanceof TFile) {
 				try {
 					if (((TFile)selected).isBasicFile()) {
-						sText = ((TFile)selected).listBasic((imagetool.getPropertyBoolean(TIImageTool.BASICVER)==true)? BasicLine.EX_BASIC : BasicLine.TI_BASIC);
+						sText = ((TFile)selected).listBasic((imagetool.getPropertyBoolean(TIImageTool.BASICVER)==true)? BasicLine.EX_BASIC : BasicLine.TI_BASIC, escape);
 					}
 					
 					imagetool.showTextContent(selected.getName(), sText);  

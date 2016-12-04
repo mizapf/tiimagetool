@@ -35,10 +35,8 @@
     [x] Split properties settings into tabs
     [x] Fix double output in Console
     [ ] Fix Drag and drop
-    [ ] Base address for plain dump
+    [x] Base address for plain dump
     [ ] Split help file
-    [ ] i18n
-    [ ] Enable logging after setting in prefs
 	
     New for 2.1+
     [x] Redirect standard output

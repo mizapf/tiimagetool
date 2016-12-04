@@ -56,45 +56,7 @@ public class ContentFrame extends JFrame implements ActionListener {
 
 	public void createGui(String sText, String sFontName) {	
 		
-		String sEscape = m_app.getPropertyString(TIImageTool.ESCAPE);
-
-		if (sEscape.length() < 1 || sEscape.length() > 2) {
-			JOptionPane.showMessageDialog(this, "Invalid escape specification (see manual)", "Error", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-
-		char chEscape = sEscape.charAt(0);
-		boolean bEscape = (sEscape.length() == 2);
-		boolean bUnprintable = false;
-		
-		if (bEscape && sEscape.charAt(1) != '%') {
-			JOptionPane.showMessageDialog(this, "Invalid escape specification (see manual)", "Error", JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		
-		StringBuilder sb = new StringBuilder();
-		for (int i=0; i < sText.length(); i++) {
-			char c = sText.charAt(i);
-			if (c==chEscape && bEscape) sb.append(c).append(c);
-			else {
-				if (Utilities.isPrintable(c)) sb.append(c);
-				else {
-					System.out.println("Unprintable character at position " + i + ": code " + Utilities.toHex(c&0xff,2));
-					bUnprintable = true;
-					if (bEscape) sb.append(chEscape).append(Utilities.toHex(c & 0xff, 2));
-					else sb.append(chEscape);
-				}
-			}
-		}
-		
-		if (bUnprintable) {
-			if (bEscape)
-				JOptionPane.showMessageDialog(this, "Unprintable characters have been replaced by " + chEscape + "xx (ASCII code).", "Warning", JOptionPane.WARNING_MESSAGE);
-			else 
-				JOptionPane.showMessageDialog(this, "Unprintable characters have been replaced by '" + sEscape + "'.", "Warning", JOptionPane.WARNING_MESSAGE);
-		}
-		
-		m_sContent = sb.toString();
+		m_sContent = sText;
 		m_mbar = new JMenuBar();
 
 		m_mFile = new JMenu("File");

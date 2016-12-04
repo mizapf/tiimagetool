@@ -997,11 +997,11 @@ public class TFile extends Element {
 		return false;
 	}
 
-	public String listBasic(int version) throws IOException, FormatException, ImageException {	
-		return listBasic(getRawContent(), version);
+	public String listBasic(int version, String escape) throws IOException, FormatException, ImageException {	
+		return listBasic(getRawContent(), version, escape);
 	}
 		
-	public String listBasic(byte[] content, int version) throws ImageException {
+	public String listBasic(byte[] content, int version, String escape) throws ImageException {
 		List<BasicLine> basicprog = new ArrayList<BasicLine>();
 			
 		int nLineNo = 0;
@@ -1103,7 +1103,7 @@ public class TFile extends Element {
 		StringBuilder sb = new StringBuilder();
 				
 		for (BasicLine line:basicprog) {
-			sb.append(line.list(version)).append("\n");
+			sb.append(line.list(version, escape)).append("\n");
 		}		
 		
 		return sb.toString();

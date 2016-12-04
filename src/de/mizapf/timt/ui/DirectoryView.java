@@ -693,21 +693,22 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 					va.showPicture(file, file.getVolume(), this);
 				}
 				else {
+					String escape = m_app.getPropertyString(TIImageTool.ESCAPE);
 					if (file.isTextFile()) {
-						sText = file.getTextContent();
-						if (Utilities.checkForText(sText)==false) {
+						byte[] content = file.getRecordContent();
+						if (Utilities.checkForText(content)==false) {
 							int nRet = JOptionPane.showConfirmDialog(getFrame(), "File contains lots of unprintable characters. Show anyway?", "Read problem", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 							if (nRet==JOptionPane.NO_OPTION) {
 								frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 								return;
 							}
 						}
-						sText = Utilities.sanitizeText(sText);
+						sText = Utilities.sanitizeText(content, escape);
 					}
 					else {
 						// Do this only when applicable
 						if (file.isBasicFile()) {
-							sText = file.listBasic((m_app.getPropertyBoolean(TIImageTool.BASICVER)==true)? BasicLine.EX_BASIC : BasicLine.TI_BASIC);
+							sText = file.listBasic((m_app.getPropertyBoolean(TIImageTool.BASICVER)==true)? BasicLine.EX_BASIC : BasicLine.TI_BASIC, escape);
 						}
 						else {
 							byte[] content = null;

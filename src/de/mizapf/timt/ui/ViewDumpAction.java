@@ -48,10 +48,15 @@ public class ViewDumpAction extends Activity {
 
 		for (Element selected : dvCurrent.getSelectedEntries()) {
 			if (selected instanceof TFile) {
+				String sRet = null;
 				try {
-					byte[] content = null;
-					content = ((TFile)selected).getRawContent();
-					imagetool.showTextContent("Contents of " + selected.getName(), Utilities.hexdump(0, 0, content, content.length, false, 0x00)); 
+					sRet = JOptionPane.showInputDialog(dvCurrent.getFrame(), "Start address (hex, no prefix): ", "0000");
+					if (sRet != null) {
+						int start = Integer.parseInt(sRet, 16);	
+						byte[] content = ((TFile)selected).getRawContent();
+						String dump = Utilities.hexdump(start, 0, content, content.length, false, 0x00);
+						imagetool.showTextContent("Contents of " + selected.getName(), dump);
+					}
 				}
 				catch (EOFException eofx) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error: " + eofx.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 					
@@ -61,6 +66,9 @@ public class ViewDumpAction extends Activity {
 				}
 				catch (ImageException ix) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+				}
+				catch (NumberFormatException nx) {
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "'" + sRet + "' is not a valid address", "Input error", JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}

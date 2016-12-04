@@ -22,6 +22,7 @@ package de.mizapf.timt.basic;
 
 import de.mizapf.timt.util.Utilities;
 import java.io.ByteArrayOutputStream;
+import de.mizapf.timt.files.FormatException;
 
 public class BasicLine {
 	int linenumber;
@@ -218,7 +219,7 @@ public class BasicLine {
 		address = addr;
 	}
 		
-	public String list(int version) {
+	public String list(int version, String escape) {
 		StringBuilder sb = new StringBuilder();
 		int state = STNORMAL;
 		boolean bCommand = false;
@@ -260,8 +261,14 @@ public class BasicLine {
 
 			case STQUOTED_CONT:
 				c = (char)content[i];
-				if (c=='"') sb.append("\"");
-				sb.append(c);  // double the quote
+				if (c=='"') sb.append("\""); // double the quote
+				try {
+					sb.append(Utilities.sanitizeChar(content[i], escape));  
+				}
+				catch (FormatException fx) {
+					if (content[i] < 32 || content[i] > 126) sb.append("<").append(Utilities.toHex(content[i],2)).append(">");
+					else sb.append(c);
+				}
 
 				if (i == nEndString) {
 					sb.append("\"");
@@ -271,7 +278,13 @@ public class BasicLine {
 
 			case STUNQUOTED_CONT:
 				c = (char)content[i];
-				sb.append(c);
+				try {
+					sb.append(Utilities.sanitizeChar(content[i], escape));  
+				}
+				catch (FormatException fx) {
+					if (content[i] < 32 || content[i] > 126) sb.append("<").append(Utilities.toHex(content[i],2)).append(">");
+					else sb.append(c);
+				}
 				if (i == nEndString) {
 					state = STNORMAL;
 				}
