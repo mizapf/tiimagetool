@@ -34,7 +34,8 @@
     [x] New dialog for CHDRaw/RawCHD (from SearchDialog)	
     [x] Split properties settings into tabs
     [x] Fix double output in Console
-    [ ] Fix Drag and drop
+    [x] Fix Drag and drop
+    [ ] Fix marking in directory panel
     [x] Base address for plain dump
     [ ] Split help file
 	

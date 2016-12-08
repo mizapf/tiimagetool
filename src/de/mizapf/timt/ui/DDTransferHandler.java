@@ -25,9 +25,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.DataInputStream;
 import java.util.List;
+import java.util.TooManyListenersException;
 import java.io.IOException;
 import java.awt.datatransfer.*;
-import java.awt.dnd.DnDConstants;
+import java.awt.dnd.*;
+import java.awt.Component;
+import javax.swing.plaf.UIResource;
+import javax.swing.event.EventListenerList;
+
 import javax.swing.JComponent;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -71,7 +76,6 @@ import javax.swing.Action;
 	4. Import from file system to TIImageTool
 	importData: called after drop; javaFileListFlavor
 	exportDone: not called
-
 */
 
 class DDTransferHandler extends TransferHandler {
@@ -120,7 +124,12 @@ class DDTransferHandler extends TransferHandler {
 					action = support.getDropAction();
 					// action = 1 for CTRL
 					// action = 2 for Shift or no key
-					// System.out.println("drop action = " + support.getDropAction() + ", user drop action = " + support.getUserDropAction());
+					
+					// Trick: If no modifier has been pressed, change the action
+					// to ACTION_NONE
+					if (action == DnDConstants.ACTION_MOVE && !m_panel.shiftPressed())
+						action = DnDConstants.ACTION_NONE;
+
 					Element last = m_panel.getLastSelected();
 					String elname = last.getName();
 					if (elname != null && elname.equals("..")) {

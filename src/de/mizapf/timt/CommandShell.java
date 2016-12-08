@@ -296,7 +296,7 @@ public class CommandShell {
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);
 		TFile fl = dirCurrent.getFile(dirPath[dirPath.length-1]);
 		if (fl.isBasicFile()) {
-			return fl.listBasic(BasicLine.EX_BASIC);
+			return fl.listBasic(BasicLine.EX_BASIC, "~%");
 		}
 		else return "Not a BASIC program";		
 	}

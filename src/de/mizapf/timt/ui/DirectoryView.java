@@ -92,11 +92,22 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	JMenuItem m_iExportEmulate;
 	
 	Element m_clickedElement;
-
+	
 	public static final Color BACK = new Color(200,221,242);
 	
 	/** The (only one) context menu. Needed to decide whether to react on mouseentered. */
 	JPopupMenu m_ctxmenu;
+
+	/** Support for DnD menu. */
+	JPopupMenu m_dndmenu;
+	JMenuItem m_iDnDMove;
+	JMenuItem m_iDnDCopy;
+	JMenuItem m_iDnDCancel;	
+	Element m_lastSelected;
+	
+	final static String DNDMOVE = "dndmove";
+	final static String DNDCOPY = "dndcopy";
+	final static String DNDCANCEL = "dndcancel";
 	
 	public DirectoryView(Directory dir, boolean bAttached, TIImageTool app) {
 		m_dirCurrent = dir;
@@ -286,16 +297,27 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	
 	void paste(Transferable t, int action, Element lastSelected) {
 		m_app.setClipboard(t);
-		m_app.markForCut(action == DnDConstants.ACTION_MOVE);
-		PasteAction pa = new PasteAction();
-		pa.setLinks(m_app, getFrame());
 		
-		if (lastSelected instanceof Directory) {
-			pa.paste(this, (Directory)lastSelected);
+		// We use the ACTION_NONE constant if no modifier has been pressed.
+		// There is no invocation of paste if the actual action (according
+		// to the DnD support) is ACTION_NONE
+		if (action == DnDConstants.ACTION_NONE) {
+			// System.out.println("Action none");
+			openDnDChoiceMenu(m_panel.getMousePosition());
+			m_lastSelected = lastSelected;
 		}
-		else pa.paste(this);
-		
-		m_panel.updateView();
+		else {
+			m_app.markForCut(action == DnDConstants.ACTION_MOVE);
+			PasteAction pa = new PasteAction();
+			pa.setLinks(m_app, getFrame());
+			
+			if (lastSelected instanceof Directory) {
+				pa.paste(this, (Directory)lastSelected);
+			}
+			else pa.paste(this);
+			
+			m_panel.updateView();
+		}
 		// update the source!
 	}
 	
@@ -349,7 +371,38 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	// ================================================================
 
 	public void actionPerformed(ActionEvent ae) {
-		reattach();		
+		if (ae.getActionCommand() == DNDCOPY) {
+		//	System.out.println(DNDCOPY);
+			m_app.markForCut(false);
+			PasteAction pa = new PasteAction();
+			pa.setLinks(m_app, getFrame());
+			if (m_lastSelected instanceof Directory) {
+				pa.paste(this, (Directory)m_lastSelected);
+			}
+			else pa.paste(this);			
+			m_panel.updateView();
+		}
+		else {
+			if (ae.getActionCommand() == DNDMOVE) {
+				//  System.out.println(DNDMOVE);
+				m_app.markForCut(true);
+				PasteAction pa = new PasteAction();
+				pa.setLinks(m_app, getFrame());
+				if (m_lastSelected instanceof Directory) {
+					pa.paste(this, (Directory)m_lastSelected);
+				}
+				else pa.paste(this);			
+				m_panel.updateView();
+			}
+			else {
+				if (ae.getActionCommand() == DNDCANCEL) {
+					// System.out.println(DNDCANCEL);
+				}
+				else
+					// Attach the stand-alone frame
+					reattach();
+			}
+		}
 	}
 	
 	// ================================================================
@@ -616,7 +669,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	public void mouseEntered(MouseEvent act) { }
 	public void mouseExited(MouseEvent act) { }
 	public void mousePressed(MouseEvent act) { 	}
-	public void mouseReleased(MouseEvent act) { }
+	public void mouseReleased(MouseEvent act) {	}
 	
 	// Click occured on panel.
 	public void mouseClicked(MouseEvent act) {
@@ -738,5 +791,36 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			}
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
+	}
+	
+	// ===============================================
+	//   DnD dialog for no modifiers
+	// ===============================================
+	
+	void openDnDChoiceMenu(Point mouse) {
+		// we're in the AWT thread here, no need for an invokeLater
+		m_dndmenu = new JPopupMenu();
+		m_iDnDMove = new JMenuItem("Move here    (Shift)");
+		m_iDnDMove.setActionCommand(DNDMOVE);
+		m_iDnDMove.setFont(TIImageTool.dialogFont);
+		m_iDnDMove.addActionListener(this);
+		m_iDnDCopy = new JMenuItem("Copy here    (Ctrl)");
+		m_iDnDCopy.setActionCommand(DNDCOPY);
+		m_iDnDCopy.setFont(TIImageTool.dialogFont);
+		m_iDnDCopy.addActionListener(this);
+		m_iDnDCancel = new JMenuItem("Cancel");
+		m_iDnDCancel.setActionCommand(DNDCANCEL);
+		m_iDnDCancel.setFont(TIImageTool.dialogFont);
+		
+		// Accelerator does not work when the target panel has no focus
+		// m_iDnDCancel.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
+		m_iDnDCancel.addActionListener(this);
+
+		m_dndmenu.add(m_iDnDMove);	
+		m_dndmenu.add(m_iDnDCopy);
+		m_dndmenu.addSeparator();
+		m_dndmenu.add(m_iDnDCancel);
+		
+		m_dndmenu.show(m_panel, (int)mouse.getX(), (int)mouse.getY());	
 	}
 }

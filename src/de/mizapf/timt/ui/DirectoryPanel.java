@@ -28,8 +28,7 @@ import javax.swing.*;
 import javax.swing.event.*;
 import java.awt.event.*;
 import java.util.*;
-import java.awt.dnd.DragSource;
-import java.awt.dnd.DnDConstants;
+import java.awt.dnd.*;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
@@ -37,7 +36,7 @@ import de.mizapf.timt.TIImageTool;
 /**
 	Heading plus JList below
 */
-public class DirectoryPanel extends JComponent implements ListCellRenderer<Element> /*, ListSelectionListener */ {
+public class DirectoryPanel extends JComponent implements ListCellRenderer<Element>, DragSourceListener /*, ListSelectionListener */ {
 
 	DirectoryView m_dvCurrent;
 	JList<Element> m_Listing;
@@ -50,6 +49,9 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	DirectoryListModel m_dlm;
 	
 	JComponent m_head;
+
+	boolean m_shift;
+	boolean m_ctrl;
 	
 	static final Color NORM = new Color(250,255,255);
 	private static final Color COLTEXT = new Color(51,51,51);
@@ -139,13 +141,16 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		m_Listing.setDragEnabled(true);
 		m_Listing.setDropMode(DropMode.ON);
 		m_Listing.setTransferHandler(new DDTransferHandler(this));
-			
 		m_Listing.addMouseListener(m_dvCurrent);
 		
 		InputMap imap = m_Listing.getInputMap();
 		imap.put(KeyStroke.getKeyStroke("ctrl X"), "anothercut");
 		imap.put(KeyStroke.getKeyStroke("ctrl C"), "anothercopy");
 		imap.put(KeyStroke.getKeyStroke("ctrl V"), "anotherpaste");
+		
+		// We need this to determine the pressed modifiers
+		DragSource ds = DragSource.getDefaultDragSource();
+		ds.addDragSourceListener(this);
 	}
 	
 	private void createHeader(JComponent comp) {
@@ -411,4 +416,21 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 
 		return cnt;
 	}
+	
+	// DragSourceListener
+	
+	public void dragDropEnd(DragSourceDropEvent dsde) { }
+	public void dragEnter(DragSourceDragEvent dsde) { }
+	public void dragExit(DragSourceEvent dse) { }
+	public 	void dropActionChanged(DragSourceDragEvent dsde) { }
+
+	public 	void dragOver(DragSourceDragEvent dsde) {
+		int mods = dsde.getGestureModifiers();
+		m_shift = ((mods & 1) != 0);
+		m_ctrl = ((mods & 2) != 0);
+	}
+	
+	boolean shiftPressed() {
+		return m_shift;
+	}	
 }
