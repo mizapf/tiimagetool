@@ -123,9 +123,9 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_iArchive = app.createMenuItem(new CreateArchiveAction());
 		m_iSelect = app.createMenuItem(new SelectAllAction());
 		
-		m_iNewFile.setText("Text or BASIC file");
-		m_iNewDirectory.setText("Directory");
-		m_iArchive.setText("Archive");
+		m_iNewFile.setText(app.langstr("TextBasic"));
+		m_iNewDirectory.setText(app.langstr("Directory"));
+		m_iArchive.setText(app.langstr("Archive"));
 
 		m_iCut = app.createMenuItem(new CutAction());
 		m_iCopy = app.createMenuItem(new CopyAction());
@@ -171,10 +171,10 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		cnt.add(m_panel);
 
 		m_mbar = new JMenuBar();
-		m_mFile = new JMenu("File");
+		m_mFile = new JMenu(m_app.langstr("File"));
 		m_mFile.setFont(TIImageTool.dialogFont);
 		
-		m_iClose = new JMenuItem("Attach");
+		m_iClose = new JMenuItem(m_app.langstr("Attach"));
 		m_iClose.setFont(TIImageTool.dialogFont);
 		m_iClose.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
 		m_iClose.addActionListener(this);
@@ -448,11 +448,11 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	void openContainerContextMenu(MouseEvent act) {
 		Volume vol = m_dirCurrent.getVolume();
 		m_ctxmenu = new JPopupMenu();
-		JMenu mnew = new JMenu("Create new");
+		JMenu mnew = new JMenu(TIImageTool.langstr("CreateNew"));
 		mnew.setFont(TIImageTool.dialogFont);
 		mnew.add(m_iNewFile);
 		mnew.add(m_iNewDirectory);
-		mnew.add(m_iArchive);
+		mnew.add(m_iArchive);  // FIXME: Exception, disabled
 		mnew.setEnabled(!vol.isProtected() && !m_dirCurrent.isProtected());
 		m_ctxmenu.add(m_iSelect);
 		m_ctxmenu.addSeparator();
@@ -514,9 +514,9 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			}
 		}		
 		
-		if (selected.size()==1) m_iDelete.setText("Delete");
+		if (selected.size()==1) m_iDelete.setText(TIImageTool.langstr("Delete"));
 		else {
-			m_iDelete.setText("Delete all selected");
+			m_iDelete.setText(TIImageTool.langstr("DeleteAll"));
 		}
 		
 		m_ctxmenu.add(m_iCut);	

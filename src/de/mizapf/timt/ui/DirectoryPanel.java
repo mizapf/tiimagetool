@@ -154,9 +154,11 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	}
 	
 	private void createHeader(JComponent comp) {
-		if (Thread.currentThread().getName().equals("main")) {
+		// This is called by main when using the "Enter directory" context
+		// menu item
+		/* if (Thread.currentThread().getName().equals("main")) {
 			Thread.currentThread().dumpStack();
-		}
+		} */
 		comp.removeAll();
 
 		Directory dirCurrent = m_dvCurrent.getDirectory();
