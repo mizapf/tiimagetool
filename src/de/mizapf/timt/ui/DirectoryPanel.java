@@ -316,7 +316,6 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	public Component getListCellRendererComponent(JList<? extends Element> list, Element el, int index, boolean isSelected, boolean cellHasFocus) {
 
 		Volume vol = m_dvCurrent.getVolume();
-
 		Font font = TIImageTool.plainFont;
 		boolean bSelectable = true;
 		String sName = el.getName();
@@ -328,7 +327,9 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		String sCreation = " ";
 		String sUpdate = " ";
 		boolean bContainer = true;
-				
+
+		// System.out.println("render element '" + sName + "', index = " + index + ", isSelected = " + isSelected + ", hasFocus = " + cellHasFocus);
+
 		m_lastSelected = el;
 		
 		if (el instanceof EndOfListElement) {
@@ -412,7 +413,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 
 		cnt.setOpaque(true);
 		cnt.setBackground(selected? PSEL : NORM);
-		if (focused) cnt.setBackground(FOCUSED);
+		if (selected && focused) cnt.setBackground(FOCUSED);
 
 		return cnt;
 	}

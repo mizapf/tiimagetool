@@ -30,7 +30,7 @@ public class CloseAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return "Close";
+		return imagetool.langstr("Close");
 	}
 	
 	public String getActionName() {

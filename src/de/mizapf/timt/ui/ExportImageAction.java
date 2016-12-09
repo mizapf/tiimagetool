@@ -36,7 +36,7 @@ import java.util.Properties;
 public class ExportImageAction extends Activity {
 
 	public String getMenuName() {
-		return "Export image ...";
+		return imagetool.langstr("ExportImage");
 	}
 	
 	public String getActionName() {

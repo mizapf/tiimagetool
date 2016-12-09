@@ -149,8 +149,7 @@ class DisassParamDialog extends ToolDialog implements ActionListener {
 			if (m_bTagged) {
 				putTextLine(this, "ref(location): This location is referenced as a data source or destination or a jump/branch target", 0);
 			    add(Box.createVerticalStrut(10));
-			    putTextLine(this, "Locations can be specified as absolute (837c, >837C, 0x837c, X837C), as program-relocatable (R0010),", 0);
-			    putTextLine(this, "as common-relocatable (S0123), or as data-relocatable (T0028).", 0);
+			    putMultiTextLine(this, "Locations can be specified as absolute (837c, >837C, 0x837c, X837C), as program-relocatable (R0010),\nas common-relocatable (S0123), or as data-relocatable (T0028).");
 			    add(Box.createVerticalStrut(10));
 			    putTextLine(this, "A branch target can be specified as a location or by its name, like param(R0418,2) or param(\"XMLLNK\",1).", 0);
 			}

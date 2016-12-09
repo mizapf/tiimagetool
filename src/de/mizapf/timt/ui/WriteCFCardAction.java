@@ -36,7 +36,7 @@ import de.mizapf.timt.TIImageTool;
 public class WriteCFCardAction extends Activity {
 	
 	public String getMenuName() {
-		return "Write Compact Flash card ...";
+		return imagetool.langstr("WriteCF");
 	}
 	
 	public String getActionName() {

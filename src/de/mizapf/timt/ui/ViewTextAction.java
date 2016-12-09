@@ -30,7 +30,7 @@ import de.mizapf.timt.util.Utilities;
 public class ViewTextAction extends Activity {
 
 	public String getMenuName() {
-		return "View as text";
+		return imagetool.langstr("ViewText");
 	}
 	
 	public String getActionName() {

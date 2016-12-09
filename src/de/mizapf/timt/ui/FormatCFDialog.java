@@ -85,8 +85,9 @@ class FormatCFDialog extends ToolDialog {
 
 		putTextLine(this, "!Formatting volumes on a CF7 card", 0);
 		add(Box.createVerticalStrut(10));
-		putTextLine(this, "This tool modifies an image file that must be written to the CF7 card with \"Write to CF card\" afterwards.", 0);
-		putTextLine(this, "You have to read the image file from the CF card first, even when it is not yet a CF7-formatted card.", 0);
+		putMultiTextLine(this, 
+		      "This tool modifies an image file that must be written to the CF7 card with \"Write to CF card\" afterwards.\n"
+			+ "You have to read the image file from the CF card first, even when it is not yet a CF7-formatted card.");
 		add(Box.createVerticalStrut(10));
 		putTextLine(this, "Note that all changes are applied to the image file only. You must write back the image to the CF card later.", 0);
 
@@ -99,8 +100,9 @@ class FormatCFDialog extends ToolDialog {
 		m_jlNumber = putLabel(this, "Highest volume number", "-", nColumnWidth);
 		add(Box.createVerticalStrut(10));
 
-		putTextLine(this, "Please specify the numbers of the volumes to be formatted. If the volumes are already formatted, they will",0);
-		putTextLine(this, "lose their contents.", 0);
+		putMultiTextLine(this, 
+			  "Please specify the numbers of the volumes to be formatted. If the volumes are already formatted, they will\n"
+			+ "lose their contents.");
 		add(Box.createVerticalStrut(10));
 		putTextLine(this, "You can enter the numbers as a comma-separated list of single numbers or intervals (like 1-2,5,7,10-20).", 0);
 		
@@ -110,9 +112,10 @@ class FormatCFDialog extends ToolDialog {
 		m_tfSelection = putTextField(this, "Numbers of volumes to be formatted", "", nColumnWidth, 0);
 		add(Box.createVerticalStrut(10));
 		
-		putTextLine(this, "For the volume names you can specify a number field using ##...# with the name: VOL### will create names", 0);
-		putTextLine(this, "VOL001 for volume 1, VOL002 for volume 2. A single # will create sufficiently many digits for the number", 0);
-		putTextLine(this, "but without leading zeros.", 0);
+		putMultiTextLine(this, 
+			 "For the volume names you can specify a number field using ##...# with the name: VOL### will create names\n"
+		   + "VOL001 for volume 1, VOL002 for volume 2. A single # will create sufficiently many digits for the number\n" 
+		   + "but without leading zeros.");
 		add(Box.createVerticalStrut(10));
 		
 		m_tfNames = putTextField(this, "Volume names", "", nColumnWidth, 0);

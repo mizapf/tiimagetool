@@ -49,7 +49,7 @@ public class SearchAction extends Activity {
 	}
 
 	public String getMenuName() {
-		return "Search...";
+		return imagetool.langstr("Search");
 	}
 	
 	public String getActionName() {

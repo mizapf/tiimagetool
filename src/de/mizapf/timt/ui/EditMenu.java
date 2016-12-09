@@ -46,7 +46,7 @@ public class EditMenu extends JMenu {
 	JMenuItem m_iCreateArchive;
 		
 	public EditMenu(JFrame frm, TIImageTool app) {
-		super("Edit");
+		super(TIImageTool.langstr("Edit"));
 		m_frmMain = frm;
 		m_app = app;
 

@@ -40,7 +40,7 @@ import de.mizapf.timt.util.TIFiles;
 public class ExportRemoteAction extends Activity {
 
 	public String getMenuName() {
-		return "Send to remote ...";
+		return imagetool.langstr("SendRemote");
 	}
 	
 	public String getActionName() {

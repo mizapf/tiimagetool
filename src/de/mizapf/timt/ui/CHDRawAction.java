@@ -37,7 +37,7 @@ import de.mizapf.timt.ui.ImageFileFilter;
 public class CHDRawAction extends Activity {
 
 	public String getMenuName() {
-		return "Extract raw from CHD ...";
+		return imagetool.langstr("ExtractRaw"); 
 	}
 	
 	public String getActionName() {

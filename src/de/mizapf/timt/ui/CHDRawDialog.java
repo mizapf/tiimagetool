@@ -73,10 +73,10 @@ class CHDRawDialog extends ToolDialog {
 
 		putTextLine(this, "!Exporting all sectors from a CHD file", 0);
 		add(Box.createVerticalStrut(10));
-		putTextLine(this, "This function creates a new file that consists of the contents of all sectors", 0);
-		putTextLine(this, "from sector 0 to the last sector, essentially a sector dump format for a hard disk.", 0);
-		putTextLine(this, "No metadata are retained. You can edit this file with an external hex editor and", 0);
-		putTextLine(this, "import it into a CHD file again later.", 0);
+		putMultiTextLine(this, 
+			  "This function creates a new file that consists of the contents of all sectors from sector 0 to the last sector,\n"
+			+ "essentially a sector dump format for a hard disk. You can edit this file with an external hex editor and import\n"
+			+ "it into a CHD file again later.");
 		add(Box.createVerticalStrut(10));
 		
 		String fileprompt = "File name for CHD image (from)";

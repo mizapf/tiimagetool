@@ -34,7 +34,7 @@ public class HelpAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return "Manual";
+		return imagetool.langstr("Manual");
 	}
 	
 	public String getActionName() {

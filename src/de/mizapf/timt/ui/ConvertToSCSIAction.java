@@ -28,7 +28,7 @@ import de.mizapf.timt.files.*;
 public class ConvertToSCSIAction extends Activity {
 
 	public String getMenuName() {
-		return "Convert to SCSI...";
+		return imagetool.langstr("ConvertSCSI");
 	}
 	
 	public String getActionName() {

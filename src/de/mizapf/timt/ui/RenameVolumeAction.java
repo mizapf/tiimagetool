@@ -33,7 +33,7 @@ public class RenameVolumeAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return "Rename volume ...";
+		return imagetool.langstr("RenameVolume");
 	}
 	
 	public String getActionName() {

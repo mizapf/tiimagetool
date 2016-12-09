@@ -31,7 +31,7 @@ import de.mizapf.timt.util.Utilities;
 public class ViewImageAction extends Activity {
 
 	public String getMenuName() {
-		return "View as image";
+		return imagetool.langstr("ViewImage");
 	}
 	
 	public String getActionName() {

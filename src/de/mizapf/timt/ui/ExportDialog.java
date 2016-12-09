@@ -93,8 +93,7 @@ class ExportDialog extends ToolDialog implements ActionListener {
 		putTextLine(this, "Use ? as target character to delete the character.", 0);
 		add(Box.createVerticalStrut(10));
 
-		putTextLine(this, "Every non-printable character will be translated to ", 0);
-		putTextLine(this, "a character sequence of the form =xx.", 0);
+		putMultiTextLine(this, "Every non-printable character will be translated to\na character sequence of the form =xx.");
 		
 		add(Box.createVerticalStrut(10));
 		add(Box.createVerticalGlue());

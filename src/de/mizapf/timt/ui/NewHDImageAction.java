@@ -275,7 +275,7 @@ public class NewHDImageAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return "Hard disk image ...";
+		return imagetool.langstr("Harddisk");
 	}
 	
 	public String getActionName() {

@@ -27,7 +27,7 @@ import java.util.*;
 public class PreferencesAction extends Activity {
 	
 	public String getMenuName() {
-		return "Preferences...";
+		return imagetool.langstr("Prefer");
 	}
 	
 	public String getActionName() {
@@ -50,6 +50,12 @@ public class PreferencesAction extends Activity {
 					if (jc instanceof JCheckBox) {
 						boolean selected = ((JCheckBox)jc).isSelected();
 						imagetool.setProperty(prop, selected? "true" : "false");
+					}
+					else {
+						if (jc instanceof JComboBox) {
+							int index = ((JComboBox)jc).getSelectedIndex();
+							imagetool.setProperty(prop, String.valueOf(index));
+						}
 					}
 				}
 			}

@@ -205,6 +205,34 @@ public class ToolDialog extends JDialog implements ActionListener {
 		where.add(box0);		
 	}
 	
+	/* Problem with HTML text: A JLabel does not wrap automatically; it
+	   extend as far as a single line will take it, unless there are explicit
+	   break tags. It may be possible but difficult to tell the layout manager
+	   to define a label of an initial width (not maximum, may be resized) 
+	   but a variable height. Note that the pack method belongs to Window.
+	   We will use an own format which is parsed here.	   
+	*/
+	final protected void putMultiTextLine(Container where, String sText) {
+		Font font = TIImageTool.dialogFont;
+		if (sText.charAt(0)=='!') {
+			sText = sText.substring(1);			
+			font = TIImageTool.boldDialogFont;
+		}
+		
+		String[] textLines = sText.split("\n");
+		for (String line : textLines) {
+			Box box0 = new Box(BoxLayout.X_AXIS);
+			box0.add(Box.createHorizontalStrut(10));
+			JLabel jl = new JLabel(line, SwingConstants.LEFT);
+			jl.setFont(font);
+			box0.add(jl);
+			box0.add(Box.createGlue());
+			jl.setMaximumSize(new Dimension(600, 10000));
+			box0.add(Box.createHorizontalStrut(10));		
+			where.add(box0);
+		}
+	}	
+		
 	final protected JTextField putTextField(Container where, String sText, String sDefaultEntry, int nColumnWidth, int nFieldWidth) {
 		Box box = new Box(BoxLayout.X_AXIS);
 		JTextField tf = new JTextField();

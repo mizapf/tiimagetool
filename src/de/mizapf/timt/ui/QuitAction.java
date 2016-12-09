@@ -30,7 +30,7 @@ public class QuitAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return "Exit";
+		return imagetool.langstr("Exit");
 	}
 	
 	public String getActionName() {

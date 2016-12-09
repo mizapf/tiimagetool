@@ -36,7 +36,7 @@ import de.mizapf.timt.TIImageTool;
 public class NewDirectoryAction extends Activity {
 
 	public String getMenuName() {
-		return "New directory ...";
+		return imagetool.langstr("NewDir");
 	}
 	
 	public String getActionName() {

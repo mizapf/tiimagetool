@@ -37,7 +37,7 @@ public class CopyAction extends Activity {
 	}
 
 	public String getMenuName() {
-		return "Copy";
+		return imagetool.langstr("Copy");
 	}
 	
 	public String getActionName() {

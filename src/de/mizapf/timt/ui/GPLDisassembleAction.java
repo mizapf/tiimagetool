@@ -33,7 +33,7 @@ import de.mizapf.timt.TIImageTool;
 public class GPLDisassembleAction extends Activity {
 
 	public String getMenuName() {
-		return "Disassemble GPL ...";
+		return imagetool.langstr("DisGPL");
 	}
 	
 	public String getActionName() {

@@ -30,7 +30,7 @@ public class SelectAllAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return "Select all";
+		return imagetool.langstr("SelectAll");
 	}
 	
 	public String getActionName() {

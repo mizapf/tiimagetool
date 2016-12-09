@@ -34,7 +34,7 @@ import de.mizapf.timt.TIImageTool;
 public class ChangeCHDFormatAction extends Activity {
 
 	public String getMenuName() {
-		return "Change CHD Format...";
+		return imagetool.langstr("ChangeCHD");
 	}
 	
 	public String getActionName() {

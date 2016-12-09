@@ -34,7 +34,7 @@ import de.mizapf.timt.TIImageTool;
 public class RawCHDAction extends Activity {
 
 	public String getMenuName() {
-		return "Import raw into CHD ...";
+		return imagetool.langstr("ImportRaw");
 	}
 	
 	public String getActionName() {

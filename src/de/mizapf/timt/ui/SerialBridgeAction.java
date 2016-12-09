@@ -33,7 +33,7 @@ public class SerialBridgeAction extends Activity implements Runnable {
 	SerialBridge m_sb;
 	
 	public String getMenuName() {
-		return "Serial bridge";
+		return imagetool.langstr("SerialBridge");
 	}
 	
 	public String getActionName() {

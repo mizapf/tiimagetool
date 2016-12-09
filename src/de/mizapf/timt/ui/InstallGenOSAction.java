@@ -38,7 +38,7 @@ public class InstallGenOSAction extends Activity {
 	private final static String AUTOEXEC = "/de/mizapf/timt/util/autoexec.txt";
 	
 	public String getMenuName() {
-		return "Install Geneve OS";
+		return imagetool.langstr("Geneve");
 	}
 	
 	public String getActionName() {

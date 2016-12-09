@@ -30,7 +30,7 @@ import de.mizapf.timt.util.Utilities;
 public class ViewConsoleAction extends Activity {
 
 	public String getMenuName() {
-		return "View Console output";
+		return imagetool.langstr("ViewConsole");
 	}
 	
 	public String getActionName() {

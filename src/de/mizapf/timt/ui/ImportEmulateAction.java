@@ -36,7 +36,7 @@ import de.mizapf.timt.util.TIFiles;
 public class ImportEmulateAction extends Activity {
 
 	public String getMenuName() {
-		return "Import as emulate files...";
+		return imagetool.langstr("ImpEmulate");
 	}
 	
 	public String getActionName() {

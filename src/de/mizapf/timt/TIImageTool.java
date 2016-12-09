@@ -28,16 +28,15 @@
     [x] Open CF7
     [x] Sector editor
     [x] Rename volume
-    [x] Add GRAPHX format
+    [x] Add RLE-128 format
     [x] Read/Write CF7 card
     [x] Format CF7
     [x] New dialog for CHDRaw/RawCHD (from SearchDialog)	
     [x] Split properties settings into tabs
     [x] Fix double output in Console
     [x] Fix Drag and drop
-    [ ] Fix marking in directory panel
+    [x] Fix marking in directory panel
     [x] Base address for plain dump
-    [ ] Split help file
 	
     New for 2.1+
     [x] Redirect standard output
@@ -103,6 +102,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.ResourceBundle;
+import java.util.Locale;
 // 
 
 import javax.swing.*;
@@ -121,7 +122,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JFrame m_frmMain;
 
 	public final static String VERSION = "2.3.5";
-	public final static String DATE = "November 2016";
+	public final static String DATE = "December 2016";
 	
 	private static final String TITLE = "TIImageTool";
 	
@@ -152,6 +153,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String ESCAPE = "escape";
 	public final static String LOGFILE = "logging";
 	public final static String RECENT = "recent";
+	public final static String LANG = "lang";
 	
 	Properties m_propNames;
 	
@@ -222,9 +224,15 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	public final static String TEMPDIRNAME = "tiimagetool_tmp";
 	
+	public final static String LANGTEXT = "de.mizapf.timt.ui.Strings";
+	
+	private static final Locale[] locale = { Locale.ENGLISH, Locale.GERMAN };
+	
 	Properties m_Settings;
 	String m_sPropertiesPath;
 
+	private static ResourceBundle m_resources;
+	
 	/** Used to stop the main thread. */
 	boolean m_bRunning;
 	
@@ -324,11 +332,11 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_jtViews.addChangeListener(TIImageTool.this);
 			
 			// -------------------------------------------
-			m_mFile = new JMenu("File");
+			m_mFile = new JMenu(langstr("File"));
 			m_mFile.setFont(dialogFont);
 			m_mbar.add(m_mFile);
 			
-			m_mNew = new JMenu("New");
+			m_mNew = new JMenu(langstr("New"));
 			m_mNew.setFont(dialogFont);
 			m_mFile.add(m_mNew);
 			
@@ -343,7 +351,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_iOpen = createMenuItem(new OpenImageAction());
 			m_mFile.add(m_iOpen);
 
-			m_mOpenRecent = new JMenu("Open recent file");
+			m_mOpenRecent = new JMenu(langstr("Open_recent_file"));
 			m_mFile.add(m_mOpenRecent);
 			m_mOpenRecent.setFont(dialogFont);
 			
@@ -383,7 +391,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			// -------------------------------------------
 			
-			m_mUtility = new JMenu("Utility");
+			m_mUtility = new JMenu(langstr("Utility"));
 			m_mbar.add(m_mUtility);
 			m_mUtility.setFont(dialogFont);
 			
@@ -435,7 +443,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			// -------------------------------------------
 			
-			m_mHelp = new JMenu("Help");
+			m_mHelp = new JMenu(langstr("Help"));
 			m_mbar.add(m_mHelp);
 			m_mHelp.setFont(dialogFont);
 			
@@ -691,7 +699,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_dv = dv;
 			int size = 17;
 			setPreferredSize(new Dimension(size, size));
-			setToolTipText("Close this view");
+			setToolTipText(langstr("Close_this_view"));
 			// setUI(new BasicButtonUI());
 			setContentAreaFilled(false);
 			setFocusable(false);
@@ -761,7 +769,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_dt = dv.getPanel();
 			int size = 17;
 			setPreferredSize(new Dimension(size, size));
-			setToolTipText("Show as window");
+			setToolTipText("Show_as_window");
 			// setUI(new BasicButtonUI());
 			setContentAreaFilled(false);
 			setFocusable(false);
@@ -862,6 +870,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_sPropertiesPath = null;
 		m_Settings = new Properties();
 		loadProperties();
+		
+		// Load localized strings
+		m_resources = ResourceBundle.getBundle(LANGTEXT, getLocale(getPropertyString(LANG)));
 
 		// Redirect Console output
 		String sLogFile = getPropertyString(LOGFILE, "tiimagetool.log");
@@ -1138,6 +1149,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		getPropertyString(TFIFILTER, "true");
 		getPropertyString(NEWFRAME, "false");
 		getPropertyString(ESCAPE, ".");
+		getPropertyString(LANG, "0");
 	}
 
 	public List<String> getPreferences(String category) {
@@ -1244,6 +1256,22 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return sValues;
 	}
 	
+	public static Locale getLocale(String loc) {
+		int index = 0;
+		try {
+			index = Integer.parseInt(loc);
+		}
+		catch (NumberFormatException nfx) {
+			index = 0;
+		}
+		if (index >= locale.length) index = locale.length-1;
+		return locale[index];
+	}
+	
+	public static String langstr(String key) {
+		return m_resources.getString(key);
+	}
+	
 // JComponent.getComponentGraphics -> getFontMetrics -> stringWidth
 
 	public JMenuItem createMenuItem(Activity act) {
@@ -1271,7 +1299,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					catch (Exception e) {
 						m_frmMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 						e.printStackTrace();
-						JOptionPane.showMessageDialog(m_frmMain, "BUG: Exception occured; see console output", "Internal error", JOptionPane.ERROR_MESSAGE);						
+						JOptionPane.showMessageDialog(m_frmMain, langstr("BUG"), langstr("Internal_error"), JOptionPane.ERROR_MESSAGE);						
 					}
 					m_UserInput = null;
 					// SwingUtilities.invokeLater(new ActivateMenuItems());
@@ -1280,7 +1308,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					if (m_bRunning) wait();
 				}
 				catch (InterruptedException ix) {
-					JOptionPane.showMessageDialog(m_frmMain, "BUG: Wait interrupted in processUserInput", "Internal error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(m_frmMain, "BUG: Wait interrupted in processUserInput", langstr("Internal_error"), JOptionPane.ERROR_MESSAGE); 
 				}
 				m_bAction = false;
 			}
@@ -1785,7 +1813,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					line = br.readLine();
 					if (line != null) sbConsoleContent.append(line).append("\n");
 				} 
-				SwingUtilities.invokeLater(new ContentShow("Console output", sbConsoleContent.toString(), true, true));
+				SwingUtilities.invokeLater(new ContentShow(langstr("Console_output"), sbConsoleContent.toString(), true, true));
 			}
 			catch (IOException iox) {
 				System.setOut(System.out);

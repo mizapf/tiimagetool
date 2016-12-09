@@ -30,7 +30,7 @@ import de.mizapf.timt.util.Utilities;
 public class ConvertToHFDCAction extends Activity {
 
 	public String getMenuName() {
-		return "Convert to HFDC...";
+		return imagetool.langstr("ConvertHFDC");
 	}
 	
 	public String getActionName() {

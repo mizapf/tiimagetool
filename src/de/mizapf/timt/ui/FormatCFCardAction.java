@@ -32,7 +32,7 @@ import de.mizapf.timt.TIImageTool;
 public class FormatCFCardAction extends Activity {
 	
 	public String getMenuName() {
-		return "Format CF7 volumes ...";
+		return imagetool.langstr("FormatCF");
 	}
 	
 	public String getActionName() {

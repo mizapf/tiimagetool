@@ -68,25 +68,28 @@ class NewCF7Dialog extends ToolDialog {
 			add(Box.createVerticalStrut(10));
 			putTextLine(this, "!please use the functions in the \"Utility\" menu.", 0);
 			add(Box.createVerticalStrut(10));
-			putTextLine(this, "Short explanation: Compact Flash cards sometimes offer less than the exact amount of", 0);
-			putTextLine(this, "memory as printed on their casing, so you may get into trouble when copying the image", 0);
-			putTextLine(this, "on the CF card.", 0);
+			
+			putMultiTextLine(this, 
+				  "Short explanation: Compact Flash cards sometimes offer less than the exact amount of\n"
+				+ "memory as printed on their casing, so you may get into trouble when copying the image\n"
+				+ "on the CF card.");
 			add(Box.createVerticalStrut(10));
-			putTextLine(this, "Hence, you should use the \"Read Compact Flash Card\" function first, which produces", 0);
-			putTextLine(this, "an image file, then format the volumes as desired with \"Format CF7\". This way, you", 0);
-			putTextLine(this, "will get an image that suits your CF card; copy it to the CF card with \"Write Compact", 0);
-			putTextLine(this, "Flash Card\" finally.", 0);
+			putMultiTextLine(this,
+				  "Hence, you should use the \"Read Compact Flash Card\" function first, which produces\n"
+				+ "an image file, then format the volumes as desired with \"Format CF7\". This way, you\n"
+				+ "will get an image that suits your CF card; copy it to the CF card with \"Write Compact\n"
+				+ "Flash Card\" finally.");
 		}
 		else {
-			putTextLine(this, "This is a single volume for a CF7-formatted card. You can copy its contents into a", 0);
-			putTextLine(this, "CF7 image by using the usual file views (copy/paste or drag-and-drop) or by using the", 0);
-			putTextLine(this, "tool dsk2cf.exe for your CF7 device. A volumes has 1600 sectors and resembles a", 0);
-			putTextLine(this, "floppy disk image in sector dump format.", 0);
+			putMultiTextLine(this,
+				   "This is a single volume for a CF7-formatted card. You can copy its contents into a\n"
+				 + "CF7 image by using the usual file views (copy/paste or drag-and-drop) or by using the\n"
+				 + "tool dsk2cf.exe for your CF7 device. A volumes has 1600 sectors and resembles a\n"
+				 + "floppy disk image in sector dump format.");
 			add(Box.createVerticalStrut(10));
 			putTextLine(this, "!You can work on CF7 images in TIImageTool directly.", 0);
 			add(Box.createVerticalStrut(10));
-			putTextLine(this, "You do not need an external volume file unless you want to store it", 0);
-			putTextLine(this, "as a separate file.", 0);
+			putTextLine(this, "You do not need an external volume file unless you want to store it as a separate file.", 0);
 			add(Box.createVerticalStrut(10));
 			putTextLine(this, "See also the \"Utility\" menu.", 0);
 			add(Box.createVerticalStrut(10));

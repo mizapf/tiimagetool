@@ -30,7 +30,7 @@ import de.mizapf.timt.files.*;
 public class SavePlainAction extends Activity {
 
 	public String getMenuName() {
-		return "Save as plain dump ...";
+		return imagetool.langstr("SavePlain");
 	}
 	
 	public String getActionName() {

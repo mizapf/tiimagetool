@@ -26,7 +26,7 @@ import de.mizapf.timt.TIImageTool;
 public class AboutAction extends Activity {
 
 	public String getMenuName() {
-		return "About TIImageTool...";
+		return TIImageTool.langstr("About");
 	}
 	
 	public String getActionName() {
@@ -35,6 +35,6 @@ public class AboutAction extends Activity {
 	
 	public void go() {
 		// Date and version see TIImageTool
-		JOptionPane.showMessageDialog(m_parent, "TIImageTool: Viewing and editing images of\nTI-99 disk media for emulators\n\nAuthor: Michael Zapf\n\nVersion " + TIImageTool.VERSION + ", " + TIImageTool.DATE, "About", JOptionPane.INFORMATION_MESSAGE); 
+		JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("AboutText") + TIImageTool.VERSION + ", " + TIImageTool.DATE, "About", JOptionPane.INFORMATION_MESSAGE); 
 	}
 }

@@ -92,10 +92,11 @@ class RawCHDDialog extends ToolDialog {
 
 		putTextLine(this, "!Creating a CHD file from a raw sector dump", 0);
 		add(Box.createVerticalStrut(10));
-		putTextLine(this, "This function creates a new CHD image (MAME hard disk format) from a sector dump file.", 0);
 		
-		putTextLine(this, "The sector dump file is supposed to hold the contents of all sectors from 0 to the last", 0);
-		putTextLine(this, "sector with no metadata. You have to define these metadata below.", 0);
+		putMultiTextLine(this, 
+			  "This function creates a new CHD image (MAME hard disk format) from a sector dump file. The sector dump file\n"
+			+ "is supposed to hold the contents of all sectors from 0 to the last sector with no metadata. You have to\n"
+			+ "define these metadata below.");
 		add(Box.createVerticalStrut(10));
 		
 		String rawprompt = "File name for raw contents (from)";

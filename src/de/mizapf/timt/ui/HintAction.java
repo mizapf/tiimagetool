@@ -41,7 +41,7 @@ public class HintAction extends Activity {
 								"Just thought I should tell you that" };
 	
 	public String getMenuName() {
-		return "Hints";
+		return imagetool.langstr("Hints");
 	}
 	
 	public String getActionName() {

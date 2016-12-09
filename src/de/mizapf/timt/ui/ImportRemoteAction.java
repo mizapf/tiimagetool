@@ -37,7 +37,7 @@ import de.mizapf.timt.files.*;
 public class ImportRemoteAction extends Activity {
 
 	public String getMenuName() {
-		return "Import from remote...";
+		return imagetool.langstr("ImpRemote");
 	}
 	
 	public String getActionName() {

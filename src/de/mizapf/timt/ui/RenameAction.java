@@ -37,7 +37,7 @@ public class RenameAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return "Rename element ...";
+		return imagetool.langstr("RenameElement");
 	}
 	
 	public String getActionName() {

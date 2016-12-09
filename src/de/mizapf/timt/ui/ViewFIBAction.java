@@ -31,7 +31,7 @@ import javax.swing.JOptionPane;
 public class ViewFIBAction extends Activity {
 
 	public String getMenuName() {
-		return "View file information block";
+		return imagetool.langstr("ViewFIB");
 	}
 	
 	public String getActionName() {

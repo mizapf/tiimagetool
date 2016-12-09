@@ -32,7 +32,7 @@ import de.mizapf.timt.util.ImageCheck;
 public class CheckFSAction extends Activity {
 
 	public String getMenuName() {
-		return "Check filesystem";
+		return imagetool.langstr("Check");
 	}
 	
 	public String getActionName() {

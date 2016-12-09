@@ -30,7 +30,7 @@ import java.io.EOFException;
 public class ViewUtilAction extends Activity {
 
 	public String getMenuName() {
-		return "View UTIL/GK dump";
+		return imagetool.langstr("ViewUtil");
 	}
 	
 	public String getActionName() {

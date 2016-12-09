@@ -38,10 +38,14 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 	int m_fieldWidth;
 	
 	JTabbedPane m_tabs;
+	String[] m_lang;
 	
 	PreferencesDialog(JFrame owner, TIImageTool app) {
 		super(owner, "Preferences");
 		m_app = app;
+		m_lang = new String[2];
+		m_lang[0] = app.langstr("English");
+		m_lang[1] = app.langstr("German");
 	}
 	
 	
@@ -95,11 +99,30 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
 		
 		tabPanel.add(Box.createVerticalStrut(10));	
+
+		int i=0;
+		int index = 0;
 		
 		for (String s : prefs) {
 			String name = m_app.getPreferenceLabel(s);
 			char type = m_app.getPreferenceType(s);
 			switch (type) {
+			case 'c':
+				value = m_app.getPropertyString(s);
+				try {
+					index = Integer.parseInt(value);
+				}
+				catch (NumberFormatException nfx) {
+					System.err.println("Invalid language parameter; invalid index: " + value);
+					index = 0;
+				}
+				if (index > m_lang.length-1) {
+					System.err.println("Invalid language parameter; invalid index: " + index);
+					index = m_lang.length-1;
+				}
+				jc = putComboBox(tabPanel, name, m_lang, index, m_nColumnWidth);
+				m_entries.put(s, jc);
+				break;
 			case 's':
 				value = m_app.getPropertyString(s);
 				jc = putTextField(tabPanel, name, value, m_nColumnWidth, m_fieldWidth);

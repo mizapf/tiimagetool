@@ -18,3 +18,4 @@ tfifilter=import:b:Suggest TIFILES file filter
 newframe=general:b:Open image file in own frame
 escape=output:s:Replace unprintable characters by
 logging=output:s:Log console output to file
+lang=general:c:UI language

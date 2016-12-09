@@ -31,7 +31,7 @@ import de.mizapf.timt.TIImageTool;
 public class SectorEditAction extends Activity {
 	
 	public String getMenuName() {
-		return "Edit sectors ...";
+		return imagetool.langstr("EditSectors");
 	}
 	
 	public String getActionName() {

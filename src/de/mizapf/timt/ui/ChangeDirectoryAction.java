@@ -32,7 +32,7 @@ import de.mizapf.timt.TIImageTool;
 public class ChangeDirectoryAction extends Activity {
 
 	public String getMenuName() {
-		return "Enter";
+		return imagetool.langstr("Enter");
 	}
 	
 	public String getActionName() {

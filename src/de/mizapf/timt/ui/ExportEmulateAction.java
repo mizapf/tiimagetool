@@ -32,7 +32,7 @@ import java.awt.event.KeyEvent;
 public class ExportEmulateAction extends Activity {
 
 	public String getMenuName() {
-		return "Save as DSK image ...";
+		return imagetool.langstr("SaveDSK");
 	}
 	
 	public String getActionName() {

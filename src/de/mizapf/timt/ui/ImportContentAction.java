@@ -35,7 +35,7 @@ import de.mizapf.timt.basic.CrunchException;
 public class ImportContentAction extends Activity {
 
 	public String getMenuName() {
-		return "Import from text editor...";
+		return imagetool.langstr("ImpText");
 	}
 	
 	public String getActionName() {

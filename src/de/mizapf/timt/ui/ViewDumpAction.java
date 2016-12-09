@@ -31,7 +31,7 @@ import javax.swing.JOptionPane;
 public class ViewDumpAction extends Activity {
 
 	public String getMenuName() {
-		return "View plain dump";
+		return imagetool.langstr("ViewPlain");
 	}
 	
 	public String getActionName() {

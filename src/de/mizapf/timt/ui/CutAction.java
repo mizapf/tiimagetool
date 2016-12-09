@@ -36,7 +36,7 @@ public class CutAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return "Cut";
+		return imagetool.langstr("Cut");
 	}
 	
 	public String getActionName() {

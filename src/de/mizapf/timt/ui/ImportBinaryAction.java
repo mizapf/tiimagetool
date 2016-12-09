@@ -35,7 +35,7 @@ import de.mizapf.timt.TIImageTool;
 public class ImportBinaryAction extends Activity {
 
 	public String getMenuName() {
-		return "Import plain binary files...";
+		return imagetool.langstr("ImpBinary");
 	}
 	
 	public String getActionName() {

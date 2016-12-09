@@ -35,7 +35,7 @@ import java.util.ArrayList;
 public class ReadCFCardAction extends Activity {
 	
 	public String getMenuName() {
-		return "Read Compact Flash card ...";
+		return imagetool.langstr("ReadCF");
 	}
 	
 	public String getActionName() {

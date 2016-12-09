@@ -43,7 +43,7 @@ public class DeleteAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return "Delete";
+		return imagetool.langstr("Delete");
 	}
 	
 	public String getActionName() {

@@ -44,7 +44,7 @@ public class PasteAction extends Activity {
 	}
 	
  	public String getMenuName() {
-		return "Paste";
+		return imagetool.langstr("Paste");
 	}
 	
 	public String getActionName() {

@@ -34,7 +34,7 @@ import de.mizapf.timt.basic.BasicLine;
 public class ListAction extends Activity {
 
 	public String getMenuName() {
-		return "List BASIC program";
+		return imagetool.langstr("ListBasic");
 	}
 	
 	public String getActionName() {

@@ -34,7 +34,7 @@ import de.mizapf.timt.util.*;
 public class CreateArchiveAction extends Activity {
 
 	public String getMenuName() {
-		return "Create archive...";
+		return imagetool.langstr("Create_archive");
 	}
 	
 	public String getActionName() {
