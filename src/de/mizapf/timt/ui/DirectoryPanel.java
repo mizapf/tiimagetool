@@ -428,9 +428,10 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	public 	void dropActionChanged(DragSourceDragEvent dsde) { }
 
 	public 	void dragOver(DragSourceDragEvent dsde) {
-		int mods = dsde.getGestureModifiers();
-		m_shift = ((mods & 1) != 0);
-		m_ctrl = ((mods & 2) != 0);
+		int mods = dsde.getGestureModifiersEx();
+		// System.out.println(Utilities.toHex(mods, 4));
+		m_shift = ((mods & InputEvent.SHIFT_DOWN_MASK) != 0);
+		m_ctrl = ((mods & InputEvent.CTRL_DOWN_MASK) != 0);
 	}
 	
 	boolean shiftPressed() {

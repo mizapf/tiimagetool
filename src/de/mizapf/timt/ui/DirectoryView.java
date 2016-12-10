@@ -164,6 +164,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 //		int nHeight = m_panel.getHeight();
 		// Create top-level window
 		m_frmOwn = new JFrame(m_dirCurrent.getVolume().getShortImageName());
+		m_frmOwn.setIconImage(m_app.m_frameicon.getImage());
 		m_frmOwn.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		m_frmOwn.addWindowListener(this);
 		Container cnt = m_frmOwn.getContentPane();
