@@ -29,6 +29,7 @@ import javax.swing.undo.*;
 import java.io.*;
 import java.util.*;
 import java.awt.print.*;
+import de.mizapf.timt.TIImageTool;
 
 class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListener, DocumentListener {
 
@@ -76,7 +77,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 	
 	class UndoAction extends AbstractAction {
 		public UndoAction() {
-			super("Undo");
+			super(TIImageTool.langstr("Undo"));
 			setEnabled(false);
 		}
 
@@ -85,7 +86,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 				m_UndoManager.undo();
 			} 
 			catch (CannotUndoException ex) {
-				error("Cannot undo this: " + ex.getMessage());
+				error(TIImageTool.langstr("UndoCannot") + ": " + ex.getMessage());
 			}
 			updateUndoState();
 			m_RedoAction.updateRedoState();
@@ -105,7 +106,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 
 	class RedoAction extends AbstractAction {
 		public RedoAction() {
-			super("Redo");
+			super(TIImageTool.langstr("Redo"));
 			setEnabled(false);
 		}
 
@@ -114,7 +115,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 				m_UndoManager.redo();
 			} 
 			catch (CannotRedoException ex) {
-				error("Cannot redo this: " + ex.getMessage());
+				error(TIImageTool.langstr("RedoCannot") + ": " + ex.getMessage());
 			}
 			updateRedoState();
 			m_UndoAction.updateUndoState();
@@ -133,9 +134,9 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 
 	DVEditorFrame(Frame owner, ImportContentAction ia, DirectoryView dv) {
 		// Parameter dialog should probably be raised in this class
-		super("New text content");
+		super(TIImageTool.langstr("NewText"));
 		m_flText = null;
-		m_sTitle = "Unnamed";
+		m_sTitle = TIImageTool.langstr("Unnamed");
 		createUI("");
 		setWindowTitle();
 		m_importact = ia;
@@ -146,24 +147,24 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 	private void createUI(String sText) {
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		JMenuBar jb = new JMenuBar();
-		JMenu jmFile = new JMenu("File");
+		JMenu jmFile = new JMenu(TIImageTool.langstr("File"));
 		jb.add(jmFile);
-		JMenu jmEdit = new JMenu("Edit");
+		JMenu jmEdit = new JMenu(TIImageTool.langstr("Edit"));
 		jb.add(jmEdit);
 
-		m_jmiClose = new JMenuItem("Close and save");
-		m_jmiQuit = new JMenuItem("Exit without saving");
+		m_jmiClose = new JMenuItem(TIImageTool.langstr("CloseSave"));
+		m_jmiQuit = new JMenuItem(TIImageTool.langstr("ExitNoSave"));
 		
 		jmFile.add(m_jmiClose);
 		jmFile.addSeparator();
 		jmFile.add(m_jmiQuit);
 
-		m_jmiUndo = new JMenuItem("Undo");
-		m_jmiRedo = new JMenuItem("Redo");
-		m_jmiCut = new JMenuItem("Cut");
-		m_jmiCopy = new JMenuItem("Copy");
-		m_jmiPaste = new JMenuItem("Paste");
-		m_jmiSelectAll = new JMenuItem("Select all");
+		m_jmiUndo = new JMenuItem(TIImageTool.langstr("Undo"));
+		m_jmiRedo = new JMenuItem(TIImageTool.langstr("Redo"));
+		m_jmiCut = new JMenuItem(TIImageTool.langstr("Cut"));
+		m_jmiCopy = new JMenuItem(TIImageTool.langstr("Copy"));
+		m_jmiPaste = new JMenuItem(TIImageTool.langstr("Paste"));
+		m_jmiSelectAll = new JMenuItem(TIImageTool.langstr("SelectAll"));
 		
 		jmEdit.add(m_jmiUndo);
 		jmEdit.add(m_jmiRedo);		  
@@ -287,7 +288,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 		if (ae.getActionCommand().equals(CUT)) {
 			Action ac = m_hmActions.get(DefaultEditorKit.cutAction);
 			if (ac==null) {
-				error("Internal error: Could not find cut operation");
+				error(String.format(TIImageTool.langstr("EditIntErr"), TIImageTool.langstr("Cut")));
 				return;
 			}
 			// m_jmiPaste.setEnabled(true);
@@ -297,7 +298,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 		if (ae.getActionCommand().equals(COPY)) {
 			Action ac = m_hmActions.get(DefaultEditorKit.copyAction);
 			if (ac==null) {
-				error("Internal error: Could not find copy operation");
+				error(String.format(TIImageTool.langstr("EditIntErr"), TIImageTool.langstr("Copy")));
 				return;
 			}
 			// m_jmiPaste.setEnabled(true);
@@ -307,7 +308,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 		if (ae.getActionCommand().equals(PASTE)) {
 			Action ac = m_hmActions.get(DefaultEditorKit.pasteAction);
 			if (ac==null) {
-				error("Internal error: Could not find paste operation");
+				error(String.format(TIImageTool.langstr("EditIntErr"), TIImageTool.langstr("Paste")));
 				return;
 			}
 			ac.actionPerformed(ae);
@@ -316,7 +317,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 		if (ae.getActionCommand().equals(SELECT_ALL)) {
 			Action ac = m_hmActions.get(DefaultEditorKit.selectAllAction);
 			if (ac==null) {
-				error("Internal error: Could not find select_all operation");
+				error(String.format(TIImageTool.langstr("EditIntErr"), TIImageTool.langstr("SelectAll")));
 				return;
 			}
 			ac.actionPerformed(ae);
@@ -345,16 +346,16 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 	}
  
 	int check(String sMessage) {
-		return JOptionPane.showConfirmDialog(this, sMessage, "Attention", 
+		return JOptionPane.showConfirmDialog(this, sMessage, TIImageTool.langstr("Attention"), 
 			JOptionPane.YES_NO_OPTION,
 			JOptionPane.QUESTION_MESSAGE);
 	}
 		
 	public void info(String sInfo) {
-		JOptionPane.showMessageDialog(this, sInfo, "Information", JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(this, sInfo, TIImageTool.langstr("Information"), JOptionPane.INFORMATION_MESSAGE);
 	}
 	
 	public void error(String sError) {
-		JOptionPane.showMessageDialog(this, sError, "Error", JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(this, sError, TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 	}
 }

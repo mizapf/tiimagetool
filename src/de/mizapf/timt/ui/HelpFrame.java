@@ -35,6 +35,8 @@ import java.awt.Component;
 import java.awt.Container;
 import javax.swing.event.HyperlinkEvent;
 
+import de.mizapf.timt.TIImageTool;
+
 public class HelpFrame extends JFrame implements HyperlinkListener {
 
 	private static final String FONTHLP = Font.SANS_SERIF;
@@ -42,7 +44,7 @@ public class HelpFrame extends JFrame implements HyperlinkListener {
 	JEditorPane m_jep;
 		
 	HelpFrame() {
-		super("TIImageTool Help");
+		super(TIImageTool.langstr("HelpTitle"));
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 	}
 
@@ -54,7 +56,7 @@ public class HelpFrame extends JFrame implements HyperlinkListener {
 		Class thisClass = getClass();
 		InputStream is = thisClass.getResourceAsStream("help.html");
 		if (is==null) {
-			sText = "\n*** Help text not found ***";
+			sText = "\n*** " + TIImageTool.langstr("HelpNotFound") + " ***";
 			m_jep = new JEditorPane("text/plain", sText);
 		}
 		else {
@@ -67,7 +69,7 @@ public class HelpFrame extends JFrame implements HyperlinkListener {
 				m_jep.addHyperlinkListener(this);
 			}
 			catch (IOException iox) {
-				sText = "IOException";
+				sText = TIImageTool.langstr("IOError");
 				m_jep = new JEditorPane("text/plain", sText);
 			}
 		}

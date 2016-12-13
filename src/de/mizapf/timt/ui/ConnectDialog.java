@@ -25,6 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import de.mizapf.timt.conn.SerialConnection;
+import de.mizapf.timt.TIImageTool;
 
 public class ConnectDialog extends ToolDialog implements ActionListener {
 	
@@ -36,7 +37,7 @@ public class ConnectDialog extends ToolDialog implements ActionListener {
 	JComboBox<String>		m_jcProtocol;
 			
 	public ConnectDialog(JFrame owner) {
-		super(owner, "Serial connection setup");
+		super(owner, TIImageTool.langstr("SerialConnect"));
 	}
 	
 /*
@@ -55,33 +56,33 @@ public class ConnectDialog extends ToolDialog implements ActionListener {
 */	
 	public void createGui(Font font, boolean bUpload) throws IOException {
 		prepareGui();
-		determineWidth("Serial Adapter");
+		determineWidth(TIImageTool.langstr("SerialColumn"));
 
 		String[] asAdapters = SerialConnection.getPorts();
-		if (asAdapters==null) throw new IOException("No serial ports found");
+		if (asAdapters==null) throw new IOException(TIImageTool.langstr("NoSerialPorts"));
 
 		m_jcAdapters = new JComboBox<String>(asAdapters);
-		addLine("Serial adapter", m_jcAdapters);
+		addLine(TIImageTool.langstr("SerialAdapter"), m_jcAdapters);
 
 		String[] asSpeed = { "57600", "38400", "19200", "9600", "4800", "2400", "1200", "300", "110" }; 		
 		m_jcSpeed = new JComboBox<String>(asSpeed);
 		m_jcSpeed.setSelectedIndex(2);
-		addLine("Speed", m_jcSpeed);
+		addLine(TIImageTool.langstr("SerialSpeed"), m_jcSpeed);
 		
 		String[] asDatabits = { "8", "7" };
 		m_jcDatabits = new JComboBox<String>(asDatabits);
 		m_jcDatabits.setSelectedIndex(0);
-		addLine("Data bits", m_jcDatabits);
+		addLine(TIImageTool.langstr("SerialBits"), m_jcDatabits);
 		
 		String[] asParity = { "None", "Odd", "Even" };
 		m_jcParity = new JComboBox<String>(asParity);
 		m_jcParity.setSelectedIndex(0);
-		addLine("Parity", m_jcParity);
+		addLine(TIImageTool.langstr("SerialParity"), m_jcParity);
 
 		String[] asStopbits = { "1", "2" };
 		m_jcStopbits = new JComboBox<String>(asStopbits);
 		m_jcStopbits.setSelectedIndex(0);
-		addLine("Stop bits", m_jcStopbits);
+		addLine(TIImageTool.langstr("SerialStop"), m_jcStopbits);
 
 		String[] asProtocolUpload = { "XModem", "XModem-1K" };
 		String[] asProtocolDownload = { "XModem", "XModem/CRC" };
@@ -90,7 +91,7 @@ public class ConnectDialog extends ToolDialog implements ActionListener {
 		else
 			m_jcProtocol = new JComboBox<String>(asProtocolDownload);
 
-		addLine("Protocol", m_jcProtocol);
+		addLine(TIImageTool.langstr("SerialProtocol"), m_jcProtocol);
 		addButtons();		
 	}
 	

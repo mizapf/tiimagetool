@@ -69,7 +69,7 @@
 <h1>TIImageTool</h1>
 <p style="text-align:center">Easily manage TI-99 floppy and hard disk images</p>
 
-<div class="version">Version: <span style="font-weight:bold">2.3.5</span>; November 2016</div>
+<div class="version">Version: <span style="font-weight:bold">2.3.9</span>; December 2016</div>
 <div class="author">Author: Michael Zapf<br/>Contact: ti99@mizapf.de<br/>www.mizapf.de</div>
 
 <p style="text-align:center">Also see <span style="font-weight:bold">www.ninerpedia.org</span> for more technical
@@ -179,6 +179,8 @@ details.</p>
 <ul>
 <li>Sector editor</li>
 <li>Compact Flash / CF7 handling</li>
+<li>RLE-128 format</li>
+<li>Localization</li>
 </ul>
 
 <a name="why"></a>
@@ -424,18 +426,26 @@ or even between an image and the PC file system and vice versa. The DnD support 
 all common gestures, but has some few limitations that you should be aware of.</p>
 <p>In most cases, DnD is simply done by clicking on a file, holding the mouse
 button while moving the pointer to a target area, and then releasing the button.</p>
-<p><strong>Moving</strong> is the default operation in TIImageTool. This
-means that after the operation, the file is added to the target image (where you
-released the mouse button), and it is removed from the image from where you
-dragged the file away.</p>
+<p><strong>Moving</strong> means that after the operation, the file is added 
+to the target image (where you released the mouse button), and it is removed 
+from the image from where you dragged the file away. Press and hold the <strong>Shift</strong>
+key while moving the file to the destination.</p>
 <p><strong>Copying</strong> is what you may want to do in almost the same number
 of times. You can specify that the DnD gesture means copying by pressing and holding the
 <strong>Ctrl</strong> button on the keyboard when you drop the file. In this 
 case, the file will not be removed from its origin.</p>
-<p>You can copy single files, but also a set of files from a single view. For this
+<p>If you do not press Shift or Ctrl, the program may pop up a small dialog
+window to ask whether you intend to move or copy the files or directories. This
+feature can be enabled or disabled in the <a href="#pref">Preferences</a>. On
+MacOS the Drag and Drop support of Java seems to have some issues here; obviously
+the Shift and Ctrl keys are not checked during the drag, so there will always
+be a dialog window, even when you press Shift or Ctrl. In that case you may
+choose to disable this dialog completely; when no key is pressed, <strong>moving</strong> will
+be assumed automatically.</p>
+<p>You can copy or move single files, but also a set of files from a single view. For this
 purpose you must mark the files as already described above (left-clicking, 
 together with Shift or Ctrl keys) and then drag them to the target view.</p>
-<p>We're not done yet. You can also copy directories; they behave in the same
+<p>You can also copy directories; they behave in the same
 way as your files. One exception though, you cannot drag a directory into another
 directory on a floppy disk, since the floppy disk file system does not support
 nested directories.</p>
@@ -2487,6 +2497,11 @@ be shown in a "detached" window instead of in a tabbed pane of the main window.<
 is the <em>Metal Look-and-Feel</em>.</li>
 <li><em>Show hints on startup</em>: When set, hints will be shown on each program start.
 If you change your mind, you can modify this setting any time.</li>
+<li><em>Show options for drag-and-drop</em>: When set, a dialog window appears
+at the end of the drag-and-drop process when neither Shift nor Ctrl keys were
+pressed.</li>
+<li><em>Language</em>: Changes the language of the texts on the user interface.</li>
+
 </ul>
 <p><strong>Paths</strong></p>
 <ul>

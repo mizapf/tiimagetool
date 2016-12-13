@@ -57,32 +57,28 @@ public class CheckFSAction extends Activity {
 		/* Part 0: Check CF7 inconsistency */
 		if (vol.isCF7Volume()) {
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-			ps.println("===========  Checking CF7 inconsistency ===========\n");
+			ps.println("===========  " + imagetool.langstr("CheckingCF7Incons") + " ===========\n");
 	
 			try {
 				int[] geom = new int[5];
 				boolean badcf7 = ImageCheck.checkCF7Inconsistency(vol, geom);
-				
+				// total, heads, tracks, sectors, density 
 				if (badcf7) {
-					ps.println("The CF7 volume has inconsistent geometry data:\n");
-					ps.println("total sectors = " + geom[0]);
-					ps.println("tracks = " + geom[2]);
-					ps.println("heads = " + geom[1]);
-					ps.println("Sectors per track = " + geom[3]);
-					ps.println("density = " + geom[4] + "\n");
+					ps.println(imagetool.langstr("CF7Incons1") + "\n");
+					ps.println(String.format(imagetool.langstr("CF7InconsGeom"), geom[0], geom[1], geom[2], geom[3], geom[4]));
 					
 					StringBuilder sbMsg = new StringBuilder();
 					sbMsg.append("<html>");
-					sbMsg.append("The volume is a CF7 volume and should be defined with 1600 total sectors, ");
-					sbMsg.append("<br>2 heads, 20 sectors per track, and 40 tracks.");
-					sbMsg.append("<br><br>Instead, it defines ").append(geom[0]).append(" sectors, ").append(geom[1]).append(" heads, ");
-					sbMsg.append(geom[3]).append(" sectors per track, and ").append(geom[2]).append(" tracks.");
-					sbMsg.append("<br><br>Shall I fix this? You can free the additional space in the next step.");
+					sbMsg.append(String.format(imagetool.langstr("CF7Incons2"), 1600, 2, 20, 40, 2));
+					sbMsg.append("<br><br>");
+					sbMsg.append(String.format(imagetool.langstr("CF7Incons3"), geom[0], geom[1], geom[2], geom[3], geom[4]));
+					sbMsg.append("<br><br>");
+					sbMsg.append(imagetool.langstr("CF7Incons4"));
 					sbMsg.append("</html>");
 					JPanel jp = new JPanel();		
 					JLabel jl = new JLabel(sbMsg.toString());
 					jp.add(jl);
-					nRet = JOptionPane.showConfirmDialog(m_parent, jp, "File system check", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+					nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 					
 					if (nRet == JOptionPane.YES_OPTION) {
 						bChangedSector0 = true;
@@ -98,16 +94,16 @@ public class CheckFSAction extends Activity {
 					bErrors = true;
 				}
 				else {
-					ps.println("No inconsistencies found\n");
+					ps.println(imagetool.langstr("NoIncons") + "\n");
 				}
 			}
 			catch (IOException iox) {
 				iox.printStackTrace();
-				ps.println("IOException: " + iox.getClass().getName() + ", " + iox.getMessage());
+				ps.println(imagetool.langstr("IOError") + iox.getClass().getName() + ", " + iox.getMessage());
 			}
 			catch (ImageException ix) {
 				ix.printStackTrace();
-				ps.println("Image error: " + ix.getMessage());
+				ps.println(imagetool.langstr("ImageError") + ": " + ix.getMessage());
 			}
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));			
 		}		
@@ -115,7 +111,7 @@ public class CheckFSAction extends Activity {
 		/* Part 1: Check underallocation */
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		int savedResp = -1;		
-		ps.println("===========  Checking underallocation ===========\n");
+		ps.println("===========  " + imagetool.langstr("CheckingUnder") +  " ===========\n");
 		allocMap = vol.getAllocationMap();
 		ArrayList<AllocationGapList> broken = new ArrayList<AllocationGapList>();
 
@@ -125,14 +121,19 @@ public class CheckFSAction extends Activity {
 		// Now report
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));			
 		if (broken.size()>0) bErrors = true;
-		else ps.println("No underallocation errors.\n");
+		else ps.println(imagetool.langstr("NoUnder") + "\n");
 
 		for (AllocationGapList agl:broken) {
 
 			StringBuilder sbMsg = new StringBuilder();
 			sbMsg.append("<html>");
-			sbMsg.append("The file <span style=\"color:blue\">").append(agl.getName()).append("</span> extends over the following unallocated locations:<br><br>");
-			ps.println("File " + agl.getName() + " extends over the following unallocated locations:\n");
+			String fileblue = "<span style=\"color:blue\">" + agl.getName() + "</span>";
+			sbMsg.append(String.format(imagetool.langstr("FileExtends"), fileblue));
+			sbMsg.append("<br><br>");
+			
+			ps.println();
+			ps.print(String.format(imagetool.langstr("FileExtends"), agl.getName()) + ": ");
+
 			int[] nAU = agl.getAllocationGaps();
 			for (int n=0; n < nAU.length-1; n++) {
 				sbMsg.append(Integer.valueOf(nAU[n])).append(", ");
@@ -141,17 +142,20 @@ public class CheckFSAction extends Activity {
 			}
 			sbMsg.append(Integer.valueOf(nAU[nAU.length-1])).append(".<br>");
 			ps.println(Integer.valueOf(nAU[nAU.length-1]));
-			sbMsg.append("<br>This may lead to data loss or file corruption when new files are stored.");
-			sbMsg.append("<br><br>Allocated these AUs for this file?");
+			
+			sbMsg.append("<br>");
+			sbMsg.append(imagetool.langstr("DataLoss"));
 			sbMsg.append("</html>");
 
 			if (savedResp == -1) {
-				JPanel jp = new JPanel();		
+				JPanel jp = new JPanel();
+				jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 				JLabel jl = new JLabel(sbMsg.toString());
 				jp.add(jl);			
-				cb = new JCheckBox("Repeat my decision for all AUs to be allocated");
+				jp.add(Box.createVerticalStrut(10));
+				cb = new JCheckBox(imagetool.langstr("RepeatAUAlloc"));
 				jp.add(cb);
-				nRet = JOptionPane.showConfirmDialog(m_parent, jp, "File system check", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 			}
 			else {
 				nRet = savedResp;
@@ -184,8 +188,9 @@ public class CheckFSAction extends Activity {
 			This usually means that at least one of both files is corrupt at
 			that point.
 		*/
-		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));		
-		ps.println("===========  Checking overallocation ===========\n");
+		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		ps.println();		
+		ps.println("===========  " + imagetool.langstr("CheckingOver") +  " ===========\n");
 
 		ArrayList<AllocationDomain> alloc = new ArrayList<AllocationDomain>();
 
@@ -196,26 +201,30 @@ public class CheckFSAction extends Activity {
 		savedResp = -1;
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));			
 		if (alloc.size()>0) bErrors = true;
-		else ps.println("No overallocation errors.\n");
+		else ps.println(imagetool.langstr("NoOver") + "\n");
 		
 		for (AllocationDomain ad:alloc) {
 			if (ad.isUnassigned()) {
-				ps.println("AU " + ad.getAU() + " is not assigned to any reachable file or directory.");
+				ps.println(String.format(imagetool.langstr("AUNotAssigned"), String.valueOf(ad.getAU())));
 				
 				if (savedResp == -1) {
+					String aublue = "<span style=\"color:blue\">" + ad.getAU() + "</span>";
 					StringBuilder sbMsg = new StringBuilder();
-					sbMsg.append("<html>");				
-					sbMsg.append("The allocation unit <span style=\"color:blue\">").append(ad.getAU()).append("</span> is not assigned to any reachable file or directory.");
-					sbMsg.append("<br>Free this allocation unit?");
+					sbMsg.append("<html>");		
+					sbMsg.append(String.format(imagetool.langstr("AUNotAssigned"), aublue));
+					sbMsg.append("<br><br>");
+					sbMsg.append(imagetool.langstr("AUFree"));
 					sbMsg.append("</html>");
 				
 					JPanel jp = new JPanel();
 					jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 					JLabel jl = new JLabel(sbMsg.toString());
+					jp.add(Box.createVerticalStrut(10));
 					jp.add(jl);
-					cb = new JCheckBox("Repeat my decision for all AUs to be freed");
+					jp.add(Box.createVerticalStrut(10));
+					cb = new JCheckBox(imagetool.langstr("RepeatAUFree"));
 					jp.add(cb);
-					nRet = JOptionPane.showConfirmDialog(m_parent, jp, "File system check", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+					nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 				}
 				else {
 					nRet = savedResp;
@@ -240,10 +249,11 @@ public class CheckFSAction extends Activity {
 		for (AllocationDomain ad:alloc) {
 			if (!ad.isUnassigned()) {
 				StringBuilder sbMsg = new StringBuilder();
+				String aublue = "<span style=\"color:blue\">" + ad.getAU() + "</span>";
 				sbMsg.append("<html>");				
-				sbMsg.append("The allocation unit <span style=\"color:blue\">").append(ad.getAU()).append("</span> is allocated to the following file system objects:<br>");
-
-				ps.println("AU " + ad.getAU() + " is allocated to the following file system objects:\n");
+				sbMsg.append(String.format(imagetool.langstr("AUCrossAllocated"), aublue));
+				sbMsg.append("<br>");	
+				ps.println(String.format(imagetool.langstr("AUCrossAllocated"), String.valueOf(ad.getAU())));
 
 				String[] asEl = ad.getAllocations();
 				boolean first = true;
@@ -260,17 +270,16 @@ public class CheckFSAction extends Activity {
 				
 				if (savedResp == -1) {
 					sbMsg.append(".<br>");
-					
-					sbMsg.append("<br>You should make copies of those files. Check whether they are corrupt or can be repaired.<br>");
-					sbMsg.append("Then you must manually delete these files from this image. No action can be taken at this point.");
-					sbMsg.append("<br>Continue this test?");
+					sbMsg.append(imagetool.langstr("AUCrossSuggest"));
+					sbMsg.append("<br>");
+					sbMsg.append(imagetool.langstr("ContinueTest"));
 					sbMsg.append("</html>");
 				
 					JPanel jp = new JPanel();
 					jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 					JLabel jl = new JLabel(sbMsg.toString());
 					jp.add(jl);
-					nRet = JOptionPane.showConfirmDialog(m_parent, jp, "File system check", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+					nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 				}
 				
 				if (nRet == JOptionPane.NO_OPTION) {
@@ -285,7 +294,7 @@ public class CheckFSAction extends Activity {
 		}
 
 		/* Part 3: Broken sectors */
-		ps.println("===========  Checking broken sectors ===========\n");
+		ps.println("===========  " + imagetool.langstr("CheckingBroken") +  " ===========\n");
 		savedResp = -1;
 		
 		ArrayList<SectorFaultList> brokensect = new ArrayList<SectorFaultList>();
@@ -295,15 +304,18 @@ public class CheckFSAction extends Activity {
 			bErrors = true;
 		}
 		else {
-			ps.println("No sector data errors.\n");
+			ps.println(imagetool.langstr("NothingBroken") + "\n");
 		}
 			
 		for (SectorFaultList sfl:brokensect) {
+			String fileblue = "<span style=\"color:blue\">" + sfl.getName() + "</span>";
+
 			StringBuilder sbMsg = new StringBuilder();
 			sbMsg.append("<html>");
-			sbMsg.append("The file <span style=\"color:blue\">" + sfl.getName() + "</span> contains sectors that are likely to be broken:<br><br>"); 
+			sbMsg.append(String.format(imagetool.langstr("BrokenSectors"), fileblue));
+			sbMsg.append(":<br><br>");			
 
-			ps.println("The file " + sfl.getName() + " contains sectors that are likely to be broken:");
+			ps.println(String.format(imagetool.langstr("BrokenSectors"), sfl.getName()));
 			
 			int[] anSect = sfl.getFaultySectors();
 			if (sfl.getProblem()!=null) {
@@ -312,36 +324,35 @@ public class CheckFSAction extends Activity {
 			}
 			else {
 				int n = 0;
-				boolean first = true;
 				for (n=0; n < anSect.length && n < 100; n++) {
-					if (!first) sbMsg.append(", ");
-					first = false;
-					if (n % 10==9) sbMsg.append("<br>");
 					sbMsg.append(Integer.valueOf(anSect[n]));
+					if (n != anSect.length-1) sbMsg.append(", "); 
+					if (n % 10==9) sbMsg.append("<br>");
 				}
 				if (n !=  anSect.length) { 
-					sbMsg.append(" ... (" + (anSect.length-101) + " omitted) ... ");
+					sbMsg.append("... (");				
+					sbMsg.append(String.format(imagetool.langstr("Omitted"), anSect.length-101));
+					sbMsg.append(") ...");
 				}
 
 				for (n=0; n < anSect.length; n++) {
 					ps.println(Integer.valueOf(anSect[n]));
 				}
 
-				sbMsg.append(".<br>");				
-				sbMsg.append("<br>These sectors have been found to be filled with E5E5, DEAD, or D7A5.<br>");
-				sbMsg.append("The values may indicate that the original contents were lost.<br>");
-				sbMsg.append("You should verify the integrity of these files. No action can be taken at this point.<br>");
+				sbMsg.append(".<br><br>");			
+				sbMsg.append(imagetool.langstr("ReportSector"));
 			}
 
 			if (savedResp == -1) {
 				JPanel jp = new JPanel();
 				jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 				jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
-				sbMsg.append("<br>Continue this test?");
+				sbMsg.append("<br>");
+				sbMsg.append(imagetool.langstr("ContinueTest"));
 				sbMsg.append("</html>");
 				JLabel jl = new JLabel(sbMsg.toString());
 				jp.add(jl);
-				nRet = JOptionPane.showConfirmDialog(m_parent, jp, "File system check", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 				
 				if (nRet == JOptionPane.NO_OPTION) {
 					savedResp = 0;
@@ -355,7 +366,7 @@ public class CheckFSAction extends Activity {
 		}
 		
 		/* Part 4. L3 check. */
-		ps.println("===========  Checking L3 swap issue ===========\n");
+		ps.println("===========  " + imagetool.langstr("CheckL3") +  " ===========\n");
 		boolean changedL3 = false;
 		savedResp = -1;
 
@@ -365,29 +376,30 @@ public class CheckFSAction extends Activity {
 		
 		if (brokenL3.size()>0) bErrors = true;
 		else {
-			ps.println("No L3 swap errors.\n");
+			ps.println(imagetool.langstr("L3OK") + ".\n");
 		}
 
 		JCheckBox cb2 = null;
 	
 		for (TFile brL3file : brokenL3) {
-			ps.println("The file " + brL3file.getPathname() + " has a swapped record count (L3).");
+			String fileblue = "<span style=\"color:blue\">" + brL3file.getPathname() + "</span>";
+			ps.println(String.format(imagetool.langstr("FileL3"), brL3file.getPathname()));
+			
 			if (savedResp == -1) {
 				JPanel jp = new JPanel();
 				jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 				StringBuilder sbMsg = new StringBuilder();
 				sbMsg.append("<html>");
-				sbMsg.append("The file <span style=\"color:blue\">" + brL3file.getPathname() + "</span> has a swapped record count (L3)."); 
-				sbMsg.append("<br>This may have been caused by a bug in a floppy DSR.");
-				sbMsg.append("<br>Fix this issue?<br><br>");
-				sbMsg.append("</html>");
-				
+				sbMsg.append(String.format(imagetool.langstr("FileL3"), fileblue));
+				sbMsg.append("<br>");
+				sbMsg.append(imagetool.langstr("L3Cause"));
+				sbMsg.append("<br><br></html>");				
 				JLabel jl = new JLabel(sbMsg.toString());
 				jp.add(jl);
-				cb2 = new JCheckBox("Repeat my decision for all L3 issues");
+				cb2 = new JCheckBox(imagetool.langstr("RepeatL3"));
 				jp.add(cb2);
 				
-				nRet = JOptionPane.showConfirmDialog(m_parent, jp, "File system check", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 			}
 			else {
 				nRet = savedResp;
@@ -419,23 +431,25 @@ public class CheckFSAction extends Activity {
 		}
 		
 		if (badcrc != -1) {
-			ps.println("===========  Checking CRC issues (TDF only) ===========\n");
+			ps.println("===========  " + imagetool.langstr("CheckCRC") +  " ===========\n");
 			
 			if (badcrc > 0) {
-				ps.println("Found " + badcrc + " CRC errors");
+				ps.println(String.format(imagetool.langstr("FoundCRC"), badcrc));
 				JPanel jp = new JPanel();
 				jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 				StringBuilder sbMsg = new StringBuilder();
 				sbMsg.append("<html>");
-				sbMsg.append("The disk image has sectors with CRC errors in the header or data part.");
-				sbMsg.append("<br>Total count: ").append(badcrc);
-				sbMsg.append("<br><br>Fix this issue?<br><br>");
-				sbMsg.append("</html>");
+				sbMsg.append(imagetool.langstr("HasCRCErrors"));
+				sbMsg.append("<br>");
+				sbMsg.append(String.format(imagetool.langstr("TotalCount"), badcrc));
+				sbMsg.append("<br><br>");
+				sbMsg.append(imagetool.langstr("FixCRC"));
+				sbMsg.append("<br><br></html>");
 				JLabel jl = new JLabel(sbMsg.toString());
 				jp.add(jl);
-				cb2 = new JCheckBox("Reset the CRC fields to F7F7");
+				cb2 = new JCheckBox(imagetool.langstr("ResetF7F7"));
 				jp.add(cb2);
-				nRet = JOptionPane.showConfirmDialog(m_parent, jp, "File system check", JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 				if (nRet == JOptionPane.CANCEL_OPTION) {
 					return;
 				}
@@ -450,7 +464,7 @@ public class CheckFSAction extends Activity {
 				}			
 			}
 			else {
-				ps.println("No CRC errors.");
+				ps.println(String.format(imagetool.langstr("FoundCRC"), 0));
 			}
 		}
 		
@@ -458,7 +472,7 @@ public class CheckFSAction extends Activity {
 		            Done with the check. 
 		 **************************************************************/
 		if (bChangedSector0 || bChangedAlloc || changedL3) {
-			nRet = JOptionPane.showConfirmDialog(m_parent, "Commit the changes to the image now?", "File system check", JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+			nRet = JOptionPane.showConfirmDialog(m_parent, imagetool.langstr("CommitCheck"), imagetool.langstr("FileSystemCheck"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (nRet == JOptionPane.OK_OPTION) {
 //				if (vol.isFloppyImage()) {
 					try {
@@ -468,41 +482,41 @@ public class CheckFSAction extends Activity {
 						if (changedL3) {
 							// Write all affected sectors
 							for (TFile f : fixL3) {
-								ps.println("Swapped L3 count in file " + f.getPathname());
+								ps.println(String.format(imagetool.langstr("SwappedL3"), f.getPathname()));
 								f.rewriteFIB();
 							}
 						}
 						vol.reopenForRead();
 					}
 					catch (FileNotFoundException fnfx) {
-						JOptionPane.showMessageDialog(m_parent, "Image file is write-protected.", "Write error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageFWP"), imagetool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE); 
 						return;
 					}
 					catch (IOException iox) {
-						JOptionPane.showMessageDialog(m_parent, "Image broken: " + iox.getClass().getName(), "Write error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					catch (ImageException ix) {
-						JOptionPane.showMessageDialog(m_parent, "Image broken: " + ix.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					catch (ProtectedException px) {
-						JOptionPane.showMessageDialog(m_parent, "Image protected: " + px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("VolumeWP") + ": " + px.getMessage(), imagetool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 //				}
 			}
-			imagetool.showTextContent("Results", baos.toString());
+			imagetool.showTextContent(imagetool.langstr("Results"), baos.toString());
 		}
 		else {
 			if (!bErrors) {
-				nRet = JOptionPane.showConfirmDialog(m_parent, "No errors found. Do you want to see a report?", "File system check", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+				nRet = JOptionPane.showConfirmDialog(m_parent, imagetool.langstr("NoErrors"), imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
 				if (nRet == JOptionPane.YES_OPTION) {
-					imagetool.showTextContent("Results", baos.toString());  			
+					imagetool.showTextContent(imagetool.langstr("Results"), baos.toString());  			
 				}
 			}
 			else
-				imagetool.showTextContent("Results", baos.toString());
+				imagetool.showTextContent(imagetool.langstr("Results"), baos.toString());
 		}
 		
 		imagetool.refreshPanel(vol);			

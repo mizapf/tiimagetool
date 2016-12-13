@@ -28,6 +28,7 @@ import de.mizapf.timt.files.*;
 import java.io.*;
 import java.awt.Dimension;
 import java.awt.event.KeyEvent; 
+import de.mizapf.timt.TIImageTool;
 
 public class ExportEmulateAction extends Activity {
 
@@ -76,7 +77,7 @@ public class ExportEmulateAction extends Activity {
 						}
 						
 						if (file.exists()) {		
-							int nRet = JOptionPane.showConfirmDialog(m_parent, "Image file already exists. Overwrite?", "Export Emulate File", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+							int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ExistsOverwrite"), TIImageTool.langstr("ExportEmu"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 							if (nRet == JOptionPane.NO_OPTION) return;
 						}
 						
@@ -85,14 +86,14 @@ public class ExportEmulateAction extends Activity {
 						FileOutputStream fos = new FileOutputStream(file);
 						fos.write(((TFile)selected).getRawContent());
 						fos.close();
-						JOptionPane.showMessageDialog(m_parent, "Export completed sucessfully", "Export Emulate", JOptionPane.INFORMATION_MESSAGE);	
+						JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("Export")), TIImageTool.langstr("ExportEmu"), JOptionPane.INFORMATION_MESSAGE);	
 					}
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getClass().getName(), "Error saving file", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getClass().getName(), TIImageTool.langstr("IOError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}

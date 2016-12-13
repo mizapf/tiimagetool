@@ -24,6 +24,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.font.*;
+import de.mizapf.timt.TIImageTool;
 
 class CHSDialog extends ToolDialog implements ActionListener {
 	
@@ -37,7 +38,7 @@ class CHSDialog extends ToolDialog implements ActionListener {
 	JTextField		m_tfPrecomp; // 0-127
 		
 	CHSDialog(JFrame owner) {
-		super(owner, "Define geometry");
+		super(owner, TIImageTool.langstr("DefineGeometry"));
 	}
 	
 /*
@@ -64,21 +65,21 @@ class CHSDialog extends ToolDialog implements ActionListener {
 		int nHeight = getHeight(font, "W");
 		
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth("Write precompensationXXX");
-		int nColumnWidth1 = fm.stringWidth("XXXXX");
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("CHSColumn"));
+		int nColumnWidth1 = 0; // fm.stringWidth("XXXXX");
 		
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
-		m_tfCylinders = putTextField(this, "Cylinders", "-", nColumnWidth, nColumnWidth1);
-		m_tfHeads = putTextField(this, "Heads", "16", nColumnWidth, nColumnWidth1); 
-		m_tfSectorsPerTrack = putTextField(this, "Sectors per track", "32", nColumnWidth, nColumnWidth1);
-		m_tfSectorLength = putTextField(this, "Sector length", "256", nColumnWidth, nColumnWidth1);
+		m_tfCylinders = putTextField(this, TIImageTool.langstr("Cylinders"), "-", nColumnWidth, nColumnWidth1);
+		m_tfHeads = putTextField(this, TIImageTool.langstr("Heads"), "16", nColumnWidth, nColumnWidth1); 
+		m_tfSectorsPerTrack = putTextField(this, TIImageTool.langstr("SectorsPerTrack"), "32", nColumnWidth, nColumnWidth1);
+		m_tfSectorLength = putTextField(this, TIImageTool.langstr("SectorLength"), "256", nColumnWidth, nColumnWidth1);
 		add(Box.createVerticalStrut(10));		
 
-		m_tfReducedCurrent = putTextField(this, "Reduced write current", "58", nColumnWidth, nColumnWidth1);
-		m_tfPrecomp = putTextField(this, "Write precompensation", "29", nColumnWidth, nColumnWidth1);
-		m_tfStepSpeed = putTextField(this, "Step speed", "1", nColumnWidth, nColumnWidth1);
-		m_chbBufferedStep = putCheckBox(this, "Buffered step", false, nColumnWidth);
+		m_tfReducedCurrent = putTextField(this, TIImageTool.langstr("ReducedWC"), "58", nColumnWidth, nColumnWidth1);
+		m_tfPrecomp = putTextField(this, TIImageTool.langstr("WritePC"), "29", nColumnWidth, nColumnWidth1);
+		m_tfStepSpeed = putTextField(this, TIImageTool.langstr("StepSpeed"), "1", nColumnWidth, nColumnWidth1);
+		m_chbBufferedStep = putCheckBox(this, TIImageTool.langstr("BufferedStep"), true, nColumnWidth);
 
 		add(Box.createVerticalStrut(10));		
 		add(Box.createVerticalGlue());

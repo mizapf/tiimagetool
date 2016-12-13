@@ -23,6 +23,7 @@ package de.mizapf.timt.ui;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import de.mizapf.timt.TIImageTool;
 
 class ArchiveDialog extends ToolDialog implements ActionListener {
 	
@@ -32,7 +33,7 @@ class ArchiveDialog extends ToolDialog implements ActionListener {
 	boolean m_bSet = false;
 	
 	ArchiveDialog(JFrame owner) {
-		super(owner, "Create archive");
+		super(owner, TIImageTool.langstr("CreateArchive"));
 	}
 	
 /*
@@ -50,7 +51,7 @@ class ArchiveDialog extends ToolDialog implements ActionListener {
 
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 		int nHeight = fm.getHeight();
-		int nColumnWidth = fm.stringWidth("Archive file nameXXXXX");
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("ArchiveDialogColumn"));
 		int nColumnWidth1 = fm.stringWidth("XXXXXXXXXXXX");
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
@@ -58,9 +59,9 @@ class ArchiveDialog extends ToolDialog implements ActionListener {
 				
 		String sProposed = sFirstFilename;
 		if (sProposed.length()>6) sProposed = sProposed.substring(0,6);
-		m_tfFilename = putTextField(this, "Archive file name", sProposed + "_ARK", nColumnWidth, nColumnWidth1);
+		m_tfFilename = putTextField(this, TIImageTool.langstr("ArchiveFileName"), sProposed + "_ARK", nColumnWidth, nColumnWidth1);
 			
-		m_chbCompression = putCheckBox(this, "LZW compression", true, nColumnWidth);
+		m_chbCompression = putCheckBox(this, TIImageTool.langstr("LZWComp"), true, nColumnWidth);
 		add(Box.createVerticalStrut(10));
 
 		add(Box.createVerticalGlue());

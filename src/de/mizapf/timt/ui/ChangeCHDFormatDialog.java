@@ -25,6 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.event.*;
 import de.mizapf.timt.files.*;
+import de.mizapf.timt.TIImageTool;
 
 class ChangeCHDFormatDialog extends ToolDialog {
 
@@ -33,7 +34,7 @@ class ChangeCHDFormatDialog extends ToolDialog {
 	JComboBox<String>	m_jcCHDVersion;
 	
 	ChangeCHDFormatDialog(JFrame owner) {
-		super(owner, "Change CHD Format");
+		super(owner, TIImageTool.langstr("ConvertCHDVersion"));
 	}
 	
 /*
@@ -52,23 +53,24 @@ class ChangeCHDFormatDialog extends ToolDialog {
 */	
 	public void createGui(Font font) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth("Convert to versionXXXXX");
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("ChangeCHDColumn"));
 
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
 		add(Box.createVerticalStrut(10));		
+		add(Box.createHorizontalStrut(300));		
 
-		putTextLine(this, "Convert CHD image file to another CHD version.", 0);
+		putTextLine(this, "!" + TIImageTool.langstr("ConvertTitle"), 0);
 
 		add(Box.createVerticalStrut(10));
 		
-		m_jlSourceImage = putLabel(this,"Image file", "-", nColumnWidth);  
-		m_jlCurrentFormat = putLabel(this, "Current version", "-", nColumnWidth);
+		m_jlSourceImage = putLabel(this, TIImageTool.langstr("ImageFile"), "-", nColumnWidth);  
+		m_jlCurrentFormat = putLabel(this, TIImageTool.langstr("CurrentVersion"), "-", nColumnWidth);
 
 		add(Box.createVerticalStrut(10));
 
 		String[] asOptio = { "4", "5" };
-		m_jcCHDVersion = putComboBox(this, "Convert to version", asOptio, 1, nColumnWidth);
+		m_jcCHDVersion = putComboBox(this, TIImageTool.langstr("ConvertTo"), asOptio, 1, nColumnWidth);
 		
 		add(Box.createVerticalStrut(10));
 		add(Box.createVerticalGlue());

@@ -61,7 +61,7 @@ public class ExportImageAction extends Activity {
 		if (nReturn == jfc.CANCEL_OPTION) return;
 		
 		ExportDialog expparm = new ExportDialog(m_parent);
-		expparm.createGui(imagetool.boldFont, imagetool.getPropertyString(imagetool.CONVERT, "/\\*_ __x."), Font.decode(imagetool.contentFont));
+		expparm.createGui(imagetool.boldFont, imagetool.getPropertyString(imagetool.CONVERT), Font.decode(imagetool.contentFont));
 		expparm.setVisible(true);
 		
 		if (expparm.confirmed()) {
@@ -71,22 +71,22 @@ public class ExportImageAction extends Activity {
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			try {
 				imagetool.exportDirectory(dirCurrent, jfc.getSelectedFile(), null, false);
-				JOptionPane.showMessageDialog(m_parent, "Export completed sucessfully", "Export files", JOptionPane.INFORMATION_MESSAGE);				
+				JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("Export")), TIImageTool.langstr("Export"), JOptionPane.INFORMATION_MESSAGE);				
 			}
 			catch (ImageException ix) { 
-				JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Error getting file", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ExportError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (FileNotFoundException fnfx) {
-				JOptionPane.showMessageDialog(m_parent, fnfx.getMessage(), "File or folder not found", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileFolderNotFound") + ": " + fnfx.getMessage(), TIImageTool.langstr("ExportError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (IOException iox) { 
-				JOptionPane.showMessageDialog(m_parent, iox.getClass().getName(), "Error exporting file", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ExportError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (ReplaceTableException rx) {
-				JOptionPane.showMessageDialog(m_parent, "Replacement list mismatch, must have same number of characters.", "Export problem", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ReplaceMismatch"), TIImageTool.langstr("ExportError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (InvalidNameException ix) {
-				JOptionPane.showMessageDialog(m_parent, "File name contains a character that cannot be used for the exported file.", "Export problem", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InvalidName"), TIImageTool.langstr("ExportError"), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

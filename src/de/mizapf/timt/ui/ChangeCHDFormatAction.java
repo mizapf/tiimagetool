@@ -74,21 +74,21 @@ public class ChangeCHDFormatAction extends Activity {
 		try {
 			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath());
 			if (!(ifsource instanceof MessCHDFormat)) {
-				JOptionPane.showMessageDialog(m_parent, "Not a MESS CHD image file.", "Invalid format error", JOptionPane.ERROR_MESSAGE);				
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("NotCHD"), imagetool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
 				return;
 			}
 			source = (MessCHDFormat)ifsource;
 		}
 		catch (FileNotFoundException fnfx) {
-			JOptionPane.showMessageDialog(m_parent, "File not found; has it been removed in the meantime?", "Read error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("FileNotFoundUnexp"), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return;
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_parent, "IO error: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return;
 		}
 		catch (ImageException ix) {
-			JOptionPane.showMessageDialog(m_parent, "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return;
 		}		
 		
@@ -105,12 +105,12 @@ public class ChangeCHDFormatAction extends Activity {
 			if (changeDialog.confirmed()) {
 				nNewFormat = changeDialog.getNewFormat();
 				if (nNewFormat < source.getVersion()) {
-					int nRet = JOptionPane.showConfirmDialog(m_parent, "Are you sure you want to downgrade to version " + nNewFormat + "?\nYou will not be able to use the image in current MESS releases.", "Convert format", JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
+					int nRet = JOptionPane.showConfirmDialog(m_parent, String.format(imagetool.langstr("SureToDowngrade"), nNewFormat), imagetool.langstr("ConvertCHDVersion"), JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
 					if (nRet != JOptionPane.OK_OPTION) bDone = false; 
 				}
 				else {
 					if (nNewFormat == source.getVersion()) {
-						JOptionPane.showMessageDialog(m_parent, "The image is already stored in this format; converting would have no effect.", "Convert format", JOptionPane.WARNING_MESSAGE); 
+						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ConvertNoEffect"), imagetool.langstr("ConvertCHDVersion"), JOptionPane.WARNING_MESSAGE); 
 						bDone = false;
 					}
 				}
@@ -154,12 +154,12 @@ public class ChangeCHDFormatAction extends Activity {
 			}
 		}
 		catch (IllegalOperationException iox) {	
-			JOptionPane.showMessageDialog(m_parent, iox.getMessage(), "Conversion error", JOptionPane.ERROR_MESSAGE);		
+			JOptionPane.showMessageDialog(m_parent, iox.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			return;
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_parent, "IO error while creating new image: " + iox.getClass().getName(), "Conversion error", JOptionPane.ERROR_MESSAGE);		
+			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("IOError") + " " + imagetool.langstr("WhileNewImage") + ": " + iox.getClass().getName(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			return;
 		}
@@ -179,17 +179,17 @@ public class ChangeCHDFormatAction extends Activity {
 			bOK = true;			
 		}
 		catch (ImageException ix) {
-			JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Conversion error", JOptionPane.ERROR_MESSAGE);		
+			JOptionPane.showMessageDialog(m_parent, ix.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
 		}
 		catch (FileNotFoundException fnfx) {
-			JOptionPane.showMessageDialog(m_parent, "Target file not found, seems to have disappeared.", "Conversion error", JOptionPane.ERROR_MESSAGE);		
+			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("TargetNotFoundUnexp"), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
 		}
 		catch (IOException iox) {
 			iox.printStackTrace();
-			JOptionPane.showMessageDialog(m_parent, "IO error while copying contents: " + iox.getClass().getName(), "Conversion error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_parent,  imagetool.langstr("IOError") + " " + imagetool.langstr("WhileCopyContents") + ": " , imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);
 		}
 		
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-		if (bOK) JOptionPane.showMessageDialog(m_parent, "Conversion completed successfully", "Conversion", JOptionPane.INFORMATION_MESSAGE);
+		if (bOK) JOptionPane.showMessageDialog(m_parent, String.format(imagetool.langstr("Completed"), imagetool.langstr("Conversion")), imagetool.langstr("ConvertCHDVersion"), JOptionPane.INFORMATION_MESSAGE);
 	}
 }

@@ -63,7 +63,7 @@
    <mkdir dir="${dist}/lib"/>
    <delete file="${dist}/lib/tiimagetool.jar"/>
    <jar jarfile="${dist}/lib/tiimagetool.jar" basedir="${build}" 
-	   includes="de/mizapf/timt/**/*.class de/mizapf/timt/ui/*.png de/mizapf/timt/ui/*.html de/mizapf/timt/ui/*.txt de/mizapf/timt/ui/*.jpg de/mizapf/timt/util/*.tfi de/mizapf/timt/util/autoexec.txt de/mizapf/timt/ui/names.prop de/mizapf/timt/ui/Strings*.properties">
+	   includes="de/mizapf/timt/**/*.class de/mizapf/timt/ui/*.png de/mizapf/timt/ui/*.html de/mizapf/timt/ui/*.txt de/mizapf/timt/ui/*.jpg de/mizapf/timt/util/*.tfi de/mizapf/timt/util/autoexec.txt de/mizapf/timt/ui/names*.prop de/mizapf/timt/ui/Strings*.properties">
 	   <manifest>
 		 <attribute name="Main-Class" value="de.mizapf.timt.TIImageTool" />
 	   </manifest>

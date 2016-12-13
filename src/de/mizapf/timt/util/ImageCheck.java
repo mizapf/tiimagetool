@@ -34,6 +34,8 @@ import java.io.PrintStream;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.util.Utilities;
 
+import de.mizapf.timt.TIImageTool;
+
 public class ImageCheck {
 	
 	static void check(String sImagename) throws FileNotFoundException, IOException, ImageException {
@@ -53,7 +55,7 @@ public class ImageCheck {
 		ArrayList<AllocationGapList> broken = new ArrayList<AllocationGapList>();
 		checkUnderAllocationInDir(image, image.getRootDirectory(), allocMap, broken, "", System.out);
 		if (broken.size()>0) {
-			System.out.println("Files with missing bit in allocation map");
+			System.out.println(TIImageTool.langstr("MissingBit"));
 			for (AllocationGapList agl:broken) {
 				System.out.print(agl);
 			}
@@ -62,7 +64,7 @@ public class ImageCheck {
 		ArrayList<AllocationDomain> alloc = new ArrayList<AllocationDomain>();
 		findAllocationFaults(image, allocMap, alloc, System.out);
 		if (alloc.size()>0) {
-			System.out.println("Allocation units that have no or multiple associated entities");
+			System.out.println(TIImageTool.langstr("AllocationError"));
 			for (AllocationDomain a:alloc) 
 				System.out.println(a);
 		}
@@ -82,17 +84,15 @@ public class ImageCheck {
 			// Check whether all FIBs of this file are allocated
 			for (int nFib : afib) {
 				int nAuFib = nFib / map.getAUSize();
-				ps.print("Sector " + nFib + " = FIB of file " + sbFullname.toString());
+				ps.print(String.format(TIImageTool.langstr("SectorFIB"), nFib, sbFullname.toString()));
 				if (!map.hasAllocated(nAuFib)) {
 					agl.addAU(nAuFib);
-					ps.println(":  ERROR: FIB at sector " + nFib + " not allocated");
+					ps.println(":  " + String.format(TIImageTool.langstr("NotAllocatedFIB"), nFib));
 				}
 			}
 			Interval[] ainv = aFile[i].getAllocatedBlocks();
 			try {
-				ps.print(", occupying interval");
-				if (ainv.length>1) ps.print("s");
-				ps.print(" ");
+				ps.print(", " + TIImageTool.langstr("Occupying") + " ");
 				boolean first = true;
 				for (int j=0; j < ainv.length; j++) {
 					if (!first) ps.print(", ");
@@ -106,7 +106,7 @@ public class ImageCheck {
 				ps.print("\n");
 			}
 			catch (IndexOutOfBoundsException ix) {
-				ps.println(":  ERROR: File " + sbFullname.toString() + " has invalid cluster pointers");
+				ps.println(":  " + String.format(TIImageTool.langstr("InvalidCluster"), sbFullname.toString()));
 			}
 			if (agl.size()>0) broken.add(agl);
 		}
@@ -124,7 +124,7 @@ public class ImageCheck {
 				broken.add(agl);
 			}
 			else {
-				ps.println("Sector " + ad[i].getDDRSector() + " = DDR of directory " + sbFullname.toString());
+				ps.print(String.format(TIImageTool.langstr("SectorDDR"), ad[i].getDDRSector(), sbFullname.toString()));
 			}
 			// Recurse
 			StringBuilder sbNew = new StringBuilder();
@@ -185,7 +185,7 @@ public class ImageCheck {
 			SectorFaultList sfl = new SectorFaultList(sbFullname.toString()); 
 
 			if (!TFile.validName(aFile[i].getName())) {
-				sfl.setProblem("Invalid directory entry '" + aFile[i].getName() + "'; file information block may be lost");
+				sfl.setProblem(String.format(TIImageTool.langstr("InvalidEntry"), aFile[i].getName()));
 			}
 			else {
 				try {
@@ -205,20 +205,20 @@ public class ImageCheck {
 				}
 				catch (EOFException ex) {
 					if (TFile.validName(aFile[i].getName())) {
-						sfl.setProblem("Damaged pointer, file unreadable");
+						sfl.setProblem(TIImageTool.langstr("DamagedPointer"));
 					}
 					else {
-						sfl.setProblem("Invalid directory entry; file information block may be lost");
+						sfl.setProblem(String.format(TIImageTool.langstr("InvalidEntry"), aFile[i].getName()));
 					}
 				}
 				catch (IOException iox) {
 					sfl.setProblem(iox.getClass() + ", " + iox.getMessage());
 				}
 				catch (FormatException fx) {
-					sfl.setProblem("File has no contents");
+					sfl.setProblem(TIImageTool.langstr("FileNoContents"));
 				}
 				catch (ImageException ix) {
-					sfl.setProblem("Cannot read file; probably lost clusters");
+					sfl.setProblem(TIImageTool.langstr("CannotReadFile"));
 					ix.printStackTrace();
 				}
 			}
@@ -267,7 +267,7 @@ public class ImageCheck {
 			for (int j=0; j < ainv.length; j++) {
 				if ((ainv[j].start <= au * nAuSize) && (au * nAuSize <= ainv[j].end)) {
 					alloc.addEntity(sFullname.toString());
-					ps.println("AU " + au + " belongs to " + sFullname.toString() + " (dirpos=" + pos + ", cluster=" + j + ")");
+					ps.println(String.format(TIImageTool.langstr("AUBelongs"), au, sFullname.toString(), pos, j));
 				}
 			}
 			pos++;

@@ -207,7 +207,6 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			m_app.closeVolume(m_dirCurrent.getVolume(), this);
 		}
 		catch (IOException iox) {
-			System.err.println("Error when closing image: " + iox.getMessage());
 			iox.printStackTrace();
 		}
 	}
@@ -342,7 +341,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			list = (List<Element>)t.getTransferData(DDData.elementCollection);
 		}
 		catch (UnsupportedFlavorException ufx) {
-			System.err.println("Unsupported flavor in copy operation: " + ufx);
+			System.err.println(TIImageTool.langstr("UnknownFlavor") + ": " + ufx);
 			return;
 		}
 		catch (IOException iox) {
@@ -723,23 +722,23 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				enterDirectory(ark);
 			}
 			catch (IllegalOperationException iox) {
-				JOptionPane.showMessageDialog(frame, iox.getMessage(), "Illegal operation", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, iox.getMessage(), TIImageTool.langstr("IllegalOperation"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (FormatException fx) {
-				JOptionPane.showMessageDialog(frame, fx.getMessage(), "Error during unpacking", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, fx.getMessage(), TIImageTool.langstr("UnpackError"), JOptionPane.ERROR_MESSAGE);
 			}		
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(frame, iox.getMessage(), "Error during unpacking", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, iox.getMessage(), TIImageTool.langstr("UnpackError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(frame, ix.getMessage(), "Error during unpacking", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(frame, ix.getMessage(), TIImageTool.langstr("UnpackError"), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		else {		
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			
 			// File operation
-			String sText = "no content";
+			String sText = TIImageTool.langstr("NoContent");
 			try {
 				if (file.isImageFile()) {
 					ViewImageAction va = new ViewImageAction();
@@ -751,7 +750,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 					if (file.isTextFile()) {
 						byte[] content = file.getRecordContent();
 						if (Utilities.checkForText(content)==false) {
-							int nRet = JOptionPane.showConfirmDialog(getFrame(), "File contains lots of unprintable characters. Show anyway?", "Read problem", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+							int nRet = JOptionPane.showConfirmDialog(getFrame(), TIImageTool.langstr("LotUnprint"), TIImageTool.langstr("Attention"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 							if (nRet==JOptionPane.NO_OPTION) {
 								frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 								return;
@@ -779,16 +778,16 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				}
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(frame, iox.getClass().getName(), "Error opening file", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(frame, iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (ArithmeticException ax) {
-				JOptionPane.showMessageDialog(frame, ax.getMessage(), "Error opening file", JOptionPane.ERROR_MESSAGE); 				
+				JOptionPane.showMessageDialog(frame, ax.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 				
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(frame, "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(frame, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (FormatException fx) {
-				JOptionPane.showMessageDialog(frame, fx.toString(), "Read error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(frame, fx.toString(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			frame.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}
@@ -801,20 +800,22 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	void openDnDChoiceMenu(Point mouse) {
 		// we're in the AWT thread here, no need for an invokeLater
 		m_dndmenu = new JPopupMenu();
-		m_iDnDMove = new JMenuItem("Move here    (Shift)");
+		m_iDnDMove = new JMenuItem(TIImageTool.langstr("DnDMove"));
+		m_iDnDMove.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0));
 		m_iDnDMove.setActionCommand(DNDMOVE);
 		m_iDnDMove.setFont(TIImageTool.dialogFont);
 		m_iDnDMove.addActionListener(this);
-		m_iDnDCopy = new JMenuItem("Copy here    (Ctrl)");
+		m_iDnDCopy = new JMenuItem(TIImageTool.langstr("DnDCopy"));
+		m_iDnDCopy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0));
 		m_iDnDCopy.setActionCommand(DNDCOPY);
 		m_iDnDCopy.setFont(TIImageTool.dialogFont);
 		m_iDnDCopy.addActionListener(this);
-		m_iDnDCancel = new JMenuItem("Cancel");
+		m_iDnDCancel = new JMenuItem(TIImageTool.langstr("DnDCancel"));
 		m_iDnDCancel.setActionCommand(DNDCANCEL);
 		m_iDnDCancel.setFont(TIImageTool.dialogFont);
 		
 		// Accelerator does not work when the target panel has no focus
-		// m_iDnDCancel.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
+		m_iDnDCancel.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));
 		m_iDnDCancel.addActionListener(this);
 
 		m_dndmenu.add(m_iDnDMove);	

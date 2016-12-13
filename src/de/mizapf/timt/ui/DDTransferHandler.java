@@ -130,6 +130,8 @@ class DDTransferHandler extends TransferHandler {
 					if (action == DnDConstants.ACTION_MOVE && !m_panel.shiftPressed())
 						action = DnDConstants.ACTION_NONE;
 
+					// The lastSelected is the element that is rendered last
+					// due to the mouse pointer moved over it
 					Element last = m_panel.getLastSelected();
 					String elname = last.getName();
 					if (elname != null && elname.equals("..")) {
@@ -159,14 +161,14 @@ class DDTransferHandler extends TransferHandler {
 			} 
 		}
 		catch (UnsupportedFlavorException e) {
-			System.out.println("Unsupported Flavor: " + e);
+			System.out.println(TIImageTool.langstr("UnknownFlavor") + ": " + e);
 			return false;
 		} 
 		catch (Exception e) {
 			e.printStackTrace();
 			JFrame frmMain = m_panel.getView().getFrame();
 			frmMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-			JOptionPane.showMessageDialog(frmMain, "BUG: Exception occured; see console output", "Internal error", JOptionPane.ERROR_MESSAGE);						
+			JOptionPane.showMessageDialog(frmMain, TIImageTool.langstr("BUG"), TIImageTool.langstr("InternalError"), JOptionPane.ERROR_MESSAGE);						
 		}
 		
 		m_panel.getView().refreshAll();

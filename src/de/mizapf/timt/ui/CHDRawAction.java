@@ -53,7 +53,7 @@ public class CHDRawAction extends Activity {
 		
 		if (expdialog.confirmed()) {
 			if (!expdialog.validSelection()) {
-				JOptionPane.showMessageDialog(m_parent, "Missing raw or CHD file specification", "Conversion error", JOptionPane.ERROR_MESSAGE);		
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("MissingRaw"), imagetool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);		
 			}
 			else {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -77,18 +77,18 @@ public class CHDRawAction extends Activity {
 					bOK = true;
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Extract error", JOptionPane.ERROR_MESSAGE);		
+					JOptionPane.showMessageDialog(m_parent, ix.getMessage(), imagetool.langstr("ExtractError"), JOptionPane.ERROR_MESSAGE);		
 				}
 				catch (FileNotFoundException fnfx) {
-					JOptionPane.showMessageDialog(m_parent, "Target file or directory not found: " + fnfx.getMessage(), "Extract error", JOptionPane.ERROR_MESSAGE);		
+					JOptionPane.showMessageDialog(m_parent, imagetool.langstr("TargetNotFound") + fnfx.getMessage(), imagetool.langstr("ExtractError"), JOptionPane.ERROR_MESSAGE);		
 				}
 				catch (IOException iox) {
 					iox.printStackTrace();
-					JOptionPane.showMessageDialog(m_parent, "IO error while extracting contents: " + iox.getClass().getName(), "Extract error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ExtractIOError") + iox.getClass().getName(), imagetool.langstr("ExtractError"), JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-		if (bOK) JOptionPane.showMessageDialog(m_parent, "Extraction completed successfully", "Extract", JOptionPane.INFORMATION_MESSAGE);
+		if (bOK) JOptionPane.showMessageDialog(m_parent, String.format(imagetool.langstr("Completed"), imagetool.langstr("Extraction")), imagetool.langstr("Extract"), JOptionPane.INFORMATION_MESSAGE);
 	}
 }

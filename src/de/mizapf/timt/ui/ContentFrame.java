@@ -52,6 +52,7 @@ public class ContentFrame extends JFrame implements ActionListener {
 		m_app = app;
 		m_app.registerFrame(this);
 		m_withClear = bWithClear;
+		setIconImage(m_app.m_frameicon.getImage());
 	}
 
 	public void createGui(String sText, String sFontName) {	
@@ -59,14 +60,14 @@ public class ContentFrame extends JFrame implements ActionListener {
 		m_sContent = sText;
 		m_mbar = new JMenuBar();
 
-		m_mFile = new JMenu("File");
+		m_mFile = new JMenu(TIImageTool.langstr("File"));
 		m_mbar.add(m_mFile);
-		m_iSaveAs = new JMenuItem("Save as...");
+		m_iSaveAs = new JMenuItem(TIImageTool.langstr("ContFrameSaveAs"));
 		m_iSaveAs.setActionCommand(SAVEAS);
 		m_iSaveAs.addActionListener(this);
 		m_mFile.add(m_iSaveAs);
 
-		m_iClear = new JMenuItem("Clear content");
+		m_iClear = new JMenuItem(TIImageTool.langstr("ContFrameClear"));
 		m_iClear.setActionCommand(CLEAR);
 		m_iClear.addActionListener(this);
 
@@ -74,7 +75,7 @@ public class ContentFrame extends JFrame implements ActionListener {
 			m_mFile.add(m_iClear);			
 		}
 		
-		m_iClose = new JMenuItem("Close");
+		m_iClose = new JMenuItem(TIImageTool.langstr("ContFrameClose"));
 		m_iClose.setActionCommand(CLOSE);
 		m_iClose.addActionListener(this);
 		m_mFile.add(m_iClose);
@@ -115,11 +116,11 @@ public class ContentFrame extends JFrame implements ActionListener {
 					java.io.File file = jfc.getSelectedFile();
 					
 					FileOutputStream fos = new FileOutputStream(file);
-					fos.write(m_sContent.getBytes());
+					fos.write(m_jep.getText().getBytes());
 					fos.close();
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(this, "Error", "IOException: " + iox.getClass().getName(), JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(this, TIImageTool.langstr("Error"), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 			}

@@ -40,24 +40,24 @@ public class ConvertToSCSIAction extends Activity {
 		Volume vol = dvCurrent.getVolume();
 
 		if (vol.isCHDImage()) {
-			JOptionPane.showMessageDialog(m_parent, "Cannot convert the image inside the CHD container. You must extract the raw contents,\nconvert those, and import into a new CHD.", "Convert problem", JOptionPane.WARNING_MESSAGE);						
+			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ConvNotInCHD"), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);						
 			return;
 		}
 		
-		int nRet = JOptionPane.showConfirmDialog(m_parent, "This will remove the CHS information from the file system. Continue?", "Warning", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+		int nRet = JOptionPane.showConfirmDialog(m_parent, imagetool.langstr("ConvLoseInfo"), imagetool.langstr("Warning"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 		if (nRet == JOptionPane.OK_OPTION) {
 			try {
 				vol.hfdc2scsi();
 				// TODO: Close image
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, "Image broken: " + iox.getClass().getName(), "Convert error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 			}			
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, "Image broken: " + ix.getMessage(), "Convert error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(m_parent, "Image protected: " + px.getMessage(), "Convert error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("VolumeWP") + ": " + px.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}
 			try {
@@ -65,7 +65,7 @@ public class ConvertToSCSIAction extends Activity {
 				imagetool.refreshPanel(vol);
 			}
 			catch (Exception e) {
-				JOptionPane.showMessageDialog(m_parent, "Could not re-open image file: " + e.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("NotReopen") + ": " + e.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			}
 		}		
 	}

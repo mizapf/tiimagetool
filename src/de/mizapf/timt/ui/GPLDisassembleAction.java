@@ -41,7 +41,7 @@ public class GPLDisassembleAction extends Activity {
 	}
 	
 	public void go() {
-		String sText = "no content";
+		String sText = imagetool.langstr("NoContent");
 
 		DirectoryView dvCurrent = imagetool.getSelectedView();
 		DirectoryPanel dp = dvCurrent.getPanel();
@@ -66,18 +66,18 @@ public class GPLDisassembleAction extends Activity {
 						GPLAssembler gplasm = new GPLAssembler();
 						sText = gplasm.disassemble(content, disparm.getOffset(), disparm.getStartAddress(), len, disparm.getHint(), bInvAddr, disparm.showDataLoc());
 
-						imagetool.showTextContent("GPL-disassembled " + selected.getName(), sText);
+						imagetool.showTextContent(imagetool.langstr("GPLDisasmd") + " " + selected.getName(), sText);
 					}
 				}
 				catch (FormatException fx) {
 					fx.printStackTrace();
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Invalid skip declaration", "Parameter error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("GPLInvSkip"), imagetool.langstr("DisasmBadParam"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getClass().getName(), "Error opening file", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}

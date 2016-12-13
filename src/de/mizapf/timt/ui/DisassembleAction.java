@@ -41,7 +41,7 @@ public class DisassembleAction extends Activity {
 	}
 	
 	public void go() {
-		String sText = "no content";
+		String sText = TIImageTool.langstr("NoContent");
 		DirectoryView dvCurrent = imagetool.getSelectedView();
 		Directory dirCurrent = dvCurrent.getDirectory();
 		DirectoryPanel dp = dvCurrent.getPanel();
@@ -77,17 +77,17 @@ public class DisassembleAction extends Activity {
 								sText = tms9900.disassembleTaggedObjectCode(disparm.getOffset(), disparm.getStartAddress(), disparm.getLength(), disparm.getHint(), disparm.showDataLoc());
 						}
 							
-						imagetool.showTextContent("Disassembled " + selected.getName(), sText);
+						imagetool.showTextContent(TIImageTool.langstr("Disasmd") + " " + selected.getName(), sText);
 					}
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getClass().getName(), "Error opening file", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (FormatException fx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Parameter error: " + fx.getMessage(), "Disassembler error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("DisasmBadParam") + ": " + fx.getMessage(), TIImageTool.langstr("DisasmError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}

@@ -28,6 +28,8 @@ import de.mizapf.timt.assm.Hint;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.files.FormatException;
 
+import de.mizapf.timt.TIImageTool;
+
 class DisassParamDialog extends ToolDialog implements ActionListener {
 	
 	JTextField 		m_tfOffset;
@@ -44,7 +46,7 @@ class DisassParamDialog extends ToolDialog implements ActionListener {
 	boolean			m_bTagged;
 	
 	DisassParamDialog(JFrame owner, byte[] abyFile, boolean bGPL) {
-		super(owner, "Disassembler parameters");
+		super(owner, TIImageTool.langstr("DisasmParameters"));
 		m_abyFile = abyFile;
 		m_bGPL = bGPL;
 		m_bTagged = false;
@@ -78,22 +80,17 @@ class DisassParamDialog extends ToolDialog implements ActionListener {
 		m_bSet = false;
 
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth("Skip invalid GROM addresses");
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("DisasmColumn"));
 		int nColumnWidth1 = fm.stringWidth("XXXXXX");
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
 		add(Box.createVerticalStrut(10));		
 
-		if (m_bGPL) {
-			putTextLine(this, "!Parameters for GPL disassembly", 0);
-		}
-		else {
-			putTextLine(this, "!Parameters for TMS99xx disassembly", 0);
-		}
+		putTextLine(this, "!" + String.format(TIImageTool.langstr("DisasmTitle"), m_bGPL? "GPL" : "TMS99xx"), 0);
 
 		add(Box.createVerticalStrut(10));		
 		
-		putLabel(this, "Head of file", Utilities.hexdump(0, 0, m_abyFile, 16, true), nColumnWidth);
+		putLabel(this, TIImageTool.langstr("HeadOfFile"), Utilities.hexdump(0, 0, m_abyFile, 16, true), nColumnWidth);
 				
 		int start = Utilities.getInt16(m_abyFile, 4);
 		int length = Utilities.getInt16(m_abyFile, 2)-6;
@@ -108,55 +105,55 @@ class DisassParamDialog extends ToolDialog implements ActionListener {
 		}
 		
 		if (m_bTagged) {
-			putLabel(this, "Type", "Tagged object code", nColumnWidth);
+			putLabel(this, TIImageTool.langstr("DisasmType"), "Tagged object code", nColumnWidth);
 			add(Box.createVerticalStrut(10));		
 		}
 		else {	
-			putLabel(this, "Type", "Memory dump", nColumnWidth);
+			putLabel(this, TIImageTool.langstr("DisasmType"), "Memory dump", nColumnWidth);
 			add(Box.createVerticalStrut(10));		
-			m_chbSymbolic = putCheckBox(this, "Symbolic disassembly", false, nColumnWidth);			
+			m_chbSymbolic = putCheckBox(this, TIImageTool.langstr("DisasmSym"), false, nColumnWidth);			
 			add(Box.createVerticalStrut(10));		
-			m_tfOffset = putTextField(this, "File offset (hex)", Utilities.toHex(offset, 4), nColumnWidth, nColumnWidth1);
-			m_tfStart = putTextField(this, "Start address (hex)", Utilities.toHex(start, 4), nColumnWidth, nColumnWidth1);
-			m_tfLength = putTextField(this, "Length (hex)", Utilities.toHex(length, 4), nColumnWidth, nColumnWidth1);
+			m_tfOffset = putTextField(this, TIImageTool.langstr("DisasmOff"), Utilities.toHex(offset, 4), nColumnWidth, nColumnWidth1);
+			m_tfStart = putTextField(this, TIImageTool.langstr("DisasmStart"), Utilities.toHex(start, 4), nColumnWidth, nColumnWidth1);
+			m_tfLength = putTextField(this, TIImageTool.langstr("DisasmLength"), Utilities.toHex(length, 4), nColumnWidth, nColumnWidth1);
 			
 			if (m_bGPL) {
-				m_chbSkipAddresses = putCheckBox(this, "Skip invalid GROM addresses", true, nColumnWidth);
+				m_chbSkipAddresses = putCheckBox(this, TIImageTool.langstr("DisasmSkip"), true, nColumnWidth);
 			}
 		}
 
-		m_chbShowAddresses = putCheckBox(this, "Show locations at line end", false, nColumnWidth);
-		m_chbShowData = putCheckBox(this, "Show raw data at line end", false, nColumnWidth);
+		m_chbShowAddresses = putCheckBox(this, TIImageTool.langstr("DisasmLoc"), false, nColumnWidth);
+		m_chbShowData = putCheckBox(this, TIImageTool.langstr("DisasmRaw"), false, nColumnWidth);
 		add(Box.createVerticalStrut(10));		
 
-		putTextLine(this, "!Disassembler hints", 0);
+		putTextLine(this, "!" + TIImageTool.langstr("DisasmHints"), 0);
 		add(Box.createVerticalStrut(10));
 		
-		putTextLine(this, "You can specify which parts of the code are data or text areas.", 0);
+		putTextLine(this, TIImageTool.langstr("DisasmExp1"), 0);
 		add(Box.createVerticalStrut(10));
 
-		putTextLine(this, "data(from,to): Locations which should be interpreted as DATA", 0);
-		putTextLine(this, "text(from,to): Locations which should be interpreted as TEXT/BYTE", 0);
+		putTextLine(this, TIImageTool.langstr("DisasmExp2"), 0);
+		putTextLine(this, TIImageTool.langstr("DisasmExp3"), 0);
 
 		if (m_bGPL) {
-			putTextLine(this, "btext(from,to): Locations which should be interpreted as BTEXT/BYTE", 0);
-			putTextLine(this, "param(proc,count): CALL to this location is followed by a fixed number of parameter bytes", 0);
-			putTextLine(this, "nofmt(from,to): Inhibit FMT disassembly in this area", 0);
+			putTextLine(this, TIImageTool.langstr("DisasmExp4"), 0);
+			putTextLine(this, TIImageTool.langstr("DisasmExp5"), 0);
+			putTextLine(this, TIImageTool.langstr("DisasmExp6"), 0);
 			add(Box.createVerticalStrut(10));
 		}
 		else {
-			putTextLine(this, "param(proc,count): BL/BLWP to this location is followed by a fixed number of data words", 0);
+			putTextLine(this, TIImageTool.langstr("DisasmExp7"), 0);
 			if (m_bTagged) {
-				putTextLine(this, "ref(location): This location is referenced as a data source or destination or a jump/branch target", 0);
+				putTextLine(this, TIImageTool.langstr("DisasmExp8"), 0);
 			    add(Box.createVerticalStrut(10));
-			    putMultiTextLine(this, "Locations can be specified as absolute (837c, >837C, 0x837c, X837C), as program-relocatable (R0010),\nas common-relocatable (S0123), or as data-relocatable (T0028).");
+			    putMultiTextLine(this, TIImageTool.langstr("DisasmExp9"));
 			    add(Box.createVerticalStrut(10));
-			    putTextLine(this, "A branch target can be specified as a location or by its name, like param(R0418,2) or param(\"XMLLNK\",1).", 0);
+			    putTextLine(this, TIImageTool.langstr("DisasmExp10"), 0);
 			}
 		}
 		add(Box.createVerticalStrut(10));
 
-		putTextLine(this, "Separate specifications by spaces, commas, or newlines.",0);
+		putTextLine(this, TIImageTool.langstr("DisasmExp11"),0);
 		add(Box.createVerticalStrut(10));
 		
 		Box box7 = new Box(BoxLayout.X_AXIS);
@@ -242,7 +239,7 @@ class DisassParamDialog extends ToolDialog implements ActionListener {
 				offset = 0;
 				length = 0;
 				noinv = false;
-				System.err.println("Invalid disassembler parameters: " + sParam);
+				System.err.println(TIImageTool.langstr("DisasmInvalid") + ": " + sParam);
 			}
 			if (m_tfStart != null) m_tfStart.setText(Utilities.toHex(start,4));
 			if (m_tfOffset != null) m_tfOffset.setText(Utilities.toHex(offset, 4));

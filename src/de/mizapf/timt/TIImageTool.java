@@ -121,8 +121,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.3.5";
-	public final static String DATE = "December 2016";
+	public final static String VERSION = "2.3.9";
+	public final static String MONTH = "December";
+	public final static String YEAR = "2016";
 	
 	private static final String TITLE = "TIImageTool";
 	
@@ -154,6 +155,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String LOGFILE = "logging";
 	public final static String RECENT = "recent";
 	public final static String LANG = "lang";
+	public final static String DNDC = "dndc";
 	
 	Properties m_propNames;
 	
@@ -261,6 +263,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	// Start image file
 	String m_startImage;
+	
+	// Title icon
+	public ImageIcon m_frameicon = null;
 	
 	// ===============================================
 	// Clipboard for cut-copy-paste
@@ -874,6 +879,16 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		// Load localized strings
 		m_resources = ResourceBundle.getBundle(LANGTEXT, getLocale(getPropertyString(LANG)));
 
+		// Load the property texts
+		m_propNames = new Properties();
+		try {
+			String propFile = "names_" + getLocale(getPropertyString(LANG)).getLanguage() + ".prop";
+       		m_propNames.load(ToolDialog.class.getResourceAsStream(propFile));
+		}
+		catch (IOException iox) {
+			iox.printStackTrace();
+		}		
+			
 		// Redirect Console output
 		String sLogFile = getPropertyString(LOGFILE, "tiimagetool.log");
 		if (sLogFile.length()>0) {
@@ -898,11 +913,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_frmMain.addWindowListener(this);
 		m_frmMain.addComponentListener(this);
 		
-		ImageIcon frameicon = null;
 		java.net.URL iconurl = ToolDialog.class.getResource(FRAMEICON);
 		if (iconurl != null) {
-			frameicon = new ImageIcon(iconurl);
-			m_frmMain.setIconImage(frameicon.getImage());
+			m_frameicon = new ImageIcon(iconurl);
+			m_frmMain.setIconImage(m_frameicon.getImage());
 		} 
 		else {
 			System.err.println("Error: Could not locate icon image in package " + iconurl);
@@ -1085,15 +1099,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		boolean windows = System.getProperty("os.name").startsWith("Windows");
 		String sFile = (windows)? "tiimagetool.prop" : ".tiimagetoolrc";
 				
-		// Load the property texts
-		m_propNames = new Properties();
-		try {
-       		m_propNames.load(ToolDialog.class.getResourceAsStream("names.prop"));
-		}
-		catch (IOException iox) {
-			iox.printStackTrace();
-		}		
-		
 		// Try to load
 		// 1. from the current directory
 		// 2. from the special path 
@@ -1150,6 +1155,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		getPropertyString(NEWFRAME, "false");
 		getPropertyString(ESCAPE, ".");
 		getPropertyString(LANG, "0");
+		getPropertyString(DNDC, "true");
 	}
 
 	public List<String> getPreferences(String category) {
@@ -1299,7 +1305,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					catch (Exception e) {
 						m_frmMain.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 						e.printStackTrace();
-						JOptionPane.showMessageDialog(m_frmMain, langstr("BUG"), langstr("Internal_error"), JOptionPane.ERROR_MESSAGE);						
+						JOptionPane.showMessageDialog(m_frmMain, langstr("BUG"), langstr("InternalError"), JOptionPane.ERROR_MESSAGE);						
 					}
 					m_UserInput = null;
 					// SwingUtilities.invokeLater(new ActivateMenuItems());
@@ -1308,7 +1314,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					if (m_bRunning) wait();
 				}
 				catch (InterruptedException ix) {
-					JOptionPane.showMessageDialog(m_frmMain, "BUG: Wait interrupted in processUserInput", langstr("Internal_error"), JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(m_frmMain, "BUG: Wait interrupted in processUserInput", langstr("InternalError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				m_bAction = false;
 			}
@@ -1458,7 +1464,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public List<java.io.File> exportDirectory(Directory dirCurrent, java.io.File iofBaseDir, List<Element> selected, boolean deleteOnExit) throws ReplaceTableException, InvalidNameException, IOException, FileNotFoundException, ImageException {
 		List<java.io.File> lst = new ArrayList<java.io.File>();
 		
-		String value = getPropertyString(CONVERT, "/\\* __x");
+		String value = getPropertyString(CONVERT, "/\\*><: __x___");
 		String fromList = null;
 		String toList = null;
 

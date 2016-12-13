@@ -52,6 +52,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 
 	boolean m_shift;
 	boolean m_ctrl;
+	boolean m_moveAsDefault;
 	
 	static final Color NORM = new Color(250,255,255);
 	private static final Color COLTEXT = new Color(51,51,51);
@@ -149,8 +150,13 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		imap.put(KeyStroke.getKeyStroke("ctrl V"), "anotherpaste");
 		
 		// We need this to determine the pressed modifiers
-		DragSource ds = DragSource.getDefaultDragSource();
-		ds.addDragSourceListener(this);
+		if (m_dvCurrent.getImageTool().getPropertyBoolean(TIImageTool.DNDC)==false) {
+			m_moveAsDefault = true;
+		}
+		else {
+			DragSource ds = DragSource.getDefaultDragSource();
+			ds.addDragSourceListener(this);
+		}
 	}
 	
 	private void createHeader(JComponent comp) {
@@ -169,17 +175,27 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		StringBuilder sb = new StringBuilder();
 		
 		// First line
-		sb.append("Volume in ").append(vol.getDeviceName());
-		if (vol.getName().trim().length()==0) sb.append(" is unnamed");
-		else sb.append(" is named ").append(vol.getName());
+		if (vol.getName().trim().length()==0)
+			sb.append(String.format(TIImageTool.langstr("PanelVolumeUnnamed"), vol.getDeviceName())); 
+		else 
+			sb.append(String.format(TIImageTool.langstr("PanelVolumeNamed"), vol.getDeviceName(), vol.getName()));
+
 		if (vol.isFloppyImage()) {
-			sb.append(", format: ").append(vol.getFloppyFormat());
-			sb.append(", tracks: ").append(vol.getTracksPerSide());
+			sb.append(", ");
+			sb.append(String.format(TIImageTool.langstr("PanelFloppyParams"), vol.getFloppyFormat(), vol.getTracksPerSide()));
 		}
-		sb.append(", total sectors: ").append(vol.getTotalSectors());
-		if (vol.getAUSize()!=1) sb.append(", AU size: ").append(vol.getAUSize());
-		if (vol.isProtected()) sb.append(" (protected)");
-		sb.append(", ").append(vol.dumpFormat()).append(" image");
+		sb.append(", ");
+		sb.append(String.format(TIImageTool.langstr("PanelParams"), vol.getTotalSectors()));
+		if (vol.getAUSize()!=1) {
+			sb.append(", ");
+			sb.append(String.format(TIImageTool.langstr("PanelAU"), vol.getAUSize()));
+		}
+		if (vol.isProtected()) {
+			sb.append(" ");
+			sb.append(TIImageTool.langstr("PanelProt"));
+		}
+		sb.append(", ");
+		sb.append(String.format(TIImageTool.langstr("PanelImage"), vol.dumpFormat()));
 
 		comp.add(createHeadline(sb.toString()));
 		comp.add(Box.createVerticalStrut(2));
@@ -209,14 +225,12 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		}
 		
 		sb = new StringBuilder();
-		sb.append("Free sectors: ");
-		sb.append(vol.getTotalSectors() - vol.getAllocatedSectorCount());
-		sb.append(", used: ").append(vol.getAllocatedSectorCount());
+		sb.append(String.format(TIImageTool.langstr("PanelFreeUsed"), vol.getTotalSectors() - vol.getAllocatedSectorCount(), vol.getAllocatedSectorCount()));
 		
 		//		nFileTotal += m_vol.getAllRequiredSectors(m_vol.getAUSize());
 		
 		if (nFileTotal != vol.getAllocatedSectorCount()) {
-			sb.append(", in this directory: ").append(nFileTotal);
+			sb.append(", ").append(String.format(TIImageTool.langstr("PanelInThisDir"), nFileTotal));
 		}
 
 		comp.add(createHeadline(sb.toString()));
@@ -224,11 +238,20 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	
 		// Third line
 		sb = new StringBuilder();
-		sb.append("Directory of " ).append(vol.getDeviceName()).append(dirCurrent.getFullPathname());
+		sb.append(String.format(TIImageTool.langstr("PanelDir"), vol.getDeviceName(), dirCurrent.getFullPathname()));
 		comp.add(createHeadline(sb.toString()));
 		comp.add(Box.createVerticalStrut(10));
 		
-		JComponent title = createLine(TIImageTool.boldFont, null, false, "Name", "Sectors", "Type", "Length", "Prot", "Frag", "Created", "Updated", false, false, false);
+		JComponent title = createLine(TIImageTool.boldFont, null, false, 
+			TIImageTool.langstr("PanelName"),
+			TIImageTool.langstr("PanelSectors"),
+			TIImageTool.langstr("PanelType"),
+			TIImageTool.langstr("PanelLength"),
+			TIImageTool.langstr("PanelProt"),
+			TIImageTool.langstr("PanelFrag"),
+			TIImageTool.langstr("PanelCreated"),
+			TIImageTool.langstr("PanelUpdated"),
+			false, false, false);
 
 		title.setMaximumSize(new Dimension(Short.MAX_VALUE, TIImageTool.plainHeight+2));		
 		title.setBackground(new Color(180,200,220));
@@ -405,11 +428,11 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		}
 		
 		addField(cnt, sFile,     col,  SwingConstants.LEFT,  m_dvCurrent.calcWidth("MOMOMOMOMO"), 10, font);
-		addField(cnt, sSectors,  col,  SwingConstants.RIGHT, m_dvCurrent.calcWidth("Sectors"), 10, font);
+		addField(cnt, sSectors,  col,  SwingConstants.RIGHT, m_dvCurrent.calcWidth(TIImageTool.langstr("PanelSectors")), 10, font);
 		addField(cnt, sType,     col,  SwingConstants.LEFT,  m_dvCurrent.calcWidth("Emulate*"), 10, font);
 		addField(cnt, sLength,    col, SwingConstants.RIGHT, m_dvCurrent.calcWidth("XXXXXX"), 10, font);
-		addField(cnt, sProtected,  col,SwingConstants.LEFT,  m_dvCurrent.calcWidth("Prot"), 10, font);
-		addField(cnt, sFragmented, col,SwingConstants.LEFT,  m_dvCurrent.calcWidth("Frag"), 10, font);
+		addField(cnt, sProtected,  col,SwingConstants.LEFT,  m_dvCurrent.calcWidth(TIImageTool.langstr("PanelProt")), 10, font);
+		addField(cnt, sFragmented, col,SwingConstants.LEFT,  m_dvCurrent.calcWidth(TIImageTool.langstr("PanelFrag")), 10, font);
 		addField(cnt, sCreation,   col,SwingConstants.LEFT,  m_dvCurrent.calcWidth("XXXX-XX-XX XX:XX:XX"), 10, font);
 		addField(cnt, sUpdate,     col,SwingConstants.LEFT,  m_dvCurrent.calcWidth("XXXX-XX-XX XX:XX:XX"),  0, font);
 
@@ -427,14 +450,13 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	public void dragExit(DragSourceEvent dse) { }
 	public 	void dropActionChanged(DragSourceDragEvent dsde) { }
 
-	public 	void dragOver(DragSourceDragEvent dsde) {
+	public void dragOver(DragSourceDragEvent dsde) {
 		int mods = dsde.getGestureModifiersEx();
-		// System.out.println(Utilities.toHex(mods, 4));
 		m_shift = ((mods & InputEvent.SHIFT_DOWN_MASK) != 0);
 		m_ctrl = ((mods & InputEvent.CTRL_DOWN_MASK) != 0);
 	}
 	
 	boolean shiftPressed() {
-		return m_shift;
+		return m_shift || m_moveAsDefault;
 	}	
 }

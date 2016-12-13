@@ -46,7 +46,7 @@ class CHDRawDialog extends ToolDialog {
 	private final static int TO = 2;
 	
 	CHDRawDialog(JFrame owner, TIImageTool timt) {
-		super(owner, "Extract raw contents from a CHD image");
+		super(owner, timt.langstr("ExtractRawLong"));
 		imagetool = timt;
 	}
 	
@@ -67,29 +67,26 @@ class CHDRawDialog extends ToolDialog {
 */	
 	public void createGui(Font font) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth("File name for CHD image (from)");
+		int nColumnWidth = fm.stringWidth(imagetool.langstr("CHDRawColumn"));
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		add(Box.createVerticalStrut(10));		
 
-		putTextLine(this, "!Exporting all sectors from a CHD file", 0);
+		putTextLine(this, "!" + imagetool.langstr("ExtractTitle"), 0);
 		add(Box.createVerticalStrut(10));
-		putMultiTextLine(this, 
-			  "This function creates a new file that consists of the contents of all sectors from sector 0 to the last sector,\n"
-			+ "essentially a sector dump format for a hard disk. You can edit this file with an external hex editor and import\n"
-			+ "it into a CHD file again later.");
+		putMultiTextLine(this, imagetool.langstr("ExtractText"));
 		add(Box.createVerticalStrut(10));
 		
-		String fileprompt = "File name for CHD image (from)";
-		String rawprompt = "File name for raw contents (to)";
-		m_tfImageFile = new JTextField("click to select");
-		m_tfRawFile = new JTextField("click to select");
+		String fileprompt = imagetool.langstr("FromCHD");
+		String rawprompt = imagetool.langstr("ToImage");
+		m_tfImageFile = new JTextField(imagetool.langstr("ClickToSelect"));
+		m_tfRawFile = new JTextField(imagetool.langstr("ClickToSelect"));
 
 		addChoiceLine(nColumnWidth, fileprompt, FILELINE, FROM, m_tfImageFile, 32);
 		add(Box.createVerticalStrut(10));
 		addChoiceLine(nColumnWidth, rawprompt, FILELINE, TO, m_tfRawFile, 32);
 		add(Box.createVerticalStrut(10));
 
-		m_jlExportSize = putLabel(this, "Export size will be ", "0", nColumnWidth);
+		m_jlExportSize = putLabel(this, imagetool.langstr("ExportSize"), "0", nColumnWidth);
 				
 		add(Box.createVerticalStrut(10));	
 		m_validCHD = false;
@@ -171,31 +168,31 @@ class CHDRawDialog extends ToolDialog {
 		try {
 			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath());
 			if (!(ifsource instanceof MessCHDFormat)) {
-				JOptionPane.showMessageDialog(m_frmMain, "Not a MESS CHD image file.", "Invalid format error", JOptionPane.ERROR_MESSAGE);				
+				JOptionPane.showMessageDialog(m_frmMain, imagetool.langstr("NotCHD"), imagetool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
 				return false;
 			}
 			m_image = (MessCHDFormat)ifsource;
 		}
 		catch (FileNotFoundException fnfx) {
-			JOptionPane.showMessageDialog(m_frmMain, "Input file not found: " + fnfx.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_frmMain, imagetool.langstr("InputNotFound") + ": " + fnfx.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return false;
 		}
 		catch (EOFException ex) {
-			JOptionPane.showMessageDialog(m_frmMain, "Not a MESS CHD image file.", "Invalid format error", JOptionPane.ERROR_MESSAGE);				
+			JOptionPane.showMessageDialog(m_frmMain, imagetool.langstr("NotCHD"), imagetool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
 			return false;
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_frmMain, "IO error: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_frmMain, imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return false;
 		}
 		catch (ImageException ix) {
-			JOptionPane.showMessageDialog(m_frmMain, "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_frmMain, imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return false;
 		}		
 		
 		// Calculate the size
 		int nSize = m_image.getHunkCount() * 0x1000;
-		m_jlExportSize.setText(String.valueOf(nSize) + " bytes");
+		m_jlExportSize.setText(String.valueOf(nSize) + " " + imagetool.langstr("Bytes"));
 		return true;
 	}
 	

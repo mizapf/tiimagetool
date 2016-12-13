@@ -37,7 +37,7 @@ public class HintAction extends Activity {
 	private String[] entry = { "Maybe you already know",
 								"Here's another tip for you",
 								"It might be interesting to note that",
-								"Bet you're glad to hear that",
+								"I bet you're glad to hear that",
 								"Just thought I should tell you that" };
 	
 	public String getMenuName() {

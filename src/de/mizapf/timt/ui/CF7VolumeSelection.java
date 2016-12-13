@@ -62,7 +62,7 @@ class CF7VolumeSelection extends ToolDialog {
 	}	
 
 	CF7VolumeSelection(JFrame owner) {
-		super(owner, "Select volume");
+		super(owner, TIImageTool.langstr("SelectVolume"));
 	}
 	
 /*
@@ -82,7 +82,7 @@ class CF7VolumeSelection extends ToolDialog {
 */	
 	void createGui() {
 		prepareGui();
-		int nLabelWidth = determineFieldWidth("Volume number");
+		int nLabelWidth = determineFieldWidth(TIImageTool.langstr("CF7VolumeColumn"));
 		
 		JPanel jpSelection = new JPanel();
 		jpSelection.setLayout(new BoxLayout(jpSelection, BoxLayout.Y_AXIS));
@@ -101,7 +101,7 @@ class CF7VolumeSelection extends ToolDialog {
 				try {
 					num = Integer.parseInt(m_volume[i].substring(0,pos));
 					String volname = m_volume[i].substring(pos+1).trim();
-					if (volname.length()==0) volname = "<unnamed>";
+					if (volname.length()==0) volname = "<" + TIImageTool.langstr("Unnamed") + ">";
 					Box b1 = addEntry(num+1, nLabelWidth, volname); 
 					b1.setOpaque(true);
 					b1.setBackground(color[i&1]);
@@ -115,11 +115,10 @@ class CF7VolumeSelection extends ToolDialog {
 		}
 	
 		JScrollPane scp = new JScrollPane(jpSelection);
-		scp.setPreferredSize(new Dimension(100,200));		
 		add(scp);
 		add(Box.createVerticalStrut(10));
 		
-		m_tfVolumeNumber = putTextField(this, "Volume number", "", nLabelWidth, 0);
+		m_tfVolumeNumber = putTextField(this, TIImageTool.langstr("VolumeNumber"), "", nLabelWidth, 0);
 		m_tfVolumeNumber.setText("1");
 
 		addButtons();	
@@ -159,7 +158,8 @@ class CF7VolumeSelection extends ToolDialog {
 		box1.add(Box.createHorizontalGlue());
 		add(box1);
 		add(Box.createVerticalStrut(2));
-		box1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 3*TIImageTool.dialogHeight/2)); 
+		box1.setMinimumSize(new Dimension(0, 3*TIImageTool.dialogHeight/2)); 
+		box1.setPreferredSize(new Dimension(2*width, 3*TIImageTool.dialogHeight/2));
 		return box1;
 	}
 }

@@ -42,7 +42,7 @@ public class ConvertToHFDCAction extends Activity {
 		Volume vol = dvCurrent.getVolume();
 
 		if (vol.isCHDImage()) {
-			JOptionPane.showMessageDialog(m_parent, "Cannot convert the image inside the CHD container. You must extract the raw contents,\nconvert those, and import into a new CHD.", "Convert problem", JOptionPane.WARNING_MESSAGE);						
+			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ConvNotInCHD"), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);						
 			return;
 		}
 		
@@ -65,14 +65,14 @@ public class ConvertToHFDCAction extends Activity {
 			param = Utilities.guessAdvanced(nCylinders, nHeads, nSectorsPerTrack);
 		}
 		else {
-			JOptionPane.showMessageDialog(m_parent, "Cannot calculate a suitable geometry for the image.", "Convert problem", JOptionPane.WARNING_MESSAGE);				
+			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ConvHFDCNoGeom"), imagetool.langstr("ConvertError"), JOptionPane.WARNING_MESSAGE);				
 			nHeads = 0;
 			nCylinders = 0;
 			nSectorsPerTrack = 0;
 			param = new int[2];
 		}
 				
-		chs.setParameters(nCylinders, nHeads, nSectorsPerTrack, 256, param[1], param[1], 1, false);
+		chs.setParameters(nCylinders, nHeads, nSectorsPerTrack, 256, param[1], param[1], 1, true);
 		chs.setVisible(true);
 		
 		// TODO: Close image
@@ -86,19 +86,19 @@ public class ConvertToHFDCAction extends Activity {
 					chs.getWritePrecompensation());
 			}
 			catch (FileNotFoundException fnfx) {
-				JOptionPane.showMessageDialog(m_parent, "Image file cannot be found or is write-protected", "Convert error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageNotFoundOrWP"), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, "Image broken: " + iox.getClass().getName(), "Convert error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}			
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, "Image broken: " + ix.getMessage(), "Convert error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}
 			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(m_parent, "Image protected: " + px.getMessage(), "Convert error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("VolumeWP") + ": " + px.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}
 			
@@ -107,7 +107,7 @@ public class ConvertToHFDCAction extends Activity {
 				imagetool.refreshPanel(vol);
 			}
 			catch (Exception e) {
-				JOptionPane.showMessageDialog(m_parent, "Could not re-open image file: " + e.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("NotReopen") + ": " + e.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			}
 		}
 	}

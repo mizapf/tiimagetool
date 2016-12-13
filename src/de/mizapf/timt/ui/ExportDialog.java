@@ -23,6 +23,7 @@ package de.mizapf.timt.ui;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import de.mizapf.timt.TIImageTool;
 
 class ExportDialog extends ToolDialog implements ActionListener {
 	
@@ -32,7 +33,7 @@ class ExportDialog extends ToolDialog implements ActionListener {
 	JTextField		m_tfSubst;	
 	
 	ExportDialog(JFrame owner) {
-		super(owner, "Export parameters");
+		super(owner, TIImageTool.langstr("ExportTitle"));
 	}
 	
 /*
@@ -59,41 +60,35 @@ class ExportDialog extends ToolDialog implements ActionListener {
 		m_bSet = false;
 
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth("Each of these characters");
-		int nFullWidth = fm.stringWidth("Every non-printable character will be translated to =XX,");
-		int nFieldWidth = fm.stringWidth("XXXXX");
-		
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("ExportColumn"));
 		add(Box.createVerticalStrut(10));		
 
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
-		putTextLine(this, "Choose the rules for creating file names", 0);
+		putTextLine(this, "!" + TIImageTool.langstr("ExportChoose"), 0);
 		add(Box.createVerticalStrut(10));		
 
-		m_tfSuffix = putTextField(this, "File name suffix", ".tfi", nColumnWidth, nFieldWidth);
-		m_chbLower = putCheckBox(this, "Convert to lowercase", true, nColumnWidth);
+		m_tfSuffix = putTextField(this, TIImageTool.langstr("ExportSuffix"), ".tfi", nColumnWidth, 0);
+		m_chbLower = putCheckBox(this, TIImageTool.langstr("ExportLower"), true, nColumnWidth);
 		add(Box.createVerticalStrut(10));
 		
-		putTextLine(this, "Character replacement", 0);
-		add(Box.createVerticalStrut(10));		
-
 		int separ = translate.indexOf(" ");
 		String fromList = translate.substring(0, separ);
 		String toList = translate.substring(separ+1);		
 		
-		m_tfSSubst = putTextField(this, "Each of these characters", "", nColumnWidth, nFieldWidth);
+		m_tfSSubst = putTextField(this, TIImageTool.langstr("ExportReplFrom"), "", nColumnWidth, 0);
 		m_tfSSubst.setFont(mono);
 		m_tfSSubst.setText(fromList);
 
-		m_tfSubst = putTextField(this, "shall be mapped to", "", nColumnWidth, nFieldWidth); 
+		m_tfSubst = putTextField(this, TIImageTool.langstr("ExportReplTo"), "", nColumnWidth, 0); 
 		m_tfSubst.setFont(mono);
 		m_tfSubst.setText(toList);
 		
 		add(Box.createVerticalStrut(10));		
-		putTextLine(this, "Use ? as target character to delete the character.", 0);
+		putTextLine(this, TIImageTool.langstr("ExportUse"), 0);
 		add(Box.createVerticalStrut(10));
 
-		putMultiTextLine(this, "Every non-printable character will be translated to\na character sequence of the form =xx.");
+		putMultiTextLine(this, TIImageTool.langstr("ExportEvery"));
 		
 		add(Box.createVerticalStrut(10));
 		add(Box.createVerticalGlue());

@@ -37,6 +37,8 @@ import java.io.IOException;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.util.TIFiles;
 
+import de.mizapf.timt.TIImageTool;
+
 public class ExportRemoteAction extends Activity {
 
 	public String getMenuName() {
@@ -65,15 +67,15 @@ public class ExportRemoteAction extends Activity {
 			}				
 		}
 		catch (ImageException ix) { 
-			JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Error getting file file", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ExportError"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		catch (FileNotFoundException fnfx) {
-			JOptionPane.showMessageDialog(m_parent, fnfx.getMessage(), "File or folder not found", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileFolderNotFound") + ": " + fnfx.getMessage(), TIImageTool.langstr("ExportError"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		catch (IOException iox) { 
-			JOptionPane.showMessageDialog(m_parent, iox.getClass().getName(), "Error loading file", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ExportError"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 
@@ -83,7 +85,7 @@ public class ExportRemoteAction extends Activity {
 			cd.setVisible(true);		
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_parent, iox.getMessage(), "Connection error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE);
 			return;			
 		}		
 		if (cd.confirmed()) {
@@ -92,19 +94,19 @@ public class ExportRemoteAction extends Activity {
 				sc.initializeConnection(cd.getAdapter(), cd.getSpeed(), cd.getDatabits(), cd.getParity(), cd.getStopbits(), 10000);
 			}
 			catch (ConnectionException cx) {
-				JOptionPane.showMessageDialog(m_parent, cx.getMessage(), "Connection error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Error") + ": " + cx.getMessage(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE);
 				sc.close();
 				return;
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, iox.getMessage(), "Connection error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE);
 				sc.close();
 				return;
 			}
 			
 			ProgressView view = null;
 			try {
-				view = new ProgressView("XModem sending", m_parent);
+				view = new ProgressView(TIImageTool.langstr("XModemSend"), m_parent);
 				view.createGui(imagetool.boldFont);
 				InputStream is = sc.getInputStream();
 				OutputStream os = sc.getOutputStream();
@@ -119,10 +121,10 @@ public class ExportRemoteAction extends Activity {
 				os.close();
 			}
 			catch (ProtocolException px) {
-				JOptionPane.showMessageDialog(m_parent, px.getMessage(), "Protocol error", JOptionPane.ERROR_MESSAGE);				
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Error") + ": " + px.getMessage(), TIImageTool.langstr("ProtocolError"), JOptionPane.ERROR_MESSAGE);				
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, iox.getMessage(), "Connection error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE);
 			}
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			view.dispose();

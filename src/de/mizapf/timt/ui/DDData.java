@@ -87,7 +87,7 @@ class DDData implements Transferable {
 				return m_list;
 			}
 		}
-		System.out.println("*** Unknown Data Flavor");
+		System.out.println("*** " + TIImageTool.langstr("UnknownFlavor"));
 		return null;
 	}
 	
