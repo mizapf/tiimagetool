@@ -34,12 +34,8 @@ public class HintAction extends Activity {
 		return 0;
 	}
 
-	private String[] entry = { "Maybe you already know",
-								"Here's another tip for you",
-								"It might be interesting to note that",
-								"I bet you're glad to hear that",
-								"Just thought I should tell you that" };
-	
+	private String[] entry;
+		
 	public String getMenuName() {
 		return imagetool.langstr("Hints");
 	}
@@ -49,6 +45,13 @@ public class HintAction extends Activity {
 	}
 	
 	public void go() {	
+		entry = new String[5];
+		entry[0] = TIImageTool.langstr("Hint1");
+		entry[1] = TIImageTool.langstr("Hint2");
+		entry[2] = TIImageTool.langstr("Hint3");
+		entry[3] = TIImageTool.langstr("Hint4"); 
+		entry[4] = TIImageTool.langstr("Hint5"); 
+		
 		String head1 = "<html><body style='width: ";
 		String head2 = "px'>"; 
 		String foot = "</body></html>";
@@ -69,21 +72,21 @@ public class HintAction extends Activity {
 
 		jp.add(Box.createVerticalStrut(10));
 		
-		JCheckBox cb1 = new JCheckBox("I know that one, don't tell me again.");
+		JCheckBox cb1 = new JCheckBox(TIImageTool.langstr("HintIKnow"));
 		cb1.setFont(TIImageTool.dialogFont);
 		jp.add(cb1);
 		
-		JCheckBox cb2 = new JCheckBox("Don't show me hints on startup.");
+		JCheckBox cb2 = new JCheckBox(TIImageTool.langstr("HintDont"));
 		cb2.setFont(TIImageTool.dialogFont);
 		jp.add(cb2);
 		
-		JCheckBox cb3 = new JCheckBox("I forgot the old hints; please show them again.");
+		JCheckBox cb3 = new JCheckBox(TIImageTool.langstr("HintForgot"));
 		cb3.setFont(TIImageTool.dialogFont);
 		jp.add(cb3);
 
 		jp.add(Box.createVerticalStrut(10));
 
-		JOptionPane.showMessageDialog(m_parent, jp, "Hint", JOptionPane.INFORMATION_MESSAGE); 
+		JOptionPane.showMessageDialog(m_parent, jp, TIImageTool.langstr("Hint"), JOptionPane.INFORMATION_MESSAGE); 
 		
 		imagetool.setHintResponse(cb1.isSelected(), cb2.isSelected(), cb3.isSelected()); 
 	}

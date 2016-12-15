@@ -69,7 +69,7 @@ public class ImportBinaryAction extends Activity {
 				volTarget.reopenForWrite();
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot open image file for writing", "Import error", JOptionPane.ERROR_MESSAGE); 				
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
@@ -85,32 +85,32 @@ public class ImportBinaryAction extends Activity {
 						bGuess = imagetool.putBinaryFileIntoImage(dirCurrent, abyTif, iofile.getName(), afile.length>1, bGuess);
 					}
 					catch (ProtectedException px) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					catch (FileExistsException fx) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File " + fx.getMessage() + " already exists in directory; not imported", "Import error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					catch (EOFException ex) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ex.getMessage(), "Import error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ex.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					catch (InvalidNameException ix) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Invalid name: " + ix.getMessage(), "Invalid name", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidName") + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					dis.close();
 					fis.close();
 				}
 				catch (FileNotFoundException fnfx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File not found: " + fnfx.getMessage(), "Not found", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("FileNotFound") + ": " + fnfx.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 					bOK = false;
 				}
 				catch (IOException iox) {
 					iox.printStackTrace();
 					bOK = false;
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
 					bOK = false;
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					break;
 				}
 			}
@@ -118,10 +118,10 @@ public class ImportBinaryAction extends Activity {
 				volTarget.reopenForRead();
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot re-open image file for reading", "Import error", JOptionPane.ERROR_MESSAGE); 				
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 			}			
 			imagetool.refreshPanel(volTarget);			
-			if (bOK && afile.length>1) JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Import completed sucessfully", "Import files", JOptionPane.INFORMATION_MESSAGE);
+			if (bOK && afile.length>1) JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("Import")), TIImageTool.langstr("ImpBinary"), JOptionPane.INFORMATION_MESSAGE);
 
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}

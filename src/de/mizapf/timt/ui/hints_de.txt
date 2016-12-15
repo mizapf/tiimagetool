@@ -1,0 +1,95 @@
+# Hint file
+# Number = Text
+0 = Es gibt diese "Hinweise"-Funktion, die Ihnen beim Programmstart oder bei
+Auswahl aus dem Menü hilfreiche Tipps gibt. Diese Funktion kann hier oder in
+den Einstellungen an- oder ausgeschaltet werden.
+1 = Im <em>Hilfe</em>-Menü gibt es ein langes Referenzhandbuch für TIImageTool.
+2 = Sie sollten gelegentlich in den <em>Einstellungen</em> im <em>Datei</em>-Menü vorbeischauen.
+3 = Man kann Floppy-Disk-Images mit wenigen Klicks erstellen, und zwar von SSSD 
+bis DSHD (90 KiB bis 1,4 MiB), vorformatiert oder komplett leer (<em>Datei->Neu</em>).
+5 = Man kann CHD-Images für die Verwendung in MAME mit wenigen Klicks erzeugen (<em>Datei->Neu</em>).
+6 = Es gibt die wohlbekannte Kopieren/Einfügen-Unterstützung für das Arbeiten mit Dateien
+in Images, auch für Export und Import: Drücken Sie Strg-C in einer Verzeichnisansicht,
+und die markierten Dateien können durch Strg-V als TIFILES im Explorer abgelegt werden.
+7 = Sie können mit der Maus Dateien von einem Image zum anderen ziehen und ablegen,
+oder Sie können sie in Ihr Explorer-Fenster ablegen. Auch die umgekehrte Richtung
+vom Explorer in das Image wird unterstützt.
+8 = TIImageTool beinhaltet eine XModem-Funktion, mit der Sie Dateien über eine
+serielle Verbindung versenden oder empfangen können (<em>Bearbeiten->Datei empfangen</em>)
+Man kann damit beispielsweise Dateien von TELCO empfangen.
+9 = Eine Archivdatei, die mit Archiver erstellt wurde, kann ganz einfach durch
+Doppelklick wie ein Verzeichnis geöffnet werden, und da sie wie ein Verzeichnis
+behandelt wird, ist alles möglich, was man von Verzeichnissen erwartet, einschließlich
+dem Ausschneiden, Einfügen, Umbenennen und mehr. Man kann sogar ein Archiv im 
+Archiv öffnen und darin zum Beispiel eine Datei umbenennen.
+10 = Man kann Binärdateien als PROGRAM-Dateien importieren. 
+11 = Man kann Textdateien als DIV/VAR-80-Dateien importieren, was besonders 
+nützlich für Assemberquellcode ist.
+12 = TIImageTool findet heraus, ob eine Datei ein BASIC-Programm ist und liefert
+bei Doppelklick ein BASIC-Listing. Das gilt für PROGRAM-, MERGE- sowie LONG-Dateien
+(INT/VAR 254).
+13 = Diverse Grafikformate werden automatisch erkannt und bei Doppelklick
+angezeigt: TI-ARTIST, MyArt, YAPP, RLE-128 und FRACTALS. 
+14 = Verzeichnisse können nicht nur auf Festplatten-Images, sondern auch auf 
+Floppy-Images erzeugt werden, in letzteren jedoch nur im Wurzelverzeichnis und auch nur
+drei (entsprechend dem erweiterten TI-Dateisystem von HFDC oder GeneveOS).
+15 = Es gibt einen Dateisystemprüfer im <em>Extras</em>-Menü, der verschiedene 
+Fehler wie Fehl-/Über-/Kreuzallokation entdecken und beheben kann.
+16 = Es erscheint ein Kontextmenü mit entsprechenden Funktionen, wenn Sie die
+rechte Maustaste in einer Verzeichnisansicht klicken.
+17 = Eine Verzeichnisansicht kann ein eigenes Fenster bekommen, was es einfacher
+macht, Inhalte zu vergleichen oder Dateien per Drag-and-Drop zwischen den Images
+zu bewegen. Ein solches Fenster hängt sich beim Schließen wieder als Reiter in
+das Hauptfenster ein.
+18 = Man kann ein Image mehr als einmal öffnen, was es einfacher macht, 
+Dateien innerhalb des Images zu bewegen.
+19 = Dateien werden im TIFILES-Format in das Dateisystem Ihres Rechners exportiert,
+wobei in den Einstellungen verschiedene Angaben gemacht werden können, wie der
+externe Dateiname aufgebaut werden soll.
+20 = Neben Dateien kann man auch ganze Verzeichnisse exportieren und importieren.
+Die Dateien im Verzeichnis werden als TIFILES exportiert. Das Verzeichnis
+erhält eine zusätzliche <em>meta.inf</em>-Datei, um dessen Namen zu speichern.
+21 = Wenn man eine Datei importiert, kann TIImageTool entweder den Namen aus
+dem TIFILES-Kopf verwenden oder den Namen der exportierten Datei nutzen, nachdem
+eventuell unzulässige Zeichen ersetzt worden sind.
+22 = Der eingebaute TMS9900-Disassembler erlaubt es, Bereiche von der 
+Disassemblierung auszusparen, die von Ihnen als Daten- oder Textbereiche 
+ausgewiesen wurden. Diese Einstellungen werden für die jeweilige Datei permanent
+gespeichert.
+23 = Der TMS9900-Disassembler nimmt sowohl PROGRAM-Dateien als auch DIS/FIX-80-Dateien
+entgegen. Durch Verwendung von Symbolen ist es dem Disassembler möglich, Quellcode zu erzeugen, 
+der wieder assembliert werden kann.
+24 = Es gibt auch einen GPL-Disassembler in TIImageTool, der Bereiche von der
+Disassemblierung aussparen kann, indem diese als Daten- oder Textbereiche
+gekennzeichnet werden. Diese und andere Angaben werden für die jeweilige Datei
+permanent gespeichert.
+25 = Es ist möglich, eine Boot-Diskette oder eine bootfähige Festplatte für 
+den Geneve zu erzeugen, indem man <em>Extras->GeneveOS installieren</em>
+auswählt. Alle hierzu notwendigen Dateien sind in dieser TIImageTool-Distribution
+enthalten.
+26 = CHD-Images (also MAME-Festplatten-Images) können aus einfachen Sektordumps
+erzeugt werden. Man kann umgekehrt die CHD-Images auch auslesen, um sie etwa
+auf eine SCSI-Platte zu schreiben, die man am TI/Geneve verwenden möchte.
+27 = TIImageTool bietet die Funktion "Serial Bridge", die es ermöglicht, die
+TI/Geneve-Emulation in MAME mit einer echten seriellen Schnittstelle zu koppeln.
+28 = Es gibt die Möglichkeit, TIImageTool in einer Befehlszeile auszuführen, sodass
+man Verzeichnisausgaben in eine Datei umlenken kann. Verwenden Sie  
+<em>java -jar tiimagetool.jar CommandShell -h</em> für weiter gehende Informationen.
+29 = In Textform vorliegende BASIC-Programme können in ein Image importiert werden. 
+Damit ist es ein Leichtes, ein Programm von einer Webseite zu übernehmen und 
+dann etwa in MAME zur Ausführung zu bringen.
+30 = Fehler- und Diagnoseausgaben von TIImageTool können in eine Datei umgelenkt werden.
+Dies ist in den <em>Einstellungen</em> festzulegen.
+31 = TIImageTool unterstützt das HFE-Format, welches vom Lotharek-Floppy-Emulator
+verwendet wird, direkt und ohne Konvertierung.
+32 = Es gibt eine Suchfunktion im <em>Extras</em>-Menü, mit dem man nicht nur
+Dateien auf Images, sondern sogar nach Inhalten suchen und noch dazu auch
+reguläre Ausdrücke verwenden kann.
+33 = Mit dem eingebauten Sektoreditor kann man einzelne Sektoren auf einem Image
+bearbeiten, etwa um dieses zu reparieren. Es werden alle Formate unterstützt, 
+einschließlich der CHD-Container von MAME oder HFE von Lotharek.
+34 = TIImageTool bietet seine Oberfläche in verschiedenen Sprachen an, 
+die man in den <em>Einstellungen</em> ändern kann.
+35 = Es ist möglich, eine Compact-Flash-Karten mit TIImageTool zu lesen und als
+Image abzulegen. Auf diesem Image können CF7-Volumes formatiert, diese
+bearbeitet und schließlich alles wieder auf die CF-Karte geschrieben werden.

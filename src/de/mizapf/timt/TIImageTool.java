@@ -883,7 +883,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_propNames = new Properties();
 		try {
 			String propFile = "names_" + getLocale(getPropertyString(LANG)).getLanguage() + ".prop";
-       		m_propNames.load(ToolDialog.class.getResourceAsStream(propFile));
+			m_propNames.load(ToolDialog.class.getResourceAsStream(propFile));
 		}
 		catch (IOException iox) {
 			iox.printStackTrace();
@@ -969,7 +969,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		
 		int maxnumber = 0;
 		try {
-			InputStream is = ToolDialog.class.getResourceAsStream("hints.txt");
+			InputStream is = ToolDialog.class.getResourceAsStream("hints_" + getLocale(getPropertyString(LANG)).getLanguage() + ".txt");
 			BufferedReader br = new BufferedReader(new InputStreamReader(is));
 			int lastInd = 0;
 			
@@ -993,7 +993,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			System.arraycopy(ahint, 0, m_ahint, 0, maxnumber+1);
 		}
 		catch (NumberFormatException nfx) {
-			System.err.println("Error in hint file: " + hint);
+			System.err.println(langstr("HintError") + ": " + hint);
 		}
 		catch (IOException iox) {
 			iox.printStackTrace();
@@ -1062,7 +1062,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				else rand++;
 			}
 		}
-		if (!found) return "you know all the hints by now!";
+		if (!found) return langstr("HintAll");
 		else {
 			m_lastHint = rand;
 			return m_ahint[rand];

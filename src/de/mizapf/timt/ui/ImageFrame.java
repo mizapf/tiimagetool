@@ -735,6 +735,6 @@ public class ImageFrame extends JFrame {
 		}
 		// else System.out.println("Failed GraphX check");
 		
-		throw new FormatException(m_sName, "is not a picture format");
+		throw new FormatException(m_sName, TIImageTool.langstr("ImageFrameNoPic"));
 	}
 }

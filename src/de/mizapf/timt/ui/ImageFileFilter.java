@@ -23,16 +23,18 @@ package de.mizapf.timt.ui;
 import java.io.File;
 import javax.swing.filechooser.FileFilter;
 
+import de.mizapf.timt.TIImageTool;
+
 public class ImageFileFilter extends FileFilter {
 	
 	boolean m_bOnlyHD = false;
 	
 	public String getDescription() {
 		if (m_bOnlyHD) {
-			return "TI hard disk image files";
+			return TIImageTool.langstr("FilterHD");
 		}
 		else {
-			return "TI disk image files";
+			return TIImageTool.langstr("FilterImg");
 		}
 	}
 
