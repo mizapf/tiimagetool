@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
 
+import de.mizapf.timt.TIImageTool;
+
 class RawHDFormat extends ImageFormat {
 
 	private final static int BLOCKSIZE = 512;
@@ -56,7 +58,7 @@ class RawHDFormat extends ImageFormat {
 	}
 
 	public String getDumpFormatName() {
-		return "sector";
+		return TIImageTool.langstr("RAWType");
 	}
 	
 	RawHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {

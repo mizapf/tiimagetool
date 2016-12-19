@@ -494,7 +494,7 @@ public class GPLAssembler {
 						break;
 					}
 					if (hint[i].definesParamsFor(nLastCallAddr) && (nCurrentAddress < nLastCallPos + 3 + hint[i].getParamCount())) {
-						System.out.println("PARAM contains " + Utilities.toHex(nCurrentAddress, 4));
+						// System.out.println("PARAM contains " + Utilities.toHex(nCurrentAddress, 4));
 						if (nLastDataPos == -1) nLastDataPos = nCurrentAddress;
 						bData = true;
 						bText = false;

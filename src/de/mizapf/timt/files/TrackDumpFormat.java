@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.io.File;
 
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.TIImageTool;
 
 class TrackDumpFormat extends ImageFormat {
 
@@ -124,7 +125,7 @@ class TrackDumpFormat extends ImageFormat {
 	}
 
 	public String getDumpFormatName() {
-		return "track";
+		return TIImageTool.langstr("TrackDump");
 	}
 	
 	/** We return the cached sector.

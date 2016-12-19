@@ -25,6 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import de.mizapf.timt.files.ImageFormat;
+import de.mizapf.timt.TIImageTool;
 
 class NewCF7Dialog extends ToolDialog {
 	
@@ -32,7 +33,7 @@ class NewCF7Dialog extends ToolDialog {
 	boolean   m_fullImage;
 	
 	NewCF7Dialog(JFrame owner, boolean fullImage) {
-		super(owner, "Create new external CF7 volume");
+		super(owner, TIImageTool.langstr("NewCF7Title"));
 		m_fullImage = fullImage;
 	}
 	
@@ -61,39 +62,28 @@ class NewCF7Dialog extends ToolDialog {
 		prepareGui();
 
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth("Volume name");
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("NewCF7Column"));
 
 		if (m_fullImage) {
-			putTextLine(this, "If you want to create a new image for a CF7 card,", 0);
+			putTextLine(this, TIImageTool.langstr("NewCF7Hint1"), 0);
 			add(Box.createVerticalStrut(10));
-			putTextLine(this, "!please use the functions in the \"Utility\" menu.", 0);
+			putTextLine(this, "!" + TIImageTool.langstr("NewCF7Hint2"), 0);
 			add(Box.createVerticalStrut(10));
 			
-			putMultiTextLine(this, 
-				  "Short explanation: Compact Flash cards sometimes offer less than the exact amount of\n"
-				+ "memory as printed on their casing, so you may get into trouble when copying the image\n"
-				+ "on the CF card.");
+			putMultiTextLine(this, TIImageTool.langstr("NewCF7Hint3")); 
 			add(Box.createVerticalStrut(10));
-			putMultiTextLine(this,
-				  "Hence, you should use the \"Read Compact Flash Card\" function first, which produces\n"
-				+ "an image file, then format the volumes as desired with \"Format CF7\". This way, you\n"
-				+ "will get an image that suits your CF card; copy it to the CF card with \"Write Compact\n"
-				+ "Flash Card\" finally.");
+			putMultiTextLine(this, TIImageTool.langstr("NewCF7Hint4"));
 		}
 		else {
-			putMultiTextLine(this,
-				   "This is a single volume for a CF7-formatted card. You can copy its contents into a\n"
-				 + "CF7 image by using the usual file views (copy/paste or drag-and-drop) or by using the\n"
-				 + "tool dsk2cf.exe for your CF7 device. A volumes has 1600 sectors and resembles a\n"
-				 + "floppy disk image in sector dump format.");
+			putMultiTextLine(this, TIImageTool.langstr("NewCF7Hint5"));
 			add(Box.createVerticalStrut(10));
-			putTextLine(this, "!You can work on CF7 images in TIImageTool directly.", 0);
+			putTextLine(this, "!" + TIImageTool.langstr("NewCF7Hint6"), 0);
 			add(Box.createVerticalStrut(10));
-			putTextLine(this, "You do not need an external volume file unless you want to store it as a separate file.", 0);
+			putTextLine(this, TIImageTool.langstr("NewCF7Hint7"), 0);
 			add(Box.createVerticalStrut(10));
-			putTextLine(this, "See also the \"Utility\" menu.", 0);
+			putTextLine(this, TIImageTool.langstr("NewCF7Hint8"), 0);
 			add(Box.createVerticalStrut(10));
-			m_tfVolumeName = putTextField(this, "Volume name", "", nColumnWidth, 0);
+			m_tfVolumeName = putTextField(this, TIImageTool.langstr("VolumeName"), "", nColumnWidth, 0);
 		}
 		add(Box.createVerticalStrut(10));
 		add(Box.createVerticalGlue());

@@ -28,6 +28,7 @@ import java.awt.event.KeyEvent;
 import java.awt.Cursor;
 
 import de.mizapf.timt.util.ImageCheck;
+import de.mizapf.timt.TIImageTool;
 
 public class OpenImageAction extends Activity {
 
@@ -36,7 +37,7 @@ public class OpenImageAction extends Activity {
 	}
 
 	public String getMenuName() {
-		return imagetool.langstr("Open");
+		return imagetool.langstr("OpenImage");
 	}
 	
 	public String getActionName() {
@@ -85,11 +86,11 @@ public class OpenImageAction extends Activity {
 							sAbsFile = sAbsFile + "#" + number;
 						}
 						catch (NumberFormatException nx) {
-							JOptionPane.showMessageDialog(m_parent, "Invalid volume number", "Open error", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageInvalidNumber"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 							continue;
 						}
 						if (number < 0) {
-							JOptionPane.showMessageDialog(m_parent, "Volume number cannot be negative", "Open error", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageNegativeNumber"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 							continue;
 						}
 					}
@@ -104,12 +105,11 @@ public class OpenImageAction extends Activity {
 					if (vol==null) vol = new Volume(sAbsFile);
 					int[] geom = new int[5];
 					if (vol.isCF7Volume() && ImageCheck.checkCF7Inconsistency(vol, geom)==true) {
-						JOptionPane.showMessageDialog(m_parent, "Inconsistent file system. You should run a file system check (Utilities).", "Open error", JOptionPane.WARNING_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageInconsistent"), TIImageTool.langstr("Error"), JOptionPane.WARNING_MESSAGE);
 					}
 				}
 				catch (MissingHeaderException mx) {
-					int doCheck1 = JOptionPane.showConfirmDialog(m_parent, 
-						"Image file has floppy size, but no floppy signature (DSK). Open anyway?", "Warning", JOptionPane.YES_NO_OPTION);
+					int doCheck1 = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageNoDSK"), TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
 					if (doCheck1 == JOptionPane.YES_OPTION) {
 						vol = new Volume(sAbsFile, false);
 					}
@@ -117,7 +117,7 @@ public class OpenImageAction extends Activity {
 					else continue;
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 					continue;
 				}
 
@@ -129,27 +129,22 @@ public class OpenImageAction extends Activity {
 //					imagetool.setHDConvEnabled(true, false);
 					int nChecked = Directory.checkDIB(root, false);
 					if (nChecked < 0) {
-						int doCheck = JOptionPane.showConfirmDialog(m_parent, 
-							"This SCSI image shows the MaxAU bug. Shall this image be repaired?", "Warning", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+						int doCheck = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageAUBug"), TIImageTool.langstr("Warning"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 						if (doCheck == JOptionPane.OK_OPTION) {
 							nChecked = Directory.checkDIB(root, true);
 							if (nChecked < 0)
 							{
-								JOptionPane.showMessageDialog(m_parent, 
-									"Checked " + (-nChecked) + " directories and fixed MaxAu bug.", "Fix MaxAU", JOptionPane.INFORMATION_MESSAGE);
+								JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("OpenImageFixed"), -nChecked), TIImageTool.langstr("OpenImageChecking"), JOptionPane.INFORMATION_MESSAGE);
 							}
 							else {
 								if (nChecked==0) 
-								JOptionPane.showMessageDialog(m_parent, 
-									"No directories found.", "Fix MaxAU", JOptionPane.INFORMATION_MESSAGE);
+									JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageNoDir"), TIImageTool.langstr("OpenImageChecking"), JOptionPane.INFORMATION_MESSAGE);
 								else 
-								JOptionPane.showMessageDialog(m_parent, 
-									"Checked " + nChecked + " directories; no problems found.", "Fix MaxAU",JOptionPane.INFORMATION_MESSAGE);
+									JOptionPane.showMessageDialog(m_parent,  String.format(TIImageTool.langstr("OpenImageAllOk"), nChecked), TIImageTool.langstr("OpenImageChecking"), JOptionPane.INFORMATION_MESSAGE);
 							}
 						}
 						else {
-							JOptionPane.showMessageDialog(m_parent, 
-								"Before this image can be converted to HFDC it must be fixed.", "Warning", JOptionPane.INFORMATION_MESSAGE);							
+							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageBefore"), TIImageTool.langstr("Warning"), JOptionPane.INFORMATION_MESSAGE);							
 //							imagetool.setHDConvEnabled(false, false);
 						}
 					}
@@ -160,21 +155,21 @@ public class OpenImageAction extends Activity {
 				
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (EOFException eofx) {
 				// TODO: Close open image
-				JOptionPane.showMessageDialog(m_parent, "Defect or missing file system: " + eofx.getMessage(), "Error opening file", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageDefect") + ": " + eofx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (FileNotFoundException fnfx) {
-				JOptionPane.showMessageDialog(m_parent, "File not found: " + fnfx.getMessage(), "Error opening file", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileNotFound") + ": "  + fnfx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, iox.getClass().getName() + " (" + iox.getMessage() + ")", "Error reading file", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName() + " (" + iox.getMessage() + ")", TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 				iox.printStackTrace();
 			}
 			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(m_parent, "Error during fix: " + px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
 			}
 
 		}

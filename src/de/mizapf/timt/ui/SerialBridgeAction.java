@@ -49,16 +49,16 @@ public class SerialBridgeAction extends Activity implements Runnable {
 			m_sb.create();
 		}
 		catch (ConnectionException cx) {
-			JOptionPane.showMessageDialog(display.getFrame(), cx.getMessage(), "Connection exception", JOptionPane.ERROR_MESSAGE); 			
+			JOptionPane.showMessageDialog(display.getFrame(), cx.getMessage(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE); 			
 		}
 		catch (SocketException sx) {
-			JOptionPane.showMessageDialog(display.getFrame(), sx.getMessage(), "Socket exception", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(display.getFrame(), sx.getMessage(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE); 
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(display.getFrame(), iox.getClass().getName(), "Socket communication error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(display.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE);
 		}
 		catch (NumberFormatException nfx) {
-			System.err.println("Invalid port number: " + sPort);
+			System.err.println(TIImageTool.langstr("SBActionInvalidPort") + ": " + sPort);
 		}
 	}
 	
@@ -68,13 +68,13 @@ public class SerialBridgeAction extends Activity implements Runnable {
 			m_sb.create();
 		}
 		catch (ConnectionException cx) {
-			JOptionPane.showMessageDialog(m_parent, cx.getMessage(), "Connection exception", JOptionPane.ERROR_MESSAGE); 			
+			JOptionPane.showMessageDialog(m_parent, cx.getMessage(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE); 			
 		}
 		catch (SocketException sx) {
-			JOptionPane.showMessageDialog(m_parent, sx.getMessage(), "Socket exception", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, sx.getMessage(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE); 
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_parent, iox.getClass().getName(), "Socket communication error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE); 
 		}		
 		imagetool.setBridgeEnabled(true);
 		// Bridge has been closed
@@ -87,7 +87,7 @@ public class SerialBridgeAction extends Activity implements Runnable {
 			sbd.setVisible(true);	
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_parent, iox.getMessage(), "Error setting up bridge", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("SBActionError") + ": " + iox.getClass().getName(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
 			return;
 		}
 		

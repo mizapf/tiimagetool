@@ -32,6 +32,8 @@ import de.mizapf.timt.util.*;
 import de.mizapf.timt.basic.BasicCruncher;
 import de.mizapf.timt.basic.CrunchException;
 
+import de.mizapf.timt.TIImageTool;
+
 public class ImportContentAction extends Activity {
 
 	public String getMenuName() {
@@ -51,7 +53,7 @@ public class ImportContentAction extends Activity {
 	
 	public void convertAndImport(byte[] abyContent, DirectoryView dvCurrent, String sSuggested, boolean bReopen) {
 		if (!imagetool.viewStillThere(dvCurrent)) {
-			JOptionPane.showMessageDialog(imagetool.getMainFrame(), "Target directory view has been closed already; cannot save file", "Import error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(imagetool.getMainFrame(), TIImageTool.langstr("ImportContentViewClosed"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		
@@ -75,7 +77,7 @@ public class ImportContentAction extends Activity {
 					sName = impdia.getFileName();
 					bValid = TFile.validName(sName);
 					if (!bValid) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Invalid file name: " + sName, "Invalid input", JOptionPane.ERROR_MESSAGE);				
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + sName, TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);				
 					}
 				}
 				else {
@@ -98,24 +100,24 @@ public class ImportContentAction extends Activity {
 				}
 				catch (CrunchException cx) {
 					if (cx.getMessage()==BasicCruncher.TOOLONG) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), cx.getMessage(), "BASIC error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), cx.getMessage(), TIImageTool.langstr("BasicError"), JOptionPane.ERROR_MESSAGE);
 					}
 					else {
 						if (cx.getMessage()==BasicCruncher.TOOSHORT) {
-							JOptionPane.showMessageDialog(dvCurrent.getFrame(), cx.getMessage(), "BASIC error", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(dvCurrent.getFrame(), cx.getMessage(), TIImageTool.langstr("BasicError"), JOptionPane.ERROR_MESSAGE);
 						}
 						else {
 							cx.printStackTrace();
 							if (cx.textline != 0) {
 								if (cx.line != 0) {
-									JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error in text line " + cx.textline + ", BASIC line " + cx.line + ", column " + cx.pos + "; use another BASIC version or save as text.", "BASIC error", JOptionPane.ERROR_MESSAGE);
+									JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("BasicErrorLineExt"), cx.textline, cx.line, cx.pos) + "; " + TIImageTool.langstr("BasicUseAnother"), TIImageTool.langstr("BASICError"), JOptionPane.ERROR_MESSAGE);
 								}
 								else {
-									JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Parse error in text line " + cx.textline + "; use another BASIC version or save as text.", "BASIC error", JOptionPane.ERROR_MESSAGE);
+									JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("BasicParseError"), cx.textline) + "; " + TIImageTool.langstr("BasicUseAnother"), TIImageTool.langstr("BASICError"), JOptionPane.ERROR_MESSAGE);
 								}
 							}
 							else {
-								JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error in line " + cx.line + ", column " + cx.pos + "; use another BASIC version or save as text.", "BASIC error", JOptionPane.ERROR_MESSAGE);
+								JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("BasicErrorLine"), cx.line, cx.pos) + "; " + TIImageTool.langstr("BasicUseAnother"), TIImageTool.langstr("BASICError"), JOptionPane.ERROR_MESSAGE);
 							}
 						}
 					}
@@ -125,7 +127,6 @@ public class ImportContentAction extends Activity {
 					continue;
 				}				
 				catch (IOException iox) {
-					System.err.println("Should not happen");
 					iox.printStackTrace();
 					return;
 				}
@@ -158,7 +159,7 @@ public class ImportContentAction extends Activity {
 					
 					if (bTab || special.length()>0) {
 						if (special.length() > 20) {
-							JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Too many unprintable characters; consider importing as binary", "Import error", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImportContentUnprint"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 							return;							
 						}
 						TranslateDialog trdia = new TranslateDialog(dvCurrent.getFrame(), bTab, special.toString());
@@ -167,8 +168,9 @@ public class ImportContentAction extends Activity {
 							trdia.setVisible(true);
 						}
 						catch (Exception e) {
-							System.err.println("Translate dialog has unrenderable characters");
-							JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot be imported as text", "Import error", JOptionPane.ERROR_MESSAGE);
+							e.printStackTrace();
+							System.err.println(TIImageTool.langstr("ImportContentTransError"));
+							JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImportContentNotAsText"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 							return;							
 						}
 						
@@ -225,7 +227,7 @@ public class ImportContentAction extends Activity {
 						abyTif = TIFiles.createTfi(abyContent, impdia.getFileName(), TFile.PROGRAM, 0, 0);
 					}
 					else {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "BUG: Unknown import mode", "Import error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImportContentBug"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 					}
 /*					else {
 						abyTif = TIFiles.createTfi(abyContent, impdia.getFileName(), impdia.getFlags(), impdia.getRecordLength(), impdia.getRecordCount());
@@ -239,27 +241,27 @@ public class ImportContentAction extends Activity {
 				dirCurrent.insertFile(abyTif, impdia.getFileName(), bReopen);
 			}
 			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (FileExistsException fx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File already exists: " + fx.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 				bDone = false;
 				bValid = false;
 			}
 			catch (EOFException eox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), eox.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), eox.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image broken: " + iox.getClass().getName(), "Write error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}			
 			catch (ImageFullException ix) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), sName + ": " + ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), sName + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image broken: " + ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (InvalidNameException fx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Invalid name: " + fx.getMessage(), "Invalid name", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + fx.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 				bDone = false;
 				bValid = false;				
 			}

@@ -25,6 +25,7 @@ import java.awt.event.KeyEvent;
 import javax.swing.JOptionPane;
 import java.io.IOException;
 import de.mizapf.timt.files.*;
+import de.mizapf.timt.TIImageTool;
 
 public class RenameVolumeAction extends Activity {
 
@@ -46,23 +47,23 @@ public class RenameVolumeAction extends Activity {
 		Directory dirCurrent = dvCurrent.getDirectory();
 		Volume volCurrent = dvCurrent.getVolume();
 
-		String sRet = JOptionPane.showInputDialog(dvCurrent.getFrame(), "Provide a new volume name: ", volCurrent.getName());
+		String sRet = JOptionPane.showInputDialog(dvCurrent.getFrame(), TIImageTool.langstr("RenameVolumeNewName") +": ", volCurrent.getName());
 		if (sRet != null) {
 			try {
 				volCurrent.renameVolume(sRet);
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage() , "Renaming error", JOptionPane.ERROR_MESSAGE); 						
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage() , TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 						
 			}
 			catch (IOException iox) {
 				iox.printStackTrace();
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Write error" , "Renaming error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IO error") + ": " + iox.getClass().getName(), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot write: " + px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (InvalidNameException inx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), inx.getMessage(), "Renaming error", JOptionPane.ERROR_MESSAGE);				
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), inx.getMessage(), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE);				
 			}
 		}
 		imagetool.refreshPanel(volCurrent);

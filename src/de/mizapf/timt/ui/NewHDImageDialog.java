@@ -27,6 +27,7 @@ import javax.swing.event.*;
 import de.mizapf.timt.files.FormatParameters;
 import de.mizapf.timt.files.Time;
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.TIImageTool;
 
 class NewHDImageDialog extends ToolDialog implements ActionListener, FocusListener {
 	
@@ -53,7 +54,7 @@ class NewHDImageDialog extends ToolDialog implements ActionListener, FocusListen
 	JCheckBox		m_chbBuffered;	
 	
 	NewHDImageDialog(JFrame owner) {
-		super(owner, "Create new hard disk image");
+		super(owner, TIImageTool.langstr("NewImageTitle"));
 	}
 	
 /*
@@ -93,34 +94,31 @@ Default values:
 */	
 	public void createGui(Font font) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth("Hard disk size will be 1234 MiB");
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("NewHDColumn"));
 		int nFieldWidth = fm.stringWidth("XXXXXXXXXXXX");
 
 		add(Box.createVerticalStrut(10));		
 
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
-		m_tfName = putTextField(this, "Volume name",  "HARDDISK", nColumnWidth, nFieldWidth);
+		m_tfName = putTextField(this, TIImageTool.langstr("VolumeName"), "HARDDISK", nColumnWidth, nFieldWidth);
 		
-		m_tfCylinders = putTextField(this, "Cylinders", "615", nColumnWidth, nFieldWidth);
+		m_tfCylinders = putTextField(this, TIImageTool.langstr("Cylinders"), "615", nColumnWidth, nFieldWidth);
 		m_tfCylinders.addFocusListener(this);		
 		
-		m_tfHeads = putTextField(this, "Heads", "4", nColumnWidth, nFieldWidth);
+		m_tfHeads = putTextField(this, TIImageTool.langstr("Heads"), "4", nColumnWidth, nFieldWidth);
 		m_tfHeads.addFocusListener(this);
 
-		m_tfSectors = putTextField(this, "Sectors per track", "32", nColumnWidth, nFieldWidth);
+		m_tfSectors = putTextField(this, TIImageTool.langstr("SectorsPerTrack"), "32", nColumnWidth, nFieldWidth);
 		m_tfSectors.addFocusListener(this);
 		
 		String[] asOpti = { "256", "512" };
-		m_jcSectorLength = putComboBox(this, "Sector length", asOpti, 0, nColumnWidth);
-
-//		String[] asOptio = { "4", "5" };
-//		m_jcCHDVersion = putComboBox(this, "MESS CHD version", asOptio, 1, nColumnWidth);
+		m_jcSectorLength = putComboBox(this, TIImageTool.langstr("SectorLength"), asOpti, 0, nColumnWidth);
 		
-		m_chbFormat = putCheckBox(this, "Format hard disk", true, nColumnWidth);
+		m_chbFormat = putCheckBox(this, TIImageTool.langstr("NewHDDoFormat"), true, nColumnWidth);
 		m_chbFormat.addActionListener(this);
 
-		m_chbAdvanced = putCheckBox(this, "Advanced options", false, nColumnWidth);
+		m_chbAdvanced = putCheckBox(this, TIImageTool.langstr("NewHDAdvancedOptions"), false, nColumnWidth);
 		m_chbAdvanced.addActionListener(this);
 
 		m_jpAdvancedFrame = new JPanel();
@@ -130,15 +128,15 @@ Default values:
 
 		// add(Box.createVerticalStrut(10));
 
-		m_tfReserved = putTextField(m_jpAdvanced, "Reserved AUs", "2048", nColumnWidth, nFieldWidth); 
-		m_tfPrecomp = putTextField(m_jpAdvanced, "Write precompensation", "464", nColumnWidth, nFieldWidth); 
-		m_tfReduced = putTextField(m_jpAdvanced, "Reduced write current", "464", nColumnWidth, nFieldWidth); 
-		m_tfStep = putTextField(m_jpAdvanced, "Step rate", "1", nColumnWidth, nFieldWidth);	
+		m_tfReserved = putTextField(m_jpAdvanced, TIImageTool.langstr("NewHDReservedAUs"), "2048", nColumnWidth, nFieldWidth); 
+		m_tfPrecomp = putTextField(m_jpAdvanced, TIImageTool.langstr("WritePC"), "464", nColumnWidth, nFieldWidth); 
+		m_tfReduced = putTextField(m_jpAdvanced, TIImageTool.langstr("ReducedWC"), "464", nColumnWidth, nFieldWidth); 
+		m_tfStep = putTextField(m_jpAdvanced, TIImageTool.langstr("StepSpeed"), "1", nColumnWidth, nFieldWidth);	
 
 		String[] asOptions = { "HFDC", "SCSI" };
-		m_jcFilesystem = putComboBox(m_jpAdvanced, "File system", asOptions, 0, nColumnWidth);
+		m_jcFilesystem = putComboBox(m_jpAdvanced, TIImageTool.langstr("FileSystem"), asOptions, 0, nColumnWidth);
 
-		m_chbBuffered = putCheckBox(m_jpAdvanced, "Buffered step", true, nColumnWidth);
+		m_chbBuffered = putCheckBox(m_jpAdvanced, TIImageTool.langstr("BufferedStep"), true, nColumnWidth);
 		add(m_jpAdvancedFrame);
 		add(Box.createVerticalStrut(10));
 
@@ -277,15 +275,11 @@ Default values:
 		return m_chbBuffered.isSelected();
 	}
 	
-	public int getCHDVersion() {
-		return 5;
-	}
-	
 	public FormatParameters getFormatParameters() {
 		return new FormatParameters(getVolumeName(), getCylinders(), getHeads(), 
 			getSectors(), getSectorLength(), getReserved(), getStepRate(), 
 			getReducedWriteCurrent(), 0, getBufferedStep(), 
 			getWritePrecompensation(), Time.createNow(), formatImage(), 
-			forHfdc(), getCHDVersion());
+			forHfdc(), 5);
 	}
 }

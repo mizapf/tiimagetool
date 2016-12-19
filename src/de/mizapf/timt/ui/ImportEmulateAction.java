@@ -36,7 +36,7 @@ import de.mizapf.timt.util.TIFiles;
 public class ImportEmulateAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ImpEmulate");
+		return imagetool.langstr("ImportEmulate");
 	}
 	
 	public String getActionName() {
@@ -70,7 +70,7 @@ public class ImportEmulateAction extends Activity {
 				volTarget.reopenForWrite();
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot open image file for writing", "Import error", JOptionPane.ERROR_MESSAGE); 				
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
@@ -86,16 +86,16 @@ public class ImportEmulateAction extends Activity {
 						if (vol==null) vol = new Volume(sAbsFile);
 					}
 					catch (MissingHeaderException mx) {
-						JOptionPane.showMessageDialog(m_parent, "Image file does not have a floppy signature (DSK).", "Image error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImportEmulateNoSig"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 						continue;
 					}
 					catch (ImageException ix) {
-						JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 						continue;
 					}
 					
 					if (!vol.isFloppyImage()) {
-						JOptionPane.showMessageDialog(m_parent, "Only floppy images can be used as EMULATE files; " + imagefile.getAbsolutePath() + " is not a floppy image.", "Image error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImportEmulateOnlyFloppy"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 						continue;
 					}
 					
@@ -110,7 +110,7 @@ public class ImportEmulateAction extends Activity {
 						String defName = imagefile.getName().toUpperCase();
 						int perpos = defName.lastIndexOf(".");
 						if (perpos != -1) defName = defName.substring(0,perpos);						
-						NewElementDialog impdia = new NewElementDialog(dvCurrent.getFrame(), "New emulate file", defName, "Use the context menu to activate the EMULATE file.");
+						NewElementDialog impdia = new NewElementDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImportEmulateName"), defName, TIImageTool.langstr("ImportEmulateHint"));
 						impdia.createGui();
 						impdia.setVisible(true);
 						if (impdia.confirmed()) {							
@@ -119,33 +119,33 @@ public class ImportEmulateAction extends Activity {
 						}
 					}
 					catch (ProtectedException px) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					catch (FileExistsException fx) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File " + fx.getMessage() + " already exists in directory; not imported", "Import error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					catch (EOFException ex) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ex.getMessage(), "Import error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ex.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 						ex.printStackTrace();
 					}
 					catch (InvalidNameException ix) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Invalid name: " + ix.getMessage(), "Invalid name", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 				}
 				// Exceptions from new Volume
 				catch (FileNotFoundException fnfx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File not found: " + fnfx.getMessage(), "Not found", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("FileNotFound") + ": " + fnfx.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 					bOK = false;
 				}
 				catch (IOException iox) {
 					iox.printStackTrace();
 					bOK = false;
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				// from readSector
 				catch (ImageException ix) {
 					bOK = false;
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					break;
 				}
 			} 
@@ -153,10 +153,10 @@ public class ImportEmulateAction extends Activity {
 				volTarget.reopenForRead();
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot re-open image file for reading", "Import error", JOptionPane.ERROR_MESSAGE); 				
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 			}			
 			imagetool.refreshPanel(volTarget);			
-			if (bOK && afile.length>1) JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Import completed sucessfully", "Import files", JOptionPane.INFORMATION_MESSAGE);
+			if (bOK && afile.length>1) JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("Import")), TIImageTool.langstr("ImportFiles"), JOptionPane.INFORMATION_MESSAGE);
 
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		}

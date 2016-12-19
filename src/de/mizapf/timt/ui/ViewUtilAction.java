@@ -26,6 +26,7 @@ import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.files.*;
 import java.awt.Cursor;
 import java.io.EOFException;
+import de.mizapf.timt.TIImageTool;
 
 public class ViewUtilAction extends Activity {
 
@@ -42,7 +43,6 @@ public class ViewUtilAction extends Activity {
 		Directory dirCurrent = dvCurrent.getDirectory();
 		Volume vol = dvCurrent.getVolume();
 
-		String sText = "no content";
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 		for (Element selected : dvCurrent.getSelectedEntries()) {
@@ -53,13 +53,13 @@ public class ViewUtilAction extends Activity {
 					imagetool.showTextContent(selected.getName(), Utilities.hexdump(nUtilStart, 6, content, content.length, false));  
 				}
 				catch (EOFException eofx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error: " + eofx.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("Error") + ": " + eofx.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 					
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}

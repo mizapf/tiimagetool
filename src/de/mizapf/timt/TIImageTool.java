@@ -225,11 +225,18 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	java.io.File m_flSourceDirectory = null;
 	
 	public final static String TEMPDIRNAME = "tiimagetool_tmp";
-	
-	public final static String LANGTEXT = "de.mizapf.timt.ui.Strings";
-	
+		
+	// Localization
+	// Add more languages into both lists (in the same order)
+	// The second list is a list of keys into the Strings_xx.properties files
+	// so the language names can be translated as well
+	// Note that you need a Strings_xx.properties and hints_xx.txt file for
+	// each language
 	private static final Locale[] locale = { Locale.ENGLISH, Locale.GERMAN };
-	
+	private static final String[] langs = { "English", "German" }; 
+
+	public final static String LANGTEXT = "de.mizapf.timt.ui.Strings";
+
 	Properties m_Settings;
 	String m_sPropertiesPath;
 
@@ -356,7 +363,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_iOpen = createMenuItem(new OpenImageAction());
 			m_mFile.add(m_iOpen);
 
-			m_mOpenRecent = new JMenu(langstr("Open_recent_file"));
+			m_mOpenRecent = new JMenu(langstr("OpenRecentFile"));
 			m_mFile.add(m_mOpenRecent);
 			m_mOpenRecent.setFont(dialogFont);
 			
@@ -704,7 +711,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_dv = dv;
 			int size = 17;
 			setPreferredSize(new Dimension(size, size));
-			setToolTipText(langstr("Close_this_view"));
+			setToolTipText(langstr("CloseThisView"));
 			// setUI(new BasicButtonUI());
 			setContentAreaFilled(false);
 			setFocusable(false);
@@ -774,7 +781,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_dt = dv.getPanel();
 			int size = 17;
 			setPreferredSize(new Dimension(size, size));
-			setToolTipText("Show_as_window");
+			setToolTipText("ShowAsWindow");
 			// setUI(new BasicButtonUI());
 			setContentAreaFilled(false);
 			setFocusable(false);
@@ -1278,6 +1285,14 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return m_resources.getString(key);
 	}
 	
+	public String[] getLanguages() {
+		String[] lang = new String[langs.length];
+		for (int i=0; i < lang.length; i++) {
+			lang[i] = langstr(langs[i]);
+		}
+		return lang;
+	}
+	
 // JComponent.getComponentGraphics -> getFontMetrics -> stringWidth
 
 	public JMenuItem createMenuItem(Activity act) {
@@ -1472,7 +1487,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 
 		// For safety
 		if (separ==-1) {
-			value = "/\\* __x";
+			value = "/\\*><: __x___";
 			setProperty(CONVERT, value);
 			separ = value.indexOf(" ");
 		}
@@ -1819,12 +1834,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					line = br.readLine();
 					if (line != null) sbConsoleContent.append(line).append("\n");
 				} 
-				SwingUtilities.invokeLater(new ContentShow(langstr("Console_output"), sbConsoleContent.toString(), true, true));
+				SwingUtilities.invokeLater(new ContentShow(langstr("ConsoleOutput"), sbConsoleContent.toString(), true, true));
 			}
 			catch (IOException iox) {
 				System.setOut(System.out);
 				System.setErr(System.err);		
-				System.err.println("Cannot open log file. Outputting to console.");
+				System.err.println(langstr("ConsoleOutputError"));
 				m_logFile = null;
 			}
 		}
@@ -1843,7 +1858,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			catch (FileNotFoundException fx) {
 				System.setOut(System.out);
 				System.setErr(System.err);
-				System.err.println("Cannot open log file. Outputting to console.");
+				System.err.println(langstr("ConsoleOutputError"));
 				m_iConsole.setEnabled(false);
 				m_logFile = null;
 			}

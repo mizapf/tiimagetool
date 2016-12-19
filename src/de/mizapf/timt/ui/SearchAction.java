@@ -80,7 +80,7 @@ public class SearchAction extends Activity {
 				m_maxhits = sd.getMaximumHits();
 			}
 			catch (NumberFormatException nfx) {
-				JOptionPane.showMessageDialog(m_parent, "Invalid value for maximum hits", "Search error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("SearchInvalidMax"), TIImageTool.langstr("SearchError"), JOptionPane.ERROR_MESSAGE);
 				return;
 			}
 			
@@ -89,11 +89,11 @@ public class SearchAction extends Activity {
 					m_pattern = Pattern.compile(m_searchString);
 				}
 				catch (PatternSyntaxException psx) {
-					JOptionPane.showMessageDialog(m_parent, "Invalid regular expression", "Search error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("SearchInvalidRegex"), TIImageTool.langstr("SearchError"), JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 				catch (IllegalArgumentException iax) {
-					JOptionPane.showMessageDialog(m_parent, "BUG: Illegal argument when creating regex. Check console.", "Search error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("SearchBug"), TIImageTool.langstr("SearchError"), JOptionPane.ERROR_MESSAGE);
 					iax.printStackTrace();
 					return;
 				}
@@ -106,7 +106,7 @@ public class SearchAction extends Activity {
 			
 			ArrayList<SearchResult> list = new ArrayList<SearchResult>();
 			
-			m_view = new SearchProgressView("Searching", m_parent);
+			m_view = new SearchProgressView(TIImageTool.langstr("Searching"), m_parent);
 			m_view.createGui(imagetool.boldFont);
 			m_view.setVisible(true);
 			
@@ -114,12 +114,12 @@ public class SearchAction extends Activity {
 				search(image, list);
 			}
 			
-			if (m_view.stopRequested()) System.out.println("Stop requested");
+			if (m_view.stopRequested()) System.out.println(TIImageTool.langstr("SearchStop"));
 			if (m_count >=m_maxhits) System.out.println("Maximum hits reached");
 			
 			SearchResult[] result = new SearchResult[list.size()];
 			list.toArray(result);
-			imagetool.showSearchResult("Search results", result); 
+			imagetool.showSearchResult(TIImageTool.langstr("SearchResults"), result); 
 			m_view.dispose();
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

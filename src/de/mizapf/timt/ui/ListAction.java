@@ -46,7 +46,7 @@ public class ListAction extends Activity {
 		Directory dirCurrent = dvCurrent.getDirectory();
 		DirectoryPanel dp = dvCurrent.getPanel();
 
-		String sText = "no content or no BASIC file";			
+		String sText = TIImageTool.langstr("NoContent");			
 		Volume vol = dvCurrent.getVolume();
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		String escape = imagetool.getPropertyString(TIImageTool.ESCAPE);
@@ -61,16 +61,16 @@ public class ListAction extends Activity {
 					imagetool.showTextContent(selected.getName(), sText);  
 				}
 				catch (EOFException eofx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error: " + eofx.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("Error") + ": " + eofx.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 					
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getClass().getName(), "Error opening file", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (FormatException fx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), fx.toString(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), fx.toString(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}

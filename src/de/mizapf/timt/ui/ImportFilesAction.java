@@ -38,7 +38,7 @@ import de.mizapf.timt.TIImageTool;
 public class ImportFilesAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ImpFiles");
+		return imagetool.langstr("ImportFiles");
 	}
 	
 	public String getActionName() {
@@ -85,10 +85,10 @@ public class ImportFilesAction extends Activity {
 						imagetool.putTIFileIntoImage(sub, dvCurrent, abyTif, iofile.getName());
 					}
 					catch (FileExistsException fx) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File " + fx.getMessage() + " already exists in directory; not imported", "Import error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					catch (EOFException ex) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ex.getMessage(), "Import error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ex.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 				}
 			}
@@ -105,7 +105,7 @@ public class ImportFilesAction extends Activity {
 			volTarget.reopenForWrite();
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot open image file for writing", "Import error", JOptionPane.ERROR_MESSAGE); 				
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			return;
 		}
@@ -141,50 +141,50 @@ public class ImportFilesAction extends Activity {
 						imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, iofile.getName());							
 					}
 					catch (FileExistsException fx) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File " + fx.getMessage() + " already exists in directory; not imported", "Import error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					catch (ArrayIndexOutOfBoundsException ex) {
 						if (abyTif.length==0) {
-							JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File " + iofile.getName() + " is empty and cannot be imported", "Import error", JOptionPane.ERROR_MESSAGE); 
+							JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileEmpty"), iofile.getName()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 						}
 						else {
 							ex.printStackTrace();
-							JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File " + iofile.getName() + " cannot be imported", "Import error", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileFailed"), iofile.getName()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 						}
 					}					
 					catch (EOFException ex) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ex.getMessage(), "Import error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ex.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					catch (InvalidNameException ix) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Invalid name: " + ix.getMessage(), "Invalid name", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					dis.close();
 					fis.close();
 				}
 			}
 			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (IllegalOperationException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Illegal operation: " + iox.getMessage(), "Import error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IllegalOperation") + ": " + iox.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 				bOK = false;
 			}
 			catch (InvalidNameException ix) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Invalid name: " + ix.getMessage(), "Invalid name", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 				bOK = false;
 			}
 			catch (FileNotFoundException fnfx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File not found: " + fnfx.getMessage(), "Not found", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("FileNotFound") + ": " + fnfx.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 				bOK = false;
 			}
 			catch (IOException iox) {
 				iox.printStackTrace();
 				bOK = false;
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (ImageException ix) {
 				bOK = false;
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), iofile.getName() + ": " + ix.getMessage(), "Image error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), iofile.getName() + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 				break;
 			}		
 		}
@@ -192,7 +192,7 @@ public class ImportFilesAction extends Activity {
 			volTarget.reopenForRead();
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot re-open image file for reading", "Import error", JOptionPane.ERROR_MESSAGE); 				
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 		}			
 		imagetool.refreshPanel(volTarget);			
 		//			if (bOK && afile.length>1) JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Import completed sucessfully", "Import files", JOptionPane.INFORMATION_MESSAGE);

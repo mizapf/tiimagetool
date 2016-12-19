@@ -29,6 +29,8 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.io.File;
 
+import de.mizapf.timt.TIImageTool;
+
 class SectorDumpFormat extends ImageFormat {
 
 	int m_maxSector;
@@ -75,7 +77,7 @@ class SectorDumpFormat extends ImageFormat {
 	}
 
 	public String getDumpFormatName() {
-		return "sector";
+		return TIImageTool.langstr("SectorDump");
 	}
 	
 	@Override	

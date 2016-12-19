@@ -24,6 +24,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
+import de.mizapf.timt.TIImageTool;
+
 class NewNameDialog extends ToolDialog {
 	
 	String 		m_sSuggested;
@@ -38,7 +40,7 @@ class NewNameDialog extends ToolDialog {
 	static final int ABORT = 2;
 	
 	NewNameDialog(JFrame owner, boolean bFile, String sName) {
-		super(owner, "Choose new name");
+		super(owner, TIImageTool.langstr("NewNameTitle"));
 		m_bFile = bFile;
 		m_sName = sName;
 	}
@@ -58,19 +60,25 @@ class NewNameDialog extends ToolDialog {
 	void createGui() {
 		prepareGui();
 
-		m_nColumnWidth = determineFieldWidth("Guess each file name");
+		m_nColumnWidth = determineFieldWidth(TIImageTool.langstr("NewNameColumn"));
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("The target directory already contains a ");
-		if (m_bFile) sb.append("file"); 
-		else sb.append("directory");
-		sb.append(" named \"").append(m_sName).append("\".");
+		sb.append(String.format(TIImageTool.langstr(m_bFile? "NewNameContainsFile" : "NewNameContainsDir"), m_sName));
+		sb.append(".");
 		addLine(sb.toString());
 		add(Box.createVerticalStrut(10));
 		
 		m_tfFileName = new JTextField();
-		m_tfFileName.setText("");
-		addLine("Use this file name", m_tfFileName);
+		
+		String newName = m_sName;
+		if (newName.length()==10) {
+			char last = newName.charAt(9);
+			if (last < 126) last++;
+			newName = newName.substring(0, 9) + String.valueOf(last);
+		}
+		else newName = newName + "1";
+		m_tfFileName.setText(newName);
+		addLine(TIImageTool.langstr("NewNameUseThis"), m_tfFileName);
 				
 		add(Box.createVerticalStrut(10));
 		add(Box.createVerticalGlue());
@@ -84,15 +92,15 @@ class NewNameDialog extends ToolDialog {
 	protected void addButtons() {
 		add(Box.createVerticalStrut(10));		
 		Box box7 = new Box(BoxLayout.X_AXIS);		
-		m_btnOK = new JButton("OK");
+		m_btnOK = new JButton(TIImageTool.langstr("OK"));
 		m_btnOK.addActionListener(this);
-		m_btnSkip = new JButton("Skip");
+		m_btnSkip = new JButton(TIImageTool.langstr("NewNameSkip"));
 		m_btnSkip.addActionListener(this);
-		m_btnCancel = new JButton("Abort");
+		m_btnCancel = new JButton(TIImageTool.langstr("Abort"));
 		m_btnCancel.addActionListener(this);
-		m_btnOK.setPreferredSize(new Dimension(100, 25));
-		m_btnSkip.setPreferredSize(new Dimension(100, 25));
-		m_btnCancel.setPreferredSize(new Dimension(100, 25));
+		m_btnOK.setMinimumSize(new Dimension(100, 25));
+		m_btnSkip.setMinimumSize(new Dimension(100, 25));
+		m_btnCancel.setMinimumSize(new Dimension(100, 25));
 		box7.add(Box.createHorizontalGlue());		
 		box7.add(Box.createHorizontalStrut(10));		
 		box7.add(m_btnOK);

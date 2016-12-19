@@ -26,16 +26,18 @@ import java.awt.event.*;
 import java.util.*;
 import java.awt.font.*;
 
+import de.mizapf.timt.TIImageTool;
+
 class NewElementDialog extends ToolDialog {
 	
 	JTextField	m_tfElementName;
-	String 		m_title;
+	String 		m_prompt;
 	String 		m_default;
 	String		m_hint;
 	
-	NewElementDialog(JFrame owner, String title, String def, String hint) {
-		super(owner, title);
-		m_title = title;
+	NewElementDialog(JFrame owner, String prompt, String def, String hint) {
+		super(owner, TIImageTool.langstr("NewElementTitle"));
+		m_prompt = prompt;
 		m_default = def;
 		m_hint = hint;
 	}
@@ -43,7 +45,9 @@ class NewElementDialog extends ToolDialog {
 /*
 	| 	XXX             								|
 		
-		XXXXX name [ ... ]
+		XXXXX [ ... ]
+		
+		XXXXXXXXXXXXXXXXXXXXXXX
 		
 			+-------+			+-----------+
 			|	OK	|			|	Cancel	|
@@ -51,9 +55,9 @@ class NewElementDialog extends ToolDialog {
 */	
 	void createGui() {
 		prepareGui();
-		int nLabelWidth = determineFieldWidth("New element file name");
+		int nLabelWidth = determineFieldWidth(m_prompt);
 
-		m_tfElementName = putTextField(this, m_title + " name", "", nLabelWidth, 0);
+		m_tfElementName = putTextField(this, m_prompt, "", nLabelWidth, 0);
 		m_tfElementName.setText(m_default);
 		add(Box.createVerticalStrut(10));
 		if (m_hint != null) {	

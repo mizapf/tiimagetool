@@ -80,14 +80,14 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 	public void createGui(SearchResult[] content, String sFontName) {	
 
 		m_mbar = new JMenuBar();
-		m_mFile = new JMenu("Results");
+		m_mFile = new JMenu(TIImageTool.langstr("SearchResultMenu"));
 		m_mbar.add(m_mFile);
-		m_iSaveAs = new JMenuItem("Save as...");
+		m_iSaveAs = new JMenuItem(TIImageTool.langstr("SaveAs"));
 		m_iSaveAs.setActionCommand(SAVEAS);
 		m_iSaveAs.addActionListener(this);
 		m_mFile.add(m_iSaveAs);
 
-		m_iClose = new JMenuItem("Close");
+		m_iClose = new JMenuItem(TIImageTool.langstr("Close"));
 		m_iClose.setActionCommand(CLOSE);
 		m_iClose.addActionListener(this);
 		m_mFile.add(m_iClose);
@@ -106,7 +106,7 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 		color[1] = new Color(220,230,240);
 		color[2] = new Color(230,241,252);
 	
-		cntView.add(createLine("(Path.)Filename", "Image file", color[0], true));
+		cntView.add(createLine(TIImageTool.langstr("SearchResultCol1"), TIImageTool.langstr("SearchResultCol2"), color[0], true));
 		
 		String lastVolume = null;
 	
@@ -187,7 +187,7 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 			for (int i=0; i < width1-res.path.length(); i++) sb.append(" ");
 			sb.append(" --- ").append(res.image).append("\n");
 		}
-		if (sb.length()==0) sb.append("-- Nothing found --");
+		if (sb.length()==0) sb.append("-- " + TIImageTool.langstr("SearchResultNothing") + " --");
 		return sb.toString();
 	}
 	
@@ -207,7 +207,7 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 					fos.close();
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(this, "IOException: " + iox.getClass().getName(), "Error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(this, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
 					return;
 				}
 			}

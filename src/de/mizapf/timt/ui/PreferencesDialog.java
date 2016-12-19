@@ -41,11 +41,9 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 	String[] m_lang;
 	
 	PreferencesDialog(JFrame owner, TIImageTool app) {
-		super(owner, "Preferences");
+		super(owner, TIImageTool.langstr("PreferencesTitle"));
 		m_app = app;
-		m_lang = new String[2];
-		m_lang[0] = app.langstr("English");
-		m_lang[1] = app.langstr("German");
+		m_lang = app.getLanguages();
 	}
 	
 	
@@ -76,12 +74,12 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 		m_entries = new HashMap<String,JComponent>();
 
 		m_tabs = new JTabbedPane();
-		m_tabs.addTab("General", createTab("general"));
-		m_tabs.addTab("Paths", createTab("paths"));
-		m_tabs.addTab("CF Card", createTab("cfcard"));
-		m_tabs.addTab("Output", createTab("output"));
-		m_tabs.addTab("Importing", createTab("import"));
-		m_tabs.addTab("Exporting", createTab("export"));
+		m_tabs.addTab(TIImageTool.langstr("PreferencesGeneral"), createTab("general"));
+		m_tabs.addTab(TIImageTool.langstr("PreferencesPaths"), createTab("paths"));
+		m_tabs.addTab(TIImageTool.langstr("PreferencesCFCard"), createTab("cfcard"));
+		m_tabs.addTab(TIImageTool.langstr("PreferencesOutput"), createTab("output"));
+		m_tabs.addTab(TIImageTool.langstr("PreferencesImporting"), createTab("import"));
+		m_tabs.addTab(TIImageTool.langstr("PreferencesExporting"), createTab("export"));
 		
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		add(Box.createVerticalStrut(10));
@@ -113,6 +111,7 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 					index = Integer.parseInt(value);
 				}
 				catch (NumberFormatException nfx) {
+					// Do not localize this
 					System.err.println("Invalid language parameter; invalid index: " + value);
 					index = 0;
 				}
@@ -146,7 +145,7 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 				}
 				break;
 			default:
-				System.err.println("Unknown preference type: " + type);
+				System.err.println(TIImageTool.langstr("PreferencesUnknown") + ": " + type);
 				break;
 			}
 		}

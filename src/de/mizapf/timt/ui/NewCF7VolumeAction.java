@@ -81,12 +81,12 @@ public class NewCF7VolumeAction extends Activity {
 					}
 					
 					if (file.exists()) {		
-						int nRet = JOptionPane.showConfirmDialog(m_parent, "Image file already exists. Overwrite?", "New image", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+						int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ExistsOverwrite"), TIImageTool.langstr("NewVolume"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 						if (nRet == JOptionPane.NO_OPTION) return;
 					}
 					
 					if (imagetool.getAlreadyOpenedVolume(file.getAbsolutePath()) != null) {
-						JOptionPane.showMessageDialog(m_parent, "Volume with same file name already opened", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NewVolumeSameName"), TIImageTool.langstr("NewVolume"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					
@@ -112,10 +112,10 @@ public class NewCF7VolumeAction extends Activity {
 				fnfx.printStackTrace();
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, "Error opening new image: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE);				
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("NewVolume"), JOptionPane.ERROR_MESSAGE);				
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("NewVolume"), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}

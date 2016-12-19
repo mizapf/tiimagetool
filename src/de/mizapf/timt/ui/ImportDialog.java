@@ -75,21 +75,21 @@ public class ImportDialog extends ToolDialog {
 	public static final int BASIC = 6;
 	
 	ImportDialog(JFrame owner, String sGivenName, String sSuggested, boolean bMulti, int nMode) {
-		super(owner, "Import parameters");
+		super(owner, TIImageTool.langstr("ImportDialogTitle"));
 		m_sGivenName = sGivenName;
 		m_sSuggested = sSuggested;
 		m_bMulti = bMulti;
 		m_nMode = nMode;
-		m_sInfoTitle = "File has no TIFILES header";
+		m_sInfoTitle = TIImageTool.langstr("NoTIFILESHeader");
 	}
 
 	public ImportDialog(JFrame owner, String sSuggested, boolean bMulti, int nMode) {
-		super(owner, "Import parameters");
+		super(owner, TIImageTool.langstr("ImportDialogTitle"));
 		m_sGivenName = null;
 		m_sSuggested = sSuggested;
 		m_bMulti = bMulti;
 		m_nMode = nMode;
-		m_sInfoTitle = "File has no TIFILES header";
+		m_sInfoTitle = TIImageTool.langstr("NoTIFILESHeader");
 	}
 	
 	void setInfoTitle(String sInfo) {
@@ -130,62 +130,61 @@ public class ImportDialog extends ToolDialog {
 	public void createGui() {
 		prepareGui();
 
-		int nLabelWidth = determineFieldWidth("Guess each file name");
-		int nValueWidth = determineFieldWidth("DIS/VAR 80 text file");
+		int nLabelWidth = determineFieldWidth(TIImageTool.langstr("ImportDialogColumn"));
 		
 		add(Box.createVerticalStrut(10));
 		if (m_sGivenName != null) {
-			putTextLine(this, "File has TIFILES header, but the file name is not valid.", 0);
+			putTextLine(this, TIImageTool.langstr("ImportDialogHasTIFILES") + " " + TIImageTool.langstr("ImportDialogButInvalid"), 0);
 			add(Box.createVerticalStrut(10));
 			
-			putTextLine(this, "File name: " + m_sGivenName, 0);
+			putTextLine(this, TIImageTool.langstr("FileName") + ": " + m_sGivenName, 0);
 			StringBuilder sb = new StringBuilder();
 			for (int i=0; i < 10; i++) {
 				sb.append(" ");
 				sb.append(Utilities.toHex(m_sGivenName.charAt(i), 2));
 			}
 			add(Box.createVerticalStrut(10));
-			putTextLine(this, "Hex values: " + sb.toString(), 0);
+			putTextLine(this, TIImageTool.langstr("ImportDialogHex") + ": " + sb.toString(), 0);
 			add(Box.createVerticalStrut(10));
 
-			m_tfFileName = putTextField(this, "Use this file name", m_sSuggested, nLabelWidth, 0);
+			m_tfFileName = putTextField(this, TIImageTool.langstr("ImportDialogUseThis"), m_sSuggested, nLabelWidth, 0);
 			add(Box.createVerticalStrut(10));
 						
 			if (m_bMulti) {
-				m_chbDontAsk = putCheckBox(this, "Guess each file name", false, nLabelWidth);
+				m_chbDontAsk = putCheckBox(this, TIImageTool.langstr("ImportDialogGuess"), false, 0);
 			}			
 		}
 		else {
 			if (m_nMode==NONAME) {
-				putTextLine(this, "File has TIFILES header, but no name defined.", 0);
+				putTextLine(this, TIImageTool.langstr("ImportDialogHasTIFILES") + " " + TIImageTool.langstr("ImportDialogButNoName"), 0);
 				add(Box.createVerticalStrut(10));
 								
-				m_tfFileName = putTextField(this, "Use this file name", m_sSuggested, nLabelWidth, 0);
+				m_tfFileName = putTextField(this, TIImageTool.langstr("ImportDialogUseThis"), m_sSuggested, nLabelWidth, 0);
 				
 				if (m_bMulti) {
-					m_chbDontAsk = putCheckBox(this, "Guess each file name", false, nLabelWidth);
+					m_chbDontAsk = putCheckBox(this, TIImageTool.langstr("ImportDialogGuess"), false, 0);
 				}
 			}
 			else {
-				setMinimumSize(new Dimension(nLabelWidth*3,1));
+				// setMinimumSize(new Dimension(nLabelWidth*3,1));
 				boolean fromEditor = false;
 				if (m_sSuggested == DVEditorFrame.FROMEDITOR) {
-					putTextLine(this, "!Save text or BASIC from editor", 0);
-					m_sSuggested = "UNNAMED";
+					putTextLine(this, "!" + TIImageTool.langstr("ImportDialogSubtitle"), 0);
+					m_sSuggested = "UNNAMED";  // not localized since this is a file name in the TI file system
 					fromEditor = true;
 				}
 				else {
 					putTextLine(this, "!" + m_sInfoTitle, 0);
 				}
 				add(Box.createVerticalStrut(10));
-				m_tfFileName = putTextField(this, "File name", m_sSuggested, nLabelWidth, 0);
+				m_tfFileName = putTextField(this, TIImageTool.langstr("FileName"), m_sSuggested, nLabelWidth, 0);
 
 				// File may be text ... or not
 			
 				// Container where, String sLabel, int nLabelWidth, String[] asOption, int[] anWidth, int nSelected
 				if (m_nMode == BINARY) {
 					add(Box.createVerticalStrut(10));
-					putTextLine(this, "File will be imported as PROGRAM file", 0);
+					putTextLine(this, TIImageTool.langstr("ImportDialogWill"), 0);
 				}
 				else {	
 					int select = 0;
@@ -194,10 +193,10 @@ public class ImportDialog extends ToolDialog {
 					
 					if (m_nMode == BASIC) {
 						asFor = new String[3];
-						asFor[0] = "DIS/VAR 80 text file";
-						asFor[1] = "TI BASIC";
-						asFor[2] = "Extended Basic";
-						arb = putRadioButtons(this,  "Import mode", nLabelWidth, asFor, null, 1);
+						asFor[0] = TIImageTool.langstr("ImportDialogAsDV80");
+						asFor[1] = TIImageTool.langstr("ImportDialogAsBASIC");
+						asFor[2] = TIImageTool.langstr("ImportDialogAsExBas");
+						arb = putRadioButtons(this, TIImageTool.langstr("ImportDialogMode"), nLabelWidth, asFor, null, 1);
 						m_rbtOpt1 = arb[0];
 						m_rbtOpt2 = arb[1];
 						m_rbtOpt3 = arb[2];
@@ -207,10 +206,10 @@ public class ImportDialog extends ToolDialog {
 					}
 					else { 
 						asFor = new String[3];
-						asFor[0] = "DIS/VAR 80 text file";
-						asFor[1] = "Binary";
-						asFor[2] = "Other format";
-						arb = putRadioButtons(this,  "Import mode", nLabelWidth, asFor, null, 0);
+						asFor[0] = TIImageTool.langstr("ImportDialogAsDV80");
+						asFor[1] = TIImageTool.langstr("ImportDialogAsBin");
+						asFor[2] = TIImageTool.langstr("ImportDialogAsOther");
+						arb = putRadioButtons(this, TIImageTool.langstr("ImportDialogMode"), nLabelWidth, asFor, null, 0);
 						m_rbtOpt1 = arb[0];
 						m_rbtOpt2 = arb[1];
 						m_rbtOpt3 = arb[2];
@@ -229,20 +228,23 @@ public class ImportDialog extends ToolDialog {
 					m_jpOther.setLayout(new BoxLayout(m_jpOther, BoxLayout.Y_AXIS));
 					m_jpOther.add(Box.createVerticalStrut(10));
 					
-					int nLabelWidth1 = determineFieldWidth("Record count (only for FIX)");
-					int nValueWidth1 = determineFieldWidth("65536x");
 					String[] asFormat = { "DIS/FIX", "DIS/VAR", "INT/FIX", "INT/VAR" };
-					m_jcFormat = putComboBox(m_jpOther, "Format", asFormat, 0, nLabelWidth);
-					m_tfRecLen = putTextField(m_jpOther, "Record length", "0", nLabelWidth, nValueWidth1);
+					m_jcFormat = putComboBox(m_jpOther, TIImageTool.langstr("FileFormat"), asFormat, 0, nLabelWidth);
+					m_jpOther.add(Box.createVerticalStrut(10));
+					m_tfRecLen = putTextField(m_jpOther, TIImageTool.langstr("RecordLength"), "0", nLabelWidth, 0);
 //					m_tfL3Count = putTextField(m_jpOther, "Record count (only for FIX)", "0", nLabelWidth, nValueWidth1);
 
 					// "BASIC" option
 					m_jpBasic = new JPanel();
 					m_jpBasic.setLayout(new BoxLayout(m_jpBasic, BoxLayout.Y_AXIS));
 					m_jpBasic.add(Box.createVerticalStrut(10));
-					String[] asVersion = { "Normal format", "Merge format", "Long format" };
-					m_jcVersion = putComboBox(m_jpBasic, "Save in", asVersion, 0, nLabelWidth);
-					m_chbProtected = putCheckBox(m_jpBasic, "LIST protection", false, nLabelWidth);
+					String[] asVersion = new String[3];
+					asVersion[0] = TIImageTool.langstr("ImportDialogBasicNormal");
+					asVersion[1] = TIImageTool.langstr("ImportDialogBasicMerge");					
+					asVersion[2] = TIImageTool.langstr("ImportDialogBasicLong");
+
+					m_jcVersion = putComboBox(m_jpBasic, TIImageTool.langstr("ImportDialogSave"), asVersion, 0, nLabelWidth);
+					m_chbProtected = putCheckBox(m_jpBasic, TIImageTool.langstr("ImportDialogBasicProt"), false, nLabelWidth);
 										
 					add(m_jpExtendedPanel);
 
@@ -262,7 +264,7 @@ public class ImportDialog extends ToolDialog {
 				
 				if (!fromEditor) {
 					add(Box.createVerticalStrut(10));
-					putTextLine(this, "!File contents", 0);
+					putTextLine(this, "!" + TIImageTool.langstr("ImportDialogContents"), 0);
 					add(Box.createVerticalStrut(10));
 					Box box7 = new Box(BoxLayout.X_AXIS);
 					m_taPreview = new JTextArea(8,25);
@@ -382,16 +384,7 @@ public class ImportDialog extends ToolDialog {
 			return -1;
 		}
 	}
-/*	
-	int getRecordCount() {
-		try {
-			return Integer.parseInt(m_tfL3Count.getText());
-		}
-		catch (NumberFormatException nbfx) {
-			return -1;
-		}
-	}	
-*/	
+
 	boolean guessTheRest() {
 		if (!m_bMulti) return false;
 		return m_chbDontAsk.isSelected();

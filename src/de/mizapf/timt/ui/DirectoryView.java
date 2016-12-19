@@ -810,7 +810,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_iDnDCopy.setActionCommand(DNDCOPY);
 		m_iDnDCopy.setFont(TIImageTool.dialogFont);
 		m_iDnDCopy.addActionListener(this);
-		m_iDnDCancel = new JMenuItem(TIImageTool.langstr("DnDCancel"));
+		m_iDnDCancel = new JMenuItem(TIImageTool.langstr("Cancel"));
 		m_iDnDCancel.setActionCommand(DNDCANCEL);
 		m_iDnDCancel.setFont(TIImageTool.dialogFont);
 		

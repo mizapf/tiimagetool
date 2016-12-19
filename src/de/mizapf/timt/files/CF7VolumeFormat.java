@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.io.File;
 
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.TIImageTool;
 
 class CF7VolumeFormat extends SectorDumpFormat {
 
@@ -73,7 +74,7 @@ class CF7VolumeFormat extends SectorDumpFormat {
 	}
 
 	public String getDumpFormatName() {
-		return m_separate? "CF7 volume" : "CF7 volume #" + (m_volumeNumber+1);
+		return m_separate? TIImageTool.langstr("CF7VolumeType") : TIImageTool.langstr("CF7VolumeType") + " #" + (m_volumeNumber+1);
 	}
 	
 	@Override

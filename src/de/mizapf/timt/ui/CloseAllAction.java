@@ -25,7 +25,7 @@ import de.mizapf.timt.files.Directory;
 public class CloseAllAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("Close_all");
+		return imagetool.langstr("CloseAll");
 	}
 	
 	public String getActionName() {

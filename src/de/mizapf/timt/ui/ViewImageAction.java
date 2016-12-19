@@ -27,6 +27,7 @@ import java.awt.Cursor;
 import java.io.EOFException;
 import java.io.FileNotFoundException;
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.TIImageTool;
 
 public class ViewImageAction extends Activity {
 
@@ -42,8 +43,6 @@ public class ViewImageAction extends Activity {
 		DirectoryView dvCurrent = imagetool.getSelectedView();
 		Directory dirCurrent = dvCurrent.getDirectory();
 		Volume vol = dvCurrent.getVolume();
-
-		String sText = "no content";
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
 		for (Element selected : dvCurrent.getSelectedEntries()) {
@@ -52,13 +51,13 @@ public class ViewImageAction extends Activity {
 					showPicture((TFile)selected, vol, dvCurrent);
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (FormatException fx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), fx.toString(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("Error") + ": " + fx.toString(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}
@@ -83,7 +82,7 @@ public class ViewImageAction extends Activity {
 					abyColor = col.getRawContent();
 				}
 				catch (FileNotFoundException fnfx) {
-					System.err.println("Could not find companion color file: " + fnfx.getMessage());
+					System.err.println(TIImageTool.langstr("ViewImageNoColor") + ": " + fnfx.getMessage());
 					// Create a black/white color table
 					abyColor = new byte[6144];
 					for (int i=0; i < abyColor.length; i++) {
@@ -100,7 +99,7 @@ public class ViewImageAction extends Activity {
 						abyPattern = pat.getRawContent();
 					}
 					catch (FileNotFoundException fnfx) {
-						System.err.println("Could not find companion pattern file: " + fnfx.getMessage());
+						System.err.println(TIImageTool.langstr("ViewImageNoPattern") + ": " + fnfx.getMessage());
 						// Create a checkered pattern
 						abyPattern = new byte[6144];
 						for (int i=0; i < abyColor.length; i+=2) {
@@ -137,18 +136,18 @@ public class ViewImageAction extends Activity {
 				imagetool.showTextContent(sel.getName(), Utilities.hexdump(0, 0, content, content.length, false));
 			}
 			catch (EOFException eofx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error: " + eofx.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 					
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("Error") + ": " + eofx.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 					
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error when rendering the image", "Read error", JOptionPane.ERROR_MESSAGE);			
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ViewImageError"), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE);			
 		}
 	}
 }

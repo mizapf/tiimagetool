@@ -33,11 +33,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import de.mizapf.timt.files.*;
+import de.mizapf.timt.TIImageTool;
 
 public class ImportRemoteAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ImpRemote");
+		return imagetool.langstr("ImportRemote");
 	}
 	
 	public String getActionName() {
@@ -58,7 +59,7 @@ public class ImportRemoteAction extends Activity {
 			cd.setVisible(true);		
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getMessage(), "Connection error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 			return;			
 		}		
 		if (cd.confirmed()) {
@@ -67,12 +68,12 @@ public class ImportRemoteAction extends Activity {
 				sc.initializeConnection(cd.getAdapter(), cd.getSpeed(), cd.getDatabits(), cd.getParity(), cd.getStopbits(), 10000);
 			}
 			catch (ConnectionException cx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), cx.getMessage(), "Connection error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ConnectionError") + ": " + cx.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 				sc.close();
 				return;
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getMessage(), "Connection error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 				sc.close();
 				return;
 			}
@@ -80,7 +81,7 @@ public class ImportRemoteAction extends Activity {
 			ProgressView view = null;
 
 			try {
-				view = new ProgressView("XModem receiving", m_parent);
+				view = new ProgressView(TIImageTool.langstr("ImportRemoteReceive"), m_parent);
 				view.createGui(imagetool.boldFont);
 				InputStream is = sc.getInputStream();
 				OutputStream os = sc.getOutputStream();
@@ -98,7 +99,7 @@ public class ImportRemoteAction extends Activity {
 				sc.close();
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getMessage(), "Connection error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				view.dispose();
 				sc.close();
@@ -106,7 +107,7 @@ public class ImportRemoteAction extends Activity {
 			}
 			
 			if (abyTif==null || abyTif.length==0) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "No data received", "Connection error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImportRemoteNoData"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				view.dispose();
 				return;
@@ -115,26 +116,23 @@ public class ImportRemoteAction extends Activity {
 			// Now insert abyTif as done with "Insert File"
 			try {
 				volTarget.reopenForWrite();
-				imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, "unnamed");
+				imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, "UNNAMED");
 				volTarget.reopenForRead();
 			}
 			catch (java.io.FileNotFoundException fnfx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Failed to open directory for writing", "File save error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Could not insert file into image: " + ix.getMessage(), "File save error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImportRemoteNotInsert") + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Could not insert file into image: " + iox.getMessage(), "File save error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImportRemoteNotInsert") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 			}
-/*			catch (FormatException fx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), fx.getMessage(), "Import error", JOptionPane.ERROR_MESSAGE); 
-			}
-*/			catch (InvalidNameException ix) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Invalid name: " + ix.getMessage(), "Invalid name", JOptionPane.ERROR_MESSAGE); 
+			catch (InvalidNameException ix) {
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			imagetool.refreshPanel(volTarget);			
 		}

@@ -52,19 +52,19 @@ public class ToggleEmulateAction extends Activity {
 				vol.reopenForRead();
 			}
 			else {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "BUG: Toggle Emulate Action on element that is not a file: " + elFirst.getName(), "Internal error", JOptionPane.ERROR_MESSAGE); 		
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ToggleEmulateBug") + ": " + elFirst.getName(), TIImageTool.langstr("InternalError"), JOptionPane.ERROR_MESSAGE); 		
 			}
 			dvCurrent.refreshAll();
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), "I/O error when trying to toggle emulate flag of " + elFirst.getName(), "Update error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 			iox.printStackTrace();
 		}
 		catch (ProtectedException px) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), "Update error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 		}
 		catch (ImageException ix) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), "Update error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 			ix.printStackTrace();
 		}
 		

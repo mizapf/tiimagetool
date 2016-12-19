@@ -22,10 +22,11 @@ package de.mizapf.timt.ui;
 
 import java.io.File;
 import javax.swing.filechooser.FileFilter;
+import de.mizapf.timt.TIImageTool;
 
 public class TFIFileFilter extends FileFilter {
 	public String getDescription() {
-		return "TIFILES file";
+		return TIImageTool.langstr("TFIFilterDesc");
 	}
 
 	public boolean accept(File f) {

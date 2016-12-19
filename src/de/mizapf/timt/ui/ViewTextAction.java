@@ -26,6 +26,7 @@ import de.mizapf.timt.files.*;
 import java.awt.Cursor;
 import java.io.EOFException;
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.TIImageTool;
 
 public class ViewTextAction extends Activity {
 
@@ -42,7 +43,6 @@ public class ViewTextAction extends Activity {
 		Directory dirCurrent = dvCurrent.getDirectory();
 		Volume vol = dvCurrent.getVolume();
 
-		String sText = "no content";
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
 		// Caution: Only open text files as text 
@@ -52,7 +52,7 @@ public class ViewTextAction extends Activity {
 					byte[] content = ((TFile)selected).getRecordContent();
 					boolean showit = Utilities.checkForText(content, content.length);
 					if (!showit) {
-						int nRet = JOptionPane.showConfirmDialog(dvCurrent.getFrame(), "File contains lots of unprintable characters. Show anyway?", "Read problem", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+						int nRet = JOptionPane.showConfirmDialog(dvCurrent.getFrame(), TIImageTool.langstr("LotUnprint"), TIImageTool.langstr("Attention"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 						showit = (nRet == JOptionPane.YES_OPTION); 
 					}					
 					if (showit) {
@@ -61,16 +61,16 @@ public class ViewTextAction extends Activity {
 					}
 				}
 				catch (EOFException eofx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error: " + eofx.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("Error") + ": " + eofx.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 					
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (FormatException fx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), fx.toString(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("Error") + ": " + fx.toString(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}

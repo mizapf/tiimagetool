@@ -163,6 +163,7 @@ import java.util.zip.CRC32;
 import java.util.Arrays;
 
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.TIImageTool;
 
 public class MessCHDFormat extends ImageFormat {
 
@@ -347,7 +348,7 @@ public class MessCHDFormat extends ImageFormat {
 	} */
 
 	public String getDumpFormatName() {
-		return "CHD";
+		return TIImageTool.langstr("CHDImageType");
 	}
 	
 	static int findValue(byte[] aby, String sToken, int nStart, int nEnd) {

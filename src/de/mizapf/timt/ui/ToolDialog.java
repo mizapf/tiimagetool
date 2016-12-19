@@ -69,7 +69,7 @@ public class ToolDialog extends JDialog implements ActionListener {
 	protected void addButtons(boolean onlyOK) {
 		add(Box.createVerticalStrut(10));		
 		Box box7 = new Box(BoxLayout.X_AXIS);		
-		m_btnOK = new JButton("OK");
+		m_btnOK = new JButton(TIImageTool.langstr("OK"));
 		m_btnOK.addActionListener(this);
 		m_btnOK.setPreferredSize(new Dimension(100, 25));
 		box7.add(Box.createHorizontalGlue());		
@@ -77,7 +77,7 @@ public class ToolDialog extends JDialog implements ActionListener {
 		box7.add(m_btnOK);
 
 		if (!onlyOK) {
-			m_btnCancel = new JButton("Cancel");
+			m_btnCancel = new JButton(TIImageTool.langstr("Cancel"));
 			m_btnCancel.addActionListener(this);
 			m_btnCancel.setPreferredSize(new Dimension(100, 25));
 			box7.add(Box.createHorizontalStrut(10));		
@@ -396,8 +396,8 @@ public class ToolDialog extends JDialog implements ActionListener {
 			button = new JButton(diskicon);
 		} 
 		else {
-			System.err.println("Error: Could not locate icon image in package " + iconurl);
-			button = new JButton("Choose");
+			System.err.println(TIImageTool.langstr("NoImage") + " " + iconurl);
+			button = new JButton(TIImageTool.langstr("ImagePlaceholder"));
 		}
 		
 		button.setActionCommand(String.valueOf(number));

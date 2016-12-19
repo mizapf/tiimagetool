@@ -78,6 +78,8 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	
 	int m_lastSector;
 	
+	String m_imageName;
+	
 	private static final String SAVEAS = "saveas";
 	private static final String WRITE = "write";
 	private static final String REVERT = "revert";
@@ -108,7 +110,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 				m_sef.goToSector(secno);
 			}
 			catch (EOFException eox) {
-				JOptionPane.showMessageDialog(m_sef, "Invalid sector number", "Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_sef, TIImageTool.langstr("SectorEditInvalid"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 				m_tf.setText(String.valueOf(m_currentSector));
 			}
 			catch (NumberFormatException nfx) {
@@ -120,7 +122,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 				m_tf.setText(String.valueOf(m_currentSector));
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_sef, ix.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_sef, ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 				m_tf.setText(String.valueOf(m_currentSector));
 			}
 		}
@@ -225,6 +227,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	
 	public SectorEditFrame(String name, ImageFormat image, TIImageTool app) {
 		super(name);
+		m_imageName = name;
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		m_app = app;
 		m_app.registerFrame(this);
@@ -236,29 +239,29 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	public void createGui(String sFontName) {	
 
 		m_mbar = new JMenuBar();
-		m_mFile = new JMenu("File");
+		m_mFile = new JMenu(TIImageTool.langstr("File"));
 		m_mbar.add(m_mFile);
-		m_iSaveAs = new JMenuItem("Save as text ...");
+		m_iSaveAs = new JMenuItem(TIImageTool.langstr("SaveAsText") + " ...");
 		m_iSaveAs.setActionCommand(SAVEAS);
 		m_iSaveAs.addActionListener(this);
 		m_mFile.add(m_iSaveAs);
 
-		m_iRevert = new JMenuItem("Revert current sector");
+		m_iRevert = new JMenuItem(TIImageTool.langstr("SectorEditRevertCurrent"));
 		m_iRevert.setActionCommand(REVERT);
 		m_iRevert.addActionListener(this);
 		m_mFile.add(m_iRevert);
 
-		m_iRevertAll = new JMenuItem("Revert all changes");
+		m_iRevertAll = new JMenuItem(TIImageTool.langstr("SectorEditRevertAll"));
 		m_iRevertAll.setActionCommand(REVERTALL);
 		m_iRevertAll.addActionListener(this);
 		m_mFile.add(m_iRevertAll);
 
-		m_iWrite = new JMenuItem("Save changes to image");
+		m_iWrite = new JMenuItem(TIImageTool.langstr("SectorEditCommit"));
 		m_iWrite.setActionCommand(WRITE);
 		m_iWrite.addActionListener(this);
 		m_mFile.add(m_iWrite);
 
-		m_iClose = new JMenuItem("Close");
+		m_iClose = new JMenuItem(TIImageTool.langstr("Close"));
 		m_iClose.setActionCommand(CLOSE);
 		m_iClose.addActionListener(this);
 		m_mFile.add(m_iClose);
@@ -293,8 +296,8 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		Box firstLine = new Box(BoxLayout.X_AXIS);		
 		
 		FontMetrics fm = ((Graphics2D)(m_app.getMainFrame().getGraphics())).getFontMetrics(m_app.dialogFont);
-		int nLabelWidth = fm.stringWidth("Sector");
-		JLabel jlSect = new JLabel("Sector");
+		int nLabelWidth = fm.stringWidth(TIImageTool.langstr("Sector"));
+		JLabel jlSect = new JLabel(TIImageTool.langstr("Sector"));
 		m_tfSector = new JTextField("0");
 		m_tfSector.setMinimumSize(new Dimension(100,0));
 		m_tfSector.setPreferredSize(new Dimension(2*nLabelWidth,0));
@@ -433,8 +436,25 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	}
 	
 	String createTextOutput() {
+		byte[] content = m_sector.getBytes();
 		StringBuilder sb = new StringBuilder();
-		sb.append("-- Nothing found --");
+		sb.append(TIImageTool.langstr("ImageFile")).append(" ").append(m_imageName).append(", ");
+		sb.append(TIImageTool.langstr("Sector")).append(" ").append(m_currentSector).append("\n");
+		sb.append("\n");
+		for (int i=0; i < 16; i++) {
+			sb.append(Utilities.toHex(i*16, 2)).append(": ");
+			for (int j=0; j < 16; j++) {
+				sb.append(Utilities.toHex(content[i*16+j], 2)).append(" ");
+			}
+			sb.append("   ");
+			for (int j=0; j < 16; j++) {
+				char ch;
+				if (content[i*16+j] > 31 && content[i*16+j] < 127) ch = (char)content[i*16+j];
+				else ch = '.';
+				sb.append(ch);
+			}
+			sb.append("\n");
+		}
 		return sb.toString();
 	}
 	
@@ -579,7 +599,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 					fos.close();
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(this, "IOException: " + iox.getClass().getName(), "Error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(this, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
 					return;
 				}
 			}
@@ -590,7 +610,6 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 				if (ae.getActionCommand()==REVERT) m_sectormap.remove(m_currentSector);
 				else m_sectormap.clear();
 				try {
-					System.out.println("goto " + m_currentSector);
 					goToSector(m_currentSector);
 				}
 				catch (IOException iox) {
@@ -653,7 +672,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	
 	private void closeFrame() {		
 		if (m_thereAreChanges) {
-			int doCheck = JOptionPane.showConfirmDialog(this, "There are unsaved changes. Close without saving?", "Closing", JOptionPane.ERROR_MESSAGE);
+			int doCheck = JOptionPane.showConfirmDialog(this, TIImageTool.langstr("SectorEditUnsaved"), TIImageTool.langstr("Attention"), JOptionPane.ERROR_MESSAGE);
 			if (doCheck == JOptionPane.YES_OPTION) {
 				m_app.closeFrame(this);
 			}
@@ -679,12 +698,12 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		catch (ImageException ix) {
 			// Sector not found
 			ix.printStackTrace();
-			JOptionPane.showMessageDialog(this, "Image error when writing back sectors", "Write error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, ix.getMessage(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 		}
 		catch (IOException iox) {
 			// More low-level
 			iox.printStackTrace();
-			JOptionPane.showMessageDialog(this, "IO error when writing back sectors", "Write error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(this, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 		}
 	}
 }

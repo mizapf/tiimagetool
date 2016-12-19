@@ -28,6 +28,7 @@ import java.io.*;
 import javax.swing.*; 
 import de.mizapf.timt.util.*;
 import de.mizapf.timt.conn.SerialConnection;
+import de.mizapf.timt.TIImageTool;
 
 /** Creates a socket/serial bridge. This bridge is useful for use in the MESS
 emulator. */
@@ -51,23 +52,23 @@ public class SBConfigDialog extends ToolDialog implements ActionListener  {
 	JTextField 		m_tfPort;
 	
 	public SBConfigDialog(JFrame owner) {
-		super(owner, "Serial bridge setup");
+		super(owner, TIImageTool.langstr("SBConfigTitle"));
 	}
 	
 	public void createGui(Font font) throws IOException {
 		prepareGui();
 		
-		determineWidth("Serial Adapter");
+		determineWidth(TIImageTool.langstr("SBConfigColumn"));
 		
 		String[] asAdapters = SerialConnection.getPorts(); /* { "/dev/tty0", "/dev/tty1" }; */
-		if (asAdapters==null) throw new IOException("No serial ports found");
+		if (asAdapters==null) throw new IOException(TIImageTool.langstr("NoSerialPorts"));
 
 		m_jcAdapters = new JComboBox<String>(asAdapters);
-		addLine("Serial adapter", m_jcAdapters);
+		addLine(TIImageTool.langstr("SerialAdapter"), m_jcAdapters);
 
 		m_tfPort = new JTextField();
 		m_tfPort.setText("10000");
-		addLine("Port", m_tfPort);
+		addLine(TIImageTool.langstr("SBConfigPort"), m_tfPort);
 				
 		addButtons();
 	}

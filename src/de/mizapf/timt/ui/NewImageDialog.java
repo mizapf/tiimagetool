@@ -25,6 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 import de.mizapf.timt.files.ImageFormat;
+import de.mizapf.timt.TIImageTool;
 
 class NewImageDialog extends ToolDialog {
 	
@@ -41,7 +42,7 @@ class NewImageDialog extends ToolDialog {
 	public final static String[] suffix = { ".dsk", ".dtk", ".hfe" };
 	
 	NewImageDialog(JFrame owner) {
-		super(owner, "Create new floppy image");
+		super(owner, TIImageTool.langstr("NewImageFloppy"));
 	}
 	
 /*
@@ -58,31 +59,34 @@ class NewImageDialog extends ToolDialog {
 				|	OK	|			|	Cancel	|
 				+-------+           +-----------+
 */	
-	public void createGui() {
+	public void createGui(Font font) {
 		prepareGui();
-
-		m_tfName = putTextField(this, "Disk name", "EMPTY", 100, 100); 
+		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 		
-		String[] asFormat = { "Sector dump", "Track dump", "HFE image" };
-		m_jcType = putComboBox(this, "Image type", asFormat, 0, 100);
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("NewImageColumn"));
+
+		m_tfName = putTextField(this,  TIImageTool.langstr("VolumeName"), "EMPTY", nColumnWidth, 100); 
+		
+		String[] asFormat = { TIImageTool.langstr("SectorDump"), TIImageTool.langstr("TrackDump"), TIImageTool.langstr("HFEImage") };
+		m_jcType = putComboBox(this, TIImageTool.langstr("ImageType"), asFormat, 0, nColumnWidth);
 		
 		int[] anFormat = { 100, 100 };
 		
-		String[] asDoFormat = { "formatted", "blank" };
-		JRadioButton[] arb2 = putRadioButtons(this, "Disk will be", 100, asDoFormat, anFormat, 0);
+		String[] asDoFormat = { TIImageTool.langstr("Formatted"), TIImageTool.langstr("Blank") };
+		JRadioButton[] arb2 = putRadioButtons(this, TIImageTool.langstr("NewImageWillBe"), nColumnWidth, asDoFormat, anFormat, 0);
 		m_jrFormatted = arb2[0];
 		m_jrBlank = arb2[1];
 
-		String[] asSides = { "single", "double" };
-		JRadioButton[] arb3 = putRadioButtons(this, "Sides", 100, asSides, anFormat, 1);
+		String[] asSides = { TIImageTool.langstr("SingleSided"), TIImageTool.langstr("DoubleSided") };
+		JRadioButton[] arb3 = putRadioButtons(this, TIImageTool.langstr("NewImageSides"), nColumnWidth, asSides, anFormat, 1);
 		m_jrSingle = arb3[0];
 		m_jrDouble = arb3[1];
 
-		String[] asOptions = { "Single", "Double", "High", "Ultra" };
-		m_jcDensity = putComboBox(this, "Density", asOptions, 1, 100);
+		String[] asOptions = { TIImageTool.langstr("SingleDensity"), TIImageTool.langstr("DoubleDensity"), TIImageTool.langstr("HighDensity"), TIImageTool.langstr("UltraDensity") };
+		m_jcDensity = putComboBox(this, TIImageTool.langstr("NewImageDensity"), asOptions, 1, nColumnWidth);
 		
 		String[] asTracks = { "40", "80" };
-		JRadioButton[] arb4 = putRadioButtons(this, "Tracks", 100, asTracks, anFormat, 0);
+		JRadioButton[] arb4 = putRadioButtons(this, TIImageTool.langstr("NewImageTracks"), nColumnWidth, asTracks, anFormat, 0);
 		m_jrTrack40 = arb4[0];
 		m_jrTrack80 = arb4[1];
 

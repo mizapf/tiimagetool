@@ -36,6 +36,7 @@ import java.awt.event.ActionEvent;
 
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.util.TIFiles;
+import de.mizapf.timt.TIImageTool;
 
 public class PasteAction extends Activity {
 
@@ -81,7 +82,7 @@ public class PasteAction extends Activity {
 			list = (List<Element>)trans.getTransferData(DDData.elementCollection);
 		}
 		catch (UnsupportedFlavorException ufx) {
-			System.err.println("Unsupported flavor in paste operation: " + ufx);
+			System.err.println(TIImageTool.langstr("UnknownFlavor") + ": " + ufx);
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			return;
 		}
@@ -92,7 +93,7 @@ public class PasteAction extends Activity {
 		}
 
 		if (list.size()==0) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Empty clipboard", "Internal error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("PasteEmptyClipboard"), TIImageTool.langstr("InternalError"), JOptionPane.ERROR_MESSAGE); 
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			return;
 		}
@@ -107,7 +108,7 @@ public class PasteAction extends Activity {
 		
 		if (first.getName().equals("..")) {
 			if (!it.hasNext()) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Parent link cannot be moved or copied", "Selection error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("PasteNotParentLink"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;				
 			}
@@ -135,7 +136,7 @@ public class PasteAction extends Activity {
 			if (dirTarget.equals(dirSource)) {
 				// TODO: Implement "equals" for Element
 				// Required when we allow to open an image multiple times
-				sError = "Cannot move elements from a location to itself";
+				sError = TIImageTool.langstr("PasteNotToSelf");
 			}
 
 			if (sError == null) {
@@ -148,18 +149,18 @@ public class PasteAction extends Activity {
 						if (((Directory)el).isParentLink()) continue;
 
 						if (bArchive) {
-							sError = "Cannot move directories into / out of archive";
+							sError = TIImageTool.langstr("PasteNotDirArchive");
 							break;
 						}
 						
 						if (bSameImage && (volSource.isFloppyImage() || volSource.isCF7Volume())) {
-							sError = "Cannot move directories on the same floppy image";
+							sError = TIImageTool.langstr("PasteNotDirSelf");
 						}
 						else {
 							Directory dirStep = dirTarget;
 							while (dirStep != null && sError == null) {
 								if (dirStep.equals((Directory)el)) {
-									sError = "Cannot move a directory into one of its descendants";
+									sError = TIImageTool.langstr("PasteNotDirChild");
 								}
 								else dirStep = dirStep.getContainingDirectory();
 							}
@@ -216,37 +217,37 @@ public class PasteAction extends Activity {
 				}
 				catch (FileNotFoundException fnfx) {
 					if (fnfx.getMessage().indexOf("ermission")!=-1) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "No permission to write to image", "Write error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("PasteNoPermission"), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					else {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot open the file/device for writing", "Write error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NoReopenWrite"), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);
 					}
 					bReload = true;
 				}
 				catch (IOException iox) {
 					iox.printStackTrace();
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot open the file/device for writing: " + iox.getMessage(), "Paste error", JOptionPane.ERROR_MESSAGE);					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);					
 					bReload = true;
 				}
 				catch (ProtectedException px) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), "Paste error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);
 					imagetool.closeCurrentView();					
 					bReload = true;
 				}
 				catch (FileExistsException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "File already exists: " + ix.getMessage(), "Paste error", JOptionPane.ERROR_MESSAGE);					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("PasteAlreadyExists") + ": " + ix.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);					
 					bReload = true;					
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), "Paste error", JOptionPane.ERROR_MESSAGE);					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);					
 					bReload = true;					
 				}
 				catch (IllegalOperationException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), "Paste error", JOptionPane.ERROR_MESSAGE);					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);					
 					bReload = true;					
 				}
 				catch (InvalidNameException inx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), inx.getMessage(), "Paste error", JOptionPane.ERROR_MESSAGE);					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), inx.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);					
 					bReload = true;					
 				}
 				
@@ -255,7 +256,7 @@ public class PasteAction extends Activity {
 						imagetool.reloadVolume(volTarget);
 					}
 					catch (Exception ex) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot reload volume.", "Read error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE); 
 					}
 				}
 
@@ -263,7 +264,7 @@ public class PasteAction extends Activity {
 				imagetool.refreshPanel(volTarget);
 				
 				if (sError != null) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), sError + ".", "Illegal operation", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), sError, TIImageTool.langstr("IllegalOperation"), JOptionPane.ERROR_MESSAGE); 
 					imagetool.clearClipboard();
 				}
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));		
@@ -303,7 +304,6 @@ public class PasteAction extends Activity {
 			// We will copy the elements from the source to the target
 			
 			// if (element is dir and target is a childDirectory) error(Cannot copy parent into child)		
-			String sOperation = (bMove)? "move" : "copy";
 			
 			// First we check for obvious illegal operations
 			// We must not 
@@ -316,18 +316,18 @@ public class PasteAction extends Activity {
 					Directory dirStep = dirTarget;
 					
 					if (volTarget.isCF7Volume()) {
-						sError = "CF7 file system does not support directories.";
+						sError = TIImageTool.langstr("CF7NoDirectory");
 					}
 					else {
 						if (volTarget.isFloppyImage() && !dirTarget.isRootDirectory()) {
-							sError = "Cannot " + sOperation + " a directory into another directory on a floppy";
+							sError = TIImageTool.langstr("PasteNotFloppyDir");
 						}
 					}
 					
 					if (bSameImage) {
 						while (dirStep != null && sError == null) {
 							if (dirStep.equals((Directory)el)) {
-								sError = "Cannot " + sOperation + " a directory into one of its descendants";
+								sError = TIImageTool.langstr("PasteNotDirChild");
 							}
 							else dirStep = dirStep.getContainingDirectory();
 						}
@@ -360,7 +360,7 @@ public class PasteAction extends Activity {
 									bRetry = false;
 								}
 								catch (ProtectedException px) {
-									JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+									JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE); 
 									bAbort = true;
 								}
 								catch (FileExistsException fxx) {
@@ -394,7 +394,7 @@ public class PasteAction extends Activity {
 									}
 								}
 								catch (ImageFullException ifx) {
-									JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Target disk full when trying to " + sOperation + " file \"" + file.getName() + "\".", "Write error", JOptionPane.ERROR_MESSAGE);										
+									JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("PasteImageFull"), file.getName()), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);										
 									// Give up
 									bAbort = true;									
 								}
@@ -428,7 +428,7 @@ public class PasteAction extends Activity {
 										}
 									}
 									catch (ProtectedException px) {
-										JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+										JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE); 
 										bAbort = true;
 									}
 									catch (InvalidNameException inx) {
@@ -463,14 +463,14 @@ public class PasteAction extends Activity {
 									catch (ImageFullException ifx) {
 										if (ifx.getCode()==ImageFullException.DIREXC) {
 											// Cannot hold more directories
-											int nRet = JOptionPane.showConfirmDialog(dvCurrent.getFrame(), "Cannot create more than three directories on floppies", "Write error", JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE); 
+											int nRet = JOptionPane.showConfirmDialog(dvCurrent.getFrame(), TIImageTool.langstr("FloppyDirectoryOnly3"), TIImageTool.langstr("PasteError"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.ERROR_MESSAGE); 
 											if (nRet == JOptionPane.CANCEL_OPTION) {
 												bAbort = true;
 												bRetry = false;
 											}
 										}
 										else {
-											JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Target disk full when trying to " + sOperation + " directory \"" + el.getName() + "\".", "Write error", JOptionPane.ERROR_MESSAGE);										
+											JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("PasteImageFull"), el.getName()), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);										
 											bAbort = true;
 										}
 									}
@@ -486,38 +486,38 @@ public class PasteAction extends Activity {
 					volSource.reopenForRead();
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error while reading image: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE);					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);					
 				}
 				catch (FileNotFoundException fnfx) {
 					if (fnfx.getMessage().indexOf("ermission")!=-1) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "No permission to write to image", "Write error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("PasteNoPermission"), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE); 
 					}
 					else {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot open the file/device for writing", "Write error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(),  TIImageTool.langstr("NoReopenWrite"), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);
 					}
 					try {
 						imagetool.reloadVolume(volTarget);
 					}
 					catch (Exception ex) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot reload volume.", "Read error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE); 
 					}
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error while reading or writing image (" + iox.getClass().getName() + ")", "Read error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);
 					iox.printStackTrace();
 				}
 				catch (IllegalOperationException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Illegal operation while writing image: " + ix.getMessage(), "Illegal operation", JOptionPane.ERROR_MESSAGE);					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("IllegalOperation"), JOptionPane.ERROR_MESSAGE);					
 				}
 				catch (ProtectedException px) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot write: " + px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE); 
 				}				
 				imagetool.refreshPanel(volSource);
 				imagetool.refreshPanel(volTarget);				
 			}
 		}
 		if (sError != null) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), sError + ".", "Illegal operation", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), sError, TIImageTool.langstr("IllegalOperation"), JOptionPane.ERROR_MESSAGE); 
 			imagetool.clearClipboard();
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -577,8 +577,8 @@ public class PasteAction extends Activity {
 		
 		Directory[] dirs = dir.getDirectories();
 		
-		if (dirTarget.getVolume().isCF7Volume()) throw new IllegalOperationException("Cannot copy a directory into a CF7 image");
-		if (dirs.length !=0 && dirTarget.getVolume().isFloppyImage()) throw new IllegalOperationException("Cannot copy a directory into a directory on a floppy");
+		if (dirTarget.getVolume().isCF7Volume()) throw new IllegalOperationException(TIImageTool.langstr("PasteNotDirIntoCF7"));
+		if (dirs.length !=0 && dirTarget.getVolume().isFloppyImage()) throw new IllegalOperationException(TIImageTool.langstr("PasteNotFloppyDir"));
 		// Now recurse. We cannot have any more FileExistsException here
 		// if the source file system is correct (even if not, the sets will
 		// not allow for multiple occurances of the same name)

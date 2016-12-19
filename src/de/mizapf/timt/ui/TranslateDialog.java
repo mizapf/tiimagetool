@@ -26,6 +26,8 @@ import java.awt.event.*;
 import java.util.*;
 import java.awt.font.*;
 
+import de.mizapf.timt.TIImageTool;
+
 class TranslateDialog extends ToolDialog {
 	
 	JComboBox<String>		m_jcFormat;
@@ -38,7 +40,7 @@ class TranslateDialog extends ToolDialog {
 	String			m_sCharList;
 	
 	TranslateDialog(JFrame owner, boolean bHasTabs, String special) {
-		super(owner, "Import content parameters");
+		super(owner, TIImageTool.langstr("TranslateDialogTitle"));
 		m_bHasTabs = bHasTabs;
 		m_special = special;
 	}
@@ -54,11 +56,14 @@ class TranslateDialog extends ToolDialog {
 */	
 	void createGui() {
 		prepareGui();
-		int nLabelWidth = determineFieldWidth("Special characters:");
+		int nLabelWidth = determineFieldWidth(TIImageTool.langstr("TranslateDialogColumn"));
 		
 		if (m_bHasTabs) {
-			String[] asOptions = { "keep", "4 spaces", "5 spaces", "6 spaces", "7 spaces", "8 spaces" };
-			m_jcTabs = putComboBox(this, "Replace TABs", asOptions, 5, nLabelWidth);
+			String[] asOptions = new String[6];
+			asOptions[0] = TIImageTool.langstr("TranslateDialogKeep");
+			for (int i=4; i < 9; i++)
+				asOptions[i-3] = String.valueOf(i) + " " +  TIImageTool.langstr("TranslateDialogSpaces");
+			m_jcTabs = putComboBox(this, TIImageTool.langstr("TranslateDialogTab"), asOptions, 5, nLabelWidth);
 		}
 			
 		if (m_special.length()>0) {
@@ -78,8 +83,8 @@ class TranslateDialog extends ToolDialog {
 			
 			add(Box.createVerticalStrut(10));
 			
-			putLabel(this, "Special characters:", sb1.toString(), nLabelWidth);
-			m_tfTrans = putTextField(this, "Translations:", sb.toString(), nLabelWidth, 100);
+			putLabel(this, TIImageTool.langstr("TranslateDialogSpecial"), sb1.toString(), nLabelWidth);
+			m_tfTrans = putTextField(this, TIImageTool.langstr("TranslateDialogReplace"), sb.toString(), nLabelWidth, 0);
 		}
 		addButtons();	
 	}

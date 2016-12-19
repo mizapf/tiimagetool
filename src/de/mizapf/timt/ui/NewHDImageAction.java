@@ -275,7 +275,7 @@ public class NewHDImageAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return imagetool.langstr("Harddisk");
+		return imagetool.langstr("HarddiskImage") + "...";
 	}
 	
 	public String getActionName() {
@@ -305,40 +305,32 @@ public class NewHDImageAction extends Activity {
 				StringBuilder sb = new StringBuilder();
 								
 				if (parm.cylinders <= 40 || parm.cylinders > 2048) {
-					sb.append("Invalid cylinder count. Must be a number between 40 and 2048 (incl.)");
+					sb.append(TIImageTool.langstr("NewHDInvalidCylinderCount"));
 					bError = true;
 				}
 				
 				if (parm.heads <= 0 || parm.heads > 16) {
 					if (sb.length()>0) sb.append("\n");
-					sb.append("Invalid head count. Must be a number between 1 and 16 (incl.).");
+					sb.append(TIImageTool.langstr("NewHDInvalidHeadCount"));
 					bError = true;
 				}
 
 				if (parm.sectorsPerTrack <= 8 || parm.sectorsPerTrack > 256) {
 					if (sb.length()>0) sb.append("\n");
-					sb.append("Invalid sectors per track count. Must be a number between 8 and 256 (incl.).");
+					sb.append(TIImageTool.langstr("NewHDInvalidSectorCount"));
 					bError = true;
 				}
 				
 				if (parm.sectorLength != 256 && parm.sectorLength != 512) {
 					if (sb.length()>0) sb.append("\n");
-					sb.append("Sector length must be 256 (HFDC, SCSI) or 512 (IDE).");
+					sb.append(TIImageTool.langstr("NewHDInvalidSectorLength"));
 					bError = true;
 				}
 		
 				if (bError) {
 					bValid = false;
-					JOptionPane.showMessageDialog(m_parent, sb.toString(), "Invalid parameters", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, sb.toString(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 					continue;
-				}
-
-				if (parm.chdVersion==4) {
-					int nCheck1 = JOptionPane.showConfirmDialog(m_parent, "Are you sure you want to create an image with CHD version 4?\nThis is a deprecated format that is not accepted anymore in current MESS releases.", "Create v4 image", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-					if (nCheck1==JOptionPane.CANCEL_OPTION) {
-						bValid = false;
-						continue;
-					}
 				}
 				
 				// No error and user is certain about creating the image
@@ -352,30 +344,34 @@ public class NewHDImageAction extends Activity {
 				String foot = "</body></html>";
 				sb.append(head1);
 			
-				sb.append("<p>This will create an image of a hard disk with a capacity of ").append(nCapacity).append(" bytes (").append(nCapacity/1048576).append("MiB) ");
-				sb.append("and with volume name \"").append(parm.name).append("\".</p>");
+				sb.append("<p>").append(String.format(TIImageTool.langstr("NewHDSetup"), nCapacity, nCapacity/1048576, parm.name)).append("</p>");
 								
 				if (nSectors / parm.auSize > 0xf800) {
-					sb.append("<p></p><p><b>The image capacity exceeds the maximum capacity for the file system.</b> ");
-					sb.append("After formatting only the first 248 MiB will be accessible.</p><p></p>");
+					sb.append("<p></p>");
+					sb.append("<p>").append(TIImageTool.langstr("NewHDTooBig")).append("</p>");
 				}
 				if (!parm.format) {
-					sb.append("<p>You must format this image with a suitable tool like MDM 1.50 inside the emulation.");
-					sb.append(" Note the following parameters:</p>");
-					sb.append("<ul><li>cylinders=").append(parm.cylinders);
-					sb.append("</li><li>heads=").append(parm.heads);
-					sb.append("</li><li>sectors/track=").append(parm.sectorsPerTrack).append("</li></ul></p>");
+					sb.append("<p>").append(TIImageTool.langstr("NewHDNeedsFormat")).append("</p>");
+					sb.append("<p>").append(TIImageTool.langstr("NewHDNote")).append(":</p>");
+					sb.append("<ul>");
+					sb.append("<li>").append(String.format(TIImageTool.langstr("NewHDParams1"), parm.cylinders)).append("</li>");
+					sb.append("<li>").append(String.format(TIImageTool.langstr("NewHDParams2"), parm.heads)).append("</li>");
+					sb.append("<li>").append(String.format(TIImageTool.langstr("NewHDParams3"), parm.sectorsPerTrack)).append("</li>");
+					sb.append("</ul>");
 				}
 				else {
 					if (!parm.forHfdc) {
-						sb.append("<p></p><p><b>Warning</b>: The file system for SCSI drives may not be supported in emulators. ");
-						sb.append("HFDC file system is strongly recommended.</p><p></p>");
+						sb.append("<p></p>");
+						sb.append("<p><b>").append(TIImageTool.langstr("Warning")).append("</b>: ");
+						sb.append(TIImageTool.langstr("NewHDSCSIWarn"));
+						sb.append("</p>");
+						sb.append("<p></p>");
 					}
 					
-					sb.append("<p>The image will be formatted and ready to use. You can directly start working with it.</p>");
+					sb.append("<p>").append(TIImageTool.langstr("NewHDReady")).append("</p>");
 				}
 				
-				sb.append("<p></p><p><b>OK to continue?</b></p><p></p>");
+				sb.append("<p></p><p><b>").append(TIImageTool.langstr("OKToContinue")).append("</b></p><p></p>");
 				sb.append(foot);
 				
 				JLabel jp = new JLabel(sb.toString());
@@ -426,7 +422,7 @@ public class NewHDImageAction extends Activity {
 								}
 								
 								if (file.exists()) {		
-									int nRet = JOptionPane.showConfirmDialog(m_parent, "Image file already exists. Overwrite?", "New image", JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE);
+									int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ExistsOverwrite"), TIImageTool.langstr("NewImageTitle"), JOptionPane.YES_NO_OPTION, JOptionPane.ERROR_MESSAGE);
 									if (nRet == JOptionPane.NO_OPTION) {
 										bValid = false;
 										return;
@@ -435,7 +431,7 @@ public class NewHDImageAction extends Activity {
 													
 								Volume vol = imagetool.getAlreadyOpenedVolume(file.getAbsolutePath());
 								if (vol != null) {
-									JOptionPane.showMessageDialog(m_parent, "Volume with same file name already opened", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+									JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NewVolumeSameName"), TIImageTool.langstr("IllegalOperation"), JOptionPane.ERROR_MESSAGE);
 									bValid = false;
 									return;
 								}
@@ -451,23 +447,23 @@ public class NewHDImageAction extends Activity {
 									try {
 										ifsource = ImageFormat.getImageFormat(file.getAbsolutePath());
 										if (!(ifsource instanceof MessCHDFormat)) {
-											JOptionPane.showMessageDialog(m_parent, "Not a MESS CHD image file.", "Invalid format error", JOptionPane.ERROR_MESSAGE);				
+											JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);				
 											bValid = false;
 											return;
 										}
 									}
 									catch (FileNotFoundException fnfx) {
-										JOptionPane.showMessageDialog(m_parent, "File not found; has it been removed in the meantime?", "Read error", JOptionPane.ERROR_MESSAGE); 
+										JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileNotFoundUnexp"), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 										bValid = false;
 										return;
 									}
 									catch (IOException iox) {
-										JOptionPane.showMessageDialog(m_parent, "IO error: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE);
+										JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE);
 										bValid = false;										
 										return;
 									}
 									catch (ImageException ix) {
-										JOptionPane.showMessageDialog(m_parent, "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+										JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 										bValid = false;
 										return;
 									}
@@ -495,7 +491,7 @@ public class NewHDImageAction extends Activity {
 							}							
 						}
 						catch (IllegalOperationException iox) {
-							JOptionPane.showMessageDialog(m_parent, iox.getMessage(), "Illegal operation", JOptionPane.ERROR_MESSAGE);			
+							JOptionPane.showMessageDialog(m_parent, iox.getMessage(), TIImageTool.langstr("IllegalOperation"), JOptionPane.ERROR_MESSAGE);			
 							bValid = false;
 						}
 						catch (ImageException e) {
@@ -503,7 +499,7 @@ public class NewHDImageAction extends Activity {
 							bValid = false;
 						}
 						catch (IOException iox) {
-							JOptionPane.showMessageDialog(m_parent, iox.getMessage(), "File IO problems", JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 							bValid = false;						
 						}
 					}

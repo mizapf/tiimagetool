@@ -35,7 +35,7 @@ public class NewImageAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return imagetool.langstr("Floppy");
+		return imagetool.langstr("FloppyImage") + "...";
 	}
 	
 	public String getActionName() {
@@ -46,7 +46,7 @@ public class NewImageAction extends Activity {
 		NewImageDialog newimagedia = new NewImageDialog(m_parent);
 
 		try {
-			newimagedia.createGui();
+			newimagedia.createGui(imagetool.boldFont);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -62,12 +62,12 @@ public class NewImageAction extends Activity {
 			if (newimagedia.getImageType()==ImageFormat.TRACKDUMP) {
 				if (newimagedia.getSides()==1)
 				{
-					JOptionPane.showMessageDialog(m_parent, "Track dump images are two-sided only.", "Create error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NewImageTDF2Side"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 					return;
 				}				
-				if (newimagedia.getTrackCount()==80)
+				if (newimagedia.getTrackCount()!=40)
 				{
-					JOptionPane.showMessageDialog(m_parent, "Track dump images are defined for 40 tracks only.", "Create error", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NewImageTDF40T"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 					return;
 				}
 			}
@@ -99,12 +99,12 @@ public class NewImageAction extends Activity {
 					}
 					
 					if (file.exists()) {		
-						int nRet = JOptionPane.showConfirmDialog(m_parent, "Image file already exists. Overwrite?", "New image", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+						int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ExistsOverwrite"), TIImageTool.langstr("NewImageTitle"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 						if (nRet == JOptionPane.NO_OPTION) return;
 					}
 					
 					if (imagetool.getAlreadyOpenedVolume(file.getAbsolutePath()) != null) {
-						JOptionPane.showMessageDialog(m_parent, "Volume with same file name already opened", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NewVolumeSameName"), TIImageTool.langstr("IllegalOperation"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					
@@ -127,8 +127,7 @@ public class NewImageAction extends Activity {
 						imagetool.addDirectoryView(root);
 					}
 					else {
-						JOptionPane.showMessageDialog(m_parent, 
-							"This image is unformatted; you must format it in an emulator first\nbefore you can use it here.", "Unformatted", JOptionPane.OK_OPTION);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NewImageNeedsFormat"), TIImageTool.langstr("Warning"), JOptionPane.OK_OPTION);
 					}
 				}
 			}
@@ -136,10 +135,10 @@ public class NewImageAction extends Activity {
 				fnfx.printStackTrace();
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, "Error opening new image: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE);				
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE);				
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 	}

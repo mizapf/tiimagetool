@@ -38,7 +38,7 @@ public class InstallGenOSAction extends Activity {
 	private final static String AUTOEXEC = "/de/mizapf/timt/util/autoexec.txt";
 	
 	public String getMenuName() {
-		return imagetool.langstr("Geneve");
+		return imagetool.langstr("InstallGeneveOS");
 	}
 	
 	public String getActionName() {
@@ -50,11 +50,10 @@ public class InstallGenOSAction extends Activity {
 		
 		// Caution: the next line will unselect all windows, and therefore,
 		// dvCurrent will be null
-		int nCheck = JOptionPane.showConfirmDialog(m_parent, 
-			"You are about to install Geneve OS on the currently open image.\nExisting files will not be changed. Continue?", "Install GenOS", JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
+		int nCheck = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("InstallGenOSHint"), TIImageTool.langstr("InstallGenOSTitle"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
 
 		if (dvCurrent == null) {
-			JOptionPane.showMessageDialog(m_parent, "BUG: Current view is null", "Import error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InstallGenOSHint"), TIImageTool.langstr("InstallGenOSTitle"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		
@@ -72,7 +71,7 @@ public class InstallGenOSAction extends Activity {
 				volTarget.reopenForWrite();
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, "Cannot open image file for writing", "Import error", JOptionPane.ERROR_MESSAGE); 				
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotReopen"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 				
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
@@ -102,26 +101,26 @@ public class InstallGenOSAction extends Activity {
 				installFile(AUTOEXEC, "AUTOEXEC", dirRoot, dvCurrent); 				
 			}
 			catch (IllegalOperationException iox) {
-				JOptionPane.showMessageDialog(m_parent, "Could not create the DSK1 directory", "Import error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InstallGenOSNotCreated"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (InvalidNameException ix) {
 				ix.printStackTrace();
 			} 			
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, "Volume may be corrupt; cannot install Geneve OS: " + ix.getMessage(), "Import error", JOptionPane.ERROR_MESSAGE);				
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InstallGenOSImageError") + ": " + ix.getMessage(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE);				
 			}			
 			catch (ProtectedException ix) {
-				JOptionPane.showMessageDialog(m_parent, "Volume is protected; cannot install Geneve OS", "Import error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
 			}			
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, "IO error when copying Geneve OS on image: " + iox.getClass().getName(), "Import error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			
 			try {
 				volTarget.reopenForRead();
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, "Cannot open image file for reading", "Import error", JOptionPane.ERROR_MESSAGE); 				
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotReopen"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 				
 			}
 			
 			try {
@@ -129,7 +128,7 @@ public class InstallGenOSAction extends Activity {
 				imagetool.refreshPanel(vol);
 			}
 			catch (Exception e) {
-				JOptionPane.showMessageDialog(m_parent, "Could not re-open image file: " + e.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotReopen"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
 			}
 
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -140,7 +139,7 @@ public class InstallGenOSAction extends Activity {
 		byte[] abyTif = null;
 		InputStream isFile = getClass().getResourceAsStream(sFilename);
 		if (isFile == null) {
-			JOptionPane.showMessageDialog(m_parent, sFilename + " not found in JAR file; maybe the JAR file is corrupt.", "Import error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("InstallGenOSMissing"), sFilename), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
 			return;
 		}
 		DataInputStream dis = new DataInputStream(isFile);
@@ -162,13 +161,13 @@ public class InstallGenOSAction extends Activity {
 		}
 		
 		try {
-			imagetool.putTIFileIntoImage(where, dvCurrent, abyTif, "somefile");
+			imagetool.putTIFileIntoImage(where, dvCurrent, abyTif, "SOMEFILE");
 		}
 		catch (FileExistsException fx) {
-			JOptionPane.showMessageDialog(m_parent, "File " + fx.getMessage() + " already exists in directory; not imported", "Import error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
 		}
 		catch (InvalidNameException inx) {
-			JOptionPane.showMessageDialog(m_parent, "Invalid name: " + inx.getMessage() + "; not imported", "Import error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InvalidFileName") + ": " + inx.getMessage(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
 		}
 
 		imagetool.setProperty(TIImageTool.KEEPNAME, nameMode? "true" : "false");

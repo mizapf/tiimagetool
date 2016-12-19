@@ -30,7 +30,7 @@ public class Utilities {
 	public static void main(String[] arg)
 	{
 		if (arg.length < 2) {
-			System.err.println("usage: Utilities <command> <arguments>");
+			System.err.println("Usage: Utilities <command> <arguments>");
 			return;
 		}
 		if (arg[0].equalsIgnoreCase("crc16")) {

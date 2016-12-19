@@ -36,7 +36,7 @@ import de.mizapf.timt.TIImageTool;
 public class NewDirectoryAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("NewDir");
+		return imagetool.langstr("NewDirectory");
 	}
 	
 	public String getActionName() {
@@ -51,25 +51,7 @@ public class NewDirectoryAction extends Activity {
 		Volume vol = dvCurrent.getVolume();
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
-		// Create a simple dialog
-/*		FontMetrics fm = ((Graphics2D)(imagetool.getMainFrame().getGraphics())).getFontMetrics(TIImageTool.dialogFont);
-		FontRenderContext frc = ((Graphics2D)(imagetool.getMainFrame().getGraphics())).getFontRenderContext();
-		LineMetrics lm = TIImageTool.dialogFont.getLineMetrics("DIRECTORY", 0, 2, frc);
-		
-		int nFieldWidth = fm.stringWidth("DIRWITH10CA");
-		int nFieldHeight = (int)Math.ceil(lm.getHeight()*1.5);
-		
-		JPanel jp = new JPanel();
-		jp.setLayout(new BoxLayout(jp, BoxLayout.X_AXIS));
-		jp.add(new JLabel("New directory name:"));
-		jp.add(Box.createHorizontalStrut(10));
-		jp.add(Box.createHorizontalGlue());
-		JTextField jtName = new JTextField();
-		jtName.setPreferredSize(new Dimension(nFieldWidth, nFieldHeight));
-		jtName.setMaximumSize(new Dimension(nFieldWidth, nFieldHeight));
-		jp.add(jtName);
-	*/
-		NewElementDialog dirdia = new NewElementDialog(dvCurrent.getFrame(), "New directory", "NEWDIR", null);
+		NewElementDialog dirdia = new NewElementDialog(dvCurrent.getFrame(), TIImageTool.langstr("NewDirectoryPrompt"), "NEWDIR", null);
 		dirdia.createGui();
 		dirdia.setVisible(true);
 		boolean ok = true;
@@ -77,24 +59,24 @@ public class NewDirectoryAction extends Activity {
 		if (dirdia.confirmed()) {	
 			String sName = dirdia.getElementName();
 			if (vol.isCF7Volume()) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "CF7 file sytem does not not support directories.", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("CF7NoDirectory"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 				ok = false;
 			}
 			else {
 				if (vol.isFloppyImage()) {
 					if (!dirCurrent.isRootDirectory()) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Floppy file systems can only have directories in the root directory.", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NewDirectoryOnlyRoot"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 						ok = false;
 					}
 					if (vol.getRootDirectory().getDirectories().length>2) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot have more than three directories", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("FloppyDirectoryOnly3"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 						ok = false;
 					}
 				}
 			}
 			
 			if (ok && !Directory.validName(sName)) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Illegal name for new directory: \"" + sName + "\".", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidDirectoryName"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 				ok = false;
 			}
 
@@ -103,13 +85,13 @@ public class NewDirectoryAction extends Activity {
 					dirCurrent.createSubdirectory(sName, true);
 				}
 				catch (ImageFullException ifx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "No space to create new directory: \"" + sName + "\".", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NoSpaceLeft"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 				}
 				catch (FileExistsException fx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "There is already an element with that name.", "Illegal operation", JOptionPane.ERROR_MESSAGE);					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ElementExists"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);					
 				}
 				catch (Exception ex) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Failed to create new directory: \"" + sName + "\" (" + ex.getClass().getName() + ").", "Illegal operation", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + ex.getClass().getName(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 					ex.printStackTrace();
 				}
 				imagetool.refreshPanel(vol);			

@@ -195,7 +195,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 			sb.append(TIImageTool.langstr("PanelProt"));
 		}
 		sb.append(", ");
-		sb.append(String.format(TIImageTool.langstr("PanelImage"), vol.dumpFormat()));
+		sb.append(vol.dumpFormat());
 
 		comp.add(createHeadline(sb.toString()));
 		comp.add(Box.createVerticalStrut(2));

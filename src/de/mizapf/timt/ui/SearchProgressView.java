@@ -24,6 +24,7 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.awt.font.*;
 import java.awt.*;
+import de.mizapf.timt.TIImageTool;
 
 public class SearchProgressView extends JDialog implements ActionListener {
 	
@@ -55,7 +56,7 @@ public class SearchProgressView extends JDialog implements ActionListener {
 		setFont(font);
 
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		m_nColumnWidth = fm.stringWidth("Current fileXXXXX");
+		m_nColumnWidth = fm.stringWidth(TIImageTool.langstr("SearchProgressColumn"));
 		
 		int nHeight = getHeight(font, "B");
 		
@@ -70,13 +71,13 @@ public class SearchProgressView extends JDialog implements ActionListener {
 		setResultCount(0);
 		
 		m_btnStop = new JButton("");
-		setButtonText("Abort");
+		setButtonText(TIImageTool.langstr("Abort"));
 		
 		add(Box.createVerticalStrut(10));		
-		createLine("Current file", nHeight, m_jlCurrentFilename);
+		createLine(TIImageTool.langstr("SearchCurrentFile"), nHeight, m_jlCurrentFilename);
 		add(Box.createVerticalStrut(10));		
 
-		createLine("Matches found", nHeight, m_jlMatch);
+		createLine(TIImageTool.langstr("SearchMatchesFound"), nHeight, m_jlMatch);
 	
 		add(Box.createVerticalStrut(10));		
 	

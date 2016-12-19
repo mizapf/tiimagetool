@@ -27,6 +27,7 @@ import de.mizapf.timt.files.*;
 import java.awt.Cursor;
 import java.io.EOFException;
 import javax.swing.JOptionPane;
+import de.mizapf.timt.TIImageTool;
 
 public class ViewDumpAction extends Activity {
 
@@ -43,32 +44,32 @@ public class ViewDumpAction extends Activity {
 		Directory dirCurrent = dvCurrent.getDirectory();
 		Volume vol = dvCurrent.getVolume();
 
-		String sText = "no content";
+		String sText = TIImageTool.langstr("NoContent");
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 		for (Element selected : dvCurrent.getSelectedEntries()) {
 			if (selected instanceof TFile) {
 				String sRet = null;
 				try {
-					sRet = JOptionPane.showInputDialog(dvCurrent.getFrame(), "Start address (hex, no prefix): ", "0000");
+					sRet = JOptionPane.showInputDialog(dvCurrent.getFrame(), TIImageTool.langstr("ViewDumpPrompt"), "0000");
 					if (sRet != null) {
 						int start = Integer.parseInt(sRet, 16);	
 						byte[] content = ((TFile)selected).getRawContent();
 						String dump = Utilities.hexdump(start, 0, content, content.length, false, 0x00);
-						imagetool.showTextContent("Contents of " + selected.getName(), dump);
+						imagetool.showTextContent(String.format(TIImageTool.langstr("ViewDumpContents"), selected.getName()), dump);
 					}
 				}
 				catch (EOFException eofx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error: " + eofx.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 					
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("Error") + ": " + eofx.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 					
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Error reading file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (NumberFormatException nx) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "'" + sRet + "' is not a valid address", "Input error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ViewDumpInvalidAddress"), sRet), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}

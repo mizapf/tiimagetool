@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.io.File;
+import de.mizapf.timt.TIImageTool;
 
 public class CF7ImageFormat extends ImageFormat {
 
@@ -82,7 +83,7 @@ public class CF7ImageFormat extends ImageFormat {
 	}
 
 	public String getDumpFormatName() {
-		return "CF7 image";
+		return TIImageTool.langstr("CF7ImageType");
 	}
 	
 	public String[] getVolumes() {

@@ -52,7 +52,7 @@ public class RawCHDAction extends Activity {
 		
 		if (dialog.confirmed()) {
 			if (!dialog.hasValidSettings()) {
-				JOptionPane.showMessageDialog(m_parent, "Missing raw or CHD file specification", "Conversion error", JOptionPane.ERROR_MESSAGE);		
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("RawCHDMissingRaw"), TIImageTool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);		
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
@@ -65,12 +65,12 @@ public class RawCHDAction extends Activity {
 				fos.close();
 			}
 			catch (IllegalOperationException iox) {	
-				JOptionPane.showMessageDialog(m_parent, iox.getMessage(), "Import error", JOptionPane.ERROR_MESSAGE);		
+				JOptionPane.showMessageDialog(m_parent, iox.getMessage(),  TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);		
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, "IO error while importing new image: " + iox.getClass().getName(), "Conversion error", JOptionPane.ERROR_MESSAGE);		
+				JOptionPane.showMessageDialog(m_parent,  TIImageTool.langstr("IO error") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);		
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
@@ -117,19 +117,19 @@ public class RawCHDAction extends Activity {
 				bOK = true;			
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, ix.getMessage(), "Conversion error", JOptionPane.ERROR_MESSAGE);		
+				JOptionPane.showMessageDialog(m_parent, ix.getMessage(), TIImageTool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);		
 			}
 			catch (FileNotFoundException fnfx) {
-				JOptionPane.showMessageDialog(m_parent, "Target file not found, seems to have disappeared.", "Conversion error", JOptionPane.ERROR_MESSAGE);		
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileNotFoundUnexp"), TIImageTool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);		
 			}
 			catch (IOException iox) {
 				iox.printStackTrace();
-				JOptionPane.showMessageDialog(m_parent, "IO error while copying contents: " + iox.getClass().getName(), "Conversion error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IO error") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);
 			}
 			
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-			if (bOK) JOptionPane.showMessageDialog(m_parent, "Import completed successfully", "Import raw data", JOptionPane.INFORMATION_MESSAGE);
-			if (dialog.isSCSI()) JOptionPane.showMessageDialog(m_parent, "Warning: This image has a SCSI file system. Make sure that your emulator supports it.", "Import raw data", JOptionPane.INFORMATION_MESSAGE); 
+			if (bOK) JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("Conversion")), TIImageTool.langstr("Conversion"), JOptionPane.INFORMATION_MESSAGE);
+			if (dialog.isSCSI()) JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("RawCHDSCSIWarn"), TIImageTool.langstr("Conversion"), JOptionPane.WARNING_MESSAGE); 
 		}
 	}
 }

@@ -68,7 +68,7 @@ public class SectorEditAction extends Activity {
 		try {
 			String sAbsFile = selectedFile.getAbsolutePath();
 			if (imagetool.getAlreadyOpenedVolume(sAbsFile) != null) {
-				JOptionPane.showMessageDialog(m_parent, "Cannot edit sectors of an open image. Close all of its tabs first.", "Open error", JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("SectorEditOpenImage"), TIImageTool.langstr("OpenError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			else {
 				ImageFormat iform = ImageFormat.getImageFormat(sAbsFile);
@@ -78,13 +78,13 @@ public class SectorEditAction extends Activity {
 			}
 		}
 		catch (FileNotFoundException fnfx) {
-			JOptionPane.showMessageDialog(m_parent, "File not found: " + selectedFile.getName(), "Open error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileNotFound") + ": " + selectedFile.getName(), TIImageTool.langstr("OpenError"), JOptionPane.ERROR_MESSAGE); 
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_parent, "Error when opening " + selectedFile.getName() + ":" + iox.getClass().getName(), "Open error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("OpenError"), JOptionPane.ERROR_MESSAGE); 
 		}
 		catch (ImageException ix) {
-			JOptionPane.showMessageDialog(m_parent, "Cannot open image " + selectedFile.getName() + ":" + ix.getMessage(), "Open error", JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("OpenError"), JOptionPane.ERROR_MESSAGE); 
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}

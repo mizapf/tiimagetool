@@ -26,6 +26,7 @@ import java.awt.Cursor;
 
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.files.*;
+import de.mizapf.timt.TIImageTool;
 
 public class SavePlainAction extends Activity {
 
@@ -41,7 +42,7 @@ public class SavePlainAction extends Activity {
 		DirectoryView dvCurrent = imagetool.getSelectedView();
 		Directory dirCurrent = dvCurrent.getDirectory();
 		Volume volCurrent = dvCurrent.getVolume();
-
+		boolean ok = true;
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 		for (Element selected : dvCurrent.getSelectedEntries()) {
@@ -50,13 +51,18 @@ public class SavePlainAction extends Activity {
 					imagetool.saveToDisk(((TFile)selected).getRawContent(), false);
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getClass().getName(), "Error saving file", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IO error") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
+					ok = false;
+					break;
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage(), "Read error", JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE); 
+					ok = false;
+					break;
 				}
 			}
 		}
+		if (ok) JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("Export")), TIImageTool.langstr("Export"), JOptionPane.INFORMATION_MESSAGE);
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 }

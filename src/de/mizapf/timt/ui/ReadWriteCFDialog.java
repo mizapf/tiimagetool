@@ -46,7 +46,7 @@ class ReadWriteCFDialog extends ToolDialog {
 	JTextField m_tfCommandLine;
 			
 	ReadWriteCFDialog(JFrame owner, TIImageTool timt, boolean windows, boolean read) {
-		super(owner, read? "Reading CF card" : "Writing CF card");
+		super(owner, TIImageTool.langstr(read? "ReadWriteCFTitleR" : "ReadWriteCFTitleW"));
 		imagetool = timt;
 		m_parent = owner;
 		m_windows = windows;
@@ -78,98 +78,72 @@ class ReadWriteCFDialog extends ToolDialog {
 
 		// ======================
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth("Flash card device path (like \"/dev/sdc\")");
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("ReadwriteCFColumn"));
 
 		boolean isMac = System.getProperty("os.name").startsWith("Mac");
 		
+		// m_windows = true;
+		// isMac = true;
+		
 		if (m_read) {
-			putTextLine(this, "!Reading a Compact Flash card to an image file", 0);
+			putTextLine(this, "!" + TIImageTool.langstr("ReadWriteCFTitleRLong"), 0);
 			add(Box.createVerticalStrut(10));
 			if (m_windows) {
-				putMultiTextLine(this,	
-					   "TIImageTool uses the program \"DD.EXE\" to copy the contents of the CF card to an image file. Please specify the drive letter\n" 
-					 + "of your CF card, the name of the image file where the CF contents shall be copied to, and where the DD.EXE program is located.\n"
-					 + "See the Preferences in the File menu to change the defaults for the fields.");
+				putMultiTextLine(this,	TIImageTool.langstr("ReadWriteCFHintRWin"));
 			}
 			else {
 				if (isMac) {
-					putMultiTextLine(this,
-						  "TIImageTool uses the Unix \"dd\" program to copy the contents of a CF card to an image file. Please specify the device\n" 
-						+ "name of your CF card (like /dev/disk1, without partition number i.e. \"s1\"), and the image file on your hard disk where\n"
-						+ "the CF contents shall be copied to. See the Preferences in the File menu to change the defaults for the fields.\n"
-						+ "To get an overview of all disks mounted on your system, type \"diskutil list\" into Terminal. From its output you can\n"
-						+ "copy the device path.");
+					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintRMac"));	
 				} 
 				else {
-					putMultiTextLine(this, 
-						  "TIImageTool uses the dd tool to copy the contents of a CF card to an image file. Please specify the device name of your \n" 
-						+ "CF card (like /dev/sdc, without partition number), and the image file on your hard disk where the CF contents shall be \n"
-						+ "copied to. See the Preferences in the File menu to change the defaults for the fields.");
+					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintRLin"));
 				}  
 				add(Box.createVerticalStrut(10));
 				if (isMac) {
-					putTextLine(this, "Access to the raw device requires elevated privileges. You will be ask for your super user password if you proceed.", 0);
+					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevMac"));
 				} 
 				else {
-					putMultiTextLine(this, 
-						  "Access to the raw device requires elevated privileges. For KDE this can be done by using the kdesu command, Gnome/Unity\n"
-						+ "offers gksu. Check your OS and desktop environment for the appropriate command. You can set it in the Preferences.");
+					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevLin"));
 				}	
 			}
 			add(Box.createVerticalStrut(10));
-			putTextLine(this, "Please check the flash card specification. Since you are about to read it, nothing serious should happen on error.", 0);  
+			putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFRCheck"));  
 		}
 		else { // Writing on CF
-			putTextLine(this, "!Writing an image file to a Compact Flash card", 0);
+			putTextLine(this, "!" + TIImageTool.langstr("ReadWriteCFTitleWLong"), 0);
 			add(Box.createVerticalStrut(10));
 			if (m_windows) {
-				putMultiTextLine(this,	
-					   "TIImageTool uses the program \"DD.EXE\" to write the contents of an image file to a CF card. Please specify the image file\n" 
-					 + "on your hard disk, the drive letter of your CF card where the image shall be written to, and where the dd.exe program is located.\n"
-					 + "See the Preferences in the File menu to change the defaults for the fields.");
+				putMultiTextLine(this,	TIImageTool.langstr("ReadWriteCFHintWWin"));
 			}
 			else {
 				if (isMac) {
-					putMultiTextLine(this, 
-						  "TIImageTool uses the Unix \"dd\" program to write the contents of an image file to a CF card. Please specify the image file\n" 
-						+ "on your hard disk, and the device name of your CF card where the image shall be written to (like /dev/disk1, without partition\n"
-						+ "number i.e. \"s1\"). See the Preferences in the File menu to change the presets for the fields. To get an overview of all disks\n"
-						+ "mounted on your system, type \"diskutil list\" into Terminal. From its output you can copy the device path.");
+					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintWMac"));
 				} 
 				else {
-					putMultiTextLine(this, 
-						  "TIImageTool uses the dd tool to write the contents of an image file to a CF card. Please specify the image file on your hard\n" 
-						+ "disk, and the device name of your CF card where the image shall be written to (like /dev/sdc, without partition number).\n"
-						+ "See the Preferences in the File menu to change the presets for the fields.");
+					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintWLin"));
 				}
 				add(Box.createVerticalStrut(10));
 				if (isMac) {
-					putTextLine(this, "Access to the raw device requires elevated privileges. You will be ask for your super user password if you proceed.", 0);
+					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevMac"));
 				} 
 				else {
-					putMultiTextLine(this, 
-						  "Access to the raw device requires elevated privileges. For KDE this can be done by using the kdesu command, Gnome/Unity\n"
-						+ "offers gksu. Check your OS and desktop environment for the appropriate command. You can set it in the Preferences.");
+					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevLin")); 
 				}
 			}
 			add(Box.createVerticalStrut(10));
-			putMultiTextLine(this, 
-				  "!Double check the flash card device name. In the worst case, you could accidentally overwrite your system hard disk\n"
-				+ "and destroy your whole computer setup and lose all files!");
+			putMultiTextLine(this, "!" + TIImageTool.langstr("ReadWriteCFWCheck"));
 		}		
 		
 		add(Box.createVerticalStrut(10));
-		putMultiTextLine(this, 
-			      "Before you click on OK, have a final look at the last field. It shows the command line that will be executed and can be\n"
-				+ "modified as desired.");
+		putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFFinal"));
 		
 		add(Box.createVerticalStrut(10));
 
-		String devprompt = (m_windows)? "Flash card drive name (like \"e:\")" : (isMac)? "Flash card device path (like \"/dev/disk1\")" : "Flash card device path (like \"/dev/sdc\")";
+		String devprompt = TIImageTool.langstr((m_windows)? "ReadWriteCFPathWin" : (isMac)? "ReadWriteCFPathMac" : "ReadWriteCFPathLin");
 		String lastPath = imagetool.getPropertyString(imagetool.CFCARD);
-		String fileprompt = "File name for CF image";
-		String ddprompt = "Path to DD.EXE program";
-		m_tfImageFile = new JTextField(m_read? "click to select (suggested: *.cf7 suffix)" : "click to select");
+		String fileprompt = TIImageTool.langstr("ReadWriteCFImage");
+		String ddprompt = TIImageTool.langstr("ReadWriteCFDD");
+		m_tfImageFile = new JTextField(m_read? TIImageTool.langstr("ReadWriteCFClick") : TIImageTool.langstr("ClickToSelect"));
 		
 		m_tfDevice = new JTextField(lastPath);
 
@@ -192,7 +166,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			add(Box.createVerticalStrut(10));
 		}
 				
-		m_tfCommandLine = putTextField(this, "Command line", "", nColumnWidth, 0);
+		m_tfCommandLine = putTextField(this, TIImageTool.langstr("ReadWriteCFCommand"), "", nColumnWidth, 0);
 		setupCommand();
 		add(Box.createVerticalGlue());
 		addButtons();		
@@ -220,9 +194,9 @@ class ReadWriteCFDialog extends ToolDialog {
 		command = imagetool.getPropertyString(imagetool.DDPATH);
 		bsize = imagetool.getPropertyString(imagetool.BSIZE);
 		
-		if (!cfcard.equals("click to select") 
-			&& !image.startsWith("click to select") 
-			&& !command.equals("click to select")) {
+		if (!cfcard.equals(TIImageTool.langstr("ClickToSelect")) 
+			&& !(image.equals(TIImageTool.langstr("ClickToSelect")) || image.equals(TIImageTool.langstr("ReadWriteCFClick"))) 
+			&& !command.equals(TIImageTool.langstr("ClickToSelect"))) {
 
 			if (elevate.length()>0) sb.append(elevate).append(" -c \"");
 			sb.append(command).append(" ");

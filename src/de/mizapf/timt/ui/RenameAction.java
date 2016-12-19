@@ -26,6 +26,8 @@ import javax.swing.JOptionPane;
 import java.io.IOException;
 import de.mizapf.timt.files.*;
 
+import de.mizapf.timt.TIImageTool;
+
 public class RenameAction extends Activity {
 
 	public int getKeyCode() {
@@ -57,28 +59,28 @@ public class RenameAction extends Activity {
 		for (Element selected : dvCurrent.getSelectedEntries()) {
 			boolean bValid = false;
 			while (!bValid && !bDone) {
-				String sRet = JOptionPane.showInputDialog(dvCurrent.getFrame(), "Provide a new name: ", selected.getName());
+				String sRet = JOptionPane.showInputDialog(dvCurrent.getFrame(), TIImageTool.langstr("RenameNewName") + ": ", selected.getName());
 				if (sRet != null) {
 					try {
 						bValid = true;
 						dirCurrent.renameElement(selected, sRet);
 					}
 					catch (FileExistsException fxx) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Name already exists" , "Renaming error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("RenameExists"), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 
 						bValid = false;
 					}
 					catch (InvalidNameException inx) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Invalid name" , "Renaming error", JOptionPane.ERROR_MESSAGE); 						
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidName"), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 						
 						bValid = false;
 					}
 					catch (ImageException ix) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Image error: " + ix.getMessage() , "Renaming error", JOptionPane.ERROR_MESSAGE); 						
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage() , TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 						
 					}
 					catch (IOException iox) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Write error" , "Renaming error", JOptionPane.ERROR_MESSAGE); 						
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IO error") + ": " + iox.getClass().getName(), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 						
 					}
 					catch (ProtectedException px) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Cannot write: " + px.getMessage(), "Write error", JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 
 					}
 				}
 				else bDone = true;

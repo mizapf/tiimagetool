@@ -27,7 +27,7 @@ import java.util.*;
 public class PreferencesAction extends Activity {
 	
 	public String getMenuName() {
-		return imagetool.langstr("Prefer");
+		return imagetool.langstr("Preferences");
 	}
 	
 	public String getActionName() {

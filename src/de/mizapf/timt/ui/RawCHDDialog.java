@@ -59,7 +59,7 @@ class RawCHDDialog extends ToolDialog {
 	boolean				m_scsi;
 	
 	RawCHDDialog(JFrame owner, TIImageTool timt) {
-		super(owner, "Create a new CHD image file from raw contents");
+		super(owner, TIImageTool.langstr("RawCHDTitle"));
 		imagetool = timt;
 	}
 	
@@ -86,23 +86,20 @@ class RawCHDDialog extends ToolDialog {
 */	
 	public void createGui(Font font) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth("Fill unallocated space with zerosXXXX");
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("RawCHDColumn"));
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		add(Box.createVerticalStrut(10));		
 
-		putTextLine(this, "!Creating a CHD file from a raw sector dump", 0);
+		putTextLine(this, "!" + TIImageTool.langstr("RawCHDLongTitle"), 0);
 		add(Box.createVerticalStrut(10));
 		
-		putMultiTextLine(this, 
-			  "This function creates a new CHD image (MAME hard disk format) from a sector dump file. The sector dump file\n"
-			+ "is supposed to hold the contents of all sectors from 0 to the last sector with no metadata. You have to\n"
-			+ "define these metadata below.");
+		putMultiTextLine(this, TIImageTool.langstr("RawCHDHint"));
 		add(Box.createVerticalStrut(10));
 		
-		String rawprompt = "File name for raw contents (from)";
-		String fileprompt = "File name for CHD image (to)";
-		m_tfRawFile = new JTextField("click to select");
-		m_tfImageFile = new JTextField("click to select");
+		String rawprompt = TIImageTool.langstr("RawCHDFrom");
+		String fileprompt = TIImageTool.langstr("RawCHDTo");
+		m_tfRawFile = new JTextField(TIImageTool.langstr("ClickToSelect"));
+		m_tfImageFile = new JTextField(TIImageTool.langstr("ClickToSelect"));
 
 		addChoiceLine(nColumnWidth, rawprompt, FILELINE, FROM, m_tfRawFile, 32);
 		add(Box.createVerticalStrut(10));
@@ -111,16 +108,16 @@ class RawCHDDialog extends ToolDialog {
 		
 		// String[] asOptions = { "4", "5" };
 		// m_jcCHDVersion = putComboBox(this, "Target CHD version", asOptions, 1, nColumnWidth);
-		m_chbFillZero = putCheckBox(this, "Fill unallocated space with zeros", true, nColumnWidth);
+		m_chbFillZero = putCheckBox(this, TIImageTool.langstr("RawCHDFillZeros"), true, nColumnWidth);
 		add(Box.createVerticalStrut(15));
 		
-		putTextLine(this, "Target parameters:", 300);
+		putTextLine(this, TIImageTool.langstr("RawCHDParams") + ":", 300);
 		add(Box.createVerticalStrut(5));
-		m_jlFileSystem = putLabel(this, "File system", "-",nColumnWidth);
-		m_jlCylinders = putLabel(this, "Cylinders", "-", nColumnWidth);
-		m_jlHeads = putLabel(this, "Heads", "-", nColumnWidth);
-		m_jlSectorsPerTrack = putLabel(this, "Sectors per track", "-", nColumnWidth);
-		m_jlSectorLength = putLabel(this, "Sector length", "-", nColumnWidth);
+		m_jlFileSystem = putLabel(this, TIImageTool.langstr("FileSystem"), "-",nColumnWidth);
+		m_jlCylinders = putLabel(this, TIImageTool.langstr("Cylinders"), "-", nColumnWidth);
+		m_jlHeads = putLabel(this, TIImageTool.langstr("Heads"), "-", nColumnWidth);
+		m_jlSectorsPerTrack = putLabel(this, TIImageTool.langstr("SectorsPerTrack"), "-", nColumnWidth);
+		m_jlSectorLength = putLabel(this, TIImageTool.langstr("SectorLength"), "-", nColumnWidth);
 		add(Box.createVerticalStrut(10));
 		
 		add(Box.createVerticalStrut(10));
@@ -223,16 +220,16 @@ class RawCHDDialog extends ToolDialog {
 			dis.close();
 		}
 		catch (FileNotFoundException fx) {
-			JOptionPane.showMessageDialog(m_frmMain, "File not found; has it been removed in the meantime?", "Read error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_frmMain, TIImageTool.langstr("FileNotFoundUnexp"), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_frmMain, "IO error when reading the raw file: " + iox.getClass().getName(), "Read error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_frmMain, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 		
 		if (Volume.hasFloppyVib(m_abyHead)) {
-			JOptionPane.showMessageDialog(m_frmMain, "You cannot import a floppy image into a CHD.", "Import error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_frmMain, TIImageTool.langstr("RawCHDNoFloppy"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 		
@@ -253,11 +250,11 @@ class RawCHDDialog extends ToolDialog {
 			m_heads = (m_abyHead[16] & 0x0f) + 1; 
 			m_sectorsPerTrack = m_abyHead[12] & 0xff;
 			if (m_heads < 1 || m_heads > 16) {
-				JOptionPane.showMessageDialog(m_frmMain, "Invalid raw data; head count must be 1..16, not " + m_heads, "Import error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_frmMain, String.format(TIImageTool.langstr("RawCHDInvalidHeads"), m_heads), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 				return false;
 			}
 			if (m_sectorsPerTrack < 32) {
-				JOptionPane.showMessageDialog(m_frmMain, "Number of sectors per track (" + m_sectorsPerTrack + ") may be invalid; possibly no raw image data.", "Import error", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_frmMain, String.format(TIImageTool.langstr("RawCHDInvalidSectors"), m_sectorsPerTrack), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 				return false;
 			}	
 			// we should again increase the number of total sectors because
@@ -291,13 +288,13 @@ class RawCHDDialog extends ToolDialog {
 				m_heads = nTotalSectors / m_sectorsPerTrack / m_cylinders;
 			}
 			else {
-				JOptionPane.showMessageDialog(m_frmMain, "Cannot determine geometry for SCSI image.", "Import error", JOptionPane.ERROR_MESSAGE);				
+				JOptionPane.showMessageDialog(m_frmMain, TIImageTool.langstr("RawCHDNoGeometry"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);				
 				return false;
 			}
 		}	
 
 		if (m_auSize != 1 && m_auSize != 2 && m_auSize != 4 && m_auSize != 8 && m_auSize != 16) {
-			JOptionPane.showMessageDialog(m_frmMain, "Unplausible AU size: " + m_auSize + ". Should be 1,2,4,8, or 16.", "Import error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_frmMain, String.format(TIImageTool.langstr("RawCHDInvalidAU"), m_auSize), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 			return false;
 		}
 		

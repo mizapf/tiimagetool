@@ -61,7 +61,7 @@ public class WriteCFCardAction extends Activity {
 		if (rwd.confirmed()) {
 			String[] commands = isMac? rwd.getMacCommandLine(true) : rwd.getCommandLine();
 			if (commands == null || commands.length < 3) {
-				JOptionPane.showMessageDialog(m_parent, "Abort command. Command line was not set up correctly.", "CF card writing", JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("AbortCommand"), TIImageTool.langstr("WriteCFTitle"), JOptionPane.ERROR_MESSAGE);
 			} 
 			else {
 				try {
@@ -70,17 +70,17 @@ public class WriteCFCardAction extends Activity {
 					p.waitFor();
 					int exit = p.exitValue();
 					if (exit == 0) {
-						JOptionPane.showMessageDialog(m_parent, "CF card written successfully.", "CF card writing", JOptionPane.INFORMATION_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("WriteCFSuccess"), TIImageTool.langstr("WriteCFTitle"), JOptionPane.INFORMATION_MESSAGE);
 					}
 					else {
-						JOptionPane.showMessageDialog(m_parent, "Could not write the CF card. Maybe the path was wrong.", "CF card writing", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("WriteCFFailed"), TIImageTool.langstr("WriteCFTitle"), JOptionPane.ERROR_MESSAGE);
 					}
 				}
 				catch (IOException iox) {
 					// iox.printStackTrace();
 					// Linux: java.io.IOException: Cannot run program "xxx": error=2, Datei oder Verzeichnis nicht gefunden
 					// Windows: java.io.IOException: Cannot run program "xxx": CreateProcess error=2, Das System kann die angegebene Datei nicht finden
-					JOptionPane.showMessageDialog(m_parent, "Cannot run device dump command; please check the command path and whether it is installed at all.", "Error executing CF card writing", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("DDFailed"), "Error executing CF card writing", JOptionPane.ERROR_MESSAGE);
 				}
 				catch (InterruptedException ix) {
 					ix.printStackTrace();

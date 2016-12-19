@@ -44,7 +44,7 @@ class SearchDialog extends ToolDialog {
 	JTextField m_tfMaxHits;
 		
 	SearchDialog(JFrame owner, TIImageTool timt) {
-		super(owner, "Search files");
+		super(owner, TIImageTool.langstr("SearchTitle"));
 		imagetool = timt;
 		m_parent = owner;
 	}	
@@ -72,21 +72,21 @@ class SearchDialog extends ToolDialog {
 */	
 		prepareGui();
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth("Search in archive files");
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("SearchColumn"));
 		
-		m_tfSearchString = putTextField(this, "Search text", "", nColumnWidth, 0); 
+		m_tfSearchString = putTextField(this, TIImageTool.langstr("SearchText"), "", nColumnWidth, 0); 
 
-		m_chbRegex = putCheckBox(this, "Regular expression", false, nColumnWidth);
+		m_chbRegex = putCheckBox(this, TIImageTool.langstr("SearchRegex"), false, nColumnWidth);
 		add(Box.createVerticalStrut(10));
 		
 		int[] anFormat = { 100, 100 };
 		
-		String[] asDoSearch = { "file names", "file contents" };
-		JRadioButton[] arb2 = putRadioButtons(this, "Search", nColumnWidth, asDoSearch, anFormat, 0);
+		String[] asDoSearch = { TIImageTool.langstr("SearchNames"), TIImageTool.langstr("SearchContent") };
+		JRadioButton[] arb2 = putRadioButtons(this, TIImageTool.langstr("SearchFor"), nColumnWidth, asDoSearch, anFormat, 0);
 		m_jrSearchFile = arb2[0];
 		m_jrSearchContent = arb2[1];
 
-		m_chbArchives = putCheckBox(this, "Include archive files", false, nColumnWidth);		
+		m_chbArchives = putCheckBox(this, TIImageTool.langstr("SearchArchives"), false, nColumnWidth);		
 
 		//
 		ImageIcon diskicon = null;
@@ -96,17 +96,17 @@ class SearchDialog extends ToolDialog {
 			m_btnFileChooser = new JButton(diskicon);
 		} 
 		else {
-			System.err.println("Error: Could not locate icon image in package " + iconurl);
-			m_btnFileChooser = new JButton("Choose");
+			System.err.println(TIImageTool.langstr("NoImage") + " " + iconurl);
+			m_btnFileChooser = new JButton(TIImageTool.langstr("ImagePlaceholder"));
 		}
 
 		m_btnFileChooser.addActionListener(this);
 		
 		Box box = new Box(BoxLayout.X_AXIS);
 		box.add(Box.createHorizontalStrut(10));
-		JLabel jl = new JLabel("Path to search", SwingConstants.LEFT); 
+		JLabel jl = new JLabel(TIImageTool.langstr("SearchPath"), SwingConstants.LEFT); 
 		jl.setFont(TIImageTool.dialogFont);
-		String lastPath = "click to select";
+		String lastPath = TIImageTool.langstr("ClickToSelect");
 		add(Box.createVerticalStrut(20));
 
 		// Path setup
@@ -139,11 +139,11 @@ class SearchDialog extends ToolDialog {
 		add(box);
 		// Path setup end
 		
-		m_tfValidExtensions = putTextField(this, "Limit extensions to", ".dsk,.dtk,.hfe,.hd", nColumnWidth, 0); 
-		m_chbSubdir = putCheckBox(this, "Include subdirectories", false, nColumnWidth);
+		m_tfValidExtensions = putTextField(this, TIImageTool.langstr("SearchLimit"), ".dsk,.dtk,.hfe,.hd", nColumnWidth, 0); 
+		m_chbSubdir = putCheckBox(this, TIImageTool.langstr("SearchSubdir"), false, nColumnWidth);
 
 		box.add(Box.createHorizontalStrut(10));
-		m_tfMaxHits = putTextField(this, "Maximum hits", "1000", nColumnWidth, 0); 
+		m_tfMaxHits = putTextField(this, TIImageTool.langstr("SearchMax"), "1000", nColumnWidth, 0); 
 		
 		add(Box.createVerticalGlue());
 
@@ -187,7 +187,7 @@ class SearchDialog extends ToolDialog {
 					m_tfPath.setText(sb.toString());
 				}
 				else {
-					System.out.println("No files or directories selected");
+					System.out.println(TIImageTool.langstr("SearchNoFilesDir"));
 					m_tfPath.setText("");
 				}
 			}
