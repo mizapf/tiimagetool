@@ -31,7 +31,7 @@ import de.mizapf.timt.TIImageTool;
 public class NewCF7VolumeAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("SingleCF7");
+		return TIImageTool.langstr("SingleCF7") + "...";
 	}
 	
 	public String getActionName() {

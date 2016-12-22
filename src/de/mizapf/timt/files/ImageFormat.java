@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.TIImageTool;
 
 public abstract class ImageFormat  {
 
@@ -149,7 +150,7 @@ public abstract class ImageFormat  {
 			return new RawHDFormat(fileSystem, sFile, nSectorLength);
 		} */
 		
-		if (fileSystem.length()==0) throw new ImageException("Empty image");
+		if (fileSystem.length()==0) throw new ImageException(TIImageTool.langstr("ImageEmpty"));
 		
 		if (CF7VolumeFormat.vote(fileSystem) > 50) {
 			return new CF7VolumeFormat(fileSystem, sFile);
@@ -169,15 +170,15 @@ public abstract class ImageFormat  {
 			return new RawHDFormat(fileSystem, sFile);
 		}
 
-		if (MessCHDFormat.vote(fileSystem) > 50) {
-			return new MessCHDFormat(fileSystem, sFile);
+		if (MameCHDFormat.vote(fileSystem) > 50) {
+			return new MameCHDFormat(fileSystem, sFile);
 		}
 
 		if (HFEFormat.vote(fileSystem) > 50) {
 			return new HFEFormat(fileSystem, sFile);
 		}
 				
-		throw new ImageException(sFile + ": Unknown format or image corrupted");
+		throw new ImageException(sFile + ": " + TIImageTool.langstr("ImageUnknown"));
 	}
 
 	public void reopenForWrite() throws IOException {
@@ -220,7 +221,7 @@ public abstract class ImageFormat  {
 		// The sector offset is redefined here as the sector number in the track
 		
 		if (m_nTotalSectors != 0 && nSectorNumber > m_nTotalSectors) 
-			throw new ImageException("Sector number too high (max " + (m_nTotalSectors -1) + ").");
+			throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), m_nTotalSectors));
 		
 		int sector = nSectorNumber % m_nSectorsByFormat;
 		
@@ -233,7 +234,7 @@ public abstract class ImageFormat  {
 			cylinder = 2 * m_nCylinders - 1 - track;
 			head++;
 		}
-		if (cylinder < 0) throw new ImageException("Broken image; seems to imply more than two heads");
+		if (cylinder < 0) throw new ImageException(TIImageTool.langstr("ImageInvalidHeads"));
 
 		Location loc = new Location(cylinder, head, sector, track);
 		

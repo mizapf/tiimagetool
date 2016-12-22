@@ -275,7 +275,7 @@ public class NewHDImageAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return imagetool.langstr("HarddiskImage") + "...";
+		return TIImageTool.langstr("HarddiskImage") + "...";
 	}
 	
 	public String getActionName() {
@@ -387,7 +387,7 @@ public class NewHDImageAction extends Activity {
 					}
 					else {
 						try {
-							byte[] abyNewImage = MessCHDFormat.createEmptyCHDImage(parm);
+							byte[] abyNewImage = MameCHDFormat.createEmptyCHDImage(parm);
 							
 							// Fix the oversized parameters
 							if (nSectors / parm.auSize > 0xf800) {
@@ -446,7 +446,7 @@ public class NewHDImageAction extends Activity {
 									ImageFormat ifsource = null;
 									try {
 										ifsource = ImageFormat.getImageFormat(file.getAbsolutePath());
-										if (!(ifsource instanceof MessCHDFormat)) {
+										if (!(ifsource instanceof MameCHDFormat)) {
 											JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);				
 											bValid = false;
 											return;
@@ -468,12 +468,12 @@ public class NewHDImageAction extends Activity {
 										return;
 									}
 									
-									MessCHDFormat source = (MessCHDFormat)ifsource;
+									MameCHDFormat source = (MameCHDFormat)ifsource;
 									source.reopenForWrite();
 									
 									// Get the first 5 hunks
 									int nHunkBytes = 0x1000;
-									byte[] abyHead = MessCHDFormat.getPreparedHunks(parm, nHunkBytes);
+									byte[] abyHead = MameCHDFormat.getPreparedHunks(parm, nHunkBytes);
 									// System.out.println("abyHead.length = " + abyHead.length);
 									byte[] abyPart = new byte[nHunkBytes];
 									for (int i=0; i < abyHead.length / nHunkBytes; i++) {

@@ -38,7 +38,7 @@ import de.mizapf.timt.TIImageTool;
 public class ImportFilesAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ImportFiles");
+		return TIImageTool.langstr("ImportFiles") + "...";
 	}
 	
 	public String getActionName() {

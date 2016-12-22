@@ -33,7 +33,7 @@ import de.mizapf.timt.TIImageTool;
 public class ExportEmulateAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("SaveDSK");
+		return TIImageTool.langstr("SaveDSK") + "...";
 	}
 	
 	public String getActionName() {
@@ -90,10 +90,10 @@ public class ExportEmulateAction extends Activity {
 					}
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getClass().getName(), TIImageTool.langstr("IOError"), JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ExportEmu"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ExportEmu"), JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}

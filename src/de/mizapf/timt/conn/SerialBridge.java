@@ -27,6 +27,7 @@ import java.util.TooManyListenersException;
 import gnu.io.*;
 
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.TIImageTool;
 
 import java.awt.*;
 import java.awt.font.*;
@@ -132,7 +133,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 			adjustSerialParameters();
 		}
 		catch (ConnectionException cx) {
-			System.err.println("Connection exception: " + cx);
+			System.err.println(TIImageTool.langstr("ConnectionError") + ": " + cx);
 			return;
 		}
 
@@ -267,7 +268,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 			m_sp.setSerialPortParams(m_nSpeed, m_nData, m_nStop, m_nParity);
 		}
 		catch (UnsupportedCommOperationException ucx) {
-			throw new ConnectionException(m_sAdapter, "Setting serial port parameters failed (speed=" + m_nSpeed + ", data=" + m_nData + ", stop=" + m_nStop + ", parity=" + m_nParity + ")");
+			throw new ConnectionException(m_sAdapter, String.format(TIImageTool.langstr("SerialBridgeFailed"), m_nSpeed, m_nData, m_nStop, m_nParity));
 		}
 	}
 	
@@ -280,7 +281,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 				CommPortIdentifier cpit = (CommPortIdentifier)ePorts.nextElement();
 				if (cpit.getName().equals(sPort)) cpi=cpit;
 			}
-			if (cpi==null) throw new ConnectionException(sPort, "Port not found");
+			if (cpi==null) throw new ConnectionException(sPort, TIImageTool.langstr("SerialBridgePort"));
 			
 			m_sp = (SerialPort)cpi.open("de.mizapf.timt.conn.SerialBridge", 1000);
 			m_isFromSerial = m_sp.getInputStream();
@@ -306,13 +307,13 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 			if (TRACECONF) debug("Serial connection opened\n");
 		}
 		catch (PortInUseException px) {
-			throw new ConnectionException(sPort, "Port in use");
+			throw new ConnectionException(sPort, TIImageTool.langstr("SerialBridgeInUse"));
 		}
 		catch (UnsupportedCommOperationException ucx) {
-			throw new ConnectionException(m_sAdapter, "Serial port operation not supported: " + ucx.getMessage());
+			throw new ConnectionException(m_sAdapter, TIImageTool.langstr("SerialBridgeNotSupp") + ": " + ucx.getMessage());
 		}
 		catch (TooManyListenersException tmx) {
-			throw new ConnectionException(sPort, "Too many listeners");
+			throw new ConnectionException(sPort, TIImageTool.langstr("SerialBridgeList"));
 		}
 	}
 	
@@ -461,7 +462,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 			m_nMode = NORMAL;
 			break;
 		default:
-			System.err.println("Invalid mode: " + m_nMode);
+			System.err.println(TIImageTool.langstr("SerialBridgeInvMode") + ": " + m_nMode);
 			m_nMode = NORMAL;
 			break;
 		}
@@ -500,7 +501,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 		if (isConfig(aby[0])) {
 			int nType = aby[0] & 0x07;
 			if (nType != 1) {
-				System.err.println("Only TMS9902 supported at this time");
+				System.err.println(TIImageTool.langstr("SerialBridgeOnly9902"));
 				return;
 			}
 			// Configuration		

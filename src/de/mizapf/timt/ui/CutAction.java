@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import javax.swing.Action;
 import javax.swing.TransferHandler;
 import java.awt.event.ActionEvent;
+import de.mizapf.timt.TIImageTool;
 
 public class CutAction extends Activity {
 
@@ -36,7 +37,7 @@ public class CutAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return imagetool.langstr("Cut");
+		return TIImageTool.langstr("Cut");
 	}
 	
 	public String getActionName() {

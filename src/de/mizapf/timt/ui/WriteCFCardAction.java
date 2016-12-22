@@ -36,7 +36,7 @@ import de.mizapf.timt.TIImageTool;
 public class WriteCFCardAction extends Activity {
 	
 	public String getMenuName() {
-		return imagetool.langstr("WriteCF");
+		return TIImageTool.langstr("WriteCF") + "...";
 	}
 	
 	public String getActionName() {
@@ -80,7 +80,7 @@ public class WriteCFCardAction extends Activity {
 					// iox.printStackTrace();
 					// Linux: java.io.IOException: Cannot run program "xxx": error=2, Datei oder Verzeichnis nicht gefunden
 					// Windows: java.io.IOException: Cannot run program "xxx": CreateProcess error=2, Das System kann die angegebene Datei nicht finden
-					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("DDFailed"), "Error executing CF card writing", JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("DDFailed"), TIImageTool.langstr("WriteCFTitle"), JOptionPane.ERROR_MESSAGE);
 				}
 				catch (InterruptedException ix) {
 					ix.printStackTrace();

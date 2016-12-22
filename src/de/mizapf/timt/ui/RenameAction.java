@@ -39,7 +39,7 @@ public class RenameAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return imagetool.langstr("RenameElement");
+		return TIImageTool.langstr("RenameElement") + "...";
 	}
 	
 	public String getActionName() {
@@ -77,7 +77,7 @@ public class RenameAction extends Activity {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage() , TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 						
 					}
 					catch (IOException iox) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IO error") + ": " + iox.getClass().getName(), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 						
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 						
 					}
 					catch (ProtectedException px) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE); 

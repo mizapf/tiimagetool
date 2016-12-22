@@ -35,7 +35,7 @@ import java.util.ArrayList;
 public class ReadCFCardAction extends Activity {
 	
 	public String getMenuName() {
-		return imagetool.langstr("ReadCF");
+		return TIImageTool.langstr("ReadCF") + "...";
 	}
 	
 	public String getActionName() {

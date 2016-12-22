@@ -756,7 +756,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 								return;
 							}
 						}
-						sText = Utilities.sanitizeText(content, escape);
+						sText = Utilities.sanitizeText(content, escape, m_app.getPropertyBoolean(TIImageTool.VERBOSE));
 					}
 					else {
 						// Do this only when applicable
@@ -778,7 +778,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				}
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(frame, iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(frame, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (ArithmeticException ax) {
 				JOptionPane.showMessageDialog(frame, ax.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 				

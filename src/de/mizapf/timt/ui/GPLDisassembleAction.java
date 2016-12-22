@@ -33,7 +33,7 @@ import de.mizapf.timt.TIImageTool;
 public class GPLDisassembleAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("DisGPL");
+		return TIImageTool.langstr("DisGPL") + "...";
 	}
 	
 	public String getActionName() {
@@ -41,7 +41,7 @@ public class GPLDisassembleAction extends Activity {
 	}
 	
 	public void go() {
-		String sText = imagetool.langstr("NoContent");
+		String sText = TIImageTool.langstr("NoContent");
 
 		DirectoryView dvCurrent = imagetool.getSelectedView();
 		DirectoryPanel dp = dvCurrent.getPanel();
@@ -66,18 +66,17 @@ public class GPLDisassembleAction extends Activity {
 						GPLAssembler gplasm = new GPLAssembler();
 						sText = gplasm.disassemble(content, disparm.getOffset(), disparm.getStartAddress(), len, disparm.getHint(), bInvAddr, disparm.showDataLoc());
 
-						imagetool.showTextContent(imagetool.langstr("GPLDisasmd") + " " + selected.getName(), sText);
+						imagetool.showTextContent(TIImageTool.langstr("GPLDisasmd") + " " + selected.getName(), sText);
 					}
 				}
 				catch (FormatException fx) {
-					fx.printStackTrace();
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("GPLInvSkip"), imagetool.langstr("DisasmBadParam"), JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("GPLInvHint") + ": " + fx.getMessage(), TIImageTool.langstr("DisasmBadParam"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 				}
 			}
 		}

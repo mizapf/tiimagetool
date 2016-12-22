@@ -36,7 +36,7 @@ import de.mizapf.timt.TIImageTool;
 public class SaveTFIAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("SaveTFI");
+		return TIImageTool.langstr("SaveTFI") + "...";
 	}
 	
 	public String getActionName() {

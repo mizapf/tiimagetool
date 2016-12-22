@@ -34,7 +34,7 @@ import de.mizapf.timt.TIImageTool;
 public class RawCHDAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ImportRaw");
+		return TIImageTool.langstr("ImportRaw") + "...";
 	}
 	
 	public String getActionName() {
@@ -61,7 +61,7 @@ public class RawCHDAction extends Activity {
 			try {
 				fileTarget = dialog.getTargetCHD();
 				FileOutputStream fos = new FileOutputStream(fileTarget);
-				fos.write(MessCHDFormat.createEmptyCHDImage(parm));
+				fos.write(MameCHDFormat.createEmptyCHDImage(parm));
 				fos.close();
 			}
 			catch (IllegalOperationException iox) {	
@@ -70,7 +70,7 @@ public class RawCHDAction extends Activity {
 				return;
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent,  TIImageTool.langstr("IO error") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);		
+				JOptionPane.showMessageDialog(m_parent,  TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);		
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
@@ -82,7 +82,7 @@ public class RawCHDAction extends Activity {
 			boolean bOK = false;
 			int nHunkNumber = 0;
 			try {
-				MessCHDFormat target = (MessCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath());
+				MameCHDFormat target = (MameCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath());
 				target.reopenForWrite();
 				
 				// We have the allocation still from above
@@ -124,7 +124,7 @@ public class RawCHDAction extends Activity {
 			}
 			catch (IOException iox) {
 				iox.printStackTrace();
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IO error") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);
 			}
 			
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

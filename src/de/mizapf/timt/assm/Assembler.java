@@ -25,6 +25,8 @@ import java.util.*;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.files.FormatException;
 
+import de.mizapf.timt.TIImageTool;
+
 public class Assembler {
 	
 	public static final boolean DEBUG = false;
@@ -538,7 +540,7 @@ public class Assembler {
 		}
 		catch (ArrayIndexOutOfBoundsException e) {
 			e.printStackTrace();
-			throw new FormatException("Disassemble", "End tag missing, or file is not tagged object code");
+			throw new FormatException(TIImageTool.langstr("AssmDisassemble"), TIImageTool.langstr("AssmEndTagMissing"));
 		}
 				
 		LinkedList<DisassembledLine> lines = new LinkedList<DisassembledLine>();
@@ -1082,7 +1084,7 @@ public class Assembler {
 	private void checkReferenced(DisassembledLine dl, Map<String,Symbol> symboltable, TocEntity[] deftable) {
 	    Location count = dl.getLocation();
 	    if (count==null) {
-	    	System.err.println("Line \"" + dl + "\" has no location");
+	    	System.err.println(String.format(TIImageTool.langstr("AssmNoLocation"), dl));
 	    	return;
 	    }
 	    if (symboltable.containsKey(count.toString())) dl.setReferenced();
@@ -1135,7 +1137,7 @@ public class Assembler {
 			if (!dld.mayHaveLabels()) continue;
 			addr = dld.getLocation();
 			if (addr==null) {
-				System.err.println("Line \"" + dld + "\" has no location");
+				System.err.println(String.format(TIImageTool.langstr("AssmNoLocation"), dld));
 				continue;
 			}
 

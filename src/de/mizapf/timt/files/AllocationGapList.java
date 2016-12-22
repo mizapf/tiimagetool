@@ -62,8 +62,4 @@ public class AllocationGapList {
 		}
 		return aGap;
 	}
-	
-	public String toString() {
-		return "File " + m_sEntity + " has allocation gaps " + m_lst;
-	}
 }

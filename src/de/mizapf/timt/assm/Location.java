@@ -25,6 +25,8 @@ import java.util.*;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.files.FormatException;
 
+import de.mizapf.timt.TIImageTool;
+
 class Location implements Cloneable {
 	int m_nValue;
 	int m_nAddressType;
@@ -85,7 +87,7 @@ class Location implements Cloneable {
                        nValue = Integer.parseInt(sText.substring(2,6), 16);
                        nAddressType = Assembler.ABSOLUTE;
                     }
-                    else throw new FormatException(sText, "invalid prefix");
+                    else throw new FormatException(sText, TIImageTool.langstr("LocationInvPrefix"));
 	                break;
 	            case 'R':
 	                nValue = Integer.parseInt(sText.substring(1,5), 16);
@@ -107,13 +109,13 @@ class Location implements Cloneable {
 	                nAddressType = Assembler.PRELOC;
 	                break;
 	            default:
-	                throw new FormatException(sText, "invalid prefix");
+	                throw new FormatException(sText, TIImageTool.langstr("LocationInvPrefix"));
 	            }
 	        }
 	        return new Location(nAddressType, nValue, nSegment);
 	    }
 	    catch (NumberFormatException nfx) {
-	        throw new FormatException(sText, "invalid format");
+	        throw new FormatException(sText, TIImageTool.langstr("InvalidFormat"));
 	    }
 	}
 	

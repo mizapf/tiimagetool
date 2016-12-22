@@ -28,6 +28,8 @@ import java.util.*;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.util.TIFiles;
 
+import de.mizapf.timt.TIImageTool;
+
 public class Directory extends Element {
 	
 	public static Directory parent = new Directory("..");
@@ -82,11 +84,13 @@ public class Directory extends Element {
 			}
 			catch (ImageException ix) {
 				bad++;
-				System.err.println("Failed to add file at sector " + nFile);
+				System.err.println(ix.getMessage());
 				if (bad > 10) {
 					String name = m_sName;
-					if (dirParent == null) name = "root";
-					throw new ImageException("Failed to read directory " + name + ": too many errors");
+					if (dirParent == null)
+						throw new ImageException(TIImageTool.langstr("DirectoryFailedRoot"));
+					else 
+						throw new ImageException(String.format(TIImageTool.langstr("DirectoryFailedOther"), name));
 				}
 			}
 		}
@@ -146,9 +150,9 @@ public class Directory extends Element {
 			}
 			catch (ImageException ix) {
 				bad++;
-				System.err.println("Failed to add file at sector " + nFile);
+				System.err.println(ix.getMessage());
 				if (bad > 10) {
-					throw new ImageException("Failed to read floppy image: File system damaged");
+					throw new ImageException(TIImageTool.langstr("DirectoryDamaged"));
 				}
 			}	
 		}
@@ -250,7 +254,6 @@ public class Directory extends Element {
 	
 	public Directory getParentDirectory() {
 		if (m_dirParent == null) {
-			System.err.println("*** Called getParentDirectory for root directory. Ignoring.");
 			return this;
 		}
 		else return m_dirParent;
@@ -366,25 +369,25 @@ public class Directory extends Element {
 	
 	// File Size Type Length Protection Created Updated
 	public String toFormattedString() {
-		String sPattern = "%1$-10s %2$4d %3$-7s %4$6d     %5$20s";
+		String sPattern = "%1$-10s %2$4d %3$-8s %4$6d    %5$-20s";
 		return String.format(sPattern, getName(), m_Volume.getAUSize(), "Dir", m_Volume.getAUSize()*256, getCreationTime().toString());
 	}
 	
 	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen) throws InvalidNameException, ImageFullException, ProtectedException, ImageException, IOException {
 
-		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 
 		if (m_Files.length>=127) {
-			throw new ImageFullException("Directory full.");
+			throw new ImageFullException(TIImageTool.langstr("DirectoryFull"));
 		}
 
 		int nSectors = 0;
 		if (abyTif.length < 256 && abyTif.length != 128) {
-			throw new ImageException("File " + sNewFilename + " is too small to be a TIFILES file; it only has " + abyTif.length + " bytes");  
+			throw new ImageException(String.format(TIImageTool.langstr("DirectoryFileSmall"), sNewFilename, abyTif.length));
 		}
 
 		if (((abyTif.length - 128)&0xff) != 0) {
-			throw new ImageException("TIFILES file payload has invalid length " + (abyTif.length - 128) + ": not a multiple of 256");  
+			throw new ImageException(String.format(TIImageTool.langstr("DirectoryInvalidTFILen"), (abyTif.length - 128)));				  
 		}
 		
 		// Create a File
@@ -393,8 +396,7 @@ public class Directory extends Element {
 		if (!fileNew.isProgram()) {
 			if (fileNew.hasFixedRecordLength()) {
 				if (fileNew.getRecordsPerSector() * fileNew.getAllocatedSectors() < fileNew.getRecordCount()) {
-					throw new ImageException("File header has inconsistent data: sectors=" +fileNew.getAllocatedSectors() 
-						+ ", rec/sect=" + fileNew.getRecordsPerSector() + ", but records=" + fileNew.getRecordCount()); 
+					throw new ImageException(String.format(TIImageTool.langstr("DirectoryInvalidHeader"), fileNew.getAllocatedSectors(), fileNew.getRecordsPerSector(), fileNew.getRecordCount()));
 				}
 			}
 		}
@@ -408,7 +410,7 @@ public class Directory extends Element {
 		if (sNewFilename==null) {
 			sContName = fileNew.getName();
 			if (sContName==null) {
-				throw new ImageException("File name missing in TIFILES file. Please provide a file name.");
+				throw new ImageException(TIImageTool.langstr("MissingNameInTFI"));
 			}
 		}
 
@@ -433,7 +435,7 @@ public class Directory extends Element {
 		// Allocate a FIB
 		Interval[] aFIB = m_Volume.findFreeSpace(1, (m_Volume.isFloppyImage() || m_Volume.isCF7Volume())? 1 : 64);
 		if (aFIB == null) {
-			throw new ImageFullException("No space left on volume. Cannot create file entry in directory.");
+			throw new ImageFullException(TIImageTool.langstr("DirectoryNoSpace") + ". " + TIImageTool.langstr("DirectoryNoSpaceEntry"));
 		}
 		
 		// System.out.println("Allocate " + aFIB[0]);
@@ -451,7 +453,7 @@ public class Directory extends Element {
 		if (aint == null) {
 			// Give back the already allocated FIB
 			m_Volume.deallocate(aFIB[0]);
-			throw new ImageFullException("No space left on volume. Failed to allocate " + nSectors + " sectors for " + sContName.trim() + ".");
+			throw new ImageFullException(TIImageTool.langstr("DirectoryNoSpace") + ". " + String.format(TIImageTool.langstr("DirectoryNoSpaceSectors"), nSectors, sContName.trim())); 
 		}
 		
 		// TODO: On hard disks this may lead to a list of FIBs
@@ -461,7 +463,7 @@ public class Directory extends Element {
 			m_Volume.deallocate(aFIB[0]);
 			// Give back the already allocated intervals
 			for (Interval intv:aint) m_Volume.deallocate(intv);
-			throw new ImageException("Excessive fragmentation. Rebuild image.");			
+			throw new ImageException(TIImageTool.langstr("DirectoryExcessiveFrag"));			
 		}
 		
 		// Seems good, we can write the file.
@@ -524,21 +526,20 @@ public class Directory extends Element {
 					System.arraycopy(contents, offset, aby, 0, Volume.SECTOR_LENGTH);
 				}
 				catch (IndexOutOfBoundsException e) {
-					System.out.println("Error when writing contents of " + getName() + ": Writing to cluster " 
-						+ intv + " failed at sector " + nSect + "; contents.length = " + contents.length + ", offset = " + offset);
+					System.out.println(String.format(TIImageTool.langstr("DirectoryWritingFailed"), getName(), intv.toString(), nSect, contents.length, offset));
 				}
 				vol.writeSector(nSect, aby);
 				offset += Volume.SECTOR_LENGTH;
 			}
 		}
-		if (offset < contents.length) throw new ImageException("Bug: Not enough space allocated for file contents (offset=" + offset + ", length=" + contents.length + ")");
+		if (offset < contents.length) throw new ImageException(String.format(TIImageTool.langstr("DirectoryNoSpaceBug"), offset, contents.length));
 	}
 	
 	/** Removes a file.
 		@param bRemoveFromList if false, keeps the list unchanged. This is important when an outer loop iterates over the list.
 	*/
 	public void deleteFile(TFile file, boolean bRemoveFromList) throws FileNotFoundException, IOException, ImageException, ProtectedException {
-		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (!containsInList(file)) throw new FileNotFoundException(file.getName());
 		// Release FIBs (only if at start of AU)
 		// FIB locations are sectors (not AUs)
@@ -567,13 +568,13 @@ public class Directory extends Element {
 			}
 		}
 		catch (IndexOutOfBoundsException ix) {
-			throw new ImageException("File entry corrupt - cannot deallocate the sectors.\nYou should check the file system.");
+			throw new ImageException(TIImageTool.langstr("DirectoryEntryCorrupt"));
 		}		
 	}
 	
 	/** Called from PasteAction, only for sourceVol == targetVol. */
 	public void moveoutFile(TFile file) throws ProtectedException, FileNotFoundException, IllegalOperationException  {
-		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (!containsInList(file)) throw new FileNotFoundException(file.getName());
 		// System.out.println("moveout d " + file.getName());
 		removeFromList(file);
@@ -581,7 +582,7 @@ public class Directory extends Element {
 	
 	/** Called from PasteAction, only for sourceVol == targetVol. */
 	public void moveinFile(TFile file) throws ProtectedException, FileExistsException, IOException, ImageException, IllegalOperationException  {
-		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (containsInList(file)) throw new FileExistsException(file.getName());
 		// System.out.println("movein d " + file.getName());
 		addToList(file);
@@ -591,17 +592,17 @@ public class Directory extends Element {
 	
 	/** Called from PasteAction. */
 	public void moveoutDir(Directory dir) throws ProtectedException, FileNotFoundException, IllegalOperationException  {
-		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (!containsInList(dir)) throw new FileNotFoundException(dir.getName());
 		removeFromList(dir);
 	}
 
 	/** Called from PasteAction. */
 	public void moveinDir(Directory dir) throws ProtectedException, FileExistsException, IOException, ImageException, IllegalOperationException  {
-		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		// Should be prevented before, or the directory will get lost by moveoutDir
-		if (m_Volume.isFloppyImage()) throw new ImageException("Cannot move directories on floppies");
-		if (m_Volume.isCF7Volume()) throw new ImageException("Cannot move directories on CF7 images");
+		if (m_Volume.isFloppyImage()) throw new ImageException(TIImageTool.langstr("PasteNotDirSelf"));
+		if (m_Volume.isCF7Volume()) throw new ImageException(TIImageTool.langstr("PasteNotDirIntoCF7"));
 		if (containsInList(dir)) throw new FileExistsException(dir.getName());
 		addToList(dir);
 		dir.setContainingDirectory(this);
@@ -623,7 +624,7 @@ public class Directory extends Element {
 	/** Creates a new subdirectory. 
 	*/
 	public Directory createSubdirectory(String sName, boolean bReopen) throws ProtectedException, InvalidNameException, FileExistsException, ImageFullException, ImageException, IOException, IllegalOperationException {
-		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (!validName(sName)) throw new InvalidNameException(sName);
 		
 		for (Directory dir : m_Subdirs) {
@@ -632,13 +633,13 @@ public class Directory extends Element {
 		
 		Directory dirNew = null;
 		if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
-			if (!isRootDirectory()) throw new IllegalOperationException("Floppy file systems only allow for root subdirectories");
-			if (m_Subdirs.length>2) throw new IllegalOperationException("Floppy file systems only allow for a maximum of 3 root subdirectories");
+			if (!isRootDirectory()) throw new IllegalOperationException(TIImageTool.langstr("NewDirectoryOnlyRoot"));
+			if (m_Subdirs.length>2) throw new IllegalOperationException(TIImageTool.langstr("FloppyDirectoryOnly3"));
 
 			// Allocate a new FDIR
 			Interval[] aFDIR = m_Volume.findFreeSpace(1, 0x21);
 			if (aFDIR == null) {
-				throw new ImageFullException("No space left on volume. Cannot create file entry in directory.");
+				throw new ImageFullException(TIImageTool.langstr("DirectoryNoSpace") + ". " + TIImageTool.langstr("DirectoryNoSpaceEntry"));
 			}
 			m_Volume.allocate(aFDIR[0]);
 			dirNew = new Directory(m_Volume, sName, aFDIR[0].start, this);
@@ -647,7 +648,7 @@ public class Directory extends Element {
 			// Allocate a new DDR
 			Interval[] aDDR = m_Volume.findFreeSpace(1, m_Volume.getReservedAUs()*m_Volume.getAUSize());
 			if (aDDR == null) {
-				throw new ImageFullException("No space left on volume. Cannot create new directory descriptor.");
+				throw new ImageFullException(TIImageTool.langstr("DirectoryNoSpace") + ". " + TIImageTool.langstr("DirectoryNoSpaceDir"));
 			}
 			m_Volume.allocate(aDDR[0]);
 			
@@ -655,7 +656,7 @@ public class Directory extends Element {
 			Interval[] aFDIR = m_Volume.findFreeSpace(1, m_Volume.getReservedAUs()*m_Volume.getAUSize());
 			if (aFDIR == null) {
 				m_Volume.deallocate(aDDR[0]);
-				throw new ImageFullException("No space left on volume. Cannot create file table for new directory.");
+				throw new ImageFullException(TIImageTool.langstr("DirectoryNoSpace") + ". " + TIImageTool.langstr("DirectoryNoSpaceTable"));
 			}
 			m_Volume.allocate(aFDIR[0]);
 			dirNew = new Directory(m_Volume, sName, aDDR[0].start, aFDIR[0].start, this);
@@ -676,15 +677,15 @@ public class Directory extends Element {
 	
 	public void deleteDirectory(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
 //		System.out.println("Deleting directory " + dir.getName());
-		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 
 		if (!containsInList(dir)) throw new FileNotFoundException(dir.getName());
-		if (dir.isRootDirectory()) throw new FormatException(dir.getName(), "root cannot be deleted");
+		if (dir.isRootDirectory()) throw new FormatException(dir.getName(), TIImageTool.langstr("DirectoryRootNotDelete")); 
 
 		Directory[] asubdir = dir.getDirectories();
 		TFile[] afile = dir.getFiles();
 		
-		if ((asubdir.length > 0 || afile.length > 0) && !bRecurse) throw new FormatException(dir.getName(), "not empty");  
+		if ((asubdir.length > 0 || afile.length > 0) && !bRecurse) throw new FormatException(dir.getName(), TIImageTool.langstr("DirectoryNotEmpty"));  
 
 		for (int i=0; i < asubdir.length; i++) {
 			dir.deleteDirectory(asubdir[i], bRecurse);

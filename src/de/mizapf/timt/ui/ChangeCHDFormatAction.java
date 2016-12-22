@@ -34,7 +34,7 @@ import de.mizapf.timt.TIImageTool;
 public class ChangeCHDFormatAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ChangeCHD");
+		return TIImageTool.langstr("ChangeCHD") + "...";
 	}
 	
 	public String getActionName() {
@@ -70,25 +70,25 @@ public class ChangeCHDFormatAction extends Activity {
 		
 		String sImageFile = selectedfile.getName();
 		ImageFormat ifsource = null;
-		MessCHDFormat source = null;
+		MameCHDFormat source = null;
 		try {
 			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath());
-			if (!(ifsource instanceof MessCHDFormat)) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("NotCHD"), imagetool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
+			if (!(ifsource instanceof MameCHDFormat)) {
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
 				return;
 			}
-			source = (MessCHDFormat)ifsource;
+			source = (MameCHDFormat)ifsource;
 		}
 		catch (FileNotFoundException fnfx) {
-			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("FileNotFoundUnexp"), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileNotFoundUnexp"), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return;
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return;
 		}
 		catch (ImageException ix) {
-			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return;
 		}		
 		
@@ -105,12 +105,12 @@ public class ChangeCHDFormatAction extends Activity {
 			if (changeDialog.confirmed()) {
 				nNewFormat = changeDialog.getNewFormat();
 				if (nNewFormat < source.getVersion()) {
-					int nRet = JOptionPane.showConfirmDialog(m_parent, String.format(imagetool.langstr("SureToDowngrade"), nNewFormat), imagetool.langstr("ConvertCHDVersion"), JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
+					int nRet = JOptionPane.showConfirmDialog(m_parent, String.format(TIImageTool.langstr("SureToDowngrade"), nNewFormat), TIImageTool.langstr("ConvertCHDVersion"), JOptionPane.OK_CANCEL_OPTION,JOptionPane.WARNING_MESSAGE);
 					if (nRet != JOptionPane.OK_OPTION) bDone = false; 
 				}
 				else {
 					if (nNewFormat == source.getVersion()) {
-						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ConvertNoEffect"), imagetool.langstr("ConvertCHDVersion"), JOptionPane.WARNING_MESSAGE); 
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ConvertNoEffect"), TIImageTool.langstr("ConvertCHDVersion"), JOptionPane.WARNING_MESSAGE); 
 						bDone = false;
 					}
 				}
@@ -125,7 +125,7 @@ public class ChangeCHDFormatAction extends Activity {
 		java.io.File fileTarget = null;
 		FormatParameters parm = new FormatParameters(source.getCylinders(), source.getHeads(), source.getSectorsPerTrack(), source.getSectorLength(), nNewFormat);
 		try {
-			byte[] abyNewImage = MessCHDFormat.createEmptyCHDImage(parm);
+			byte[] abyNewImage = MameCHDFormat.createEmptyCHDImage(parm);
 			
 			JFileChooser jfc1 = new JFileChooser();
 			Dimension dim1 = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
@@ -154,12 +154,12 @@ public class ChangeCHDFormatAction extends Activity {
 			}
 		}
 		catch (IllegalOperationException iox) {	
-			JOptionPane.showMessageDialog(m_parent, iox.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
+			JOptionPane.showMessageDialog(m_parent, iox.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			return;
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("IOError") + " " + imagetool.langstr("WhileNewImage") + ": " + iox.getClass().getName(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + " " + TIImageTool.langstr("WhileNewImage") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			return;
 		}
@@ -168,7 +168,7 @@ public class ChangeCHDFormatAction extends Activity {
 		// and for each hunk read in the source, write the hunk into the target
 		boolean bOK = false;
 		try {
-			MessCHDFormat target = (MessCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath());
+			MameCHDFormat target = (MameCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath());
 			target.reopenForWrite();
 			// System.out.println("Hunks = " + source.getHunkCount());
 			for (int i=0; i < source.getHunkCount(); i++) {
@@ -179,17 +179,17 @@ public class ChangeCHDFormatAction extends Activity {
 			bOK = true;			
 		}
 		catch (ImageException ix) {
-			JOptionPane.showMessageDialog(m_parent, ix.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
+			JOptionPane.showMessageDialog(m_parent, ix.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
 		}
 		catch (FileNotFoundException fnfx) {
-			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("TargetNotFoundUnexp"), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("TargetNotFoundUnexp"), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
 		}
 		catch (IOException iox) {
 			iox.printStackTrace();
-			JOptionPane.showMessageDialog(m_parent,  imagetool.langstr("IOError") + " " + imagetool.langstr("WhileCopyContents") + ": " , imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(m_parent,  TIImageTool.langstr("IOError") + " " + TIImageTool.langstr("WhileCopyContents") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);
 		}
 		
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-		if (bOK) JOptionPane.showMessageDialog(m_parent, String.format(imagetool.langstr("Completed"), imagetool.langstr("Conversion")), imagetool.langstr("ConvertCHDVersion"), JOptionPane.INFORMATION_MESSAGE);
+		if (bOK) JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("Conversion")), TIImageTool.langstr("ConvertCHDVersion"), JOptionPane.INFORMATION_MESSAGE);
 	}
 }

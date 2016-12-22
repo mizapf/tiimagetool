@@ -1,0 +1,15 @@
+
+Funktionsübersicht
+------------------
+
+<Imagedatei> ist eine Imagedatei in einem unterstützen Format. 
+
+Verzeichnis anzeigen:
+   dir <Imagedatei> [<Unterverzeichnis>]
+   ls  <Imagedatei> [<Unterverzeichnis>]   (nur Namen anzeigen)
+   lsf <Imagedatei> [<Unterverzeichnis>]   (nur Namen anzeigen, aber mit Markierungen: *.d = Verzeichnis, *.t = Dis/Var80)
+
+Ausgeben von Dateiinhalten: (Datei kann einfacher Name oder eine Pfadangabe wie UNTERV.DATEI sein)
+   type <Imagedatei> <Datei>      
+   list <Imagedatei> <Basicdatei> 
+

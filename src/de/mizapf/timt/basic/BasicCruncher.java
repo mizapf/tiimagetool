@@ -28,6 +28,8 @@ import java.io.FileReader;
 import java.util.LinkedList;
 import java.util.ArrayList;
 import java.nio.charset.Charset;
+import de.mizapf.timt.TIImageTool;
+import static de.mizapf.timt.basic.CrunchException.*;
 
 public class BasicCruncher {
 	
@@ -48,23 +50,13 @@ public class BasicCruncher {
 	public static final int BADLINENUMBER = -2;
 	public static final byte EOL = (byte)0xff;
 	
-    static final String UNMATCHED_QUOTES = "Unmatched quotes"; 
-	static final String MULTIPLE_VAR_NUM = "Syntax error (subsequent variables or constants)"; 
-	static final String ILLEGAL_IN_PRG = "Command illegal in program"; 
-	static final String UNRECOGNIZED = "Unrecognized character";
-	static final String NOLINENO = "No line number";
-	static final String BADLINENO = "Bad line number";	
-	static final String NOSUB = "Missing subroutine name";
-	public static final String TOOLONG = "Program too long for PROGRAM format";
-	public static final String TOOSHORT = "Program too short for LONG format";
-
 	public static void main(String[] arg) {
+		TIImageTool.localize();
 		BasicCruncher bc = new BasicCruncher();
 		String[] basicline = null;
 		
 		if (arg.length < 2) {
-			System.err.println("BasicCruncher <version> <file>");
-			System.err.println("<version> = 1 (TI BASIC), 2 (Extended Basic)");
+			System.err.println(TIImageTool.langstr("BasicCrunchUsage"));
 			return;
 		}
 		try {
@@ -88,15 +80,15 @@ public class BasicCruncher {
 			iox.printStackTrace();
 		}
 		catch (CrunchException cx) {
-			System.err.println("Error during parsing: " + cx.getMessage() + ", line " + cx.line + ", reason: " + cx.reason);
+			System.err.println(String.format(TIImageTool.langstr("BasicCrunchError"), cx.getReason(), cx.line));
 		}
 	}
 		
-	public static boolean contentLooksLikeBasic(byte[] content) {
-		return textLooksLikeBasic(new String(content, Charset.forName("ISO-8859-1")));
+	public static boolean contentLooksLikeBasic(byte[] content, boolean verbose) {
+		return textLooksLikeBasic(new String(content, Charset.forName("ISO-8859-1")), verbose);
 	}
 	
-	public static boolean textLooksLikeBasic(String s) {
+	public static boolean textLooksLikeBasic(String s, boolean verbose) {
 		BasicCruncher bc = new BasicCruncher();
 		String split = Utilities.getSeparator(s);
 	
@@ -108,7 +100,7 @@ public class BasicCruncher {
 			}
 		}
 		catch (CrunchException cx) {
-			System.err.println(cx.getMessage() + ", line " + cx.line + ", column " + cx.pos);
+			if (verbose) System.err.println(String.format(TIImageTool.langstr("BasicCrunchTest"), cx.getReason(), cx.line, cx.pos)); 
 			// Try again for TI BASIC
 			try {
 				for (int i=0; i < 10 && i < aline.length; i++) {
@@ -116,7 +108,7 @@ public class BasicCruncher {
 				}
 			}
 			catch (CrunchException c1x) {
-				// System.err.println(c1x.getMessage() + ", line " + c1x.line + ", column " + c1x.pos);
+				// System.err.println(c1x.getReason() + ", line " + c1x.line + ", column " + c1x.pos);
 				return false;
 			}
 		}
@@ -534,7 +526,7 @@ d29e d645 ffe7
 	
 	private void remLine(int token, ByteArrayOutputStream baos) throws IOException {
 		baos.write(token);
-//		advance(1);
+		if (token != 0x9a) advance(1);
 		while (!endOfLine()) {
 			baos.write(currentChar());
 			advance(1);

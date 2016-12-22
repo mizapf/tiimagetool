@@ -22,13 +22,13 @@ package de.mizapf.timt.ui;
 
 import java.io.IOException;
 import javax.swing.*;
-
+import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.files.*;
 
 public class ConvertToSCSIAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ConvertSCSI");
+		return TIImageTool.langstr("ConvertSCSI") + "...";
 	}
 	
 	public String getActionName() {
@@ -40,24 +40,24 @@ public class ConvertToSCSIAction extends Activity {
 		Volume vol = dvCurrent.getVolume();
 
 		if (vol.isCHDImage()) {
-			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ConvNotInCHD"), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);						
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ConvNotInCHD"), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);						
 			return;
 		}
 		
-		int nRet = JOptionPane.showConfirmDialog(m_parent, imagetool.langstr("ConvLoseInfo"), imagetool.langstr("Warning"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+		int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ConvLoseInfo"), TIImageTool.langstr("Warning"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 		if (nRet == JOptionPane.OK_OPTION) {
 			try {
 				vol.hfdc2scsi();
 				// TODO: Close image
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 			}			
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("VolumeWP") + ": " + px.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP") + ": " + px.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}
 			try {
@@ -65,7 +65,7 @@ public class ConvertToSCSIAction extends Activity {
 				imagetool.refreshPanel(vol);
 			}
 			catch (Exception e) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("NotReopen") + ": " + e.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotReopen") + ": " + e.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			}
 		}		
 	}

@@ -20,6 +20,8 @@
 ****************************************************************************/
 package de.mizapf.timt.ui;
 
+import de.mizapf.timt.TIImageTool;
+
 public class SearchResult {
 	String image;
 	String path;
@@ -33,7 +35,7 @@ public class SearchResult {
 	
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("image = ").append(image).append(", pathname = ").append(path);
+		sb.append(String.format(TIImageTool.langstr("SearchResultString"), image, path));
 		return sb.toString();
 	}
 }

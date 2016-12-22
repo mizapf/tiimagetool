@@ -66,7 +66,7 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 
 		// Sample text
-		m_nColumnWidth = fm.stringWidth("Escape unprintable character by XXXX");
+		m_nColumnWidth = fm.stringWidth(TIImageTool.langstr("PreferencesColumn"));
 		
 		// Sample text
 		m_fieldWidth = fm.stringWidth("javax.swing.plaf.metal.MetalLookAndFeel");

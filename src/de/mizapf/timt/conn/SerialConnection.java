@@ -24,6 +24,7 @@ package de.mizapf.timt.conn;
 import java.io.*;
 import java.util.*;
 import gnu.io.*;
+import de.mizapf.timt.TIImageTool;
 
 public class SerialConnection {
 
@@ -81,13 +82,13 @@ public class SerialConnection {
 		}
 		catch (UnsupportedCommOperationException ucx) {
 			ucx.printStackTrace();
-			if (ucx.getMessage().contains("Invalid Parameter"))
-				throw new ConnectionException(sPort, "Serial interface does not support these settings.");
+			if (ucx.getMessage().contains(TIImageTool.langstr("SerialConnectInvParm")))
+				throw new ConnectionException(sPort, TIImageTool.langstr("SerialConnectNotSettings"));
 			else
-				throw new ConnectionException(sPort, "Serial port operation not supported: " + ucx.getMessage());
+				throw new ConnectionException(sPort, TIImageTool.langstr("SerialConnectUnsupp") + ": " + ucx.getMessage());
 		}
 		catch (PortInUseException pux) {
-			throw new ConnectionException(sPort, "Serial port already in use");
+			throw new ConnectionException(sPort, TIImageTool.langstr("SerialBridgeInUse"));
 		}
 	}
 	

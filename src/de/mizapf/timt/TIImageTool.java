@@ -37,6 +37,7 @@
     [x] Fix Drag and drop
     [x] Fix marking in directory panel
     [x] Base address for plain dump
+    [x] I18n, L10n for English and German
 	
     New for 2.1+
     [x] Redirect standard output
@@ -121,7 +122,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.3.9";
+	public final static String VERSION = "2.4";
 	public final static String MONTH = "December";
 	public final static String YEAR = "2016";
 	
@@ -156,6 +157,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String RECENT = "recent";
 	public final static String LANG = "lang";
 	public final static String DNDC = "dndc";
+	public final static String VERBOSE = "verbose";
 	
 	Properties m_propNames;
 	
@@ -230,7 +232,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	// Add more languages into both lists (in the same order)
 	// The second list is a list of keys into the Strings_xx.properties files
 	// so the language names can be translated as well
-	// Note that you need a Strings_xx.properties and hints_xx.txt file for
+	// Note that you need a Strings_xx.properties, hints_xx.txt, and command_xx.txt file for
 	// each language
 	private static final Locale[] locale = { Locale.ENGLISH, Locale.GERMAN };
 	private static final String[] langs = { "English", "German" }; 
@@ -677,7 +679,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				m_image = icon.getImage();
 			} 
 			else {
-				System.err.println("Error: Could not locate background image in package " + imgURL);
+				System.err.println(langstr("NoBackground") + ": " + imgURL);
 			}
 		}
 		
@@ -781,7 +783,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_dt = dv.getPanel();
 			int size = 17;
 			setPreferredSize(new Dimension(size, size));
-			setToolTipText("ShowAsWindow");
+			setToolTipText(langstr("ShowAsWindow"));
 			// setUI(new BasicButtonUI());
 			setContentAreaFilled(false);
 			setFocusable(false);
@@ -843,13 +845,14 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public static void main(String[] arg) {
 		if (arg.length>0) {
 			if (arg[0].equalsIgnoreCase("bridge")) {
+				TIImageTool.localize();
 				try {
 					// Check for presence of RXTX
 					// If not available, block the remote functions
 					Class cls = Class.forName("gnu.io.SerialPort");
 				}
 				catch (ClassNotFoundException cnfx) {
-					System.err.println("FATAL: Serial library missing, implementing gnu.io.SerialPort (like RXTX).");
+					System.err.println(langstr("MainSerialMissing"));
 					return;
 				}
 				
@@ -860,7 +863,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					act.setup(sSerial, sPort);
 				}
 				else
-					System.err.println("Missing parameters for BRIDGE; usage: BRIDGE <serialdev> <port>");
+					System.err.println(langstr("MainBridgeParamsMissing"));
 				return;
 			}
 			if (arg[0].equalsIgnoreCase("commandshell")) {
@@ -878,13 +881,33 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		ie.processUserInput();
 	}
 	
+	/** Set up localizations to a default. This must be called from stand-alone tools inside TIImageTool which
+		do not instantiate TIImageTool. */
+	public static void localize() {
+		m_resources = ResourceBundle.getBundle(LANGTEXT, getSysLocale());		
+	}
+	
+	public static Locale getSysLocale() {
+		Locale sysloc = Locale.getDefault();	
+		Locale loc = locale[0]; // English
+		
+		// Search for the first locale whose language parameter matches the system locale
+		for (int i=0; i < locale.length; i++) {
+			if (sysloc.getLanguage().equals(locale[i].getLanguage())) { 
+				loc = locale[i];
+				break;
+			}
+		}
+		return loc;
+	}
+	
 	TIImageTool() {
 		m_sPropertiesPath = null;
 		m_Settings = new Properties();
 		loadProperties();
 		
 		// Load localized strings
-		m_resources = ResourceBundle.getBundle(LANGTEXT, getLocale(getPropertyString(LANG)));
+		m_resources = ResourceBundle.getBundle(LANGTEXT, getLocale(getPropertyString(LANG)));		
 
 		// Load the property texts
 		m_propNames = new Properties();
@@ -908,7 +931,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				if (m_logFile.length()>0) System.out.println("========================");
 			}
 			catch (FileNotFoundException fx) {
-				System.err.println("Cannot open log file. Outputting to console.");
+				System.err.println(langstr("ConsoleOutputError"));
 			}
 		}
 		
@@ -926,7 +949,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_frmMain.setIconImage(m_frameicon.getImage());
 		} 
 		else {
-			System.err.println("Error: Could not locate icon image in package " + iconurl);
+			System.err.println(langstr("NoImage") + ": " + iconurl);
 		}
 		
 		activities = new HashMap<String, Activity>();
@@ -943,10 +966,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			UIManager.setLookAndFeel(lafclass);
 		}
 		catch (UnsupportedLookAndFeelException e) {
-			System.err.println("Unsupported look-and-feel: " + lafclass);
+			System.err.println(langstr("MainUnsuppLF") + ": " + lafclass);
 		}
 		catch (ClassNotFoundException e) {
-			System.err.println("Could not find look-and-feel class: " + lafclass);
+			System.err.println(langstr("MainNotFoundLF") + ": "+ lafclass);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -963,7 +986,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_tmpDir = new java.io.File(sTempDir, TEMPDIRNAME);
 		if (!m_tmpDir.exists()) {
 			m_tmpDir.mkdir();
-			System.out.println("Created new tiimagetool temporary dir: " + m_tmpDir.getName());
+			System.out.println(langstr("MainCreatedTmp") + ": " + m_tmpDir.getName());
 		}
 		m_Settings.put(TEMPDIR, sTempDir);
 		
@@ -977,7 +1000,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		int maxnumber = 0;
 		try {
 			InputStream is = ToolDialog.class.getResourceAsStream("hints_" + getLocale(getPropertyString(LANG)).getLanguage() + ".txt");
-			BufferedReader br = new BufferedReader(new InputStreamReader(is));
+			BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 			int lastInd = 0;
 			
 			int number = 0;
@@ -1021,7 +1044,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			}
 		}
 		catch (NumberFormatException nfx) {
-			System.err.println("Error when reading the hint flags: " + nfx.getMessage());
+			System.err.println(langstr("MainHintError") + ": " + nfx.getMessage());
 		}
 		saveHintSettings();
 		
@@ -1130,7 +1153,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_Settings.load(fr);
 		}
 		catch (IOException iox) {
-			System.err.println("Error loading properties ... using defaults.");
+			System.err.println(langstr("MainNoProperties"));
 		}
 		
 		setDefaults(windows);
@@ -1139,7 +1162,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			fr.close();
 		}
 		catch (IOException iox1) {
-			System.err.println("Error on close after loading properties."); 
 			iox1.printStackTrace();
 		}
 	}
@@ -1163,6 +1185,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		getPropertyString(ESCAPE, ".");
 		getPropertyString(LANG, "0");
 		getPropertyString(DNDC, "true");
+		getPropertyString(VERBOSE, "true");
 	}
 
 	public List<String> getPreferences(String category) {
@@ -1204,7 +1227,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			fw.close();
 		}
 		catch (IOException iox) {
-			System.err.println("Error storing properties");
+			System.err.println(langstr("MainPropSaveError"));
 			iox.printStackTrace();
 		}
 	}
@@ -1222,10 +1245,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				dim = new Dimension(Integer.parseInt(asPart[0]), Integer.parseInt(asPart[1]));
 			}
 			catch (NumberFormatException nfx) {
-				System.err.println("Invalid window dimension in property " + sKey);
+				System.err.println(langstr("MainInvalidDim") + " " + sKey);
 			}
 			catch (ArrayIndexOutOfBoundsException ax) {
-				System.err.println("Invalid window dimension in property " + sKey);
+				System.err.println(langstr("MainInvalidDim") + " " + sKey);
 			}
 		}
 		return dim;		
@@ -1282,6 +1305,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 	
 	public static String langstr(String key) {
+		if (m_resources == null) return null;
 		return m_resources.getString(key);
 	}
 	
@@ -1329,7 +1353,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					if (m_bRunning) wait();
 				}
 				catch (InterruptedException ix) {
-					JOptionPane.showMessageDialog(m_frmMain, "BUG: Wait interrupted in processUserInput", langstr("InternalError"), JOptionPane.ERROR_MESSAGE); 
+					ix.printStackTrace();
+					JOptionPane.showMessageDialog(m_frmMain, langstr("BUG"), langstr("InternalError"), JOptionPane.ERROR_MESSAGE); 
 				}
 				m_bAction = false;
 			}
@@ -1467,7 +1492,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		if (sbNewFile.length()==0) {
 			m_nUnnamedCount++;
-			sbNewFile.append("unnamed").append(m_nUnnamedCount);
+			sbNewFile.append(langstr("Unnamed")).append(m_nUnnamedCount);
 		}
 		return sbNewFile.toString();
 	}
@@ -1596,7 +1621,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 						sName = TIFiles.getName(abyTif);
 					}
 					catch (FormatException fx) {
-						System.err.println("BUG: TIFiles is unable to transform the header, although the test proved to be possible.");
+						System.err.println(langstr("MainTFIError"));
 					}
 					dir.insertFile(abyTif, sName, false);
 				}
@@ -1789,7 +1814,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		DirectoryView dvFocused = null;
 		for (DirectoryView dv : m_Views) {
 			if (dv.isFocused()) {
-				if (dvFocused != null) System.err.println("** Two views have focus now **"); 
+				if (dvFocused != null) System.err.println(langstr("Main2Views"));
 				dvFocused = dv;
 			}
 		}

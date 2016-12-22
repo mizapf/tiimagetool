@@ -93,7 +93,7 @@ class SectorDumpFormat extends ImageFormat {
 				break;
 			}
 		}
-		if (format==-1) throw new ImageException("Unknown image format (invalid length " + m_FileSystem.length() + ")");
+		if (format==-1) throw new ImageException(TIImageTool.langstr("SectorDumpInvLength") + ": " + m_FileSystem.length());
 			
 		m_nHeads = sdfgeometry[format][1];
 		m_nCylinders = sdfgeometry[format][2];
@@ -197,7 +197,9 @@ class SectorDumpFormat extends ImageFormat {
 		m_sector = sectors.toArray(new Sector[count]);
 		m_nSectorsByFormat = count;	
 		
-		if (count == 0) throw new ImageException("No sectors found on track");
+		// TODO: Does not make too much sense for sector dump, but we should still
+		// try to unify the readTrack method of the floppy formats 
+		if (count == 0) throw new ImageException(TIImageTool.langstr("NoSectorsFound"));
 		
 		// Determine density
 		if (m_nDensity==0) {
@@ -229,18 +231,18 @@ class SectorDumpFormat extends ImageFormat {
 	*/
 	@Override
 	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		if (nSectorNumber >= m_maxSector) throw new ImageException("Bad sector number: " + nSectorNumber); 
+		if (nSectorNumber >= m_maxSector) throw new ImageException(String.format(TIImageTool.langstr("BadSectorNumber"), nSectorNumber)); 
 		int secindex = readTrack(nSectorNumber);
 		if (secindex != NONE) {
 			return m_sector[secindex];
 		}
-		else throw new ImageException("Sector " + nSectorNumber + " not found");
+		else throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 	}
 
 	@Override
 	public void writeSector(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
 		int secindex = readTrack(nSectorNumber);
-		if (secindex == NONE) throw new ImageException("Sector " + nSectorNumber + " not found");
+		if (secindex == NONE) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 		// Write the new data
 		// Don't forget to clone the bytes!
 		byte[] bNewcontent = new byte[256];

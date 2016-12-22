@@ -37,7 +37,7 @@ import de.mizapf.timt.ui.ImageFileFilter;
 public class CHDRawAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ExtractRaw"); 
+		return TIImageTool.langstr("ExtractRaw") + "..."; 
 	}
 	
 	public String getActionName() {
@@ -53,11 +53,11 @@ public class CHDRawAction extends Activity {
 		
 		if (expdialog.confirmed()) {
 			if (!expdialog.validSelection()) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("MissingRaw"), imagetool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);		
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("MissingRaw"), TIImageTool.langstr("ConversionError"), JOptionPane.ERROR_MESSAGE);		
 			}
 			else {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-				MessCHDFormat source = expdialog.getCHD();
+				MameCHDFormat source = expdialog.getCHD();
 				File fileTarget = expdialog.getTargetFile();	
 				
 				try {
@@ -77,18 +77,18 @@ public class CHDRawAction extends Activity {
 					bOK = true;
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(m_parent, ix.getMessage(), imagetool.langstr("ExtractError"), JOptionPane.ERROR_MESSAGE);		
+					JOptionPane.showMessageDialog(m_parent, ix.getMessage(), TIImageTool.langstr("ExtractError"), JOptionPane.ERROR_MESSAGE);		
 				}
 				catch (FileNotFoundException fnfx) {
-					JOptionPane.showMessageDialog(m_parent, imagetool.langstr("TargetNotFound") + fnfx.getMessage(), imagetool.langstr("ExtractError"), JOptionPane.ERROR_MESSAGE);		
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("TargetNotFound") + fnfx.getMessage(), TIImageTool.langstr("ExtractError"), JOptionPane.ERROR_MESSAGE);		
 				}
 				catch (IOException iox) {
 					iox.printStackTrace();
-					JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ExtractIOError") + iox.getClass().getName(), imagetool.langstr("ExtractError"), JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ExtractIOError") + iox.getClass().getName(), TIImageTool.langstr("ExtractError"), JOptionPane.ERROR_MESSAGE);
 				}
 			}
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-		if (bOK) JOptionPane.showMessageDialog(m_parent, String.format(imagetool.langstr("Completed"), imagetool.langstr("Extraction")), imagetool.langstr("Extract"), JOptionPane.INFORMATION_MESSAGE);
+		if (bOK) JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("Extraction")), TIImageTool.langstr("Extract"), JOptionPane.INFORMATION_MESSAGE);
 	}
 }

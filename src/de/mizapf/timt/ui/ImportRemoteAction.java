@@ -38,7 +38,7 @@ import de.mizapf.timt.TIImageTool;
 public class ImportRemoteAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ImportRemote");
+		return TIImageTool.langstr("ImportRemote") + "...";
 	}
 	
 	public String getActionName() {
@@ -82,7 +82,7 @@ public class ImportRemoteAction extends Activity {
 
 			try {
 				view = new ProgressView(TIImageTool.langstr("ImportRemoteReceive"), m_parent);
-				view.createGui(imagetool.boldFont);
+				view.createGui(imagetool.plainFont);
 				InputStream is = sc.getInputStream();
 				OutputStream os = sc.getOutputStream();
 				XModem xm = new XModem(is, os, view); 

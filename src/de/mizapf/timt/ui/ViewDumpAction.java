@@ -32,7 +32,7 @@ import de.mizapf.timt.TIImageTool;
 public class ViewDumpAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ViewPlain");
+		return TIImageTool.langstr("ViewPlain");
 	}
 	
 	public String getActionName() {

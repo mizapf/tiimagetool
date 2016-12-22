@@ -22,6 +22,7 @@ package de.mizapf.timt.ui;
 
 import de.mizapf.timt.files.Directory;
 import java.awt.event.KeyEvent;
+import de.mizapf.timt.TIImageTool;
 
 public class CloseAction extends Activity {
 
@@ -30,7 +31,7 @@ public class CloseAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return imagetool.langstr("Close");
+		return TIImageTool.langstr("Close");
 	}
 	
 	public String getActionName() {

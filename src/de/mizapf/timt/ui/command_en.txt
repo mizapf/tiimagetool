@@ -1,0 +1,15 @@
+
+Command overview
+----------------
+
+<imagefile> is a disk image file in a supported dump format.
+
+Show directory:
+   dir <imagefile> [<subdir>]
+   ls  <imagefile> [<subdir>]   (lists only file names)
+   lsf <imagefile> [<subdir>]   (lists only file names, adds decorations: *.d = directory, *.t = Dis/Var80)
+
+Output file contents:       (file may be a plain name, or path name like SUBDIR.FILE)
+   type <imagefile> <file>
+   list <imagefile> <basicfile>
+

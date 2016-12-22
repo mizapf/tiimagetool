@@ -44,6 +44,6 @@ public class FormatException extends Exception {
 	}
 	
 	public String toString() {
-		return getFile() + " " + getMessage();
+		return getFile() + ": " + getMessage();
 	}
 }

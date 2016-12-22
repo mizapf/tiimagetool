@@ -27,6 +27,7 @@ import de.mizapf.timt.util.TIFiles;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.util.LZW;
 import de.mizapf.timt.basic.BasicLine;
+import de.mizapf.timt.TIImageTool;
 
 public class TFile extends Element {
 
@@ -38,11 +39,13 @@ public class TFile extends Element {
 	protected int			m_nAllocatedSectors;
 	protected int			m_nEOFOffset;
 	protected int			m_nNumberOfRecords;
+	protected int			m_nBadNumberOfRecords;    // for invalid L3 entries
 	protected Time			m_tUpdate;
 	protected Interval[] 	m_aCluster;
 	protected int[] 		m_anFIBSector;  // required for deleting
 	protected int			m_nFDIRAU;
-	protected boolean		m_bL3Flaw;
+	protected boolean		m_bL3Swapped;
+	protected boolean		m_bL3Bad;
 	
 	public final static byte VARIABLE = (byte)0x80;
 	public final static byte EMULATE = (byte)0x20;
@@ -114,13 +117,16 @@ public class TFile extends Element {
 	}
 
 	private void checkL3() throws ImageException {
-		m_bL3Flaw = false;
+		m_bL3Swapped = false;
+		m_bL3Bad = false;
+		m_nBadNumberOfRecords = m_nNumberOfRecords;
 		if (hasFixedRecordLength()) {
 			if (getRecordCount()==0) {
 				if (m_nAllocatedSectors > 0) {
-					System.err.print(getVolume().getImageName() + ": File " + getName() + " is a fixed data file, but has 0 record count. ");
+					// System.err.print(String.format(TIImageTool.langstr("TFile0Records"), getVolume().getImageName(), getName()));
 					m_nNumberOfRecords = m_nRecordsPerSector * m_nAllocatedSectors;
-					System.err.println("Assuming record count = " + m_nNumberOfRecords + " from sectors = " +  m_nAllocatedSectors + " and records/sector = " + m_nRecordsPerSector + ".");
+					// System.err.println(". " + String.format(TIImageTool.langstr("TFileAssume"), m_nNumberOfRecords, m_nAllocatedSectors, m_nRecordsPerSector));
+					m_bL3Bad = true;
 				}
 			}
 			else {
@@ -132,20 +138,21 @@ public class TFile extends Element {
 					// Check whether this is a little-endian error 
 					if (nTry < nMinRec || nTry > nMaxRec) {
 						// No, treat it as corrupt
-						System.err.println(getVolume().getImageName() + ": File " + getPathname() + " has unplausible record count: " + getRecordCount() + " (0x" + Utilities.toHex(getRecordCount(), 4) + ")");
-						System.err.println("  Minimum record count = " + nMinRec + ", maximum record count = " + nMaxRec);
+						m_nBadNumberOfRecords = m_nNumberOfRecords;
+						// System.err.print(String.format(TIImageTool.langstr("TFileUnplausible"), getVolume().getImageName(), getPathname(), getRecordCount(), Utilities.toHex(getRecordCount(), 4), nMinRec, nMaxRec));
 						m_nNumberOfRecords = m_nRecordsPerSector * m_nAllocatedSectors;
-						System.err.println("  Assuming record count = " + m_nNumberOfRecords + " (0x" + Utilities.toHex(m_nNumberOfRecords, 4) + ") from sectors = " +  m_nAllocatedSectors + " and records/sector = " + m_nRecordsPerSector + ".");
+						// System.err.println(". " + String.format(TIImageTool.langstr("TFileAssume"), m_nNumberOfRecords, m_nAllocatedSectors, m_nRecordsPerSector));
+						m_bL3Bad = true;
 					}
 					else {
 						// Yes, swap it
-						System.err.println(getVolume().getImageName() + ": File " + getName() + " has swapped L3 record count");
+						// System.err.println(String.format(TIImageTool.langstr("TFileSwappedL3"), getVolume().getImageName(), getName()));
 						m_nNumberOfRecords = nTry;
-						m_bL3Flaw = true;
+						m_bL3Swapped = true;
 					}
 				}
 			}
-			if (m_nNumberOfRecords > 1000000) throw new ImageException("Disk file system damaged; file descriptor record corrupt");
+			if (m_nNumberOfRecords > 1000000) throw new ImageException(TIImageTool.langstr("TFileDamaged"));
 		}
 	}
 	
@@ -437,20 +444,31 @@ public class TFile extends Element {
 	
 	/** Does this file have a swapped L3 count? */
 	public boolean hasSwappedL3Count() {
-		return m_bL3Flaw;
+		return m_bL3Swapped;
+	}
+	
+	/** Are there issues with the L3 count? */
+	public boolean hasBadL3Count() {
+		return m_bL3Bad;
+	}
+
+	/** Get bad L3 count. */
+	public int getBadRecordCount() {
+		return m_nBadNumberOfRecords;
 	}
 	
 	/** Rewrite the FIB. This is done to swap the L3 values (which have been swapped already on loading). **/
 	public void rewriteFIB() throws ProtectedException, IOException, ImageException {
 		Volume vol = getVolume();
 		int fdir = (vol.isFloppyImage() || vol.isCF7Volume())? 1 : (m_nFDIRAU * vol.getAUSize());
-		m_bL3Flaw = false;
+		m_bL3Swapped = false;
+		m_bL3Bad = false;
 		writeFIB(m_anFIBSector[0], fdir); 
 	}
 	
 	// File Size Type Length Protection Created Updated
 	public String toFormattedString() {
-		String sPattern = "%1$-10s %2$4d %3$-7s %4$6d %5$1s %6$1s %7$20s %8$20s";
+		String sPattern = "%1$-10s %2$4d %3$-8s %4$6d %5$1s %6$1s %7$-20s %8$-20s";
 		int nSize = 0;
 		if (isProgram()) nSize = getProgramLength();
 		else nSize = m_nRecordLength;
@@ -481,7 +499,7 @@ public class TFile extends Element {
 		Interval current = null;
 		
 		if (m_aCluster.length==0) {
-			throw new ImageException("File " + getPathname() + " has no content");
+			throw new ImageException(String.format(TIImageTool.langstr("TFileNoContent"), getPathname()));
 		}
 
 		for (int i=0; i < getUsedSectors(); i++) {
@@ -492,12 +510,12 @@ public class TFile extends Element {
 			if (nClusterPointer==m_aCluster.length-1)	{ // last cluster
 				if (vol.isFloppyImage() || vol.isCF7Volume()) {
 					// Interval bounds are precise
-					if (nSector == current.end + 1) throw new ImageException("Cannot find next sector for file " + getName());
+					if (nSector == current.end + 1) throw new ImageException(String.format(TIImageTool.langstr("TFileNoNext"), getName()));
 				}
 				else {
 					if (nSector == (current.end - nAUSize + nSectorsInLastAU + 1)) {
 						// System.out.println("sector = " + nSector  + ", sectors in last au = " + m_nSectorsInLastAU + ", current.end = " + current.end + ", last cluster and last sector");
-						throw new ImageException("Cannot find next sector for file " + getName() + ", " + (getUsedSectors() - nRead) + " sectors not found in clusters");
+						throw new ImageException(String.format(TIImageTool.langstr("TFileNoNext1"), getName(), (getUsedSectors() - nRead))); 
 					}
 				}
 			}
@@ -522,8 +540,8 @@ public class TFile extends Element {
 	}
 	
 	public int getPhysicalSectorNumber(int nLogicalSector) throws FormatException, ImageException {
-		if (getUsedSectors() == 0) throw new FormatException(getName(), "is an empty file");
-
+		if (getUsedSectors() == 0) throw new FormatException(getName(), TIImageTool.langstr("FileNoContent"));
+			
 		Volume vol = getVolume();
 		int nAUSize = vol.getAUSize();
 		
@@ -536,7 +554,7 @@ public class TFile extends Element {
 		Interval current = null;
 		
 		if (m_aCluster.length==0) {
-			throw new ImageException("File has no content");
+			throw new ImageException(TIImageTool.langstr("FileNoContent"));
 		}
 
 		for (int i=0; i < getUsedSectors(); i++) {
@@ -547,12 +565,12 @@ public class TFile extends Element {
 			if (nClusterPointer==m_aCluster.length-1)	{ // last cluster
 				if (vol.isFloppyImage() || vol.isCF7Volume()) {
 					// Interval bounds are precise
-					if (nSector == current.end + 1) throw new ImageException("Cannot find next sector for file " + getName());
+					if (nSector == current.end + 1) throw new ImageException(String.format(TIImageTool.langstr("TFileNoNext"), getName()));
 				}
 				else {
 					if (nSector == (current.end - nAUSize + nSectorsInLastAU + 1)) {
 						// System.out.println("sector = " + nSector  + ", sectors in last au = " + m_nSectorsInLastAU + ", current.end = " + current.end + ", last cluster and last sector");
-						throw new ImageException("Cannot find next sector for file " + getName() + ", " + (getUsedSectors() - i) + " sectors not found in clusters");
+						throw new ImageException(String.format(TIImageTool.langstr("TFileNoNext1"), getName(), (getUsedSectors() - i))); 
 					}
 				}
 			}
@@ -570,7 +588,7 @@ public class TFile extends Element {
 
 			if (i == nLogicalSector) return nSector;
 		}
-		throw new FormatException(getName(), "Logical sector " + nLogicalSector + " not found");
+		throw new FormatException(getName(), String.format(TIImageTool.langstr("SectorNotFound"), nLogicalSector));
 	}
 	
 	/** Returns the binary contents, clipped to the length of the file. */
@@ -580,13 +598,13 @@ public class TFile extends Element {
 		if (isProgram()) nLength = getProgramLength();
 		else nLength = getByteLength();
 
-		if (nLength == 0) System.err.println("File size of " + getName() + " is zero.");
+		if (nLength == 0) System.err.println(String.format(TIImageTool.langstr("TFileZero"), getName()));
 		abyReturn = new byte[nLength];
 		try {
 			System.arraycopy(getSectorContent(), 0, abyReturn, 0, nLength);
 		}
 		catch (ArrayIndexOutOfBoundsException ax) {
-			throw new ImageException("Header of file " + getName() + " possibly corrupt; file is short than expected");
+			throw new ImageException(String.format(TIImageTool.langstr("TFileBrokenHeader"), getName()));
 		}
 		return abyReturn;
 	}
@@ -647,7 +665,7 @@ public class TFile extends Element {
 					baos.write(abyContent, nPointer, nRecordLength);
 				}
 				catch (IndexOutOfBoundsException ix) {
-					System.err.println("Error: abyContent.length=" + abyContent.length + ", nPointer=" + nPointer + ", recordLength=" + nRecordLength);
+					System.err.println(TIImageTool.langstr("Error") + ": abyContent.length=" + abyContent.length + ", nPointer=" + nPointer + ", recordLength=" + nRecordLength);
 				}
 				if (sEOR != null) baos.write(sEOR.getBytes());
 				nRecord++;
@@ -669,7 +687,7 @@ public class TFile extends Element {
 				if (nRecordLength!=0xff) {
 					nPointer++;
 					if (nPointer + nRecordLength >= abyContent.length) {
-						System.err.println("File clipped");
+						System.err.println(TIImageTool.langstr("TFileClipped"));
 						nRecordLength = abyContent.length-nPointer;
 						bClipped = true;
 					}							
@@ -677,7 +695,7 @@ public class TFile extends Element {
 						baos.write(abyContent, nPointer, nRecordLength);
 					}
 					catch (IndexOutOfBoundsException ibx) {
-						System.err.println("abyContent.length = " + abyContent.length + ", Pointer = " + nPointer + ", Length = " + nRecordLength);
+						System.err.println(TIImageTool.langstr("Error") + ": abyContent.length = " + abyContent.length + ", Pointer = " + nPointer + ", Length = " + nRecordLength);
 					}
 					baos.write(sEOR.getBytes());
 					nPointer += nRecordLength;
@@ -891,7 +909,7 @@ public class TFile extends Element {
 						break;
 					}
 					if (nLen > 163) {
-						System.err.println("Invalid record length");
+						System.err.println(TIImageTool.langstr("TFileBadRecLength"));
 						return false;
 					}
 					state = 1;
@@ -908,11 +926,11 @@ public class TFile extends Element {
 						break;
 					}
 					if (nLineNumber <= nOldLine) {
-						System.err.println("Not a merge file: bad line order");
+						System.err.println(TIImageTool.langstr("TFileNotMergeOrder"));
 						return false;
 					}
 					if (abyContent[nPos+1]==0) {
-						System.err.println("Not a merge file: line empty");
+						System.err.println(TIImageTool.langstr("TFileNotMergeEmpty"));
 						return false; // empty line
 					}
 					nOldLine = nLineNumber;
@@ -930,7 +948,7 @@ public class TFile extends Element {
 					break;
 				case 5:
 					if (nPos != abyContent.length-1) {
-						System.err.println("Additional bytes at the end; nPos = " + nPos + ", length = " + abyContent.length);
+						System.err.println(TIImageTool.langstr("TFileNotMergeAddress") + "; nPos = " + nPos + ", length = " + abyContent.length);
 						// return false;
 					}
 					break;
@@ -938,7 +956,7 @@ public class TFile extends Element {
 				nPos++;
 			}
 			if (state != 5) {
-				System.err.println("Premature end, state = " + state);
+				System.err.println(TIImageTool.langstr("TFileNotMergeEnd") + ", state = " + state);
 				return false;
 			}
 			return true;
@@ -1055,7 +1073,7 @@ public class TFile extends Element {
 					// System.out.println(Utilities.hexdump(0, nPos,content, nLength + 1, false)); 
 					for (int i=0; i < nLength; i++) baos.write(content[nPos++]);
 					if (nLength!=0 && (content[nPos]&0xff) != 0xff) {
-						throw new ImageException("Missing record end in record " + nRec);
+						throw new ImageException(String.format(TIImageTool.langstr("TFileMissingEnd"), nRec));
 					}
 					nRec++;
 					nPos++;
@@ -1064,7 +1082,7 @@ public class TFile extends Element {
 			}
 		}
 		catch (ArrayIndexOutOfBoundsException ax) {
-			throw new ImageException("File cannot be listed as BASIC, possibly corrupted, or unsupported BASIC version.");
+			throw new ImageException(TIImageTool.langstr("TFileNotBasic"));
 		}
 		
 		try {
@@ -1097,7 +1115,7 @@ public class TFile extends Element {
 			}
 		}
 		catch (ArrayIndexOutOfBoundsException ax) {
-			throw new ImageException("File cannot be listed as BASIC, possibly corrupted.");
+			throw new ImageException(TIImageTool.langstr("TFileNotBasic"));
 		}
 
 		StringBuilder sb = new StringBuilder();
@@ -1134,7 +1152,6 @@ public class TFile extends Element {
 		}
 		catch (ArrayIndexOutOfBoundsException ax) {
 			ax.printStackTrace();
-			System.err.println("ArrayIndexOutOfBoundsException for " + getName());
 			return false;
 		}
 		catch (IOException iox) {
@@ -1146,7 +1163,7 @@ public class TFile extends Element {
 	}
 	
 	public Archive unpackArchive() throws IllegalOperationException, FormatException, IOException, ImageException {
-		if (!hasArchiveFormat()) throw new IllegalOperationException("Not an archive");
+		if (!hasArchiveFormat()) throw new IllegalOperationException(TIImageTool.langstr("ArchiveNot"));
 		boolean bCompressed = false;
 		
 		byte[] content = getRawContent();
@@ -1158,7 +1175,7 @@ public class TFile extends Element {
 			}
 		}
 		catch (ArrayIndexOutOfBoundsException ax) {
-			throw new ImageException("Broken archive");
+			throw new ImageException(TIImageTool.langstr("ArchiveBroken"));
 		}
 		return new Archive(getVolume(), m_sName, getContainingDirectory(), content, this, bCompressed);
 	}

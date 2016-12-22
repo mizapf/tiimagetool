@@ -82,7 +82,7 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 		m_mbar = new JMenuBar();
 		m_mFile = new JMenu(TIImageTool.langstr("SearchResultMenu"));
 		m_mbar.add(m_mFile);
-		m_iSaveAs = new JMenuItem(TIImageTool.langstr("SaveAs"));
+		m_iSaveAs = new JMenuItem(TIImageTool.langstr("SaveAs") + "...");
 		m_iSaveAs.setActionCommand(SAVEAS);
 		m_iSaveAs.addActionListener(this);
 		m_mFile.add(m_iSaveAs);

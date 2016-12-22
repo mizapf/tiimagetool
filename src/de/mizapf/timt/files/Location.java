@@ -20,6 +20,7 @@
 ****************************************************************************/
 
 package de.mizapf.timt.files;
+import de.mizapf.timt.TIImageTool;
 
 class Location {
 	int cylinder;
@@ -35,6 +36,6 @@ class Location {
 	}
 	
 	public String toString() {
-		return "track " + track + ", CHS=(" + cylinder + "," + head + "," + sector +")";
+		return String.format(TIImageTool.langstr("LocationString"), track, cylinder, head, sector);
 	}
 }

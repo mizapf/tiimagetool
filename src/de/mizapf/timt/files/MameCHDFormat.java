@@ -165,7 +165,7 @@ import java.util.Arrays;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
 
-public class MessCHDFormat extends ImageFormat {
+public class MameCHDFormat extends ImageFormat {
 
 	int m_nVersion;
 
@@ -203,91 +203,9 @@ public class MessCHDFormat extends ImageFormat {
 	
 	final static int CRCIMG = 0;
 	final static int CRCCALC = 1;
-	
-/*	public static void main(String[] arg) {
-		try {
-			byte[] abyTrack = new byte[1024];
-			RandomAccessFile fileSystem = new RandomAccessFile(arg[0], "r");
-			fileSystem.seek(0);
-			fileSystem.readFully(abyTrack);
-//			System.out.println(Utilities.hexdump(0, 0, abyTrack, 1024, false));
-			System.out.println("MESS CHD");
-			int nHeaderLength = Utilities.getInt32be(abyTrack, 8);
-			System.out.println("Header length = " + nHeaderLength);
-			System.out.println("Version = " + Utilities.getInt32be(abyTrack, 12));
-			System.out.println("Flags = " + Utilities.getInt32be(abyTrack, 16));
-			System.out.println("Compression = " + Utilities.getInt32be(abyTrack, 20));
-			int nTotalHunks = Utilities.getInt32be(abyTrack, 24);
-			System.out.println("TotalHunks = " + nTotalHunks);
-			System.out.println("LogicalBytes = " + Utilities.getInt64be(abyTrack, 28));
-			long nMetaOffset = Utilities.getInt64be(abyTrack, 36);
-			System.out.println("MetaOffset = " + nMetaOffset);
-			int nHunkSize = Utilities.getInt32be(abyTrack, 44);
-			System.out.println("HunkBytes = " + nHunkSize);
-
-			// Find metadata
-			int nMetaLength = 16;
-			long nOffset = nMetaOffset;
-			int nLength = 0;
-			boolean bFound = false;
-			int nMetaFlags = 0;
-			
-			while (!bFound && nOffset!=0) {
-				fileSystem.seek(nOffset);
-				fileSystem.readFully(abyTrack);
-				int nMetaTag = Utilities.getInt32be(abyTrack, 0);
-				nLength = Utilities.getInt32be(abyTrack, 4);
-				nOffset = Utilities.getInt64be(abyTrack, 8);
-				nMetaFlags = nLength>>24;
-				nLength = nLength & 0x00ffffff;
-				
-				if (nMetaTag == 0x47444444) {
-					bFound = true;
-				}
-			}
-			if (!bFound) System.err.println("Metadata for hard disk not found; incompatible format");
-			
-			System.out.println("Metadata: ");
-			System.out.println("  Length = " + nLength); 
-			System.out.println("  Flags = " + nMetaFlags);
-			// Metadata are found behind the metadata header
-			System.out.println("  Cylinders = " + findValue(abyTrack, "CYLS", nMetaLength, nMetaLength + nLength));
-			System.out.println("  Heads = " + findValue(abyTrack, "HEADS", nMetaLength, nMetaLength + nLength));
-			System.out.println("  Sectors = " + findValue(abyTrack, "SECS", nMetaLength, nMetaLength + nLength));
-			System.out.println("  BPS = " + findValue(abyTrack, "BPS", nMetaLength, nMetaLength + nLength));
-			
-			System.out.println("Hunk positions:");
-			fileSystem.seek(0);
-			fileSystem.readFully(abyTrack);
-
-			int nMapEntrySize = 16;
-			for (int i=0; i < 10; i++) {
-				System.out.print("Hunk " + i + " at " + Long.toHexString(Utilities.getInt64be(abyTrack, nHeaderLength + i*nMapEntrySize))); 
-				System.out.print("; CRC = " + Integer.toHexString(Utilities.getInt32be(abyTrack, nHeaderLength + i*nMapEntrySize + 8))); 
-				int nLengthHunk = Utilities.getInt16(abyTrack, nHeaderLength + i*nMapEntrySize + 12) + (abyTrack[nHeaderLength + i*nMapEntrySize + 14]<<16);
-				System.out.print("; length = " + Integer.toHexString(nLengthHunk));
-				System.out.println("; flags = " + (abyTrack[nHeaderLength + i*nMapEntrySize + 15]));
-			}
-			
-			System.out.println("Reading hunk 5:");
-			byte[] hunk0 = getHunk(fileSystem, 5, nHunkSize, nMapEntrySize, nHeaderLength);
-			
-			System.out.println(Utilities.hexdump(0, 0, hunk0, 128, false));
-
-			java.util.zip.CRC32 crc = new java.util.zip.CRC32();
-			crc.update(hunk0);
-			System.out.println("CRC32 = " + Long.toHexString(crc.getValue()));
-			
-			fileSystem.close();
-		}
-		catch(IOException iox) {
-			iox.printStackTrace();
-		}
-	}
-	*/
-	
-	public static void main(String[] arg) {
 		
+	public static void main(String[] arg) {
+		TIImageTool.localize();
 		try {
 			byte[] abyNewImage = createEmptyCHDImage(new FormatParameters("TEST", 640, 4, 32, 256, 2048, 1, 480, 2, false, 480, Time.createNow(), true, true,5));
 			if (arg.length > 0) {
@@ -304,49 +222,8 @@ public class MessCHDFormat extends ImageFormat {
 		catch (IOException iox) {
 			iox.printStackTrace();
 		}
-		
-/*		try {
-			MessCHDFormat fmt = new MessCHDFormat(new RandomAccessFile(arg[0], "r"), "Image");
-			fmt.setGeometry(false);
-			System.out.println("MESS CHD");
-			System.out.println("Header length = " + fmt.m_nHeaderLength);
-			System.out.println("Version = " + fmt.m_nVersion);
-			System.out.println("Flags = " + fmt.m_nFlags);
-			System.out.println("Compression = " + fmt.m_nCompression);
-			System.out.println("TotalHunks = " + fmt.m_nTotalHunks);
-			System.out.println("LogicalBytes = " + fmt.m_nLogicalBytes);
-			System.out.println("MetaOffset = " + Utilities.toHex((int)fmt.m_nMetaOffset,8));
-			System.out.println("TrackLength = " + fmt.m_nTrackLength);
-			
-			System.out.println("Metadata: ");
-			// Metadata are found behind the metadata header
-			System.out.println("  Cylinders = " + fmt.m_nCylinders);
-			System.out.println("  Heads = " + fmt.m_nHeads);
-			System.out.println("  Sectors = " + fmt.m_nSectorsPerTrack);
-			System.out.println("  Total sectors = " + fmt.m_nTotalSectors);
-		}
-		catch (FileNotFoundException fnfx) {
-			System.err.println("File not found: " + fnfx.getMessage());
-		}
-		catch (ImageException ix) {
-			ix.printStackTrace();
-		}
-		catch (IOException iox) {
-			iox.printStackTrace();
-		} */
 	}
 	
-	/*
-	static byte[] getHunk(RandomAccessFile fileSystem, int nHunk, int nHunkSize, int nMapEntrySize, int nHeaderLength) throws IOException {
-		byte[] abyHunk = new byte[nHunkSize];
-		fileSystem.seek(0);
-		byte[] abyTrack = new byte[1024];
-		fileSystem.readFully(abyTrack);
-		fileSystem.seek(Utilities.getInt64be(abyTrack, nHeaderLength + nHunk * nMapEntrySize));
-		fileSystem.readFully(abyHunk);
-		return abyHunk;
-	} */
-
 	public String getDumpFormatName() {
 		return TIImageTool.langstr("CHDImageType");
 	}
@@ -393,7 +270,7 @@ public class MessCHDFormat extends ImageFormat {
 		return 100;
 	}
 
-	public MessCHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+	public MameCHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
 		super(filesystem, sImageName);
 		m_nDensity = 0;
 	}
@@ -419,13 +296,13 @@ public class MessCHDFormat extends ImageFormat {
 		m_nHeaderLength = Utilities.getInt32be(abyStart, 8);
 		m_nVersion = Utilities.getInt32be(abyStart, 12);
 		
-		if (m_nVersion < 4) throw new ImageException("CHD version " + m_nVersion + " not supported; must be at least 4. Use MESS chdman tool to upgrade your image.");
-		if (m_nVersion > 5) throw new ImageException("CHD version " + m_nVersion + " not supported by TIImageTool.");
+		if (m_nVersion < 4) throw new ImageException(String.format(TIImageTool.langstr("MameCHDTooLow"), m_nVersion));
+		if (m_nVersion > 5) throw new ImageException(String.format(TIImageTool.langstr("MameCHDTooHigh"), m_nVersion));
 		if (m_nVersion == 4) {
 			m_nFlags = Utilities.getInt32be(abyStart, 16);
 			
 			m_nCompression = Utilities.getInt32be(abyStart, 20);
-			if (m_nCompression != 0) throw new ImageException("Compressed images are not supported"); 		
+			if (m_nCompression != 0) throw new ImageException(TIImageTool.langstr("MameCHDCompressed")); 		
 			
 			m_nTotalHunks   = Utilities.getInt32be(abyStart, 24);
 			m_nLogicalBytes = Utilities.getInt64be(abyStart, 28);
@@ -438,7 +315,7 @@ public class MessCHDFormat extends ImageFormat {
 		if (m_nVersion == 5) {	
 			
 			m_nCompression = Utilities.getInt32be(abyStart, 16);
-			if (m_nCompression != 0) throw new ImageException("Compressed images are not supported"); 		
+			if (m_nCompression != 0) throw new ImageException(TIImageTool.langstr("MameCHDCompressed")); 		
 			
 			m_nMapOffset    = Utilities.getInt64be(abyStart, 40);
 			m_nLogicalBytes = Utilities.getInt64be(abyStart, 32);
@@ -473,7 +350,7 @@ public class MessCHDFormat extends ImageFormat {
 				nOffset = Utilities.getInt64be(abyMeta, 8);
 			}
 		}
-		if (!bFound) throw new ImageException("Metadata for hard disk not found; incompatible format");
+		if (!bFound) throw new ImageException(TIImageTool.langstr("MameCHDNoMetadata"));
 
 		// Read the metadata
 		m_FileSystem.seek(nOffset + METALENGTH);
@@ -484,8 +361,7 @@ public class MessCHDFormat extends ImageFormat {
 		m_nSectorsPerTrack = parseValue(abyMetadata, "SECS", nMetaLength);
 
 		int nBytes = parseValue(abyMetadata, "BPS", nMetaLength);
-		if (nBytes != Volume.SECTOR_LENGTH) throw new ImageException("Invalid sector size " + nBytes + "; must be " + Volume.SECTOR_LENGTH);
-
+		if (nBytes != Volume.SECTOR_LENGTH) throw new ImageException(String.format(TIImageTool.langstr("MameCHDSectorSize"), nBytes, Volume.SECTOR_LENGTH));
 		m_nTotalSectors = m_nCylinders * m_nHeads * m_nSectorsPerTrack;
 
 		// Find out where the next position is for adding hunks
@@ -542,14 +418,14 @@ public class MessCHDFormat extends ImageFormat {
 			
 			int crci = Utilities.getInt32be(abyMap, 8);
 			int nLengthHunk = Utilities.getInt16(abyMap, 12) + (abyMap[14]<<16);
-			if (nLengthHunk != m_nTrackLength) throw new ImageException("Varying hunk sizes not supported; found " +  nLengthHunk + " but must be " + m_nTrackLength);
+			if (nLengthHunk != m_nTrackLength) throw new ImageException(String.format(TIImageTool.langstr("MameCHDVary"), nLengthHunk, m_nTrackLength));
 			m_byHunkFlags = abyMap[15];
 			m_FileSystem.seek(m_nHunkOffset);
 			m_FileSystem.readFully(m_abyTrack);
 			CRC32 crcc = new CRC32();
 			crcc.update(m_abyTrack);
 			int crca = (int)(crcc.getValue() & 0xffffffff);
-			if (crca != crci) throw new ImageException("Image corrupted: Calculated CRC (" + Utilities.toHex(crca,8) + ") differs from CRC on image (" + Utilities.toHex(crci,8) + ")");
+			if (crca != crci) throw new ImageException(String.format(TIImageTool.langstr("MameCHDBadCRC"), Utilities.toHex(crca,8), Utilities.toHex(crci,8)));
 		}
 		if (m_nVersion == 5) {
 			m_FileSystem.seek(m_nMapOffset + nHunk * 4);
@@ -588,7 +464,7 @@ public class MessCHDFormat extends ImageFormat {
 		// Get sector offset in track
 		//			System.out.println("Read sector " + nSectorNumber);
 
-		if (nSectorNumber >= m_nTotalSectors) throw new ImageException("Sector number too high (max " + (m_nTotalSectors-1) + ").");
+		if (nSectorNumber >= m_nTotalSectors) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), m_nTotalSectors));
 		int secoff = getSectorOffset(nSectorNumber);
 		System.arraycopy(m_abyTrack, secoff, abySector, 0, m_nSectorLength);
 		return new Sector(nSectorNumber, abySector);
@@ -603,7 +479,7 @@ public class MessCHDFormat extends ImageFormat {
 		}
 		catch (EOFException eofx) {
 			eofx.printStackTrace();
-			throw new EOFException("Sector " + nNumber + " beyond image size");
+			throw new EOFException(String.format(TIImageTool.langstr("ImageBeyond"), nNumber));
 		}
 	}
 	
@@ -666,7 +542,7 @@ public class MessCHDFormat extends ImageFormat {
 				
 				nHunkNumber = (int)(m_nHunkOffset / m_nTrackLength);
 				// System.out.println("nHunkNumber = " + nHunkNumber + ", m_nHunkOffset =  " + m_nHunkOffset + ", m_nTrackLength = " + m_nTrackLength);
-				if ((nHunkNumber * m_nTrackLength) != m_nHunkOffset) throw new EOFException("Invalid hunk position: " + Long.toHexString(m_nHunkOffset)); 
+				if ((nHunkNumber * m_nTrackLength) != m_nHunkOffset) throw new EOFException(TIImageTool.langstr("MameCHDInvalidHunk") + ": " + Long.toHexString(m_nHunkOffset)); 
 
 				abyMap[0] = (byte)((nHunkNumber >> 24)&0xff);
 				abyMap[1] = (byte)((nHunkNumber >> 16)&0xff);
@@ -701,7 +577,7 @@ public class MessCHDFormat extends ImageFormat {
 		case 5:
 			return createEmptyCHDImageV5(parm);
 		default:
-			throw new IllegalOperationException("CHD version must be 4 or 5");		
+			throw new IllegalOperationException(TIImageTool.langstr("MameCHDVersion"));		
 		}
 	}
 

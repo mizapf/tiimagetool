@@ -26,6 +26,8 @@ import java.io.*;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.files.FormatException;
 
+import de.mizapf.timt.TIImageTool;
+
 public class GPLAssembler {
 
 	int		m_nPos;
@@ -142,6 +144,7 @@ public class GPLAssembler {
 	}
 	
 	public static void main(String[] arg) {
+		TIImageTool.localize();
 		byte[] content = null;
 		int nAddress = 0;
 		int nOffset = 0;
@@ -167,11 +170,11 @@ public class GPLAssembler {
 				dis.close();
 			}
 			catch (NumberFormatException nfx) {
-				System.err.println("Start address must be a hex number: " + arg[1]);
+				System.err.println(TIImageTool.langstr("GPLAssmAddress") + ": " + arg[1]);
 				content = null;
 			}
 			catch (FileNotFoundException fnfx) {
-				System.err.println("File not found: " + fnfx);
+				System.err.println(TIImageTool.langstr("FileNotFound") + ": " + fnfx);
 				content = null;
 			}
 			catch (IOException iox) {
@@ -455,7 +458,7 @@ public class GPLAssembler {
 						nLastDataPos = -1;
 					}			
 
-					line.append("\n-- Skip to next GROM --\n\n");
+					line.append("\n-- " + TIImageTool.langstr("GPLAssmNextGROM") + " --\n\n");
 					sb.append(line);
 					m_nPos = ((nCurrentAddress + 0x800)&0xe000) - nStart + nOffset;
 					
@@ -722,11 +725,11 @@ V=1: Source VRAM/RAM
 		catch (ArrayIndexOutOfBoundsException aax) {
 			// System.err.println("TIImageTool (disassembler): Clipped end or beyond program code");
 			if (m_nFMTaddress != -1) {
-				sb.append("\n** File reached its end before the FMT command at " + Utilities.toHex(m_nFMTaddress, 4, true) + " was terminated.");
-				sb.append("\n** You should try to exclude that byte from being interpreted as FMT using data or nofmt in the disassembler hints.\n");
+				sb.append("\n** ").append(String.format(TIImageTool.langstr("GPLAssmEnd1"), Utilities.toHex(m_nFMTaddress, 4, true)));
+				sb.append("\n** ").append(TIImageTool.langstr("GPLAssmEnd2")).append("\n");
 			}
 			else {
-				sb.append("\n** Clipped end, or non-program data.\n");
+				sb.append("\n** ").append(TIImageTool.langstr("GPLAssmEnd3")).append("\n");
 			}
 		}
 		return sb.toString();

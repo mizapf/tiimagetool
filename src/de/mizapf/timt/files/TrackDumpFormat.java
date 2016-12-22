@@ -91,11 +91,11 @@ class TrackDumpFormat extends ImageFormat {
 		}
 		
 		m_nHeads = 2;
-		if (tracklen==0) throw new ImageException("Unknown or corrupted format");
+		if (tracklen==0) throw new ImageException(TIImageTool.langstr("ImageUnknown"));
 		
 		int cylinders = (int)((m_FileSystem.length()/tracklen)/2);
 		if (cylinders < 30) {
-			System.err.println("One-sided format; not complying to standard");
+			System.err.println(TIImageTool.langstr("TrackDump1Sided"));
 			m_nHeads = 1;
 			cylinders = cylinders*2;
 		}
@@ -132,20 +132,20 @@ class TrackDumpFormat extends ImageFormat {
 	*/
 	@Override
 	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		if (nSectorNumber > 10000) throw new ImageException("Bad sector number: " + nSectorNumber); 
+		if (nSectorNumber > 10000) throw new ImageException(String.format(TIImageTool.langstr("BadSectorNumber"), nSectorNumber)); 
 		int secindex = readTrack(nSectorNumber);
 		if (secindex != NONE) {
 			// System.out.println("sector " + nSectorNumber);
 			// System.out.println(m_sector[secindex]);
 			return m_sector[secindex];
 		}
-		else throw new ImageException("Sector " + nSectorNumber + " not found");
+		else throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 	}
 
 	@Override
 	public void writeSector(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
 		int secindex = readTrack(nSectorNumber);
-		if (secindex == NONE) throw new ImageException("Sector " + nSectorNumber + " not found");
+		if (secindex == NONE) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 		// Write the new data
 		// Don't forget to clone the bytes!
 		byte[] bNewcontent = new byte[256];
@@ -219,8 +219,8 @@ class TrackDumpFormat extends ImageFormat {
 				if ((bHeader[2]&0xff) == loc.sector) secindex = count;
 				int crch = readBits(16);
 				int crcc = Utilities.crc16_get(bHeader, 0, 4, initcrc);
-				if (crch != 0xf7f7 && crch != crcc) System.out.println("Bad header CRC at (" + bHeader[0] + "," + bHeader[1] + "," + bHeader[2]+ "): Expected " + Utilities.toHex(crcc, 4) + ", got " + Utilities.toHex(crch, 4));
-				
+				if (crch != 0xf7f7 && crch != crcc) System.out.println(String.format(TIImageTool.langstr("BadHeaderCRC"), bHeader[0], bHeader[1], bHeader[2], Utilities.toHex(crcc, 4), Utilities.toHex(crch, 4)));
+									
 				if (nextDAMFound()) {
 					int mark = m_value;  // the DAM for FM and MFM
 					if (m_encoding==MFM) {
@@ -237,7 +237,7 @@ class TrackDumpFormat extends ImageFormat {
 					Sector sect = new Sector(loc.track*m_nSectorsByFormat + bHeader[2], bSector, pos, initcrc, mark); 
 					sectors.add(sect);
 					//System.out.println("Sector " + sect.getNumber()  + ": Data CRC = " + Utilities.toHex(sect.getCrc(),4) + " (expected " +  Utilities.toHex(crcd, 4) + ")");
-					if (crcd != 0xf7f7 && crcd != sect.getCrc()) System.out.println("Bad data CRC at sector " + sect.getNumber() + ": Expected " + Utilities.toHex(sect.getCrc(), 4) + ", got " + Utilities.toHex(crcd,4));
+					if (crcd != 0xf7f7 && crcd != sect.getCrc()) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), sect.getNumber(), Utilities.toHex(sect.getCrc(),4), Utilities.toHex(crcd, 4)));
 					// System.out.println("loaded sector " + sect.getNumber() + " at track " + loc.track);
 					// System.out.println(sect);
 					count++;
@@ -248,7 +248,7 @@ class TrackDumpFormat extends ImageFormat {
 		m_sector = sectors.toArray(new Sector[count]);
 		m_nSectorsByFormat = count;	
 		
-		if (count == 0) throw new ImageException("No sectors found on track");
+		if (count == 0) throw new ImageException(TIImageTool.langstr("NoSectorsFound"));
 		
 		// Determine density
 		if (m_nDensity==0) {
@@ -484,10 +484,10 @@ class TrackDumpFormat extends ImageFormat {
 	public void createEmptyImage(File newfile, int sides, int density, int cylinders, int sectors, boolean format) throws ImageException, FileNotFoundException, IOException {
 		
 		if (density != SINGLE_DENSITY && density != DOUBLE_DENSITY) 
-			throw new ImageException("Density not supported by this floppy image format");
+			throw new ImageException(String.format(TIImageTool.langstr("TrackDumpInvalidDensity"), density));
 		
 		if (sides != 2)
-			throw new ImageException("TDF (PC99) images are double-sided");
+			throw new ImageException(TIImageTool.langstr("TrackDump1Sided"));
 		
 		int tracklen = (density==SINGLE_DENSITY)? 3253 : 6872;
 		int pos = 0;
@@ -594,7 +594,7 @@ class TrackDumpFormat extends ImageFormat {
 								changed = true;
 							}
 							else {
-								System.out.println("Bad header CRC at (" + bHeader[0] + "," + bHeader[1] + "," + bHeader[2]+ "): Expected " + Utilities.toHex(actualcrc, 4) + ", got " + Utilities.toHex(crch, 4));
+								System.out.println(String.format(TIImageTool.langstr("BadHeaderCRC"), bHeader[0], bHeader[1], bHeader[2], Utilities.toHex(actualcrc, 4), Utilities.toHex(crch, 4)));
 							}
 							count++;
 						}
@@ -622,7 +622,7 @@ class TrackDumpFormat extends ImageFormat {
 									changed = true;
 								}
 								else {
-									System.out.println("Bad data CRC at (" + bHeader[0] + "," + bHeader[1] + "," + bHeader[2]+ "): Expected " + Utilities.toHex(actualcrc, 4) + ", got " + Utilities.toHex(crcd, 4));
+									System.out.println(String.format(TIImageTool.langstr("BadDataCRC1"), bHeader[0], bHeader[1], bHeader[2], Utilities.toHex(actualcrc, 4), Utilities.toHex(crcd, 4)));
 								}
 								count++;
 							}

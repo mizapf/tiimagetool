@@ -24,6 +24,7 @@ package de.mizapf.timt.files;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import de.mizapf.timt.TIImageTool;
 
 public class SectorFaultList {
 	
@@ -74,6 +75,6 @@ public class SectorFaultList {
 	}
 	
 	public String toString() {
-		return "File " + m_sEntity + " has faulty sectors " + m_lst;
+		return String.format(TIImageTool.langstr("SectorFaultText"), m_sEntity, m_lst.toString());
 	}
 }

@@ -139,7 +139,7 @@ class ReadWriteCFDialog extends ToolDialog {
 		
 		add(Box.createVerticalStrut(10));
 
-		String devprompt = TIImageTool.langstr((m_windows)? "ReadWriteCFPathWin" : (isMac)? "ReadWriteCFPathMac" : "ReadWriteCFPathLin");
+		String devprompt = TIImageTool.langstr(m_windows? "ReadWriteCFPathWin" : (isMac)? "ReadWriteCFPathMac" : "ReadWriteCFPathLin");
 		String lastPath = imagetool.getPropertyString(imagetool.CFCARD);
 		String fileprompt = TIImageTool.langstr("ReadWriteCFImage");
 		String ddprompt = TIImageTool.langstr("ReadWriteCFDD");

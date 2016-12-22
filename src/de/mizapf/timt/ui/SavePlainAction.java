@@ -31,7 +31,7 @@ import de.mizapf.timt.TIImageTool;
 public class SavePlainAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("SavePlain");
+		return TIImageTool.langstr("SavePlain") + "...";
 	}
 	
 	public String getActionName() {
@@ -51,7 +51,7 @@ public class SavePlainAction extends Activity {
 					imagetool.saveToDisk(((TFile)selected).getRawContent(), false);
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IO error") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 					ok = false;
 					break;
 				}

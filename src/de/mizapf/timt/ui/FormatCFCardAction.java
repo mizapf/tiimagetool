@@ -32,7 +32,7 @@ import de.mizapf.timt.TIImageTool;
 public class FormatCFCardAction extends Activity {
 	
 	public String getMenuName() {
-		return imagetool.langstr("FormatCF");
+		return TIImageTool.langstr("FormatCF") + "...";
 	}
 	
 	public String getActionName() {
@@ -50,7 +50,7 @@ public class FormatCFCardAction extends Activity {
 			try {
 				String path = fcfd.getImagePath();
 				if (path == null) {
-					JOptionPane.showMessageDialog(m_parent, imagetool.langstr("NoImageSelected"), imagetool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NoImageSelected"), TIImageTool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
 				}
 				else {
 					RandomAccessFile raf = new RandomAccessFile(path, "rw");
@@ -72,7 +72,7 @@ public class FormatCFCardAction extends Activity {
 							boolean stop = false;
 							if (listFormatted.size() > 0) {
 								StringBuilder sb = new StringBuilder();
-								sb.append(imagetool.langstr("ThereAreVols")).append(": ");
+								sb.append(TIImageTool.langstr("ThereAreVols")).append(": ");
 								int count = 1;			
 								int maxlen = listFormatted.size();					
 								for (Integer i : listFormatted) {
@@ -80,19 +80,19 @@ public class FormatCFCardAction extends Activity {
 									sb.append(i);
 									count++;
 									if (count>10) { 
-										sb.append(" ... (").append(imagetool.langstr("AndMore")).append(")"); 
+										sb.append(" ... (").append(TIImageTool.langstr("AndMore")).append(")"); 
 										break;
 									}
 								}
-								sb.append(". ").append(imagetool.langstr("ContinueFormat"));
-								int nRet = JOptionPane.showConfirmDialog(m_parent, sb.toString(), imagetool.langstr("FormatCF"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+								sb.append(". ").append(TIImageTool.langstr("ContinueFormat"));
+								int nRet = JOptionPane.showConfirmDialog(m_parent, sb.toString(), TIImageTool.langstr("FormatCF"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 								if (nRet == JOptionPane.NO_OPTION) stop = true;
 							}
 							
 							if (!stop) {
 								Interval var = getVariable(names);
 								if (var == null) {
-									JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ContinueFormat") + ": " + names, imagetool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
+									JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ContinueFormat") + ": " + names, TIImageTool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
 								}
 								else {
 									for (int i=0; i < intv.length; i++) {
@@ -101,29 +101,29 @@ public class FormatCFCardAction extends Activity {
 											formatVolume(j, sName, raf);
 										}
 									}
-									JOptionPane.showMessageDialog(m_parent, String.format(imagetool.langstr("Completed"), imagetool.langstr("Formatting")), imagetool.langstr("FormatCF"), JOptionPane.INFORMATION_MESSAGE);
+									JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("Formatting")), TIImageTool.langstr("FormatCF"), JOptionPane.INFORMATION_MESSAGE);
 								}
 							}
 						}
 						else {
-							JOptionPane.showMessageDialog(m_parent, imagetool.langstr("Name10"), imagetool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
+							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Name10"), TIImageTool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
 						}
 					}
 					else {
-						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("NoVolSpec"), imagetool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NoVolSpec"), TIImageTool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
 					}
 					raf.close();	
 				}
 			}
 			catch (FileNotFoundException fnfx) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("CF7NotFound"), imagetool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("CF7NotFound"), TIImageTool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (IOException iox) {
 				iox.printStackTrace();
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("CF7WriteError"), imagetool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("CF7WriteError"), TIImageTool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (NumberFormatException nfx) {
-				JOptionPane.showMessageDialog(m_parent, nfx.getMessage() , imagetool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(m_parent, nfx.getMessage() , TIImageTool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 

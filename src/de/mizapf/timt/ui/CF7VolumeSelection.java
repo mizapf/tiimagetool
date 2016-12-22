@@ -94,7 +94,7 @@ class CF7VolumeSelection extends ToolDialog {
 		for (int i=0; i < m_volume.length; i++) {
 			int pos = m_volume[i].indexOf(":");
 			if (pos == -1) {
-				System.err.println("BUG: No volume number in " + m_volume[i]);
+				System.err.println(String.format(TIImageTool.langstr("CF7VolumeBug"), m_volume[i]));
 			}
 			else {
 				int num = -1;
@@ -109,7 +109,7 @@ class CF7VolumeSelection extends ToolDialog {
 					b1.addMouseListener(new ClickListener(num+1, this));
 				}
 				catch (NumberFormatException nx) {
-					System.err.println("BUG: No volume number in " + m_volume[i]);
+					System.err.println(String.format(TIImageTool.langstr("CF7VolumeBug"), m_volume[i]));
 				}
 			}							
 		}

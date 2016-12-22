@@ -62,7 +62,7 @@ class TranslateDialog extends ToolDialog {
 			String[] asOptions = new String[6];
 			asOptions[0] = TIImageTool.langstr("TranslateDialogKeep");
 			for (int i=4; i < 9; i++)
-				asOptions[i-3] = String.valueOf(i) + " " +  TIImageTool.langstr("TranslateDialogSpaces");
+				asOptions[i-3] = String.format(TIImageTool.langstr("TranslateDialogSpaces"), i);
 			m_jcTabs = putComboBox(this, TIImageTool.langstr("TranslateDialogTab"), asOptions, 5, nLabelWidth);
 		}
 			

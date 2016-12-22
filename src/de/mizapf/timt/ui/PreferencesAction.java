@@ -22,12 +22,12 @@ package de.mizapf.timt.ui;
 
 import javax.swing.*;
 import java.util.*;
-
+import de.mizapf.timt.TIImageTool;
 
 public class PreferencesAction extends Activity {
 	
 	public String getMenuName() {
-		return imagetool.langstr("Preferences");
+		return TIImageTool.langstr("Preferences") + "...";
 	}
 	
 	public String getActionName() {

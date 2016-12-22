@@ -38,7 +38,7 @@ class CHSDialog extends ToolDialog implements ActionListener {
 	JTextField		m_tfPrecomp; // 0-127
 		
 	CHSDialog(JFrame owner) {
-		super(owner, TIImageTool.langstr("DefineGeometry"));
+		super(owner, TIImageTool.langstr("CHSDialogTitle"));
 	}
 	
 /*

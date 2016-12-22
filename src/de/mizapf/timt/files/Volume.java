@@ -19,19 +19,13 @@
     
 ****************************************************************************/
 
-/*
-	Nota bene: CF formats seem to be like floppy formats, but they only use
-	the bytes at even positions. Even if this is correctly handled, at this
-	time they are recognized as RawHD, which is not appropriate.
-	IIRC they consist of a sequence of floppy-like images.
-*/
-
 package de.mizapf.timt.files;
 
 import java.io.*;
 import java.util.*;
 import de.mizapf.timt.util.TIFiles;
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.TIImageTool;
 
 public class Volume {
 
@@ -141,13 +135,13 @@ public class Volume {
 			m_allocMap.setMapFromBitfield(abySect0, 0x38, 0);
 			
 			if (m_nDensity != m_Image.getDensity()) {
-				System.err.println("Density as provided by the VIB does not match density of the medium (" + m_nDensity + ", " + m_Image.getDensity() +")");
+				System.err.println(String.format(TIImageTool.langstr("VolumeDensityMismatch"), m_nDensity, m_Image.getDensity())); 
 			}
 		}
 		else {
 			if ((abySect0[0x10] & 0x0f)==0) m_nType = SCSI;
 			else m_nType = HFDC;
-			if (hasFloppyVib(abySect0)) throw new ImageException("Image broken or unformatted (size suggests hard disk, but floppy header found)");
+			if (hasFloppyVib(abySect0)) throw new ImageException(TIImageTool.langstr("VolumeUnexpFloppyVIB"));
 
 			m_nStepSpeed = abySect0[0x0e] & 0xff;
 			m_nReducedWriteCurrent = abySect0[0x0f] & 0xff;
@@ -160,7 +154,7 @@ public class Volume {
 			
 			m_nReservedAUs = (abySect0[0x0d] << 6) & 0xffff;
 			if (m_nReservedAUs == 0) {
-				System.err.println("Hard disk image does not define reserved AUs. Assuming 2048 AUs.");
+				System.err.println(TIImageTool.langstr("VolumeNoReservedAU"));
 				m_nReservedAUs = 2048;
 			}	
 			
@@ -195,7 +189,7 @@ public class Volume {
 	}
 	
 	public void writeSector(int nNumber, byte[] abySector) throws ProtectedException, IOException, ImageException {
-		if (isProtected()) throw new ProtectedException("Volume is write-protected");
+		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 //		long time = m_Image.getLastModifiedTime();
 		// System.out.println("time = " + time + ", last mod = " + m_nLastMod);
 //		if (m_nLastMod < time) throw new ProtectedException("Volume has changed on disk; cannot write. Image will be closed.");
@@ -344,7 +338,7 @@ public class Volume {
 					break;
 				}
 			}
-			if (!bFound) throw new FileNotFoundException("Subdirectory " + asArg[i] + " not found");
+			if (!bFound) throw new FileNotFoundException(String.format(TIImageTool.langstr("VolumeDirNotFound"), asArg[i]));
 		}
 		String sFile = asArg[asArg.length-1];
 
@@ -353,7 +347,7 @@ public class Volume {
 		for (int i=0; i < aFile.length; i++) {
 			if (aFile[i].getName().equals(sFile)) return aFile[i];
 		}
-		throw new FileNotFoundException("File " + sFile + " not found");
+		throw new FileNotFoundException(String.format(TIImageTool.langstr("VolumeFileNotFound"), sFile));
 	}
 		
 	// -----------------------------------------------------
@@ -542,7 +536,7 @@ public class Volume {
 	}
 	
 	public boolean isCHDImage() {
-		return m_Image instanceof MessCHDFormat;
+		return m_Image instanceof MameCHDFormat;
 	}
 	
 	public String dumpFormat() {
@@ -563,7 +557,7 @@ public class Volume {
 		case 4:
 			sb.append("U"); break;
 		default:
-			return "invalid";
+			return TIImageTool.langstr("Invalid");
 		}		
 		sb.append("D");
 		return sb.toString();
@@ -586,8 +580,8 @@ public class Volume {
 	}
 	
 	public void renameVolume(String newName) throws IOException, ImageException, ProtectedException, InvalidNameException {
-		if (newName == null || newName.length()==0 || newName.length()>10) throw new InvalidNameException("Name must be 1 to 10 characters long");
-		if (newName.indexOf(".")!=-1) throw new InvalidNameException("Period not allowed in volume name");
+		if (newName == null || newName.length()==0 || newName.length()>10) throw new InvalidNameException(TIImageTool.langstr("VolumeNameConstr"));
+		if (newName.indexOf(".")!=-1) throw new InvalidNameException(TIImageTool.langstr("VolumeNamePeriod"));
 	
 		m_sVolumeName = newName;
 		reopenForWrite();

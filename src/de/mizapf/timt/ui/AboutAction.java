@@ -26,7 +26,7 @@ import de.mizapf.timt.TIImageTool;
 public class AboutAction extends Activity {
 
 	public String getMenuName() {
-		return TIImageTool.langstr("About");
+		return TIImageTool.langstr("About") + "...";
 	}
 	
 	public String getActionName() {
@@ -35,6 +35,6 @@ public class AboutAction extends Activity {
 	
 	public void go() {
 		// Date and version see TIImageTool
-		JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("AboutText") + TIImageTool.VERSION + ", " + TIImageTool.langstr(TIImageTool.MONTH) + " " + TIImageTool.YEAR, TIImageTool.langstr("About"), JOptionPane.INFORMATION_MESSAGE); 
+		JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("AboutText"), TIImageTool.VERSION, TIImageTool.langstr(TIImageTool.MONTH), TIImageTool.YEAR), TIImageTool.langstr("About"), JOptionPane.INFORMATION_MESSAGE); 
 	}
 }

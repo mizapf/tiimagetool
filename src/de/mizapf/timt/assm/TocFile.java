@@ -25,6 +25,8 @@ import java.util.*;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.files.FormatException;
 
+import de.mizapf.timt.TIImageTool;
+
 class TocFile {
 
 	private static void debug(Object s) {
@@ -116,7 +118,7 @@ class TocFile {
 			case 'E':
 				nVal = getWord();
 				nSegment = getWord();
-				System.err.println("REF offset (unsupp) " + Utilities.toHex(nVal, 4, false) + " for ref no " + nSegment); 
+				System.err.println(TIImageTool.langstr("TocUnsupported") + " REF offset " + Utilities.toHex(nVal, 4, false) + ", ref " + nSegment); 
 				break;
 			case 'F': // Next record
 				debug("Next rec");
@@ -149,7 +151,7 @@ class TocFile {
 			case 'V':
 				nVal = getWord();
 				sVal = getString(6, true);
-				System.err.println("(unsupported) SREF " + sVal);
+				System.err.println(TIImageTool.langstr("TocUnsupported") + " SREF " + sVal);
 				break;
 			case 'W':
 				nVal = getWord();
@@ -170,7 +172,7 @@ class TocFile {
 				break;
 				
 			default:
-				System.err.println("Unsupported tag " + ((char)tag));
+				System.err.println(TIImageTool.langstr("TocUnsupported") + ": " + ((char)tag));
 				break;
 			}
 			

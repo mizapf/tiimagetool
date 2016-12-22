@@ -30,11 +30,12 @@ import java.util.ArrayList;
 import java.io.IOException;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.util.*;
+import de.mizapf.timt.TIImageTool;
 
 public class CreateArchiveAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("CreateArchive");
+		return TIImageTool.langstr("CreateArchive") + "...";
 	}
 	
 	public String getActionName() {
@@ -68,7 +69,7 @@ public class CreateArchiveAction extends Activity {
 				vol.reopenForWrite();
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("NotReopen"), imagetool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
@@ -101,10 +102,10 @@ public class CreateArchiveAction extends Activity {
 				// FIXME: Element selection must be improved (select/deselect) 
 			}
 			catch (InvalidNameException inx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(imagetool.langstr("ArchiveCannotPut"), inx.getMessage()), imagetool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE); 	
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ArchiveCannotPut"), inx.getMessage()), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE); 	
 			}
 			catch (ImageFullException ifx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("ArchiveNoSpace"), imagetool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ArchiveNoSpace"), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE);
 				// Remove ark again
 				try {	
 					dirCurrent.deleteFile(arkf, true);
@@ -116,13 +117,13 @@ public class CreateArchiveAction extends Activity {
 				}
 			}
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("VolumeWP"), imagetool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("VolumeWP"), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("IOError"), imagetool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE);
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError"), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE);
 			}
 			catch (FormatException fx) {
 				fx.printStackTrace();
@@ -135,7 +136,7 @@ public class CreateArchiveAction extends Activity {
 				vol.reopenForRead();
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), imagetool.langstr("NotReopen") + ": " + iox.getMessage(), imagetool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE); 				
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen") + ": " + iox.getMessage(), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE); 				
 			}
 			imagetool.refreshPanel(vol);			
 		}

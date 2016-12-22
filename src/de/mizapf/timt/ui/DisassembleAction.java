@@ -33,7 +33,7 @@ import de.mizapf.timt.TIImageTool;
 public class DisassembleAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("DisTMS");
+		return TIImageTool.langstr("DisTMS") + "...";
 	}
 	
 	public String getActionName() {

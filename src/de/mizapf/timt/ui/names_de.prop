@@ -20,3 +20,4 @@ escape=output:s:Undruckbare Zeichen ersetzen durch
 logging=output:s:Konsolenausgabe unlenken in Datei
 lang=general:c:Sprache
 dndc=general:b:Zeige Optionen bei Drag-and-Drop
+verbose=output:b:Ausführliche Fehlerausgaben auf Konsole

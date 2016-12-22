@@ -25,6 +25,8 @@ import java.awt.event.*;
 import java.awt.font.*;
 import java.awt.*;
 
+import de.mizapf.timt.TIImageTool;
+
 public class ProgressView extends JDialog implements ActionListener {
 	
 	String m_sText;
@@ -60,9 +62,10 @@ public class ProgressView extends JDialog implements ActionListener {
 		setFont(font);
 
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		m_nColumnWidth = fm.stringWidth("Bytes transferred");
+		m_nColumnWidth = fm.stringWidth(TIImageTool.langstr("ProgressViewColumn"));
 		
-		int nHeight = getHeight(font, "B");
+		int nHeight = getHeight(font, "B") * 12 / 10;
+		add(Box.createHorizontalStrut(300));		
 		
 		m_bStop = false;
 		
@@ -79,15 +82,15 @@ public class ProgressView extends JDialog implements ActionListener {
 		setStatus("-");
 		
 		m_btnStop = new JButton("");
-		setButtonText("Abort");
+		setButtonText(TIImageTool.langstr("Abort"));
 		
 		add(Box.createVerticalStrut(10));		
-		createLine("Block size", nHeight, m_jlBlockSize);
-		createLine("Integrity check", nHeight, m_jlChecksum);
+		createLine(TIImageTool.langstr("ProgressViewBlockSize"), nHeight, m_jlBlockSize, font);
+		createLine(TIImageTool.langstr("ProgressViewIntegrity"), nHeight, m_jlChecksum, font);
 		add(Box.createVerticalStrut(10));		
 
-		createLine("Bytes transferred", nHeight, m_jlBytes);
-		createLine("Status", nHeight, m_jlStatus);
+		createLine(TIImageTool.langstr("ProgressViewTrans"), nHeight, m_jlBytes, font);
+		createLine(TIImageTool.langstr("ProgressViewStatus"), nHeight, m_jlStatus, font);
 		
 		add(Box.createVerticalStrut(10));		
 	
@@ -102,11 +105,13 @@ public class ProgressView extends JDialog implements ActionListener {
 		setLocationRelativeTo(getParent());
 	}
 
-	private void createLine(String sText, int nHeight, JComponent jc) {
+	private void createLine(String sText, int nHeight, JComponent jc, Font font) {
 		Box box = new Box(BoxLayout.X_AXIS);
 		box.add(Box.createHorizontalStrut(10));	
 		JLabel jl = new JLabel(sText, SwingConstants.LEFT);
 		jl.setPreferredSize(new Dimension(m_nColumnWidth, nHeight));
+		jl.setFont(font);
+		System.out.println(font);
 		box.add(jl);
 		box.add(Box.createHorizontalStrut(20));
 		box.add(jc);
@@ -128,7 +133,7 @@ public class ProgressView extends JDialog implements ActionListener {
 	
 	void setUseCRC16(boolean bUsed) {
 		if (bUsed) m_jlChecksum.setText("CRC16");
-		else m_jlChecksum.setText("Checksum");
+		else m_jlChecksum.setText(TIImageTool.langstr("ProgressViewChecksum"));
 	}
 	
 	void setTransferredBytes(int nAmount) {

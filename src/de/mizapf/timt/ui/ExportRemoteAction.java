@@ -42,7 +42,7 @@ import de.mizapf.timt.TIImageTool;
 public class ExportRemoteAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("SendRemote");
+		return TIImageTool.langstr("SendRemote") + "...";
 	}
 	
 	public String getActionName() {
@@ -81,7 +81,7 @@ public class ExportRemoteAction extends Activity {
 
 		ConnectDialog cd = new ConnectDialog(m_parent);
 		try {
-			cd.createGui(imagetool.boldFont, true);
+			cd.createGui(imagetool.plainFont, true);
 			cd.setVisible(true);		
 		}
 		catch (IOException iox) {
@@ -107,7 +107,7 @@ public class ExportRemoteAction extends Activity {
 			ProgressView view = null;
 			try {
 				view = new ProgressView(TIImageTool.langstr("XModemSend"), m_parent);
-				view.createGui(imagetool.boldFont);
+				view.createGui(imagetool.plainFont);
 				InputStream is = sc.getInputStream();
 				OutputStream os = sc.getOutputStream();
 				XModem xm = new XModem(is, os, view); 
@@ -119,9 +119,6 @@ public class ExportRemoteAction extends Activity {
 				
 				is.close();
 				os.close();
-			}
-			catch (ProtocolException px) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Error") + ": " + px.getMessage(), TIImageTool.langstr("ProtocolError"), JOptionPane.ERROR_MESSAGE);				
 			}
 			catch (IOException iox) {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConnectionError"), JOptionPane.ERROR_MESSAGE);

@@ -23,14 +23,14 @@ package de.mizapf.timt.ui;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import javax.swing.*;
-
+import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.util.Utilities;
 
 public class ConvertToHFDCAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ConvertHFDC");
+		return TIImageTool.langstr("ConvertHFDC") + "...";
 	}
 	
 	public String getActionName() {
@@ -42,7 +42,7 @@ public class ConvertToHFDCAction extends Activity {
 		Volume vol = dvCurrent.getVolume();
 
 		if (vol.isCHDImage()) {
-			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ConvNotInCHD"), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);						
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ConvNotInCHD"), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);						
 			return;
 		}
 		
@@ -65,7 +65,7 @@ public class ConvertToHFDCAction extends Activity {
 			param = Utilities.guessAdvanced(nCylinders, nHeads, nSectorsPerTrack);
 		}
 		else {
-			JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ConvHFDCNoGeom"), imagetool.langstr("ConvertError"), JOptionPane.WARNING_MESSAGE);				
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ConvHFDCNoGeom"), TIImageTool.langstr("ConvertError"), JOptionPane.WARNING_MESSAGE);				
 			nHeads = 0;
 			nCylinders = 0;
 			nSectorsPerTrack = 0;
@@ -86,19 +86,19 @@ public class ConvertToHFDCAction extends Activity {
 					chs.getWritePrecompensation());
 			}
 			catch (FileNotFoundException fnfx) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageNotFoundOrWP"), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageNotFoundOrWP"), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}
 			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}			
 			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}
 			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("VolumeWP") + ": " + px.getMessage(), imagetool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP") + ": " + px.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}
 			
@@ -107,7 +107,7 @@ public class ConvertToHFDCAction extends Activity {
 				imagetool.refreshPanel(vol);
 			}
 			catch (Exception e) {
-				JOptionPane.showMessageDialog(m_parent, imagetool.langstr("NotReopen") + ": " + e.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotReopen") + ": " + e.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			}
 		}
 	}

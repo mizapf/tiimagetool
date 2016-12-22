@@ -39,7 +39,7 @@ class CHDRawDialog extends ToolDialog {
 	boolean 			m_validCHD;
 	boolean 			m_validTarget;
 	
-	MessCHDFormat		m_image;
+	MameCHDFormat		m_image;
 	File				m_targetFile;
 	
 	private final static int FROM = 1;
@@ -67,26 +67,26 @@ class CHDRawDialog extends ToolDialog {
 */	
 	public void createGui(Font font) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth(imagetool.langstr("CHDRawColumn"));
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("CHDRawColumn"));
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		add(Box.createVerticalStrut(10));		
 
-		putTextLine(this, "!" + imagetool.langstr("ExtractTitle"), 0);
+		putTextLine(this, "!" + TIImageTool.langstr("ExtractTitle"), 0);
 		add(Box.createVerticalStrut(10));
-		putMultiTextLine(this, imagetool.langstr("ExtractText"));
+		putMultiTextLine(this, TIImageTool.langstr("ExtractText"));
 		add(Box.createVerticalStrut(10));
 		
-		String fileprompt = imagetool.langstr("FromCHD");
-		String rawprompt = imagetool.langstr("ToImage");
-		m_tfImageFile = new JTextField(imagetool.langstr("ClickToSelect"));
-		m_tfRawFile = new JTextField(imagetool.langstr("ClickToSelect"));
+		String fileprompt = TIImageTool.langstr("FromCHD");
+		String rawprompt = TIImageTool.langstr("ToImage");
+		m_tfImageFile = new JTextField(TIImageTool.langstr("ClickToSelect"));
+		m_tfRawFile = new JTextField(TIImageTool.langstr("ClickToSelect"));
 
 		addChoiceLine(nColumnWidth, fileprompt, FILELINE, FROM, m_tfImageFile, 32);
 		add(Box.createVerticalStrut(10));
 		addChoiceLine(nColumnWidth, rawprompt, FILELINE, TO, m_tfRawFile, 32);
 		add(Box.createVerticalStrut(10));
 
-		m_jlExportSize = putLabel(this, imagetool.langstr("ExportSize"), "0", nColumnWidth);
+		m_jlExportSize = putLabel(this, TIImageTool.langstr("ExportSize"), "0", nColumnWidth);
 				
 		add(Box.createVerticalStrut(10));	
 		m_validCHD = false;
@@ -164,39 +164,39 @@ class CHDRawDialog extends ToolDialog {
 	private boolean checkCHD(File selectedfile) {
 		String sImageFile = selectedfile.getName();
 		ImageFormat ifsource = null;
-		MessCHDFormat source = null;
+		MameCHDFormat source = null;
 		try {
 			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath());
-			if (!(ifsource instanceof MessCHDFormat)) {
-				JOptionPane.showMessageDialog(m_frmMain, imagetool.langstr("NotCHD"), imagetool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
+			if (!(ifsource instanceof MameCHDFormat)) {
+				JOptionPane.showMessageDialog(m_frmMain, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
 				return false;
 			}
-			m_image = (MessCHDFormat)ifsource;
+			m_image = (MameCHDFormat)ifsource;
 		}
 		catch (FileNotFoundException fnfx) {
-			JOptionPane.showMessageDialog(m_frmMain, imagetool.langstr("InputNotFound") + ": " + fnfx.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_frmMain, TIImageTool.langstr("InputNotFound") + ": " + fnfx.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return false;
 		}
 		catch (EOFException ex) {
-			JOptionPane.showMessageDialog(m_frmMain, imagetool.langstr("NotCHD"), imagetool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
+			JOptionPane.showMessageDialog(m_frmMain, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
 			return false;
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_frmMain, imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_frmMain, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return false;
 		}
 		catch (ImageException ix) {
-			JOptionPane.showMessageDialog(m_frmMain, imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_frmMain, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
 			return false;
 		}		
 		
 		// Calculate the size
 		int nSize = m_image.getHunkCount() * 0x1000;
-		m_jlExportSize.setText(String.valueOf(nSize) + " " + imagetool.langstr("Bytes"));
+		m_jlExportSize.setText(String.valueOf(nSize) + " " + TIImageTool.langstr("Bytes"));
 		return true;
 	}
 	
-	MessCHDFormat getCHD() {
+	MameCHDFormat getCHD() {
 		return m_image;
 	}
 	

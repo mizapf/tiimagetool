@@ -22,6 +22,7 @@ package de.mizapf.timt.ui;
 
 import javax.swing.*;
 import java.awt.event.KeyEvent;
+import de.mizapf.timt.TIImageTool;
 
 public class HelpAction extends Activity {
 
@@ -34,7 +35,7 @@ public class HelpAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return imagetool.langstr("Manual");
+		return TIImageTool.langstr("Manual");
 	}
 	
 	public String getActionName() {

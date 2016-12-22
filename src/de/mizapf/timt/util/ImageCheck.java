@@ -38,38 +38,6 @@ import de.mizapf.timt.TIImageTool;
 
 public class ImageCheck {
 	
-	static void check(String sImagename) throws FileNotFoundException, IOException, ImageException {
-		Volume image = new Volume(sImagename);
-		check(image);
-	}
-		
-	static void check(Volume image) throws IOException, ImageException {
-		/* Strategy for checking 
-		1. For each file (recurse) check whether all AUs of the file as 
-		defined in the FDR are allocated in the allocation map. List each file
-		which has unallocated AUs. (underallocation)
-		2. For each allocated AU check whether there is exactly one file 
-		(overallocation + crossallocation)
-		*/
-		AllocationMap allocMap = image.getAllocationMap();		
-		ArrayList<AllocationGapList> broken = new ArrayList<AllocationGapList>();
-		checkUnderAllocationInDir(image, image.getRootDirectory(), allocMap, broken, "", System.out);
-		if (broken.size()>0) {
-			System.out.println(TIImageTool.langstr("MissingBit"));
-			for (AllocationGapList agl:broken) {
-				System.out.print(agl);
-			}
-			System.out.print("\n");
-		}
-		ArrayList<AllocationDomain> alloc = new ArrayList<AllocationDomain>();
-		findAllocationFaults(image, allocMap, alloc, System.out);
-		if (alloc.size()>0) {
-			System.out.println(TIImageTool.langstr("AllocationError"));
-			for (AllocationDomain a:alloc) 
-				System.out.println(a);
-		}
-	}
-	
 	public static void checkUnderAllocationInDir(Volume image, Directory dir, AllocationMap map, ArrayList<AllocationGapList> broken, String dirName, PrintStream ps) {
 		TFile[] aFile = dir.getFiles();
 		// For each file in this directory
@@ -151,7 +119,7 @@ public class ImageCheck {
 		
 		for (int i=0; i < aFile.length; i++) {
 			TFile f = aFile[i];
-			if (f.hasSwappedL3Count()) {
+			if (f.hasSwappedL3Count() || f.hasBadL3Count()) {
 				fileList.add(f);
 			}
 		}
@@ -215,7 +183,7 @@ public class ImageCheck {
 					sfl.setProblem(iox.getClass() + ", " + iox.getMessage());
 				}
 				catch (FormatException fx) {
-					sfl.setProblem(TIImageTool.langstr("FileNoContents"));
+					sfl.setProblem(TIImageTool.langstr("FileNoContent"));
 				}
 				catch (ImageException ix) {
 					sfl.setProblem(TIImageTool.langstr("CannotReadFile"));

@@ -29,6 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.ByteArrayOutputStream;
 import java.io.ByteArrayInputStream;
 import de.mizapf.timt.util.LZW;
+import de.mizapf.timt.TIImageTool;
 
 /*
 ARK format
@@ -167,7 +168,7 @@ public class Archive extends Directory {
 		
 		nDirSectors++;
 		
-		if (!bFound) throw new IllegalOperationException("Not an archive");
+		if (!bFound) throw new IllegalOperationException(TIImageTool.langstr("ArchiveNot"));
 
 		bDone = false;
 		nPos = 0;
@@ -258,10 +259,10 @@ public class Archive extends Directory {
 	}
 	
 	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen) throws ProtectedException, IOException, InvalidNameException, ImageFullException, ImageException, FileExistsException {
-		if (isProtected()) throw new ProtectedException("Archive is read-only");
+		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("ArchiveProtected"));
 
 		if (m_Files.length>=127) {
-			throw new ImageFullException("No space left in archive. File maximum reached.");
+			throw new ImageFullException(TIImageTool.langstr("ArchiveNoSpace"));
 		}
 
 		int nSectors = 0;
@@ -277,7 +278,7 @@ public class Archive extends Directory {
 		if (sNewFilename==null) {
 			sContName = fileNew.getName();
 			if (sContName==null) {
-				throw new ImageException("File name missing in TIFILES file. Please provide a file name.");
+				throw new ImageException(TIImageTool.langstr("MissingNameInTFI"));
 			}
 		}
 
@@ -324,10 +325,10 @@ public class Archive extends Directory {
 		compresses the archive only after adding all files. 
 	*/		
 	public void insertFiles(TIFiles[] files, String sNewFilename, boolean bReopen) throws ProtectedException, IOException, InvalidNameException, ImageFullException, ImageException, FileExistsException {
-		if (isProtected()) throw new ProtectedException("Archive is read-only");
+		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("ArchiveProtected"));
 
 		if (m_Files.length>=127) {
-			throw new ImageFullException("No space left in archive. File maximum reached.");
+			throw new ImageFullException(TIImageTool.langstr("ArchiveNoSpace"));
 		}
 
 		int nSectors = 0;
@@ -345,7 +346,7 @@ public class Archive extends Directory {
 			if (sNewFilename==null) {
 				sContName = fileNew.getName();
 				if (sContName==null) {
-					throw new ImageException("File name missing in TIFILES file. Please provide a file name.");
+					throw new ImageException(TIImageTool.langstr("MissingNameInTFI"));
 				}
 			}
 			
@@ -377,11 +378,11 @@ public class Archive extends Directory {
 	}	
 	
 	public String getFullPathname() {
-		return m_dirParent.getFullPathname() + "." + getName() + " (Archive)";
+		return m_dirParent.getFullPathname() + "." + getName() + " (" + TIImageTool.langstr("ArchiveIndicator") + ")";
 	}
 	
 	public void deleteFile(TFile file, boolean bRemoveFromList) throws ProtectedException, FileNotFoundException {
-		if (m_Volume.isProtected()) throw new ProtectedException("Archive or volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("ArchiveProtected"));
 		if (!containsInList(file)) throw new FileNotFoundException(file.getName());
 
 		// Remove file from directory
@@ -402,18 +403,18 @@ public class Archive extends Directory {
 		catch (ImageFullException ifx) {
 			// Image is full; revert to previous state
 			ifx.printStackTrace();
-			throw new ImageException("Should not have happened during delete");
+			throw new ImageException(TIImageTool.langstr("ArchiveUnexp"));
 		}
 		catch (InvalidNameException inx) {
 			inx.printStackTrace();
-			throw new ImageException("Should not have happened during delete");
+			throw new ImageException(TIImageTool.langstr("ArchiveUnexp"));
 		}
 	}
 
 	/** Called from PasteAction, only for sourceVol == targetVol. Moving out of an archive always means to 
 		delete it from the archive.*/
 	public void moveoutFile(TFile file) throws ProtectedException, FileNotFoundException, IllegalOperationException {
-		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		// System.out.println("moveout a " + file.getName());
 		deleteFile(file, true);
 	}
@@ -421,7 +422,7 @@ public class Archive extends Directory {
 	/** Called from PasteAction, only for sourceVol == targetVol. Moving into an archive always means to 
 		insert it into the archive. */
 	public void moveinFile(TFile file) throws ProtectedException, FileExistsException, IOException, ImageException, IllegalOperationException {
-		if (m_Volume.isProtected()) throw new ProtectedException("Volume is write-protected.");
+		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (containsInList(file)) throw new FileExistsException(file.getName());
 		// System.out.println("movein a " + file.getName());
 		TIFiles tfiNew = TIFiles.createFromFile(file);
@@ -454,24 +455,24 @@ public class Archive extends Directory {
 	
 	/** Called from PasteAction. */
 	public void moveoutDir(Directory dir) throws ProtectedException, FileNotFoundException, IllegalOperationException  {
-		throw new IllegalOperationException("Cannot move directories out of archives");
+		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotMoveOut"));
 	}
 
 	/** Called from PasteAction. */
 	public void moveinDir(Directory dir) throws ProtectedException, FileExistsException, IOException, ImageException, IllegalOperationException  {
-		throw new IllegalOperationException("Cannot move directories into archives");
+		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotMoveIn"));
 	}
 	
 	public Directory createSubdirectory(String sName, boolean bReopen) throws ProtectedException, InvalidNameException, FileExistsException, ImageFullException, ImageException, IOException, IllegalOperationException {
-		throw new IllegalOperationException("Cannot create subdirectories in archives");
+		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotCreateDir"));
 	}
 
 	public void deleteDirectory(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
-		throw new IllegalOperationException("Cannot delete subdirectories from archives");
+		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotDelDir"));
 	}
 	
 	public void delDir(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
-		throw new IllegalOperationException("Cannot delete subdirectories from archives");
+		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotDelDir"));
 	}
 	
 	public boolean isProtected() {

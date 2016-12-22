@@ -32,7 +32,7 @@ import de.mizapf.timt.TIImageTool;
 public class ToggleEmulateAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ToggleEmulate");
+		return TIImageTool.langstr("ToggleEmulate");
 	}
 	
 	public String getActionName() {

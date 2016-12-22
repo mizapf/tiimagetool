@@ -44,7 +44,7 @@ public class DeleteAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return imagetool.langstr("Delete");
+		return TIImageTool.langstr("Delete");
 	}
 	
 	public String getActionName() {

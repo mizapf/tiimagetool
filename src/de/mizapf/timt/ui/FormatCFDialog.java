@@ -81,37 +81,37 @@ class FormatCFDialog extends ToolDialog {
 
 		// ======================
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth(imagetool.langstr("CF7Column"));
+		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("CF7Column"));
 
-		putTextLine(this, "!" + imagetool.langstr("CF7Title"), 0);
+		putTextLine(this, "!" + TIImageTool.langstr("CF7Title"), 0);
 		add(Box.createVerticalStrut(10));
-		putMultiTextLine(this, imagetool.langstr("CF7Exp1"));
+		putMultiTextLine(this, TIImageTool.langstr("CF7Exp1"));
 		add(Box.createVerticalStrut(10));
-		putTextLine(this, imagetool.langstr("CF7Exp2"), 0);
+		putTextLine(this, TIImageTool.langstr("CF7Exp2"), 0);
 
 		add(Box.createVerticalStrut(30));
-		String fileprompt = imagetool.langstr("CF7Name");
-		m_tfImageFile = new JTextField(imagetool.langstr("ClickToSelect"));
+		String fileprompt = TIImageTool.langstr("CF7Name");
+		m_tfImageFile = new JTextField(TIImageTool.langstr("ClickToSelect"));
 		addChoiceLine(nColumnWidth, fileprompt, FILELINE, CF, m_tfImageFile, 32);
 		add(Box.createVerticalStrut(10));
 		
-		m_jlNumber = putLabel(this, imagetool.langstr("CF7Highest"), "-", nColumnWidth);
+		m_jlNumber = putLabel(this, TIImageTool.langstr("CF7Highest"), "-", nColumnWidth);
 		add(Box.createVerticalStrut(10));
 
-		putMultiTextLine(this, imagetool.langstr("CF7Exp3"));
+		putMultiTextLine(this, TIImageTool.langstr("CF7Exp3"));
 		add(Box.createVerticalStrut(10));
-		putTextLine(this, imagetool.langstr("CF7Exp4"), 0);
+		putTextLine(this, TIImageTool.langstr("CF7Exp4"), 0);
 		
-		putTextLine(this, imagetool.langstr("CF7Exp5"), 0);
-		add(Box.createVerticalStrut(10));
-		
-		m_tfSelection = putTextField(this, imagetool.langstr("CF7Numbers"), "", nColumnWidth, 0);
+		putTextLine(this, TIImageTool.langstr("CF7Exp5"), 0);
 		add(Box.createVerticalStrut(10));
 		
-		putMultiTextLine(this, imagetool.langstr("CF7Exp6"));
+		m_tfSelection = putTextField(this, TIImageTool.langstr("CF7Numbers"), "", nColumnWidth, 0);
 		add(Box.createVerticalStrut(10));
 		
-		m_tfNames = putTextField(this, imagetool.langstr("VolumeNames"), "", nColumnWidth, 0);
+		putMultiTextLine(this, TIImageTool.langstr("CF7Exp6"));
+		add(Box.createVerticalStrut(10));
+		
+		m_tfNames = putTextField(this, TIImageTool.langstr("VolumeNames"), "", nColumnWidth, 0);
 		
 		add(Box.createVerticalGlue());
 		addButtons();		
@@ -163,23 +163,23 @@ class FormatCFDialog extends ToolDialog {
 				end = start;
 			}
 			catch (NumberFormatException nf) {
-				throw new NumberFormatException(String.format(imagetool.langstr("ParseError"), se[0]));
+				throw new NumberFormatException(String.format(TIImageTool.langstr("ParseError"), se[0]));
 			}
 			
-			if (start<=0) throw new NumberFormatException(imagetool.langstr("CF7Greater"));
+			if (start<=0) throw new NumberFormatException(TIImageTool.langstr("CF7Greater"));
 			
-			if (se.length>2) throw new NumberFormatException(imagetool.langstr("CF7InvInt") + ": " + s);
+			if (se.length>2) throw new NumberFormatException(TIImageTool.langstr("CF7InvInt") + ": " + s);
 			if (se.length==2) {
 				try {
 					end = Integer.parseInt(se[1]);
 				}
 				catch (NumberFormatException nf) {
-					throw new NumberFormatException(String.format(imagetool.langstr("ParseError"), se[1]));
+					throw new NumberFormatException(String.format(TIImageTool.langstr("ParseError"), se[1]));
 				}
 			}
 			Interval in = new Interval(start,end); 
 			list.add(in);
-			if (start>end) throw new NumberFormatException(imagetool.langstr("CF7InvInt") + ": " + in);
+			if (start>end) throw new NumberFormatException(TIImageTool.langstr("CF7InvInt") + ": " + in);
 		}
 		return list.toArray(new Interval[part.length]);
 	}
@@ -190,7 +190,7 @@ class FormatCFDialog extends ToolDialog {
 	
 	String getImagePath() {
 		String name = m_tfImageFile.getText();
-		if (name.equals(imagetool.langstr("ClickToSelect"))) name = null;
+		if (name.equals(TIImageTool.langstr("ClickToSelect"))) name = null;
 		return name;
 	}
 }

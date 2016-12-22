@@ -26,6 +26,8 @@ import de.mizapf.timt.util.Utilities;
 import java.util.List;
 import java.util.ArrayList;
 
+import de.mizapf.timt.TIImageTool;
+
 public class Hint {
 	private int m_nKind;
 	
@@ -135,6 +137,7 @@ public class Hint {
 	}
 	
 	public static void main(String[] arg) {
+		TIImageTool.localize();
 		try {
 			Hint[] hint = parse(arg[0]);
 			for (int i=0; i < hint.length; i++) {
@@ -189,11 +192,11 @@ public class Hint {
         
         for (int i=0; i < sHintLine.length(); i++) {
             if (sHintLine.charAt(i)=='(') {
-                if (nPosOpen != -1) throw new FormatException("Hints", "Double open parentheses");
+                if (nPosOpen != -1) throw new FormatException(TIImageTool.langstr("Hints"), TIImageTool.langstr("HintsDoubleOpen"));
                 nPosOpen = i;
             }
             if (sHintLine.charAt(i)==')') {
-                if (nPosOpen == -1) throw new FormatException("Hints", "Illegal closing parenthesis");
+                if (nPosOpen == -1) throw new FormatException(TIImageTool.langstr("Hints"), TIImageTool.langstr("HintsIllegalClose"));
                 String sArg = sHintLine.substring(nPosOpen+1, i).trim();
                 String sKind = sHintLine.substring(nPosLast+1, nPosOpen).trim();
                 int nCommaPos = sArg.indexOf(",");
@@ -213,7 +216,7 @@ public class Hint {
                                 sSymbol = sArg1.substring(1, sArg1.length()-1);
                             }
                             else {
-                                throw new FormatException(sArg, "Unmatched quotes: " + sArg1);
+                                throw new FormatException(sArg, TIImageTool.langstr("HintsUnmatched") + ": " + sArg1);
                             }
                             list.add(new Hint(sSymbol, Integer.parseInt(sArg2)));
                         }
@@ -222,7 +225,7 @@ public class Hint {
                         }
                     }
                     catch (NumberFormatException nfx) {
-                        throw new FormatException("Hints", "Invalid number " + sArg2);
+                        throw new FormatException(TIImageTool.langstr("Hints"), String.format(TIImageTool.langstr("ParseError"), sArg2));
                     }
                 }
                 else {
@@ -248,7 +251,7 @@ public class Hint {
                                         list.add(new Hint(NOFMT, Location.getInstance(sArg1), Location.getInstance(sArg2)));
                                     }
                                     else {
-                                        throw new FormatException("Hints", "Unknown hint: " + sKind);
+                                        throw new FormatException(TIImageTool.langstr("Hints"), TIImageTool.langstr("HintsUnknown") + " '" + sKind + "'");
                                     }
                                 }
                             }
@@ -259,7 +262,7 @@ public class Hint {
                 nPosLast = i+1;
             }
         }
-        if (nPosOpen != -1) throw new FormatException("Hints", "Missing closing parenthesis");
+        if (nPosOpen != -1) throw new FormatException(TIImageTool.langstr("Hints"), TIImageTool.langstr("HintsNotClosed"));
 
         Hint[] ah = list.toArray(new Hint[0]);
         return ah;

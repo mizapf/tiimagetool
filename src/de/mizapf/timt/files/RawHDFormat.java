@@ -84,7 +84,7 @@ class RawHDFormat extends ImageFormat {
 		int nTrackOffset = 0;
 		int nTrack = 0;
 		
-		if (nSectorNumber >= m_nTotalSectors) throw new EOFException("Sector " + nSectorNumber + " beyond image size");
+		if (nSectorNumber >= m_nTotalSectors) throw new EOFException(String.format(TIImageTool.langstr("ImageBeyond"), nSectorNumber));
 		
 		offset[TRACK] = readTrack(nSectorNumber);
 
@@ -146,7 +146,7 @@ class RawHDFormat extends ImageFormat {
 			getOffset(nStartSector, offset);
 			
 			if (offset[SECTOR] != 0) {
-				throw new IOException("Could not find block boundary for track.");
+				throw new IOException(TIImageTool.langstr("RawHDNoBlock"));
 			}
 
 			// Copy the new sector into the track image first
@@ -176,7 +176,7 @@ class RawHDFormat extends ImageFormat {
 			m_FileSystem.write(abyNewBlock);
 		}
 		catch (EOFException eofx) {
-			throw new EOFException("Sector " + nNumber + " beyond image size");
+			throw new EOFException(String.format(TIImageTool.langstr("ImageBeyond"), nNumber));
 		}
 	}
 	

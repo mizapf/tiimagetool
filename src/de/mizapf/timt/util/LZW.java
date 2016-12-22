@@ -22,6 +22,7 @@
 package de.mizapf.timt.util;
 import java.io.*;
 import de.mizapf.timt.files.FormatException;
+import de.mizapf.timt.TIImageTool;
 
 public class LZW {
 
@@ -158,6 +159,7 @@ public class LZW {
 	}
 	
 	public static void main(String[] arg) {
+		TIImageTool.localize();
 		LZW lzw = null;
 		if (arg.length < 3) {
 			System.err.println("Usage: LZW [x|c] <file> <outfile>");
@@ -330,10 +332,12 @@ public class LZW {
 			}
 		}
 		
-		if (DEBUG>0) System.out.println("bs.available = " + bs.available() + ", len = " + Utilities.toHex(m_abyRaw.length,4));
+		if (DEBUG>0) {
+			System.out.println("bs.available = " + bs.available() + ", len = " + Utilities.toHex(m_abyRaw.length,4));
+			System.out.println("\n" + Utilities.hexdump(0, 0, baos.toByteArray(), baos.toByteArray().length, false));
+		}
 		
-		if (DEBUG>0) System.out.println("\n" + Utilities.hexdump(0, 0, baos.toByteArray(), baos.toByteArray().length, false));
-		if (!bTerminate) throw new FormatException("Archive file", "Missing end-of-archive; archive file possibly corrupt");
+		if (!bTerminate) throw new FormatException(TIImageTool.langstr("Archive"), TIImageTool.langstr("LZWMissingEOA"));
 		return baos.toByteArray();
 	}
 	

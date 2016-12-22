@@ -20,6 +20,7 @@
 ****************************************************************************/
 
 package de.mizapf.timt.files;
+import de.mizapf.timt.TIImageTool;
 
 public abstract class Element implements Comparable<Element> {
 
@@ -82,12 +83,12 @@ public abstract class Element implements Comparable<Element> {
 		StringBuilder sb = new StringBuilder();
 		if (m_dirParent != null && !m_dirParent.isRootDirectory()) {
 			sb.append(m_dirParent.getPathname());
-			if (m_dirParent instanceof Archive) sb.append("(arc)");
+			if (m_dirParent instanceof Archive) sb.append("(").append(TIImageTool.langstr("ElementArcIndicator")).append(")");
 			sb.append(".");
 		}
 		sb.append(m_sName);
 		String sRes = sb.toString();
-		if (sRes.contains("..")) sRes = "<invalid name>";
+		if (sRes.contains("..")) sRes = "<" + TIImageTool.langstr("ElementInvalid") + ">";
 		return sRes; 
 	}
 }

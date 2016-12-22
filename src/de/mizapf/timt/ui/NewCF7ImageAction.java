@@ -31,7 +31,7 @@ import de.mizapf.timt.TIImageTool;
 public class NewCF7ImageAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("CompleteCF7");
+		return TIImageTool.langstr("CompleteCF7") + "...";
 	}
 	
 	public String getActionName() {

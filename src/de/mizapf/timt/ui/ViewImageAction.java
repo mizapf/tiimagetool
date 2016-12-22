@@ -32,7 +32,7 @@ import de.mizapf.timt.TIImageTool;
 public class ViewImageAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ViewImage");
+		return TIImageTool.langstr("ViewImage");
 	}
 	
 	public String getActionName() {

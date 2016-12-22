@@ -87,6 +87,7 @@ public class ImageFrame extends JFrame {
 	}
 	
 	public static void main(String[] arg) {
+		TIImageTool.localize();
 		try {
 			DataInputStream dis = new DataInputStream(new FileInputStream(arg[0]));
 			byte[] abyContent = new byte[dis.available()];
@@ -115,10 +116,10 @@ public class ImageFrame extends JFrame {
 			ifr.showImage1(null, 640);
 		}
 		catch (FileNotFoundException fnfx) {
-			System.err.println("Could not find file " + arg[0]);
+			System.err.println(TIImageTool.langstr("FileNotFound") + ": " + arg[0]);
 		}
 		catch (IOException iox) {
-			System.err.println("Could not load file " + arg[0]);
+			System.err.println(TIImageTool.langstr("IOError") + ": " + iox.getClass().getName());
 			iox.printStackTrace();
 		}
 	}

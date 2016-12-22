@@ -21,11 +21,12 @@
 package de.mizapf.timt.ui;
 
 import de.mizapf.timt.files.Directory;
+import de.mizapf.timt.TIImageTool;
 
 public class CloseAllAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("CloseAll");
+		return TIImageTool.langstr("CloseAll");
 	}
 	
 	public String getActionName() {

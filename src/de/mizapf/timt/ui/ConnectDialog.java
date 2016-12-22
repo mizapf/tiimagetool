@@ -37,7 +37,7 @@ public class ConnectDialog extends ToolDialog implements ActionListener {
 	JComboBox<String>		m_jcProtocol;
 			
 	public ConnectDialog(JFrame owner) {
-		super(owner, TIImageTool.langstr("SerialConnect"));
+		super(owner, TIImageTool.langstr("ConnectDialogTitle"));
 	}
 	
 /*
@@ -56,7 +56,7 @@ public class ConnectDialog extends ToolDialog implements ActionListener {
 */	
 	public void createGui(Font font, boolean bUpload) throws IOException {
 		prepareGui();
-		determineWidth(TIImageTool.langstr("SerialColumn"));
+		determineWidth(TIImageTool.langstr("ConnectDialogColumn"));
 
 		String[] asAdapters = SerialConnection.getPorts();
 		if (asAdapters==null) throw new IOException(TIImageTool.langstr("NoSerialPorts"));

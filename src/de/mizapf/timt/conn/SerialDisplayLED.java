@@ -25,6 +25,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.net.*;
 
+import de.mizapf.timt.TIImageTool;
+
 class SerialDisplayLED extends JPanel implements Runnable {
 	
 	boolean m_bOutput;
@@ -48,7 +50,7 @@ class SerialDisplayLED extends JPanel implements Runnable {
 			return new ImageIcon(imgURL, sDescription);
 		}
 		else {
-			System.err.println("Error: Image file not found: " + sPath);
+			System.err.println(TIImageTool.langstr("NoImage") + ": " + sPath);
 			return null;
 		}
 	}
@@ -62,7 +64,7 @@ class SerialDisplayLED extends JPanel implements Runnable {
 		greenLed[1] = createImageIcon("ledgreenon.png", "an");
 	}
 
-	SerialDisplayLED(String sLabel, boolean bOutput, int nMinOnMs, int nMaxOnMs, Dimension dim) {
+	SerialDisplayLED(String sLabel, boolean bOutput, int nMinOnMs, int nMaxOnMs, Dimension dim, Font font) {
 		m_bOutput = bOutput;
 		m_nMinOnMs = nMinOnMs;
 		m_nMaxOnMs = nMaxOnMs;
@@ -71,6 +73,7 @@ class SerialDisplayLED extends JPanel implements Runnable {
 		
 		setLayout(new BorderLayout());
 		JLabel jl = new JLabel(sLabel, SwingConstants.LEFT);
+		jl.setFont(font);
 		add(jl, BorderLayout.WEST);
 		m_jlLED = new JLabel();
 		setStateInt(false);

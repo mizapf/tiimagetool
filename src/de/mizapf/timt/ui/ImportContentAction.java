@@ -37,7 +37,7 @@ import de.mizapf.timt.TIImageTool;
 public class ImportContentAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ImpText");
+		return TIImageTool.langstr("ImpText") + "...";
 	}
 	
 	public String getActionName() {
@@ -65,7 +65,7 @@ public class ImportContentAction extends Activity {
 		ImportDialog impdia = null;
 		boolean bDone = false;
 		int mode = 0;
-		mode = BasicCruncher.contentLooksLikeBasic(abyContent)? ImportDialog.BASIC : ImportDialog.TEXTONLY;					
+		mode = BasicCruncher.contentLooksLikeBasic(abyContent, imagetool.getPropertyBoolean(TIImageTool.VERBOSE))? ImportDialog.BASIC : ImportDialog.TEXTONLY;					
 		
 		while (!bDone) {   // While file exists
 			while (!bValid) {
@@ -99,25 +99,25 @@ public class ImportContentAction extends Activity {
 					abyTif = bc.textToBasic(lines, impdia.getFileName(), impdia.getBasicVersion(), impdia.getSaveFormat(), impdia.getProtected());
 				}
 				catch (CrunchException cx) {
-					if (cx.getMessage()==BasicCruncher.TOOLONG) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), cx.getMessage(), TIImageTool.langstr("BasicError"), JOptionPane.ERROR_MESSAGE);
+					if (cx.reason==CrunchException.TOOLONG) {
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), cx.getReason(), TIImageTool.langstr("BasicError"), JOptionPane.ERROR_MESSAGE);
 					}
 					else {
-						if (cx.getMessage()==BasicCruncher.TOOSHORT) {
-							JOptionPane.showMessageDialog(dvCurrent.getFrame(), cx.getMessage(), TIImageTool.langstr("BasicError"), JOptionPane.ERROR_MESSAGE);
+						if (cx.reason==CrunchException.TOOSHORT) {
+							JOptionPane.showMessageDialog(dvCurrent.getFrame(), cx.getReason(), TIImageTool.langstr("BasicError"), JOptionPane.ERROR_MESSAGE);
 						}
 						else {
-							cx.printStackTrace();
+							// cx.printStackTrace();
 							if (cx.textline != 0) {
 								if (cx.line != 0) {
-									JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("BasicErrorLineExt"), cx.textline, cx.line, cx.pos) + "; " + TIImageTool.langstr("BasicUseAnother"), TIImageTool.langstr("BASICError"), JOptionPane.ERROR_MESSAGE);
+									JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("BasicErrorLineExt"), cx.textline, cx.line, cx.pos) + ": " + cx.getReason() + ";\n" + TIImageTool.langstr("BasicUseAnother"), TIImageTool.langstr("BasicError"), JOptionPane.ERROR_MESSAGE);
 								}
 								else {
-									JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("BasicParseError"), cx.textline) + "; " + TIImageTool.langstr("BasicUseAnother"), TIImageTool.langstr("BASICError"), JOptionPane.ERROR_MESSAGE);
+									JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("BasicParseError"), cx.textline) + ": " + cx.getReason() + ";\n" + TIImageTool.langstr("BasicUseAnother"), TIImageTool.langstr("BasicError"), JOptionPane.ERROR_MESSAGE);
 								}
 							}
 							else {
-								JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("BasicErrorLine"), cx.line, cx.pos) + "; " + TIImageTool.langstr("BasicUseAnother"), TIImageTool.langstr("BASICError"), JOptionPane.ERROR_MESSAGE);
+								JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("BasicErrorLine"), cx.line, cx.pos) + ": " + cx.getReason() + ";\n" + TIImageTool.langstr("BasicUseAnother"), TIImageTool.langstr("BasicError"), JOptionPane.ERROR_MESSAGE);
 							}
 						}
 					}

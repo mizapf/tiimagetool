@@ -26,6 +26,7 @@ import java.util.*;
 import gnu.io.*;
 import de.mizapf.timt.util.Utilities;
 import javax.swing.*;
+import de.mizapf.timt.TIImageTool;
 
 import static de.mizapf.timt.conn.SerialConnection.*;
 
@@ -47,7 +48,7 @@ public class XModem {
 		m_view = view;
 	}
 	
-	public void send(byte[] abyTIFile, int nBlockSize) throws IOException, ProtocolException {
+	public void send(byte[] abyTIFile, int nBlockSize) throws IOException {
 	
 		if (m_view != null) m_view.setVisible(true);
 		// length multiple of 1024 (padded with 0x1a)
@@ -157,17 +158,17 @@ public class XModem {
 					nNumber++;
 					nPosition += nBlockSize;
 					m_view.setTransferredBytes(nPosition);
-					m_view.setStatus("OK");
+					m_view.setStatus(TIImageTool.langstr("OK"));
 					nRetry = 10;
 				}
 				else {
 					if (by==NAK) {
 						// System.err.println("Transmission of bytes " + nPosition + " to " + (nPosition+nBlockSize-1) + " not acknowlegded");
-						m_view.setStatus("Error");
+						m_view.setStatus(TIImageTool.langstr("Error"));
 						nRetry--;
 						if (nRetry==0) {
 							// System.err.println("Abort transmission");
-							m_view.setStatus("Abort");
+							m_view.setStatus(TIImageTool.langstr("Abort"));
 							m_os.write(CAN);
 							m_os.write(CAN);
 							bDone = true;
@@ -187,19 +188,19 @@ public class XModem {
 					if (by==ACK) {
 						// ACK
 						// System.out.println("Transfer completed successfully");
-						m_view.setStatus("Complete");
+						m_view.setStatus(TIImageTool.langstr("XModemComplete"));
 						break;
 					}
 					else {
 						if (by!=NAK) {
-							System.err.println("Invalid character received: " + (by&0xff));
-							m_view.setStatus("Warn (P)");
+							System.err.println(TIImageTool.langstr("XModemInvalid") + ": " + (by&0xff));
+							m_view.setStatus(TIImageTool.langstr("Warning") + " (P)");
 						}
 					}
 				}
 				if (nRetry==0) {
-					System.err.println("Data transmitted, but connection close failed");
-					m_view.setStatus("Warn (C)");
+					System.err.println(TIImageTool.langstr("XModemCloseFailed"));
+					m_view.setStatus(TIImageTool.langstr("Warning") + " (C)");
 				}
 			}
 		}
@@ -270,16 +271,16 @@ public class XModem {
 			switch (by) {
 			case TIMEOUT:
 				// System.out.println("Timeout");
-				m_view.setStatus("Timeout");
+				m_view.setStatus(TIImageTool.langstr("XModemTimeout"));
 				nRetry--;
 				if (nRetry==0) {
-					System.err.println("Giving up");
-					m_view.setStatus("Abort");
+					System.err.println(TIImageTool.langstr("XModemGiveup"));
+					m_view.setStatus(TIImageTool.langstr("Abort"));
 					bDone = true;
 					break;
 				}
 				if (bStart) {
-					m_view.setStatus("Linking");
+					m_view.setStatus(TIImageTool.langstr("XModemLinking"));
 					sendHandshake(bUseCrc);
 				}
 				else {
@@ -296,7 +297,7 @@ public class XModem {
 					m_os.write(NAK);
 				}
 				else {
-					m_view.setStatus("OK");
+					m_view.setStatus(TIImageTool.langstr("OK"));
 					m_os.write(ACK);
 				}
 				break;
@@ -309,25 +310,25 @@ public class XModem {
 					m_os.write(NAK);
 				}
 				else {
-					m_view.setStatus("OK");
+					m_view.setStatus(TIImageTool.langstr("OK"));
 					m_os.write(ACK);
 				}
 				break;
 			case EOT: 
 				// System.out.println("Got EOT");
-				m_view.setStatus("Complete");
+				m_view.setStatus(TIImageTool.langstr("XModemComplete"));
 				m_os.write(ACK);
 				bDone = true;
 				break;
 			case ACK:
-				System.err.println("Got ACK - but unexpected");
+				System.err.println(TIImageTool.langstr("XModemUnexpAck"));
 				break;
 			case CAN:
-				System.err.println("Sender sent CANcel signal");
+				System.err.println(TIImageTool.langstr("XModemCancel"));
 				break;
 			default:
-				System.err.println("Got unknown value: " + by);
-				m_view.setStatus("Warn (P)");
+				System.err.println(TIImageTool.langstr("XModemUnknown") + ": " + by);
+				m_view.setStatus(TIImageTool.langstr("Warning") + " (P)");
 				bError = true;
 			}
 			
@@ -371,8 +372,8 @@ public class XModem {
 		// System.out.println(nNumber + ", " + nBlockSize + " bytes, crc = " + m_bUseCrc);
 		
 		if (nNumber + nCheckNumber != 255) {
-			System.err.println("Data error: Record number failed check");
-			m_view.setStatus("Invalid record");
+			System.err.println(TIImageTool.langstr("XModemDataError"));
+			m_view.setStatus(TIImageTool.langstr("XModemInvRecord"));
 			bError = true;
 		}
 		else {
@@ -392,8 +393,8 @@ public class XModem {
 				short nCrcSender = (short)((m_is.read()<<8) & 0xff00);
 				nCrcSender |= (m_is.read()&0xff);
 				if (nCrcSender != nCrc) {
-					System.err.println("CRC error: received " + Integer.toHexString(nCrcSender & 0xffff) + " but expected " + Integer.toHexString(nCrc & 0xffff));
-					m_view.setStatus("CRC error");
+					System.err.println(String.format(TIImageTool.langstr("XModemCRCError"), Integer.toHexString(nCrcSender & 0xffff), Integer.toHexString(nCrc & 0xffff)));
+					m_view.setStatus(TIImageTool.langstr("XModemCRC"));
 					bError = true;
 				}
 			}
@@ -401,8 +402,8 @@ public class XModem {
 				nChecksum = (short)(nChecksum & 0xff);
 				short nChecksumSender = (short)(m_is.read() & 0xff);
 				if (nChecksumSender != nChecksum) {
-					System.err.println("Checksum error: received " + nChecksumSender + " but expected " + nChecksum);
-					m_view.setStatus("Checksum error");
+					System.err.println(String.format(TIImageTool.langstr("XModemChecksumError"), nChecksumSender, nChecksum));
+					m_view.setStatus(TIImageTool.langstr("XModemChecksum"));
 					bError = true;
 				} 
 			}

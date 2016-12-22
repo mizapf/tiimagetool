@@ -26,11 +26,12 @@ import de.mizapf.timt.files.*;
 import java.awt.Cursor;
 import java.io.EOFException;
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.TIImageTool;
 
 public class ViewConsoleAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ViewConsole");
+		return TIImageTool.langstr("ViewConsole");
 	}
 	
 	public String getActionName() {

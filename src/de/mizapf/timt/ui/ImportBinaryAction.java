@@ -35,7 +35,7 @@ import de.mizapf.timt.TIImageTool;
 public class ImportBinaryAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ImpBinary");
+		return TIImageTool.langstr("ImpBinary") + "...";
 	}
 	
 	public String getActionName() {

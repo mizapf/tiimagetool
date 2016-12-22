@@ -26,7 +26,7 @@ import java.io.*;
 //import gnu.io.*;
 
 import de.mizapf.timt.util.Utilities;
-
+import de.mizapf.timt.TIImageTool;
 import java.awt.*;
 import java.awt.font.*;
 import javax.swing.*; 
@@ -109,7 +109,7 @@ public class SerialBridgeDisplay implements ActionListener, WindowListener {
 	final static int DELAY = 100;
 	
 	public SerialBridgeDisplay() {
-		m_frmDisplay = new JFrame("Serial Bridge");
+		m_frmDisplay = new JFrame(TIImageTool.langstr("SBDisplayTitle"));
 		Font fnt = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
 		createGui(fnt);
 	}
@@ -129,25 +129,28 @@ public class SerialBridgeDisplay implements ActionListener, WindowListener {
 		m_frmDisplay.setLayout(new BoxLayout(m_frmDisplay.getContentPane(), BoxLayout.Y_AXIS));
 		m_frmDisplay.setFont(font);
 		
-		m_nFontHeight = 15;
-	
+		// m_nFontHeight = 15;
+		FontRenderContext frc = ((Graphics2D)(m_frmDisplay.getGraphics())).getFontRenderContext();
+		LineMetrics lm = font.getLineMetrics("B", 0, 2, frc);
+		m_nFontHeight = (int)Math.ceil(lm.getHeight()*1.2);
+
 		FontMetrics fm = ((Graphics2D)(m_frmDisplay.getGraphics())).getFontMetrics(font);
-		m_nColumnWidth = fm.stringWidth("Framing error xxxxx");
+		m_nColumnWidth = fm.stringWidth(TIImageTool.langstr("SBDisplayColumn"))+40;
 //		System.out.println("font height: " + m_nFontHeight + ", width: " + m_nColumnWidth);		
 		Dimension dimPref = new Dimension(m_nColumnWidth, m_nFontHeight);
 
-		m_LedDataIn = new SerialDisplayLED("Data in", false, 100, 0, dimPref);
-		m_LedDataOut = new SerialDisplayLED("Data out", true, 100, 0, dimPref);
-		m_LedBreakIn = new SerialDisplayLED("Break in", false, 0, 100, dimPref);
-		m_LedBreakOut = new SerialDisplayLED("Break out", true, 100, 0, dimPref);
-		m_LedRTS = new SerialDisplayLED("RTS", true, 100, 0, dimPref);
-		m_LedCTS = new SerialDisplayLED("CTS", false, 100, 0, dimPref);
-		m_LedDTR = new SerialDisplayLED("DTR", true, 100, 0, dimPref);
-		m_LedDSR = new SerialDisplayLED("DSR", false, 100, 0, dimPref);
-		m_LedDCD = new SerialDisplayLED("DCD", false, 100, 0, dimPref);
-		m_LedRI = new SerialDisplayLED("RI", false, 100, 0, dimPref);
-		m_LedFramingError = new SerialDisplayLED("Framing error", false, 0, 100, dimPref);
-		m_LedParityError = new SerialDisplayLED("Parity error", false, 0, 100, dimPref);
+		m_LedDataIn = new SerialDisplayLED(TIImageTool.langstr("SBDisplayDataIn"), false, 100, 0, dimPref, font);
+		m_LedDataOut = new SerialDisplayLED(TIImageTool.langstr("SBDisplayDataOut"), true, 100, 0, dimPref, font);
+		m_LedBreakIn = new SerialDisplayLED(TIImageTool.langstr("SBDisplayBreakIn"), false, 0, 100, dimPref, font);
+		m_LedBreakOut = new SerialDisplayLED(TIImageTool.langstr("SBDisplayBreakOut"), true, 100, 0, dimPref, font);
+		m_LedRTS = new SerialDisplayLED("RTS", true, 100, 0, dimPref, font);
+		m_LedCTS = new SerialDisplayLED("CTS", false, 100, 0, dimPref, font);
+		m_LedDTR = new SerialDisplayLED("DTR", true, 100, 0, dimPref, font);
+		m_LedDSR = new SerialDisplayLED("DSR", false, 100, 0, dimPref, font);
+		m_LedDCD = new SerialDisplayLED("DCD", false, 100, 0, dimPref, font);
+		m_LedRI = new SerialDisplayLED("RI", false, 100, 0, dimPref, font);
+		m_LedFramingError = new SerialDisplayLED(TIImageTool.langstr("SBDisplayFrameError"), false, 0, 100, dimPref, font);
+		m_LedParityError = new SerialDisplayLED(TIImageTool.langstr("SBDisplayParityError"), false, 0, 100, dimPref, font);
 
 		m_jlBitRate = new JLabel();
 		m_jlParity = new JLabel();
@@ -160,10 +163,10 @@ public class SerialBridgeDisplay implements ActionListener, WindowListener {
 		setStopBits(UNDEF);	
 		
 		m_frmDisplay.add(Box.createVerticalStrut(10));
-		addLine("Line speed", m_jlBitRate); 
-		addLine("Data bits", m_jlDataBits); 
-		addLine("Parity", m_jlParity); 
-		addLine("Stop bits", m_jlStopBits); 
+		addLine(TIImageTool.langstr("SBDisplayLineSpeed"), m_jlBitRate, font); 
+		addLine(TIImageTool.langstr("SBDisplayDataBits"), m_jlDataBits, font); 
+		addLine(TIImageTool.langstr("SBDisplayParity"), m_jlParity, font); 
+		addLine(TIImageTool.langstr("SBDisplayStopBits"), m_jlStopBits, font); 
 		m_frmDisplay.add(Box.createVerticalStrut(10));
 		
 		add2Led(m_LedDataIn, m_LedDataOut);
@@ -180,7 +183,7 @@ public class SerialBridgeDisplay implements ActionListener, WindowListener {
 		m_frmDisplay.add(Box.createVerticalGlue());
 		
 		Box box7 = new Box(BoxLayout.X_AXIS);		
-		m_btnAbort = new JButton("Abort");
+		m_btnAbort = new JButton(TIImageTool.langstr("Abort"));
 		m_btnAbort.addActionListener(this);
 //		m_btnAbort.setPreferredSize(new Dimension(100, 25));
 		box7.add(m_btnAbort);
@@ -189,10 +192,11 @@ public class SerialBridgeDisplay implements ActionListener, WindowListener {
 		m_frmDisplay.pack();	
 	}
 
-	private void addLine(String sLabel, JComponent jc) {
+	private void addLine(String sLabel, JComponent jc, Font font) {
 		Box box1 = new Box(BoxLayout.X_AXIS);
 		box1.add(Box.createHorizontalStrut(10));
 		JLabel jl = new JLabel(sLabel, SwingConstants.LEFT);
+		jl.setFont(font);
 		jl.setPreferredSize(new Dimension(m_nColumnWidth, m_nFontHeight));
 		box1.add(jl);
 		jc.setPreferredSize(new Dimension(m_nColumnWidth, m_nFontHeight)); 

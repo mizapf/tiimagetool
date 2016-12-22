@@ -27,17 +27,18 @@ import java.io.*;
 public class CommandShell {
 
 	public static void main(String[] arg) {
+		TIImageTool.localize();
 		if (arg.length < 1) {
-			System.out.println("Usage: CommandShell <command> <arguments>");
-			System.out.println("Enter -h as command to get help");
+			System.out.println(TIImageTool.langstr("CommandUsage"));
 			return;
 		}
 
 		if (arg[0].equals("-h")) {
+			Locale loc = TIImageTool.getSysLocale();
 			try {
-				InputStream is = CommandShell.class.getResourceAsStream("command.txt");
+				InputStream is = CommandShell.class.getResourceAsStream("/de/mizapf/timt/ui/command_" + loc.getLanguage() + ".txt");
 				if (is==null) {
-					System.err.println("Could not find help text in jar file.");
+					System.err.println(TIImageTool.langstr("CommandNoHelp"));
 					return;
 				}
 				BufferedReader br = new BufferedReader(new InputStreamReader(is));
@@ -46,7 +47,7 @@ public class CommandShell {
 				}
 			}
 			catch (IOException iox) {
-				System.err.println("Could not read help text.");
+				System.err.println(TIImageTool.langstr("CommandHelpError"));
 			}
 			return;
 		}
@@ -57,7 +58,7 @@ public class CommandShell {
 			if (arg[0].equals("dir") || arg[0].equals("ls") || arg[0].equals("lsf")) {
 				String sSubdir = null;
 				if (arg.length<2) {
-					System.err.println("Missing arguments for dir/ls/lsf. Use -h for help.");
+					System.err.println(TIImageTool.langstr("CommandMissArg"));
 					return;
 				}
 				if (arg.length>2) {
@@ -67,50 +68,50 @@ public class CommandShell {
 					System.out.println(com.directory(arg[1], sSubdir, arg[0]));
 				}
 				catch (MissingHeaderException mx) {
-					System.err.println("Cannot open image file: Missing floppy signature (DSK)");
+					System.err.println(TIImageTool.langstr("CommandMissHeader"));
 					return;
 				}
 				catch (ImageException ix) {
-					System.err.println("Image error: " + ix.getMessage());						
+					System.err.println(TIImageTool.langstr("ImageError") + ": " + ix.getMessage());						
 					return;
 				}
 				catch (FileNotFoundException fnfx) {
-					System.err.println("File not found: " + fnfx.getMessage());
+					System.err.println(TIImageTool.langstr("FileNotFound") + ": " + fnfx.getMessage());
 					return;
 				} 
 				catch (IOException iox) {
-					System.err.println("Error getting file: " + iox.getMessage());
+					System.err.println(TIImageTool.langstr("IOError") + ": " + iox.getClass().getName());
 					iox.printStackTrace();
 					return;
 				}
 			}
 			if (arg[0].equals("type")) {
 				if (arg.length < 3) {
-					System.err.println("Missing arguments for type");
+					System.err.println(TIImageTool.langstr("CommandMissArg"));
 					return;
 				}
 				System.out.println(com.type(arg[1], arg[2]));
 			}
 			if (arg[0].equals("list")) {
 				if (arg.length < 3) {
-					System.err.println("Missing arguments for list");
+					System.err.println(TIImageTool.langstr("CommandMissArg"));
 					return;
 				}
 				System.out.println(com.list(arg[1], arg[2]));
 			}
 		}
 		catch (ImageException ix) {
-			System.err.println("Image error: " + ix.getMessage());
+			System.err.println(TIImageTool.langstr("ImageError") + ": " + ix.getMessage());						
 		}
 		catch (FormatException fx) {
-			System.err.println("Format error: " + fx.getMessage());
+			System.err.println(TIImageTool.langstr("Error") + ": " + fx.getMessage());
 		}
 		catch (FileNotFoundException fnfx) {
-			System.err.println("File not found: " + fnfx.getMessage());
-		}
+			System.err.println(TIImageTool.langstr("FileNotFound") + ": " + fnfx.getMessage());
+		} 
 		catch (IOException iox) {
+			System.err.println(TIImageTool.langstr("IOError") + ": " + iox.getClass().getName());
 			iox.printStackTrace();
-			System.err.println("Error getting file: " + iox.getMessage());
 		}
 	}
 		
@@ -145,20 +146,20 @@ public class CommandShell {
 						bFound = true;
 					}
 					catch (IllegalOperationException iox) {
-						System.err.println("Illegal operation: " + iox.getMessage());
+						System.err.println(iox.getMessage());
 					}
 					catch (FormatException fx) {
-						System.err.println("Error while unpacking " + aFile[j].getPathname());
+						System.err.println(TIImageTool.langstr("UnpackError") + ": " + aFile[j].getPathname());
 					}		
 					catch (IOException iox) {
-						System.err.println("Error while unpacking " + aFile[j].getPathname());
+						System.err.println(TIImageTool.langstr("UnpackError") + ": " + aFile[j].getPathname());
 					}
 					catch (ImageException ix) {
-						System.err.println("Error while unpacking " + aFile[j].getPathname());
+						System.err.println(TIImageTool.langstr("UnpackError") + ": "+  aFile[j].getPathname());
 					}
 				}
 			}
-			if (!bFound) throw new FileNotFoundException("Subdirectory " + aSubdir[i] + " not found");
+			if (!bFound) throw new FileNotFoundException(String.format(TIImageTool.langstr("VolumeDirNotFound"), aSubdir[i]));
 		}
 		return dirCurrent;
 	}
@@ -197,17 +198,37 @@ public class CommandShell {
 		// We need to descent to the given directory
 		String[] dirPath = getPath(sSubdir);
 		Directory dirCurrent = descendToDirectory(image, dirPath, true);
-		
-		String sVolume = dirCurrent.getVolume().getDeviceName();
+
+		Volume vol = dirCurrent.getVolume();
 		
 		StringBuilder sb = new StringBuilder();
 		if (!bOnlyNames) {
-			sb.append("Volume in ").append(sVolume).append(" is ");
-			sb.append(image.getName());
-			sb.append("\nDirectory of ").append(sVolume);
-			if (sSubdir!=null) sb.append(".").append(sSubdir);
+			// First line
+			if (vol.getName().trim().length()==0)
+				sb.append(String.format(TIImageTool.langstr("PanelVolumeUnnamed"), vol.getDeviceName())); 
+			else 
+				sb.append(String.format(TIImageTool.langstr("PanelVolumeNamed"), vol.getDeviceName(), vol.getName()));
+			
+			if (vol.isFloppyImage()) {
+				sb.append(", ");
+				sb.append(String.format(TIImageTool.langstr("PanelFloppyParams"), vol.getFloppyFormat(), vol.getTracksPerSide()));
+			}
+			sb.append(", ");
+			sb.append(String.format(TIImageTool.langstr("PanelParams"), vol.getTotalSectors()));
+			if (vol.getAUSize()!=1) {
+				sb.append(", ");
+				sb.append(String.format(TIImageTool.langstr("PanelAU"), vol.getAUSize()));
+			}
+			if (vol.isProtected()) {
+				sb.append(" ");
+				sb.append(TIImageTool.langstr("PanelProt"));
+			}
+			sb.append(", ");
+			sb.append(vol.dumpFormat());
+			sb.append("\n");
+			sb.append(String.format(TIImageTool.langstr("PanelDir"), vol.getDeviceName(), dirCurrent.getFullPathname()));
 		}
-
+				
 		// String.format
 		
 		Directory[] aDir = dirCurrent.getDirectories();
@@ -215,11 +236,11 @@ public class CommandShell {
 		
 		if (!bOnlyNames) {			  
 			if (aFile.length!=0 || aDir.length != 0) {
-				sb.append("\n\nFilename   Size  Type   Length P F  Created              Updated");
+				sb.append("\n\n").append(TIImageTool.langstr("CommandDirHead"));
 				sb.append("\n").append(buildString("-",79));
 			}
 			else {
-				sb.append("\nEmpty directory\n");
+				sb.append("\n").append(TIImageTool.langstr("CommandDirEmpty")).append("\n");
 			}
 			sb.append("\n");
 		}
@@ -258,24 +279,21 @@ public class CommandShell {
 		int nDiffer = nAlloc - nSysAlloc - nFileTotal;
 		
 		sb.append("\n");
-		if (nFileTotal > 0) {
-			if (aFile.length != 0 || aDir.length != 0) sb.append(nFileTotal).append(" sectors used in ");
-			if (aFile.length != 0) {
-				sb.append(aFile.length).append(" files");
-			}
+		if (aFile.length > 0 || aDir.length > 0) {
+			sb.append(String.format(TIImageTool.langstr("CommandDirSummary1"), nFileTotal, aFile.length));
 		}
 		if (aDir.length!=0) {
-			if (aFile.length!=0) sb.append(" and ");
-			sb.append(aDir.length).append(" directories");
+			sb.append(" ").append(String.format(TIImageTool.langstr("CommandDirSummary2"), aDir.length));
 		}
 		
 		if (aFile.length != 0 || aDir.length != 0) sb.append(",\n");
 
 		if (nDiffer!=0) {
-			sb.append(nDiffer + " sectors used not in this directory,\n");
+			sb.append(String.format(TIImageTool.langstr("CommandDirSummary3"), nDiffer));
+			sb.append(",\n");
 		}
 
-		sb.append(image.getTotalSectors() - nAlloc).append(" sectors free\n");
+		sb.append(String.format(TIImageTool.langstr("CommandDirSummary4"), image.getTotalSectors() - nAlloc));
 		return sb.toString();
 	}	
 	
@@ -298,6 +316,6 @@ public class CommandShell {
 		if (fl.isBasicFile()) {
 			return fl.listBasic(BasicLine.EX_BASIC, "~%");
 		}
-		else return "Not a BASIC program";		
+		else return TIImageTool.langstr("CommandListNotBasic");		
 	}
 }

@@ -213,6 +213,7 @@ class HFEFormat extends ImageFormat {
 			m_nHeads = number_of_side;
 		}		
 		
+		// No localized because this is only used in a commented output operation
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
 			sb.append("Revision = ").append(formatrevision);
@@ -416,7 +417,7 @@ class HFEFormat extends ImageFormat {
 				if ((bHeader[2]&0xff) == loc.sector) secindex = count;
 				int crch = readBits(16);
 				int crcc = Utilities.crc16_get(bHeader, 0, 4, initcrc);
-				if (crch != crcc) System.out.println("Bad header CRC at (" + bHeader[0] + "," + bHeader[1] + "," + bHeader[2]+ "): Expected " + Utilities.toHex(crcc, 4) + ", got " + Utilities.toHex(crch, 4));
+				if (crch != crcc) System.out.println(String.format(TIImageTool.langstr("BadHeaderCRC"), bHeader[0], bHeader[1], bHeader[2], Utilities.toHex(crcc, 4), Utilities.toHex(crch, 4)));
 				
 //				System.out.println("Header: (C="+ cyl + ",H=" + head + ",S=" + sector + ", cellpos=" + m_positionInTrack + ")");
 				if (nextDAMFound()) {
@@ -437,7 +438,7 @@ class HFEFormat extends ImageFormat {
 					Sector sect = new Sector(loc.track * m_nSectorsByFormat + bHeader[2], bSector, pos, initcrc, mark); 
 					sectors.add(sect);
 					// System.out.println("Sector " + sect.getNumber()  + ": Data CRC = " + Utilities.toHex(sect.getCrc(),4) + " (expected " +  Utilities.toHex(crcd, 4) + ")");
-					if (crcd != sect.getCrc()) System.out.println("Bad data CRC at sector " + sect.getNumber() + ": Expected " + Utilities.toHex(sect.getCrc(),4) + ", got " + Utilities.toHex(crcd, 4));
+					if (crcd != sect.getCrc()) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), sect.getNumber(), Utilities.toHex(sect.getCrc(),4), Utilities.toHex(crcd, 4)));
 					// System.out.println("loaded sector " + sect.getNumber() + " at track " + loc.track);
 					// System.out.println(sect);
 					count++;
@@ -459,18 +460,18 @@ class HFEFormat extends ImageFormat {
 	*/
 	@Override
 	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		if (nSectorNumber > 10000) throw new ImageException("Bad sector number: " + nSectorNumber); 
+		if (nSectorNumber > 10000) throw new ImageException(String.format(TIImageTool.langstr("BadSectorNumber"), nSectorNumber)); 
 		int secindex = readTrack(nSectorNumber);
 		if (secindex != NONE) {
 			return m_sector[secindex];
 		}
-		else throw new ImageException("Sector " + nSectorNumber + " not found");
+		else throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 	}
 	
 	@Override
 	public void writeSector(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
 		int secindex = readTrack(nSectorNumber);
-		if (secindex == NONE) throw new ImageException("Sector " + nSectorNumber + " not found");
+		if (secindex == NONE) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 		// Write the new data
 		// Don't forget to clone the bytes!
 		byte[] bNewcontent = new byte[256];

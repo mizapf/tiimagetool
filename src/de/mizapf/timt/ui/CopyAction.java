@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import javax.swing.Action;
 import javax.swing.TransferHandler;
 import java.awt.event.ActionEvent;
+import de.mizapf.timt.TIImageTool;
 
 public class CopyAction extends Activity {
 
@@ -37,7 +38,7 @@ public class CopyAction extends Activity {
 	}
 
 	public String getMenuName() {
-		return imagetool.langstr("Copy");
+		return TIImageTool.langstr("Copy");
 	}
 	
 	public String getActionName() {

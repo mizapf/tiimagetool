@@ -23,6 +23,7 @@ package de.mizapf.timt.util;
 import java.io.*;
 import java.util.Calendar;
 import de.mizapf.timt.files.*;
+import de.mizapf.timt.TIImageTool;
 
 public class TIFiles {
 		
@@ -97,8 +98,8 @@ public class TIFiles {
 				nRecordCount = file.getRecordCount();
 				nTotalSectors = nRecordCount;
 				if (nRecordCount>65535) {
-					System.err.println("Too many sectors for variable record file. Not supported by this version of TIFILES.");
-					throw new ImageException("Too many sectors");
+					System.err.println(TIImageTool.langstr("TFINotSupp"));
+					throw new ImageException(TIImageTool.langstr("TFISectors"));
 				}
 			}
 			else {
@@ -207,7 +208,7 @@ public class TIFiles {
 			
 			for (int i=0; i < 10; i++) {
 				if (plain[i] < 32 || plain[i] > 127 || plain[i]=='.') {
-					System.err.println("Invalid file name");
+					System.err.println(TIImageTool.langstr("InvalidFileName"));
 					return false;
 				}
 			}
@@ -252,7 +253,7 @@ public class TIFiles {
 			else {
 				// program files have 0000 as l3recno
 				if (plain[18]!=0 || plain[19]!=0) {
-					System.err.println("L3 error: program file with non-zero L3");
+					System.err.println(TIImageTool.langstr("TFIL3Error"));
 					return false;
 				}
 			}
@@ -267,7 +268,8 @@ public class TIFiles {
 		// Check for validity of dir entry
 		byte[] name = new byte[10];
 		for (int i=0; i < 10; i++) {
-			if (plain[i] < 32 || plain[i] > 127 || plain[i]=='.') throw new FormatException("Import", "Invalid file name");
+			if (plain[i] < 32 || plain[i] > 127 || plain[i]=='.') 
+				throw new FormatException(TIImageTool.langstr("Import"), TIImageTool.langstr("InvalidFileName"));
 			name[i] = plain[i];
 		}
 		byte flags = plain[12];
@@ -359,7 +361,7 @@ public class TIFiles {
 	
 	/** Used to create a new file by writing records. */
 	public void writeRecord(byte[] content) throws IOException {
-		if (content.length > 254) throw new IOException("Record too long: " + content.length);
+		if (content.length > 254) throw new IOException(TIImageTool.langstr("TFIRecord") + ": " + content.length);
 			
 		if (m_type == TFile.T_DISVAR || m_type == TFile.T_INTVAR) {
 			if (m_pos + content.length + 1 >= 256) {
@@ -380,7 +382,7 @@ public class TIFiles {
 			m_pos = m_pos + content.length + 1;
 		}
 		else {
-			if (content.length > m_reclen) throw new IOException("Record too long: " + content.length);
+			if (content.length > m_reclen) throw new IOException(TIImageTool.langstr("TFIRecord") + ": " + content.length);
 			int recpersect = 256 / m_reclen;
 			
 			if (m_type == TFile.T_DISFIX || m_type == TFile.T_INTFIX) {
@@ -401,7 +403,7 @@ public class TIFiles {
 				}
 			}
 			else
-				throw new IOException("Unsupported format for writing TIFiles");
+				throw new IOException(TIImageTool.langstr("TFIUnsupported"));
 		}
 		m_records++;
 	}		
@@ -443,107 +445,4 @@ public class TIFiles {
 		}
 		return sContName;
 	}
-/*
-	public static byte[] getContentFromDump(byte[] abyTif, String sEOR) throws IOException {
-		byte[] abyReturn = null;
-		
-//		System.out.println("Length = " + abyTif.length);
-		
-		boolean bIsFixed = ((abyTif[10]&0x80)==0);
-		boolean bIsProgram = ((abyTif[10]&0x01)==1);
-		boolean bIsDisplay = ((abyTif[10]&0x02)==0);
-
-		int nRecordLength = abyTif[13]&0xff;
-		int nLevel3RecordCount = ((abyTif[15]<<8)&0xff00)|(abyTif[14]&0xff);
-		int nRecordsPerSector = abyTif[11]&0xff;
-		int nEOF = abyTif[12]&0xff;
-		
-		int nSectors = 0;
-		
-		if (bIsProgram) {
-			nSectors = ((abyTif[8]<<8)&0xff00)|(abyTif[9]&0xff);
-		}
-		else {
-			if (bIsFixed) {
-				int nCount = nLevel3RecordCount / nRecordsPerSector;
-				if (nLevel3RecordCount % nRecordsPerSector!=0) nCount++;
-				nSectors = nCount; 
-			}
-			else {
-				nSectors = nLevel3RecordCount;
-			}
-		}
-		
-		int nLength = nSectors*256;
-		if (nEOF!=0) {
-			nLength = nLength - 256 + nEOF;
-			if (!bIsFixed && !bIsProgram) nLength++;  // add the EOF marker to the content
-		}
-		
-		if (bIsProgram || sEOR == null) {
-			abyReturn = new byte[nLength];
-			System.arraycopy(abyTif, 128, abyReturn, 0, nLength);
-		}
-		else {
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			int nPointer = 0;
-			int nRecord = 0;
-			boolean bDone = false;
-			while (!bDone) {
-				if (bIsFixed) {
-					try {
-					//					  System.out.println("Pointer = " + nPointer + ", Length = " + nRecordLength + " #Rec = " + nRecord + " #Records = " + nNumberOfRecords);
-						baos.write(abyTif, nPointer+128, nRecordLength);
-					}
-					catch (IndexOutOfBoundsException ix) {
-						System.err.println("abyTif.length=" + abyTif.length + ", nPointer=" + nPointer + ", nRecordLength=" + nRecordLength);
-					}
-					baos.write(sEOR.getBytes());
-					nRecord++;
-					if (nRecord == nRecordsPerSector) {
-						nRecord = 0;
-						nPointer = (nPointer - (nPointer%256)) + 256;
-					}
-					else nPointer += nRecordLength;
-					nLevel3RecordCount--;
-					if (nLevel3RecordCount<=0) bDone = true;
-				}
-				else {
-					nRecordLength = abyTif[nPointer+128]&0xff;
-					boolean bClipped = false;
-					if (nRecordLength!=0xff) {
-						nPointer++;
-						if (nPointer+128+nRecordLength >= abyTif.length) {
-							System.err.println("File clipped");
-							nRecordLength = abyTif.length-128-nPointer;
-							bClipped = true;
-						}							
-						try {
-							baos.write(abyTif, nPointer+128, nRecordLength);
-						}
-						catch (IndexOutOfBoundsException ibx) {
-							System.err.println("abyTif.length = " + abyTif.length + ", Pointer+128 = " + (nPointer+128) + ", Length = " + nRecordLength);
-						}
-						baos.write(sEOR.getBytes());
-						nPointer += nRecordLength;
-						if (bClipped) break;
-					}
-					else {
-						nPointer = (nPointer - (nPointer%256)) + 256;
-						if (nPointer + 128 >= abyTif.length) bDone = true;
-					}
-				}
-			}
-			//			  baos.flush();
-			abyReturn = baos.toByteArray();
-		}
-		return abyReturn;
-	}
-	*/
-/*
-	public byte[] getContent(String sEOR) throws IOException {	
-		byte[] abyTif = toByteArray();
-		return getContentFromDump(abyTif, sEOR);
-	}
-	*/
 }

@@ -35,7 +35,7 @@ public class NewImageAction extends Activity {
 	}
 	
 	public String getMenuName() {
-		return imagetool.langstr("FloppyImage") + "...";
+		return TIImageTool.langstr("FloppyImage") + "...";
 	}
 	
 	public String getActionName() {

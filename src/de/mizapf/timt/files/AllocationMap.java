@@ -22,6 +22,8 @@
 package de.mizapf.timt.files;
 import java.util.ArrayList;
 
+import de.mizapf.timt.TIImageTool;
+
 public class AllocationMap implements Cloneable {
 
 	private byte[] m_abyMap;
@@ -143,7 +145,7 @@ public class AllocationMap implements Cloneable {
 	}
 	
 	public boolean hasAllocated(int nUnit) {
-		if (nUnit/8 >= m_abyMap.length) throw new IndexOutOfBoundsException("Invalid AU: " + String.valueOf(nUnit));
+		if (nUnit/8 >= m_abyMap.length) throw new IndexOutOfBoundsException(TIImageTool.langstr("AllocMapInvalidAU") + ": " + String.valueOf(nUnit));
 		if (m_bFloppy) {
 			return ((m_abyMap[nUnit/8] & (1<<(nUnit%8)))!=0);
 		}

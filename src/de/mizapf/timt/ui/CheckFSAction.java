@@ -28,11 +28,12 @@ import java.awt.Dimension;
 import java.util.ArrayList;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.util.ImageCheck;
+import de.mizapf.timt.TIImageTool;
 
 public class CheckFSAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("Check");
+		return TIImageTool.langstr("Check");
 	}
 	
 	public String getActionName() {
@@ -57,28 +58,28 @@ public class CheckFSAction extends Activity {
 		/* Part 0: Check CF7 inconsistency */
 		if (vol.isCF7Volume()) {
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-			ps.println("===========  " + imagetool.langstr("CheckingCF7Incons") + " ===========\n");
+			ps.println("===========  " + TIImageTool.langstr("CheckingCF7Incons") + " ===========\n");
 	
 			try {
 				int[] geom = new int[5];
 				boolean badcf7 = ImageCheck.checkCF7Inconsistency(vol, geom);
 				// total, heads, tracks, sectors, density 
 				if (badcf7) {
-					ps.println(imagetool.langstr("CF7Incons1") + "\n");
-					ps.println(String.format(imagetool.langstr("CF7InconsGeom"), geom[0], geom[1], geom[2], geom[3], geom[4]));
+					ps.println(TIImageTool.langstr("CF7Incons1") + "\n");
+					ps.println(String.format(TIImageTool.langstr("CF7InconsGeom"), geom[0], geom[1], geom[2], geom[3], geom[4]));
 					
 					StringBuilder sbMsg = new StringBuilder();
 					sbMsg.append("<html>");
-					sbMsg.append(String.format(imagetool.langstr("CF7Incons2"), 1600, 2, 20, 40, 2));
+					sbMsg.append(String.format(TIImageTool.langstr("CF7Incons2"), 1600, 2, 20, 40, 2));
 					sbMsg.append("<br><br>");
-					sbMsg.append(String.format(imagetool.langstr("CF7Incons3"), geom[0], geom[1], geom[2], geom[3], geom[4]));
+					sbMsg.append(String.format(TIImageTool.langstr("CF7Incons3"), geom[0], geom[1], geom[2], geom[3], geom[4]));
 					sbMsg.append("<br><br>");
-					sbMsg.append(imagetool.langstr("CF7Incons4"));
+					sbMsg.append(TIImageTool.langstr("CF7Incons4"));
 					sbMsg.append("</html>");
 					JPanel jp = new JPanel();		
 					JLabel jl = new JLabel(sbMsg.toString());
 					jp.add(jl);
-					nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+					nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 					
 					if (nRet == JOptionPane.YES_OPTION) {
 						bChangedSector0 = true;
@@ -94,16 +95,16 @@ public class CheckFSAction extends Activity {
 					bErrors = true;
 				}
 				else {
-					ps.println(imagetool.langstr("NoIncons") + "\n");
+					ps.println(TIImageTool.langstr("NoIncons") + "\n");
 				}
 			}
 			catch (IOException iox) {
 				iox.printStackTrace();
-				ps.println(imagetool.langstr("IOError") + iox.getClass().getName() + ", " + iox.getMessage());
+				ps.println(TIImageTool.langstr("IOError") + iox.getClass().getName() + ", " + iox.getMessage());
 			}
 			catch (ImageException ix) {
 				ix.printStackTrace();
-				ps.println(imagetool.langstr("ImageError") + ": " + ix.getMessage());
+				ps.println(TIImageTool.langstr("ImageError") + ": " + ix.getMessage());
 			}
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));			
 		}		
@@ -111,7 +112,7 @@ public class CheckFSAction extends Activity {
 		/* Part 1: Check underallocation */
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		int savedResp = -1;		
-		ps.println("===========  " + imagetool.langstr("CheckingUnder") +  " ===========\n");
+		ps.println("===========  " + TIImageTool.langstr("CheckingUnder") +  " ===========\n");
 		allocMap = vol.getAllocationMap();
 		ArrayList<AllocationGapList> broken = new ArrayList<AllocationGapList>();
 
@@ -121,18 +122,18 @@ public class CheckFSAction extends Activity {
 		// Now report
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));			
 		if (broken.size()>0) bErrors = true;
-		else ps.println(imagetool.langstr("NoUnder") + "\n");
+		else ps.println(TIImageTool.langstr("NoUnder") + "\n");
 
 		for (AllocationGapList agl:broken) {
 
 			StringBuilder sbMsg = new StringBuilder();
 			sbMsg.append("<html>");
 			String fileblue = "<span style=\"color:blue\">" + agl.getName() + "</span>";
-			sbMsg.append(String.format(imagetool.langstr("FileExtends"), fileblue));
+			sbMsg.append(String.format(TIImageTool.langstr("FileExtends"), fileblue));
 			sbMsg.append("<br><br>");
 			
 			ps.println();
-			ps.print(String.format(imagetool.langstr("FileExtends"), agl.getName()) + ": ");
+			ps.print(String.format(TIImageTool.langstr("FileExtends"), agl.getName()) + ": ");
 
 			int[] nAU = agl.getAllocationGaps();
 			for (int n=0; n < nAU.length-1; n++) {
@@ -144,7 +145,7 @@ public class CheckFSAction extends Activity {
 			ps.println(Integer.valueOf(nAU[nAU.length-1]));
 			
 			sbMsg.append("<br>");
-			sbMsg.append(imagetool.langstr("DataLoss"));
+			sbMsg.append(TIImageTool.langstr("DataLoss"));
 			sbMsg.append("</html>");
 
 			if (savedResp == -1) {
@@ -153,9 +154,9 @@ public class CheckFSAction extends Activity {
 				JLabel jl = new JLabel(sbMsg.toString());
 				jp.add(jl);			
 				jp.add(Box.createVerticalStrut(10));
-				cb = new JCheckBox(imagetool.langstr("RepeatAUAlloc"));
+				cb = new JCheckBox(TIImageTool.langstr("RepeatAUAlloc"));
 				jp.add(cb);
-				nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 			}
 			else {
 				nRet = savedResp;
@@ -190,7 +191,7 @@ public class CheckFSAction extends Activity {
 		*/
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		ps.println();		
-		ps.println("===========  " + imagetool.langstr("CheckingOver") +  " ===========\n");
+		ps.println("===========  " + TIImageTool.langstr("CheckingOver") +  " ===========\n");
 
 		ArrayList<AllocationDomain> alloc = new ArrayList<AllocationDomain>();
 
@@ -201,19 +202,19 @@ public class CheckFSAction extends Activity {
 		savedResp = -1;
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));			
 		if (alloc.size()>0) bErrors = true;
-		else ps.println(imagetool.langstr("NoOver") + "\n");
+		else ps.println(TIImageTool.langstr("NoOver") + "\n");
 		
 		for (AllocationDomain ad:alloc) {
 			if (ad.isUnassigned()) {
-				ps.println(String.format(imagetool.langstr("AUNotAssigned"), String.valueOf(ad.getAU())));
+				ps.println(String.format(TIImageTool.langstr("AUNotAssigned"), String.valueOf(ad.getAU())));
 				
 				if (savedResp == -1) {
 					String aublue = "<span style=\"color:blue\">" + ad.getAU() + "</span>";
 					StringBuilder sbMsg = new StringBuilder();
 					sbMsg.append("<html>");		
-					sbMsg.append(String.format(imagetool.langstr("AUNotAssigned"), aublue));
+					sbMsg.append(String.format(TIImageTool.langstr("AUNotAssigned"), aublue));
 					sbMsg.append("<br><br>");
-					sbMsg.append(imagetool.langstr("AUFree"));
+					sbMsg.append(TIImageTool.langstr("AUFree"));
 					sbMsg.append("</html>");
 				
 					JPanel jp = new JPanel();
@@ -222,9 +223,9 @@ public class CheckFSAction extends Activity {
 					jp.add(Box.createVerticalStrut(10));
 					jp.add(jl);
 					jp.add(Box.createVerticalStrut(10));
-					cb = new JCheckBox(imagetool.langstr("RepeatAUFree"));
+					cb = new JCheckBox(TIImageTool.langstr("RepeatAUFree"));
 					jp.add(cb);
-					nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+					nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 				}
 				else {
 					nRet = savedResp;
@@ -251,9 +252,9 @@ public class CheckFSAction extends Activity {
 				StringBuilder sbMsg = new StringBuilder();
 				String aublue = "<span style=\"color:blue\">" + ad.getAU() + "</span>";
 				sbMsg.append("<html>");				
-				sbMsg.append(String.format(imagetool.langstr("AUCrossAllocated"), aublue));
+				sbMsg.append(String.format(TIImageTool.langstr("AUCrossAllocated"), aublue));
 				sbMsg.append("<br>");	
-				ps.println(String.format(imagetool.langstr("AUCrossAllocated"), String.valueOf(ad.getAU())));
+				ps.println(String.format(TIImageTool.langstr("AUCrossAllocated"), String.valueOf(ad.getAU())));
 
 				String[] asEl = ad.getAllocations();
 				boolean first = true;
@@ -270,16 +271,16 @@ public class CheckFSAction extends Activity {
 				
 				if (savedResp == -1) {
 					sbMsg.append(".<br>");
-					sbMsg.append(imagetool.langstr("AUCrossSuggest"));
+					sbMsg.append(TIImageTool.langstr("AUCrossSuggest"));
 					sbMsg.append("<br>");
-					sbMsg.append(imagetool.langstr("ContinueTest"));
+					sbMsg.append(TIImageTool.langstr("ContinueTest"));
 					sbMsg.append("</html>");
 				
 					JPanel jp = new JPanel();
 					jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 					JLabel jl = new JLabel(sbMsg.toString());
 					jp.add(jl);
-					nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+					nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 				}
 				
 				if (nRet == JOptionPane.NO_OPTION) {
@@ -294,7 +295,7 @@ public class CheckFSAction extends Activity {
 		}
 
 		/* Part 3: Broken sectors */
-		ps.println("===========  " + imagetool.langstr("CheckingBroken") +  " ===========\n");
+		ps.println("===========  " + TIImageTool.langstr("CheckingBroken") +  " ===========\n");
 		savedResp = -1;
 		
 		ArrayList<SectorFaultList> brokensect = new ArrayList<SectorFaultList>();
@@ -304,7 +305,7 @@ public class CheckFSAction extends Activity {
 			bErrors = true;
 		}
 		else {
-			ps.println(imagetool.langstr("NothingBroken") + "\n");
+			ps.println(TIImageTool.langstr("NothingBroken") + "\n");
 		}
 			
 		for (SectorFaultList sfl:brokensect) {
@@ -312,10 +313,10 @@ public class CheckFSAction extends Activity {
 
 			StringBuilder sbMsg = new StringBuilder();
 			sbMsg.append("<html>");
-			sbMsg.append(String.format(imagetool.langstr("BrokenSectors"), fileblue));
+			sbMsg.append(String.format(TIImageTool.langstr("BrokenSectors"), fileblue));
 			sbMsg.append(":<br><br>");			
 
-			ps.println(String.format(imagetool.langstr("BrokenSectors"), sfl.getName()));
+			ps.println(String.format(TIImageTool.langstr("BrokenSectors"), sfl.getName()));
 			
 			int[] anSect = sfl.getFaultySectors();
 			if (sfl.getProblem()!=null) {
@@ -331,7 +332,7 @@ public class CheckFSAction extends Activity {
 				}
 				if (n !=  anSect.length) { 
 					sbMsg.append("... (");				
-					sbMsg.append(String.format(imagetool.langstr("Omitted"), anSect.length-101));
+					sbMsg.append(String.format(TIImageTool.langstr("Omitted"), anSect.length-101));
 					sbMsg.append(") ...");
 				}
 
@@ -340,7 +341,7 @@ public class CheckFSAction extends Activity {
 				}
 
 				sbMsg.append(".<br><br>");			
-				sbMsg.append(imagetool.langstr("ReportSector"));
+				sbMsg.append(TIImageTool.langstr("ReportSector"));
 			}
 
 			if (savedResp == -1) {
@@ -348,11 +349,11 @@ public class CheckFSAction extends Activity {
 				jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 				jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 				sbMsg.append("<br>");
-				sbMsg.append(imagetool.langstr("ContinueTest"));
+				sbMsg.append(TIImageTool.langstr("ContinueTest"));
 				sbMsg.append("</html>");
 				JLabel jl = new JLabel(sbMsg.toString());
 				jp.add(jl);
-				nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 				
 				if (nRet == JOptionPane.NO_OPTION) {
 					savedResp = 0;
@@ -366,7 +367,7 @@ public class CheckFSAction extends Activity {
 		}
 		
 		/* Part 4. L3 check. */
-		ps.println("===========  " + imagetool.langstr("CheckL3") +  " ===========\n");
+		ps.println("===========  " + TIImageTool.langstr("CheckL3") +  " ===========\n");
 		boolean changedL3 = false;
 		savedResp = -1;
 
@@ -376,30 +377,45 @@ public class CheckFSAction extends Activity {
 		
 		if (brokenL3.size()>0) bErrors = true;
 		else {
-			ps.println(imagetool.langstr("L3OK") + ".\n");
+			ps.println(TIImageTool.langstr("L3OK") + ".\n");
 		}
 
 		JCheckBox cb2 = null;
 	
 		for (TFile brL3file : brokenL3) {
 			String fileblue = "<span style=\"color:blue\">" + brL3file.getPathname() + "</span>";
-			ps.println(String.format(imagetool.langstr("FileL3"), brL3file.getPathname()));
+			
+			if (brL3file.hasSwappedL3Count()) {
+				ps.println(String.format(TIImageTool.langstr("FileL3Swap"), brL3file.getPathname()));
+			}
+			else {
+				ps.println(String.format(TIImageTool.langstr("FileL3Bad"), brL3file.getPathname(), brL3file.getBadRecordCount()));
+			}
 			
 			if (savedResp == -1) {
 				JPanel jp = new JPanel();
 				jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 				StringBuilder sbMsg = new StringBuilder();
 				sbMsg.append("<html>");
-				sbMsg.append(String.format(imagetool.langstr("FileL3"), fileblue));
+				
+				if (brL3file.hasSwappedL3Count()) {
+					sbMsg.append(String.format(TIImageTool.langstr("FileL3Swap"), fileblue));
+					sbMsg.append("<br>");
+					sbMsg.append(TIImageTool.langstr("L3Cause"));
+				}
+				else {
+					sbMsg.append(String.format(TIImageTool.langstr("FileL3Bad"), fileblue, brL3file.getBadRecordCount()));					
+				}
 				sbMsg.append("<br>");
-				sbMsg.append(imagetool.langstr("L3Cause"));
+				sbMsg.append(TIImageTool.langstr("L3Repair"));
+					
 				sbMsg.append("<br><br></html>");				
 				JLabel jl = new JLabel(sbMsg.toString());
 				jp.add(jl);
-				cb2 = new JCheckBox(imagetool.langstr("RepeatL3"));
+				cb2 = new JCheckBox(TIImageTool.langstr("RepeatL3"));
 				jp.add(cb2);
 				
-				nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 			}
 			else {
 				nRet = savedResp;
@@ -431,25 +447,25 @@ public class CheckFSAction extends Activity {
 		}
 		
 		if (badcrc != -1) {
-			ps.println("===========  " + imagetool.langstr("CheckCRC") +  " ===========\n");
+			ps.println("===========  " + TIImageTool.langstr("CheckCRC") +  " ===========\n");
 			
 			if (badcrc > 0) {
-				ps.println(String.format(imagetool.langstr("FoundCRC"), badcrc));
+				ps.println(String.format(TIImageTool.langstr("FoundCRC"), badcrc));
 				JPanel jp = new JPanel();
 				jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 				StringBuilder sbMsg = new StringBuilder();
 				sbMsg.append("<html>");
-				sbMsg.append(imagetool.langstr("HasCRCErrors"));
+				sbMsg.append(TIImageTool.langstr("HasCRCErrors"));
 				sbMsg.append("<br>");
-				sbMsg.append(String.format(imagetool.langstr("TotalCount"), badcrc));
+				sbMsg.append(String.format(TIImageTool.langstr("TotalCount"), badcrc));
 				sbMsg.append("<br><br>");
-				sbMsg.append(imagetool.langstr("FixCRC"));
+				sbMsg.append(TIImageTool.langstr("FixCRC"));
 				sbMsg.append("<br><br></html>");
 				JLabel jl = new JLabel(sbMsg.toString());
 				jp.add(jl);
-				cb2 = new JCheckBox(imagetool.langstr("ResetF7F7"));
+				cb2 = new JCheckBox(TIImageTool.langstr("ResetF7F7"));
 				jp.add(cb2);
-				nRet = JOptionPane.showConfirmDialog(m_parent, jp, imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+				nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 				if (nRet == JOptionPane.CANCEL_OPTION) {
 					return;
 				}
@@ -464,7 +480,7 @@ public class CheckFSAction extends Activity {
 				}			
 			}
 			else {
-				ps.println(String.format(imagetool.langstr("FoundCRC"), 0));
+				ps.println(String.format(TIImageTool.langstr("FoundCRC"), 0));
 			}
 		}
 		
@@ -472,7 +488,7 @@ public class CheckFSAction extends Activity {
 		            Done with the check. 
 		 **************************************************************/
 		if (bChangedSector0 || bChangedAlloc || changedL3) {
-			nRet = JOptionPane.showConfirmDialog(m_parent, imagetool.langstr("CommitCheck"), imagetool.langstr("FileSystemCheck"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+			nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("CommitCheck"), TIImageTool.langstr("FileSystemCheck"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (nRet == JOptionPane.OK_OPTION) {
 //				if (vol.isFloppyImage()) {
 					try {
@@ -482,41 +498,41 @@ public class CheckFSAction extends Activity {
 						if (changedL3) {
 							// Write all affected sectors
 							for (TFile f : fixL3) {
-								ps.println(String.format(imagetool.langstr("SwappedL3"), f.getPathname()));
+								ps.println(String.format(TIImageTool.langstr("SwappedL3"), f.getPathname()));
 								f.rewriteFIB();
 							}
 						}
 						vol.reopenForRead();
 					}
 					catch (FileNotFoundException fnfx) {
-						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageFWP"), imagetool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE); 
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE); 
 						return;
 					}
 					catch (IOException iox) {
-						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("IOError") + ": " + iox.getClass().getName(), imagetool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					catch (ImageException ix) {
-						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("ImageError") + ": " + ix.getMessage(), imagetool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 					catch (ProtectedException px) {
-						JOptionPane.showMessageDialog(m_parent, imagetool.langstr("VolumeWP") + ": " + px.getMessage(), imagetool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP") + ": " + px.getMessage(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 						return;
 					}
 //				}
 			}
-			imagetool.showTextContent(imagetool.langstr("Results"), baos.toString());
+			imagetool.showTextContent(TIImageTool.langstr("Results"), baos.toString());
 		}
 		else {
 			if (!bErrors) {
-				nRet = JOptionPane.showConfirmDialog(m_parent, imagetool.langstr("NoErrors"), imagetool.langstr("FileSystemCheck"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+				nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("NoErrors"), TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
 				if (nRet == JOptionPane.YES_OPTION) {
-					imagetool.showTextContent(imagetool.langstr("Results"), baos.toString());  			
+					imagetool.showTextContent(TIImageTool.langstr("Results"), baos.toString());  			
 				}
 			}
 			else
-				imagetool.showTextContent(imagetool.langstr("Results"), baos.toString());
+				imagetool.showTextContent(TIImageTool.langstr("Results"), baos.toString());
 		}
 		
 		imagetool.refreshPanel(vol);			

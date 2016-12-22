@@ -37,7 +37,7 @@ public class OpenImageAction extends Activity {
 	}
 
 	public String getMenuName() {
-		return imagetool.langstr("OpenImage");
+		return TIImageTool.langstr("OpenImage") + "...";
 	}
 	
 	public String getActionName() {

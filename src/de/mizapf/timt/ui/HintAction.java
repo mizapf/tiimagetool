@@ -37,7 +37,7 @@ public class HintAction extends Activity {
 	private String[] entry;
 		
 	public String getMenuName() {
-		return imagetool.langstr("Hints");
+		return TIImageTool.langstr("Hints");
 	}
 	
 	public String getActionName() {

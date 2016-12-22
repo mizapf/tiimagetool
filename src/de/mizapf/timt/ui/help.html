@@ -69,7 +69,7 @@
 <h1>TIImageTool</h1>
 <p style="text-align:center">Easily manage TI-99 floppy and hard disk images</p>
 
-<div class="version">Version: <span style="font-weight:bold">2.3.9</span>; December 2016</div>
+<div class="version">Version: <span style="font-weight:bold">2.4</span>; December 2016</div>
 <div class="author">Author: Michael Zapf<br/>Contact: ti99@mizapf.de<br/>www.mizapf.de</div>
 
 <p style="text-align:center">Also see <span style="font-weight:bold">www.ninerpedia.org</span> for more technical
@@ -2535,6 +2535,9 @@ outputs are stored. You can set a relative path (which depends on the folder in 
 you start TIImageTool), or an absolute path. When this field is empty, the output
 is directed to the standard output and error channel. Changes to this field require you to
 restart TIImageTool to become effective.</li>
+<li><em>Verbose output on console</em>: Diagnostic messages like those about
+L3 record issues are output on the console. Especially for hard disk images 
+with lots of files, this may become too noisy, so you can turn it off here.</li>
 <li><em>LIST by Extended Basic style</em>: The BASIC file listing is compatible with
 Extended Basic. This particularly refers to the output of a sequence of colons (:).</li>
 <li><em>Replace unprintable characters by</em>: a single character will be used to replace each unprintable character; a

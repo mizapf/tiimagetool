@@ -24,13 +24,14 @@ import java.nio.charset.*;
 import de.mizapf.timt.files.Time;
 import de.mizapf.timt.files.FormatException;
 import java.io.*;
+import de.mizapf.timt.TIImageTool;
 
 public class Utilities {
 	
-	public static void main(String[] arg)
-	{
+	public static void main(String[] arg) {
+		TIImageTool.localize();
 		if (arg.length < 2) {
-			System.err.println("Usage: Utilities <command> <arguments>");
+			System.err.println(TIImageTool.langstr("UtilUsage"));
 			return;
 		}
 		if (arg[0].equalsIgnoreCase("crc16")) {
@@ -45,7 +46,7 @@ public class Utilities {
 			}		
 		}
 		else {
-			System.err.println("Utilities: unknown command");
+			System.err.println(TIImageTool.langstr("UtilUnknownComm"));
 		}		
 	}
 	
@@ -156,9 +157,9 @@ public class Utilities {
 		return "\n";
 	}
 	
-	public static String sanitizeText(byte[] strbyte, String sEscape) throws FormatException {
+	public static String sanitizeText(byte[] strbyte, String sEscape, boolean log) throws FormatException {
 		if (sEscape.length() < 1 || sEscape.length() > 2) {
-			throw new FormatException("", "Invalid escape specification (see manual)");
+			throw new FormatException("", TIImageTool.langstr("UtilInvalidEsc"));
 		}
 
 		char chEscape = sEscape.charAt(0);
@@ -166,7 +167,7 @@ public class Utilities {
 		boolean bUnprintable = false;
 		
 		if (bEscape && sEscape.charAt(1) != '%') {
-			throw new FormatException("", "Invalid escape specification (see manual)");
+			throw new FormatException("", TIImageTool.langstr("UtilInvalidEsc"));
 		}
 
 		StringBuilder sb = new StringBuilder();
@@ -176,7 +177,7 @@ public class Utilities {
 			else {
 				if (isPrintable(c)) sb.append(c);
 				else {
-					System.out.println("Unprintable character at position " + i + ": code " + Utilities.toHex(strbyte[i],2));
+					if (log) System.out.println(String.format(TIImageTool.langstr("UtilUnprint"), i, Utilities.toHex(strbyte[i],2)));
 					bUnprintable = true;
 					if (bEscape) sb.append(chEscape).append(Utilities.toHex(strbyte[i], 2));
 					else sb.append(chEscape);
@@ -188,7 +189,7 @@ public class Utilities {
 		
 	public static String sanitizeChar(byte strbyte, String sEscape) throws FormatException {
 		if (sEscape.length() < 1 || sEscape.length() > 2) {
-			throw new FormatException("", "Invalid escape specification (see manual)");
+			throw new FormatException("", TIImageTool.langstr("UtilInvalidEsc"));
 		}
 
 		char chEscape = sEscape.charAt(0);
@@ -196,7 +197,7 @@ public class Utilities {
 		boolean bUnprintable = false;
 		
 		if (bEscape && sEscape.charAt(1) != '%') {
-			throw new FormatException("", "Invalid escape specification (see manual)");
+			throw new FormatException("", TIImageTool.langstr("UtilInvalidEsc"));
 		}
 
 		StringBuilder sb = new StringBuilder();
@@ -365,7 +366,7 @@ public class Utilities {
 	public static boolean isTextFile(byte[] aby) {
 		for (int i=0; i < aby.length; i++) {
 			if ((aby[i]<(byte)0x20 && aby[i] != (byte)0x0a && aby[i] != (byte)0x0d && aby[i] != (byte)0x1a) || aby[i]>(byte)126) {
-				System.out.println("non-text character: " + Utilities.toHex(aby[i],2));
+				System.out.println(TIImageTool.langstr("UtilNonText") + ": " + Utilities.toHex(aby[i],2));
 				return false;
 			}
 		}

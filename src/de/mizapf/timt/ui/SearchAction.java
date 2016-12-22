@@ -49,7 +49,7 @@ public class SearchAction extends Activity {
 	}
 
 	public String getMenuName() {
-		return imagetool.langstr("Search");
+		return TIImageTool.langstr("Search") + "...";
 	}
 	
 	public String getActionName() {
@@ -115,7 +115,7 @@ public class SearchAction extends Activity {
 			}
 			
 			if (m_view.stopRequested()) System.out.println(TIImageTool.langstr("SearchStop"));
-			if (m_count >=m_maxhits) System.out.println("Maximum hits reached");
+			if (m_count >=m_maxhits) System.out.println(TIImageTool.langstr("SearchMaxReached"));
 			
 			SearchResult[] result = new SearchResult[list.size()];
 			list.toArray(result);

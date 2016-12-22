@@ -23,6 +23,7 @@ package de.mizapf.timt.files;
 
 import java.util.*;
 import java.io.*;
+import de.mizapf.timt.TIImageTool;
 
 public class ArchiveFile extends TFile {
 
@@ -55,7 +56,7 @@ public class ArchiveFile extends TFile {
 			return abyReturn;
 		}
 		catch (ArrayIndexOutOfBoundsException e) {
-			throw new ImageException("Archive truncated");
+			throw new ImageException(TIImageTool.langstr("ArchiveTruncated"));
 		}
 	}
 		

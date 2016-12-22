@@ -31,7 +31,7 @@ import de.mizapf.timt.TIImageTool;
 public class ViewTextAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("ViewText");
+		return TIImageTool.langstr("ViewText");
 	}
 	
 	public String getActionName() {
@@ -56,7 +56,7 @@ public class ViewTextAction extends Activity {
 						showit = (nRet == JOptionPane.YES_OPTION); 
 					}					
 					if (showit) {
-						String sContent = Utilities.sanitizeText(content, imagetool.getPropertyString(imagetool.ESCAPE));
+						String sContent = Utilities.sanitizeText(content, imagetool.getPropertyString(imagetool.ESCAPE), imagetool.getPropertyBoolean(TIImageTool.VERBOSE));
 						imagetool.showTextContent(selected.getName(), sContent);  
 					}
 				}

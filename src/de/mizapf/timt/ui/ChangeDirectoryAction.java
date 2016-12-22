@@ -32,7 +32,7 @@ import de.mizapf.timt.TIImageTool;
 public class ChangeDirectoryAction extends Activity {
 
 	public String getMenuName() {
-		return imagetool.langstr("Enter");
+		return TIImageTool.langstr("Enter");
 	}
 	
 	public String getActionName() {
@@ -60,16 +60,16 @@ public class ChangeDirectoryAction extends Activity {
 			dvCurrent.enterDirectory(dir);
 		}
 		catch (IllegalOperationException iox) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getMessage(), imagetool.langstr("IllegalOperation"), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getMessage(), TIImageTool.langstr("IllegalOperation"), JOptionPane.ERROR_MESSAGE);
 		}
 		catch (FormatException fx) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), fx.getMessage(), imagetool.langstr("UnpackError"), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), fx.getMessage(), TIImageTool.langstr("UnpackError"), JOptionPane.ERROR_MESSAGE);
 		}		
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getMessage(), imagetool.langstr("UnpackError"), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), iox.getMessage(), TIImageTool.langstr("UnpackError"), JOptionPane.ERROR_MESSAGE);
 		}
 		catch (ImageException ix) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), imagetool.langstr("UnpackError"), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("UnpackError"), JOptionPane.ERROR_MESSAGE);
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
