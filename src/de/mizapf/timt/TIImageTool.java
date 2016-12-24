@@ -105,6 +105,7 @@ import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.ResourceBundle;
 import java.util.Locale;
+import java.util.PropertyResourceBundle;
 // 
 
 import javax.swing.*;
@@ -907,13 +908,20 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		loadProperties();
 		
 		// Load localized strings
-		m_resources = ResourceBundle.getBundle(LANGTEXT, getLocale(getPropertyString(LANG)));		
-
+		// m_resources = ResourceBundle.getBundle(LANGTEXT, getLocale(getPropertyString(LANG)));
+		try {
+			String resourceFile = "Strings_" + getLocale(getPropertyString(LANG)).getLanguage() + ".properties";
+			m_resources = new PropertyResourceBundle(new InputStreamReader(ToolDialog.class.getResourceAsStream(resourceFile), "UTF-8"));			
+		}
+		catch (IOException iox) {
+			iox.printStackTrace();
+		}		
+		
 		// Load the property texts
 		m_propNames = new Properties();
 		try {
 			String propFile = "names_" + getLocale(getPropertyString(LANG)).getLanguage() + ".prop";
-			m_propNames.load(ToolDialog.class.getResourceAsStream(propFile));
+			m_propNames.load(new InputStreamReader(ToolDialog.class.getResourceAsStream(propFile), "UTF-8"));
 		}
 		catch (IOException iox) {
 			iox.printStackTrace();
