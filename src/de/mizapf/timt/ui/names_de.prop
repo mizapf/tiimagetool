@@ -21,3 +21,5 @@ logging=output:s:Konsolenausgabe unlenken in Datei
 lang=general:c:Sprache
 dndc=general:b:Zeige Optionen bei Drag-and-Drop
 verbose=output:b:Ausführliche Fehlerausgaben auf Konsole
+fontsize=output:s:Zeichensatzgröße
+uifont=output:s:Zeichensatz für Oberfläche

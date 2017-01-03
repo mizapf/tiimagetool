@@ -274,7 +274,7 @@ public class ImportDialog extends ToolDialog {
 					add(box7);
 					int nLength = m_abyContent.length;
 					if (nLength > 128) nLength = 128;
-					m_taPreview.setFont(Font.decode(TIImageTool.contentFont));
+					m_taPreview.setFont(TIImageTool.contentFont);
 					m_taPreview.setText(Utilities.hexdump(0, 0, m_abyContent, nLength, false) + "..."); 
 					m_taPreview.setEditable(false);
 				}

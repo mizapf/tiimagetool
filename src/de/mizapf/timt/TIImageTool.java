@@ -123,9 +123,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.4";
-	public final static String MONTH = "December";
-	public final static String YEAR = "2016";
+	public final static String VERSION = "2.4.1";
+	public final static String MONTH = "January";
+	public final static String YEAR = "2017";
 	
 	private static final String TITLE = "TIImageTool";
 	
@@ -159,6 +159,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String LANG = "lang";
 	public final static String DNDC = "dndc";
 	public final static String VERBOSE = "verbose";
+	public final static String FONTSIZE = "fontsize";
+	public final static String UIFONT = "uifont";
 	
 	Properties m_propNames;
 	
@@ -285,8 +287,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	boolean m_cliploaded;
 	
 	public static String FONT = Font.SANS_SERIF;
+	public static String CONTENTFONT = Font.MONOSPACED;
 
-	public static String contentFont;
 	public static int plainHeight;
 	public static int boldHeight;
 	public static int dialogHeight;
@@ -294,6 +296,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public static Font boldFont;
 	public static Font dialogFont;
 	public static Font boldDialogFont;
+	public static Font contentFont;
+	
+	public static int fontSize;
 	
 	private static final int MAXDEPTH = 10;
 	
@@ -330,22 +335,27 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			Graphics2D g2d = (Graphics2D)m_frmMain.getGraphics();
 
 			FontRenderContext frc = g2d.getFontRenderContext();
-			plainFont = new Font(FONT, Font.PLAIN, 12); 
+			plainFont = new Font(FONT, Font.PLAIN, fontSize); 
 			LineMetrics lm = plainFont.getLineMetrics("XX_X", 0, 2, frc);
 			
 			plainHeight = (int)Math.ceil(lm.getHeight()*1.03);
-			boldFont = new Font(FONT, Font.BOLD, 12);
+			boldFont = new Font(FONT, Font.BOLD, fontSize);
 			lm = boldFont.getLineMetrics("XXX", 0, 2, frc);
 			boldHeight = (int)Math.round(lm.getHeight());
-			dialogFont = new Font(FONT, Font.PLAIN, 12);	
-			boldDialogFont = new Font(FONT, Font.BOLD, 12);	
+			dialogFont = new Font(FONT, Font.PLAIN, fontSize);	
+			boldDialogFont = new Font(FONT, Font.BOLD, fontSize);	
 			lm = dialogFont.getLineMetrics("XXX", 0, 2, frc);
 			dialogHeight = (int)Math.round(lm.getHeight());
+			
+			contentFont = new Font(CONTENTFONT, Font.PLAIN, fontSize);	
 			
 			m_jtViews = new BackTabbedPane();
 			cnt.add(m_jtViews);
 			m_jtViews.addChangeListener(TIImageTool.this);
-			
+	
+			UIManager.put("OptionPane.messageFont", plainFont);
+			UIManager.put("OptionPane.buttonFont", boldFont);
+
 			// -------------------------------------------
 			m_mFile = new JMenu(langstr("File"));
 			m_mFile.setFont(dialogFont);
@@ -699,6 +709,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			super(new FlowLayout(FlowLayout.LEFT, 0, 0));
 			setOpaque(false);
 			JLabel label = new JLabel(sLabel);
+			label.setFont(boldFont);
 			add(label);
 			label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
 			add(new DetachTabButton(dv));
@@ -944,8 +955,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		
 		FONT = m_Settings.getProperty("uifont", Font.SANS_SERIF);
-		contentFont = m_Settings.getProperty(CONTFONT);
-		if (contentFont == null) setProperty(CONTFONT, Font.MONOSPACED);
+		CONTENTFONT = m_Settings.getProperty(CONTFONT);
+		if (CONTENTFONT == null) setProperty(CONTFONT, Font.MONOSPACED);
 		m_frmMain = new JFrame(TITLE);
 		m_frmMain.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		m_frmMain.addWindowListener(this);
@@ -1055,6 +1066,14 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			System.err.println(langstr("MainHintError") + ": " + nfx.getMessage());
 		}
 		saveHintSettings();
+		
+		try {
+			fontSize = Integer.parseInt(getPropertyString(FONTSIZE, "12"));
+		}
+		catch (NumberFormatException nfx) {
+			fontSize = 12;
+			System.err.println(langstr("ParseError") + ": " + nfx.getMessage());
+		}
 		
 		SwingUtilities.invokeLater(new CreateGui());
 	}
@@ -1194,6 +1213,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		getPropertyString(LANG, "0");
 		getPropertyString(DNDC, "true");
 		getPropertyString(VERBOSE, "true");
+		getPropertyString(FONTSIZE, "12");
+		getPropertyString(CONTFONT, "Monospaced");
+		getPropertyString(UIFONT, "SansSerif");
 	}
 
 	public List<String> getPreferences(String category) {

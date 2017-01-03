@@ -77,7 +77,7 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 		m_app.registerFrame(this);
 	}
 
-	public void createGui(SearchResult[] content, String sFontName) {	
+	public void createGui(SearchResult[] content, Font fontName) {	
 
 		m_mbar = new JMenuBar();
 		m_mFile = new JMenu(TIImageTool.langstr("SearchResultMenu"));

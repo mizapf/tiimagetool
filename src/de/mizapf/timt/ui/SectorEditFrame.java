@@ -236,35 +236,41 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		// m_content = new byte[Volume.SECTOR_LENGTH];
 	}
 
-	public void createGui(String sFontName) {	
+	public void createGui(Font fontName) {	
 
 		m_mbar = new JMenuBar();
 		m_mFile = new JMenu(TIImageTool.langstr("File"));
+		m_mFile.setFont(TIImageTool.dialogFont);
 		m_mbar.add(m_mFile);
 		m_iSaveAs = new JMenuItem(TIImageTool.langstr("SaveAsText") + " ...");
 		m_iSaveAs.setActionCommand(SAVEAS);
 		m_iSaveAs.addActionListener(this);
 		m_mFile.add(m_iSaveAs);
+		m_iSaveAs.setFont(TIImageTool.dialogFont);
 
 		m_iRevert = new JMenuItem(TIImageTool.langstr("SectorEditRevertCurrent"));
 		m_iRevert.setActionCommand(REVERT);
 		m_iRevert.addActionListener(this);
 		m_mFile.add(m_iRevert);
+		m_iRevert.setFont(TIImageTool.dialogFont);
 
 		m_iRevertAll = new JMenuItem(TIImageTool.langstr("SectorEditRevertAll"));
 		m_iRevertAll.setActionCommand(REVERTALL);
 		m_iRevertAll.addActionListener(this);
 		m_mFile.add(m_iRevertAll);
+		m_iRevertAll.setFont(TIImageTool.dialogFont);
 
 		m_iWrite = new JMenuItem(TIImageTool.langstr("SectorEditCommit"));
 		m_iWrite.setActionCommand(WRITE);
 		m_iWrite.addActionListener(this);
 		m_mFile.add(m_iWrite);
+		m_iWrite.setFont(TIImageTool.dialogFont);
 
 		m_iClose = new JMenuItem(TIImageTool.langstr("Close"));
 		m_iClose.setActionCommand(CLOSE);
 		m_iClose.addActionListener(this);
 		m_mFile.add(m_iClose);
+		m_iClose.setFont(TIImageTool.dialogFont);
 		setJMenuBar(m_mbar);	
 		
 		addWindowListener(this);
@@ -298,7 +304,9 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		FontMetrics fm = ((Graphics2D)(m_app.getMainFrame().getGraphics())).getFontMetrics(m_app.dialogFont);
 		int nLabelWidth = fm.stringWidth(TIImageTool.langstr("Sector"));
 		JLabel jlSect = new JLabel(TIImageTool.langstr("Sector"));
+		jlSect.setFont(TIImageTool.dialogFont);
 		m_tfSector = new JTextField("0");
+		m_tfSector.setFont(TIImageTool.dialogFont);
 		m_tfSector.setMinimumSize(new Dimension(100,0));
 		m_tfSector.setPreferredSize(new Dimension(2*nLabelWidth,0));
 		m_tfSector.setMaximumSize(new Dimension(100,2*fm.getHeight()));
@@ -346,7 +354,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		m_jlByteContent = new JLabel[256];
 		m_jlAsciiContent = new JLabel[256];
 		
-		Font mono = Font.decode(m_app.contentFont);
+		Font mono = fontName;
 		Font byteFont = mono.deriveFont((float)(mono.getSize() * 1.5));
 		for (int i=0; i < 256; i++) {
 			m_jlByteContent[i] = new JLabel("00");

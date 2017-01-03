@@ -237,6 +237,7 @@ public class ToolDialog extends JDialog implements ActionListener {
 		Box box = new Box(BoxLayout.X_AXIS);
 		JTextField tf = new JTextField();
 		tf.setText(sDefaultEntry);
+		tf.setFont(TIImageTool.plainFont);
 		box.add(Box.createHorizontalStrut(10));		
 		JLabel jl = new JLabel(sText, SwingConstants.LEFT); 
 		jl.setFont(TIImageTool.dialogFont);

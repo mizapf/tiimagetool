@@ -55,7 +55,7 @@ public class ContentFrame extends JFrame implements ActionListener {
 		setIconImage(m_app.m_frameicon.getImage());
 	}
 
-	public void createGui(String sText, String sFontName) {	
+	public void createGui(String sText, Font contFont) {	
 		
 		m_sContent = sText;
 		m_mbar = new JMenuBar();
@@ -86,7 +86,7 @@ public class ContentFrame extends JFrame implements ActionListener {
 		
 		m_jep = new JTextArea(m_sContent);
 		m_jep.setEditable(false);
-		m_jep.setFont(Font.decode(sFontName));
+		m_jep.setFont(contFont);
 		JScrollPane jp = new JScrollPane(m_jep);
 		cntEditor.add(jp);
 		cntEditor.setPreferredSize(new Dimension(800,600));

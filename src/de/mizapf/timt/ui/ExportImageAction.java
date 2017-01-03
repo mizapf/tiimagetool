@@ -61,7 +61,7 @@ public class ExportImageAction extends Activity {
 		if (nReturn == jfc.CANCEL_OPTION) return;
 		
 		ExportDialog expparm = new ExportDialog(m_parent);
-		expparm.createGui(imagetool.boldFont, imagetool.getPropertyString(imagetool.CONVERT), Font.decode(imagetool.contentFont));
+		expparm.createGui(imagetool.boldFont, imagetool.getPropertyString(imagetool.CONVERT), imagetool.contentFont);
 		expparm.setVisible(true);
 		
 		if (expparm.confirmed()) {

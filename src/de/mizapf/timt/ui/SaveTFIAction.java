@@ -87,7 +87,7 @@ public class SaveTFIAction extends Activity {
 		
 		// Not cancelled
 		ExportDialog expparm = new ExportDialog(dvCurrent.getFrame());
-		expparm.createGui(imagetool.boldFont, imagetool.getPropertyString(imagetool.CONVERT, "/\\*_ __x."), Font.decode(imagetool.contentFont));
+		expparm.createGui(imagetool.boldFont, imagetool.getPropertyString(imagetool.CONVERT, "/\\*_ __x."), imagetool.contentFont);
 
 		expparm.setVisible(true);
 		if (expparm.confirmed()) {

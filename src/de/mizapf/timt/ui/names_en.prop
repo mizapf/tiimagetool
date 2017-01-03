@@ -21,3 +21,5 @@ logging=output:s:Log console output to file
 lang=general:c:UI language
 dndc=general:b:Show options for drag-and-drop
 verbose=output:b:Verbose output on console
+fontsize=output:s:Font size
+uifont=output:s:Font for user interface

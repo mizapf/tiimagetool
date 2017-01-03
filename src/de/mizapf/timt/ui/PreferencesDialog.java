@@ -74,6 +74,7 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 		m_entries = new HashMap<String,JComponent>();
 
 		m_tabs = new JTabbedPane();
+		m_tabs.setFont(TIImageTool.boldFont);
 		m_tabs.addTab(TIImageTool.langstr("PreferencesGeneral"), createTab("general"));
 		m_tabs.addTab(TIImageTool.langstr("PreferencesPaths"), createTab("paths"));
 		m_tabs.addTab(TIImageTool.langstr("PreferencesCFCard"), createTab("cfcard"));
@@ -148,7 +149,9 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 				System.err.println(TIImageTool.langstr("PreferencesUnknown") + ": " + type);
 				break;
 			}
+			if (jc != null) jc.setFont(TIImageTool.plainFont);
 		}
+				
 		tabPanel.add(Box.createVerticalStrut(10));
 		tabPanel.add(Box.createVerticalGlue());	
 
