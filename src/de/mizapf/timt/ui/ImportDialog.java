@@ -131,9 +131,11 @@ public class ImportDialog extends ToolDialog {
 		prepareGui();
 
 		int nLabelWidth = determineFieldWidth(TIImageTool.langstr("ImportDialogColumn"));
-		
+				
 		add(Box.createVerticalStrut(10));
 		if (m_sGivenName != null) {
+			nLabelWidth = determineFieldWidth(TIImageTool.langstr("ImportDialogColumnWide"));
+
 			putTextLine(this, TIImageTool.langstr("ImportDialogHasTIFILES") + " " + TIImageTool.langstr("ImportDialogButInvalid"), 0);
 			add(Box.createVerticalStrut(10));
 			
@@ -156,6 +158,8 @@ public class ImportDialog extends ToolDialog {
 		}
 		else {
 			if (m_nMode==NONAME) {
+				nLabelWidth = determineFieldWidth(TIImageTool.langstr("ImportDialogColumnWide"));
+
 				putTextLine(this, TIImageTool.langstr("ImportDialogHasTIFILES") + " " + TIImageTool.langstr("ImportDialogButNoName"), 0);
 				add(Box.createVerticalStrut(10));
 								

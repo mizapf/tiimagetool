@@ -7,12 +7,14 @@ den Einstellungen an- oder ausgeschaltet werden.
 2 = Sie sollten gelegentlich in den <em>Einstellungen</em> im <em>Datei</em>-Menü vorbeischauen.
 3 = Man kann Floppy-Disk-Images mit wenigen Klicks erstellen, und zwar von SSSD 
 bis DSHD (90 KiB bis 1,4 MiB), vorformatiert oder komplett leer (<em>Datei->Neu</em>).
+4 = Die zuletzt verwendeten 10 Image-Dateien sind im Menü <em>Zuletzt verwendet</em>
+zu finden und mit einem einfachen Klick zu öffnen.
 5 = Man kann CHD-Images für die Verwendung in MAME mit wenigen Klicks erzeugen (<em>Datei->Neu</em>).
 6 = Es gibt die wohlbekannte Kopieren/Einfügen-Unterstützung für das Arbeiten mit Dateien
 in Images, auch für Export und Import: Drücken Sie Strg-C in einer Verzeichnisansicht,
 und die markierten Dateien können durch Strg-V als TIFILES im Explorer abgelegt werden.
 7 = Sie können mit der Maus Dateien von einem Image zum anderen ziehen und ablegen,
-oder Sie können sie in Ihr Explorer-Fenster ablegen. Auch die umgekehrte Richtung
+oder Sie können sie in Ihrem Explorer-Fenster ablegen. Auch die umgekehrte Richtung
 vom Explorer in das Image wird unterstützt.
 8 = TIImageTool beinhaltet eine XModem-Funktion, mit der Sie Dateien über eine
 serielle Verbindung versenden oder empfangen können (<em>Bearbeiten->Datei empfangen</em>)

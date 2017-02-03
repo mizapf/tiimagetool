@@ -123,8 +123,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.4.1";
-	public final static String MONTH = "January";
+	public final static String VERSION = "2.4.2";
+	public final static String MONTH = "February";
 	public final static String YEAR = "2017";
 	
 	private static final String TITLE = "TIImageTool";
@@ -297,6 +297,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public static Font dialogFont;
 	public static Font boldDialogFont;
 	public static Font contentFont;
+	public static Font menuFont;
 	
 	public static int fontSize;
 	
@@ -342,6 +343,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			boldFont = new Font(FONT, Font.BOLD, fontSize);
 			lm = boldFont.getLineMetrics("XXX", 0, 2, frc);
 			boldHeight = (int)Math.round(lm.getHeight());
+			menuFont = new Font(FONT, Font.PLAIN, fontSize);
 			dialogFont = new Font(FONT, Font.PLAIN, fontSize);	
 			boldDialogFont = new Font(FONT, Font.BOLD, fontSize);	
 			lm = dialogFont.getLineMetrics("XXX", 0, 2, frc);
@@ -355,14 +357,24 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 			UIManager.put("OptionPane.messageFont", plainFont);
 			UIManager.put("OptionPane.buttonFont", boldFont);
-
+			UIManager.put("MenuBar.font", menuFont);
+			UIManager.put("Menu.font", menuFont);
+			UIManager.put("MenuItem.font", menuFont);
+			UIManager.put("Label.font", dialogFont);
+			UIManager.put("RadioButton.font", dialogFont);
+			UIManager.put("ComboBox.font", dialogFont);
+			UIManager.put("TextField.font", dialogFont);
+			UIManager.put("Button.font", boldDialogFont);
+			
+			Font accFont = new Font(FONT, Font.PLAIN, fontSize*3/4);	
+			UIManager.put("MenuItem.acceleratorFont", accFont);
+			UIManager.put("FileChooser.listFont", boldDialogFont);
+			
 			// -------------------------------------------
 			m_mFile = new JMenu(langstr("File"));
-			m_mFile.setFont(dialogFont);
 			m_mbar.add(m_mFile);
 			
 			m_mNew = new JMenu(langstr("New"));
-			m_mNew.setFont(dialogFont);
 			m_mFile.add(m_mNew);
 			
 			m_iNewFloppy = createMenuItem(new NewImageAction());
@@ -378,7 +390,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 
 			m_mOpenRecent = new JMenu(langstr("OpenRecentFile"));
 			m_mFile.add(m_mOpenRecent);
-			m_mOpenRecent.setFont(dialogFont);
 			
 			// Fill recent menu
 			int i = 0;
@@ -418,7 +429,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			m_mUtility = new JMenu(langstr("Utility"));
 			m_mbar.add(m_mUtility);
-			m_mUtility.setFont(dialogFont);
 			
 			m_iConsole = createMenuItem(new ViewConsoleAction());
 			m_mUtility.add(m_iConsole);
@@ -470,7 +480,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			m_mHelp = new JMenu(langstr("Help"));
 			m_mbar.add(m_mHelp);
-			m_mHelp.setFont(dialogFont);
 			
 			m_mHelp.add(createMenuItem(new HelpAction()));
 			m_mHelp.add(createMenuItem(new HintAction()));
@@ -1354,7 +1363,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		mi.setActionCommand(act.getActionName());
 		mi.addActionListener(this);
 		registerActivity(act);
-		mi.setFont(dialogFont);
 		if (act.getKeyCode()!=0) mi.setAccelerator(KeyStroke.getKeyStroke(act.getKeyCode(), act.getModifier()));		
 		return mi;
 	}

@@ -173,10 +173,8 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 
 		m_mbar = new JMenuBar();
 		m_mFile = new JMenu(m_app.langstr("File"));
-		m_mFile.setFont(TIImageTool.dialogFont);
 		
 		m_iClose = new JMenuItem(m_app.langstr("Attach"));
-		m_iClose.setFont(TIImageTool.dialogFont);
 		m_iClose.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
 		m_iClose.addActionListener(this);
 		m_mFile.add(m_iClose);
@@ -449,7 +447,6 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		Volume vol = m_dirCurrent.getVolume();
 		m_ctxmenu = new JPopupMenu();
 		JMenu mnew = new JMenu(TIImageTool.langstr("CreateNew"));
-		mnew.setFont(TIImageTool.dialogFont);
 		mnew.add(m_iNewFile);
 		mnew.add(m_iNewDirectory);
 		mnew.add(m_iArchive);  // FIXME: Exception, disabled
@@ -803,16 +800,13 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_iDnDMove = new JMenuItem(TIImageTool.langstr("DnDMove"));
 		m_iDnDMove.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0));
 		m_iDnDMove.setActionCommand(DNDMOVE);
-		m_iDnDMove.setFont(TIImageTool.dialogFont);
 		m_iDnDMove.addActionListener(this);
 		m_iDnDCopy = new JMenuItem(TIImageTool.langstr("DnDCopy"));
 		m_iDnDCopy.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_CONTROL, 0));
 		m_iDnDCopy.setActionCommand(DNDCOPY);
-		m_iDnDCopy.setFont(TIImageTool.dialogFont);
 		m_iDnDCopy.addActionListener(this);
 		m_iDnDCancel = new JMenuItem(TIImageTool.langstr("Cancel"));
 		m_iDnDCancel.setActionCommand(DNDCANCEL);
-		m_iDnDCancel.setFont(TIImageTool.dialogFont);
 		
 		// Accelerator does not work when the target panel has no focus
 		m_iDnDCancel.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0));

@@ -61,16 +61,20 @@ class NewImageDialog extends ToolDialog {
 */	
 	public void createGui(Font font) {
 		prepareGui();
-		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
+		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.dialogFont);
 		
 		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("NewImageColumn"));
 
-		m_tfName = putTextField(this,  TIImageTool.langstr("VolumeName"), "EMPTY", nColumnWidth, 100); 
+		m_tfName = putTextField(this,  TIImageTool.langstr("VolumeName"), "EMPTY", nColumnWidth, 0); 
 		
 		String[] asFormat = { TIImageTool.langstr("SectorDump"), TIImageTool.langstr("TrackDump"), TIImageTool.langstr("HFEImage") };
 		m_jcType = putComboBox(this, TIImageTool.langstr("ImageType"), asFormat, 0, nColumnWidth);
 		
-		int[] anFormat = { 100, 100 };
+		int rbutwidth = determineFieldWidth(TIImageTool.langstr("NewImageRadioColumn"));
+		
+		int[] anFormat = new int[2];
+		anFormat[0] = rbutwidth;
+		anFormat[1] = rbutwidth;
 		
 		String[] asDoFormat = { TIImageTool.langstr("Formatted"), TIImageTool.langstr("Blank") };
 		JRadioButton[] arb2 = putRadioButtons(this, TIImageTool.langstr("NewImageWillBe"), nColumnWidth, asDoFormat, anFormat, 0);

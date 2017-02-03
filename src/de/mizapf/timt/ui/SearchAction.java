@@ -43,6 +43,7 @@ public class SearchAction extends Activity {
 	Pattern m_pattern;
 	int m_maxhits = 0;
 	boolean m_searchContents;
+	boolean m_searchDate;
 		
 	public int getKeyCode() {
 		return KeyEvent.VK_F;
@@ -75,6 +76,7 @@ public class SearchAction extends Activity {
 			m_searchSubdir = sd.searchSubdirectories();
 			m_useRegex = sd.isRegex();
 			m_searchContents = sd.searchInsideFiles();
+			m_searchDate = sd.searchFileDate();
 
 			try {
 				m_maxhits = sd.getMaximumHits();
@@ -202,25 +204,37 @@ public class SearchAction extends Activity {
 	
 	private String getCandidateString(TFile tf) {
 		String res = null;
-		if (m_searchContents) {
-			try {
-				StringBuilder sb = new StringBuilder();
-				byte[] content = tf.getSectorContent();
-				for (int i=0; i < content.length; i++) {
-					int cont = content[i] & 0xff;
-					if (cont >= 32 && cont < 127) sb.append((char)cont);
-					else sb.append(" ");
-				}
-				res = sb.toString();
-			}
-			catch (IOException iox) {
-				res = " ";
-			}
-			catch (ImageException ix) {
-				res = " ";
-			}
+		if (m_searchDate) {
+			Time tm = tf.getUpdateTime();
+			String time = tm.toString();
+			if (time.length()==0) {
+				tm = tf.getCreationTime();
+				time = tm.toString();
+				if (time.length()==0) time = "none";
+			}				
+			res = time;
 		}
-		else res = tf.getName();
+		else {
+			if (m_searchContents) {
+				try {
+					StringBuilder sb = new StringBuilder();
+					byte[] content = tf.getSectorContent();
+					for (int i=0; i < content.length; i++) {
+						int cont = content[i] & 0xff;
+						if (cont >= 32 && cont < 127) sb.append((char)cont);
+						else sb.append(" ");
+					}
+					res = sb.toString();
+				}
+				catch (IOException iox) {
+					res = " ";
+				}
+				catch (ImageException ix) {
+					res = " ";
+				}
+			}
+			else res = tf.getName();
+		}
 		return res;
 	}
 }

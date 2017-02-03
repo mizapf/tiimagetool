@@ -240,37 +240,31 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 
 		m_mbar = new JMenuBar();
 		m_mFile = new JMenu(TIImageTool.langstr("File"));
-		m_mFile.setFont(TIImageTool.dialogFont);
 		m_mbar.add(m_mFile);
 		m_iSaveAs = new JMenuItem(TIImageTool.langstr("SaveAsText") + " ...");
 		m_iSaveAs.setActionCommand(SAVEAS);
 		m_iSaveAs.addActionListener(this);
 		m_mFile.add(m_iSaveAs);
-		m_iSaveAs.setFont(TIImageTool.dialogFont);
 
 		m_iRevert = new JMenuItem(TIImageTool.langstr("SectorEditRevertCurrent"));
 		m_iRevert.setActionCommand(REVERT);
 		m_iRevert.addActionListener(this);
 		m_mFile.add(m_iRevert);
-		m_iRevert.setFont(TIImageTool.dialogFont);
 
 		m_iRevertAll = new JMenuItem(TIImageTool.langstr("SectorEditRevertAll"));
 		m_iRevertAll.setActionCommand(REVERTALL);
 		m_iRevertAll.addActionListener(this);
 		m_mFile.add(m_iRevertAll);
-		m_iRevertAll.setFont(TIImageTool.dialogFont);
 
 		m_iWrite = new JMenuItem(TIImageTool.langstr("SectorEditCommit"));
 		m_iWrite.setActionCommand(WRITE);
 		m_iWrite.addActionListener(this);
 		m_mFile.add(m_iWrite);
-		m_iWrite.setFont(TIImageTool.dialogFont);
 
 		m_iClose = new JMenuItem(TIImageTool.langstr("Close"));
 		m_iClose.setActionCommand(CLOSE);
 		m_iClose.addActionListener(this);
 		m_mFile.add(m_iClose);
-		m_iClose.setFont(TIImageTool.dialogFont);
 		setJMenuBar(m_mbar);	
 		
 		addWindowListener(this);

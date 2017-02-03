@@ -35,6 +35,7 @@ class SearchDialog extends ToolDialog {
 	JTextField m_tfSearchString;
 	JRadioButton m_jrSearchFile;
 	JRadioButton m_jrSearchContent;
+	JRadioButton m_jrSearchDate;
 	JButton m_btnFileChooser;
 	TIImageTool imagetool;
 	JFrame m_parent;
@@ -56,8 +57,7 @@ class SearchDialog extends ToolDialog {
 		Search text			___________
 		Regular expression [ ]
 		
-		Search file names    (x) 
-		Search within files  ( )
+		Search file names    (x)   file contents ( )   file dates ( ) 
 		
 		Path to search     [.....] [btn]
 		Search subdirectories ( )
@@ -79,12 +79,13 @@ class SearchDialog extends ToolDialog {
 		m_chbRegex = putCheckBox(this, TIImageTool.langstr("SearchRegex"), false, nColumnWidth);
 		add(Box.createVerticalStrut(10));
 		
-		int[] anFormat = { 100, 100 };
+		int[] anFormat = { 100, 100, 100 };
 		
-		String[] asDoSearch = { TIImageTool.langstr("SearchNames"), TIImageTool.langstr("SearchContent") };
+		String[] asDoSearch = { TIImageTool.langstr("SearchNames"), TIImageTool.langstr("SearchContent"), TIImageTool.langstr("SearchDate") };
 		JRadioButton[] arb2 = putRadioButtons(this, TIImageTool.langstr("SearchFor"), nColumnWidth, asDoSearch, anFormat, 0);
 		m_jrSearchFile = arb2[0];
 		m_jrSearchContent = arb2[1];
+		m_jrSearchDate = arb2[2];
 
 		m_chbArchives = putCheckBox(this, TIImageTool.langstr("SearchArchives"), false, nColumnWidth);		
 
@@ -103,7 +104,7 @@ class SearchDialog extends ToolDialog {
 		m_btnFileChooser.addActionListener(this);
 		
 		Box box = new Box(BoxLayout.X_AXIS);
-		box.add(Box.createHorizontalStrut(10));
+		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
 		JLabel jl = new JLabel(TIImageTool.langstr("SearchPath"), SwingConstants.LEFT); 
 		jl.setFont(TIImageTool.dialogFont);
 		String lastPath = TIImageTool.langstr("ClickToSelect");
@@ -211,6 +212,10 @@ class SearchDialog extends ToolDialog {
 
 	boolean searchFileNames() {
 		return m_jrSearchFile.isSelected();
+	}
+
+	boolean searchFileDate() {
+		return m_jrSearchDate.isSelected();
 	}
 
 	File[] getSelectedFiles() {

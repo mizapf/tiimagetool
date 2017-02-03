@@ -43,8 +43,6 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 	public final static String COPY = "COPY";
 	public final static String PASTE = "PASTE";
 	public final static String SELECT_ALL = "SELECTALL";
-
-	private static final String FONTED = Font.MONOSPACED;
 	
 	protected UndoAction m_UndoAction;
 	protected RedoAction m_RedoAction;
@@ -202,7 +200,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 
 		Container cntEditor = getContentPane();
 		m_jep = new JEditorPane("text/plain", sText);
-		m_jep.setFont(Font.decode(FONTED));
+		m_jep.setFont(TIImageTool.contentFont);
 		
 		m_doc = m_jep.getDocument();
 		m_doc.addUndoableEditListener(this);

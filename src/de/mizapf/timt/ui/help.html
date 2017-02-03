@@ -69,7 +69,7 @@
 <h1>TIImageTool</h1>
 <p style="text-align:center">Easily manage TI-99 floppy and hard disk images</p>
 
-<div class="version">Version: <span style="font-weight:bold">2.4</span>; December 2016</div>
+<div class="version">Version: <span style="font-weight:bold">2.4.2</span>; February 2017</div>
 <div class="author">Author: Michael Zapf<br/>Contact: ti99@mizapf.de<br/>www.mizapf.de</div>
 
 <p style="text-align:center">Also see <span style="font-weight:bold">www.ninerpedia.org</span> for more technical
@@ -2175,6 +2175,11 @@ search process, a copy of the file contents is searched, where all non-printable
 characters have been replaced by space characters. The original file is not affected. 
 Searching for content takes more time, but it may be the only way if you
 don't even remember the file name.</p>
+<p>Third, you can search for the creation or update date of files. Usually, you
+would use a regular expression at this point, like "2016-.*", which refers to
+all dates that start with 2016. When there is no update time, the creation
+time is used for comparison. If neither exists, "none" is used as the date
+string.</p>
 <p>During the search process, a progress window pops up that allows you to
 interrupt the process. It also informs you what image file is currently
 checked, and how many hits have been found at this time.</p>

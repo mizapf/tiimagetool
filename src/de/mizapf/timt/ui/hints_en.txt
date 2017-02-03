@@ -8,7 +8,7 @@ deselect single ones at any time.
 2 = You should have a look at the settings in the <em>File->Preferences</em> menu 
 3 = You can create disk images from SSSD to DSHD (90 KiB to 1.4 MiB), 
 preformatted or blank, by a few clicks (<em>File->New</em>).
-4 = the last 10 image files are available by a single click in the Open Recent
+4 = The most recently used 10 image files are available by a single click in the Open Recent
 menu item.
 5 = You can create ready-to-use hard disk images (CHD) for use in MAME under <em>File->New</em>.
 6 = We have full copy/paste support for file transfer between images, 

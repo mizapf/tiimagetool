@@ -69,6 +69,7 @@ class NewNameDialog extends ToolDialog {
 		add(Box.createVerticalStrut(10));
 		
 		m_tfFileName = new JTextField();
+		m_tfFileName.setFont(TIImageTool.dialogFont);
 		
 		String newName = m_sName;
 		if (newName.length()==10) {

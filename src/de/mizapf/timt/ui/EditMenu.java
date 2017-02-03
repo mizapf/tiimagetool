@@ -49,8 +49,6 @@ public class EditMenu extends JMenu {
 		super(TIImageTool.langstr("Edit"));
 		m_frmMain = frm;
 		m_app = app;
-
-		setFont(TIImageTool.dialogFont);
 		
 		m_iCutm = createMenuItem(new CutAction());
 		add(m_iCutm);
@@ -127,7 +125,6 @@ public class EditMenu extends JMenu {
 		mi.setActionCommand(act.getActionName());
 		mi.addActionListener(m_app);
 		m_app.registerActivity(act);
-		mi.setFont(TIImageTool.dialogFont);
 		if (act.getKeyCode()!=0) mi.setAccelerator(KeyStroke.getKeyStroke(act.getKeyCode(), act.getModifier()));
 		return mi;
 	}

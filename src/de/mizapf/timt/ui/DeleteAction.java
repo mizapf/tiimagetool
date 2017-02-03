@@ -61,6 +61,7 @@ public class DeleteAction extends Activity {
 		JPanel jp = new JPanel();
 		jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 		JLabel jl = new JLabel(TIImageTool.langstr("SureToDelete"));
+		jl.setFont(TIImageTool.dialogFont);
 		jp.add(Box.createVerticalStrut(10));
 		jp.add(jl);
 
