@@ -237,8 +237,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	// so the language names can be translated as well
 	// Note that you need a Strings_xx.properties, hints_xx.txt, and command_xx.txt file for
 	// each language
-	private static final Locale[] locale = { Locale.ENGLISH, Locale.GERMAN };
-	private static final String[] langs = { "English", "German" }; 
+	private static final Locale[] locale = { Locale.ENGLISH, Locale.GERMAN, Locale.ITALIAN };
+	private static final String[] langs = { "English", "German", "Italian" }; 
 
 	public final static String LANGTEXT = "de.mizapf.timt.ui.Strings";
 
@@ -922,6 +922,25 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return loc;
 	}
 	
+	private InputStream getLocalizedStream(String name, String suffix) {
+		String resourceFile = name + getLocale(getPropertyString(LANG)).getLanguage() + suffix;
+		InputStream is = ToolDialog.class.getResourceAsStream(resourceFile);
+		if (is==null) {
+			// Try to load the file from user.home
+			File propFile = new File(System.getProperty("user.home"), resourceFile);
+			try {
+				is = new FileInputStream(propFile);
+			}
+			catch (FileNotFoundException fnfx) {
+				// Fall back to English
+				System.err.println("Could not find localized file " + resourceFile + " in package, nor in " + System.getProperty("user.home") + ". Falling back to English.");
+				resourceFile = name + locale[0].getLanguage() + suffix;
+				is = ToolDialog.class.getResourceAsStream(resourceFile);
+			}
+		}
+		return is;	
+	}
+	
 	TIImageTool() {
 		m_sPropertiesPath = null;
 		m_Settings = new Properties();
@@ -930,8 +949,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		// Load localized strings
 		// m_resources = ResourceBundle.getBundle(LANGTEXT, getLocale(getPropertyString(LANG)));
 		try {
-			String resourceFile = "Strings_" + getLocale(getPropertyString(LANG)).getLanguage() + ".properties";
-			m_resources = new PropertyResourceBundle(new InputStreamReader(ToolDialog.class.getResourceAsStream(resourceFile), "UTF-8"));			
+			InputStream is = getLocalizedStream("Strings_", ".properties");
+			m_resources = new PropertyResourceBundle(new InputStreamReader(is, "UTF-8"));			
 		}
 		catch (IOException iox) {
 			iox.printStackTrace();
@@ -940,8 +959,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		// Load the property texts
 		m_propNames = new Properties();
 		try {
-			String propFile = "names_" + getLocale(getPropertyString(LANG)).getLanguage() + ".prop";
-			m_propNames.load(new InputStreamReader(ToolDialog.class.getResourceAsStream(propFile), "UTF-8"));
+			InputStream is = getLocalizedStream("names_", ".prop");
+			m_propNames.load(new InputStreamReader(is, "UTF-8"));
 		}
 		catch (IOException iox) {
 			iox.printStackTrace();
@@ -1027,8 +1046,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		
 		int maxnumber = 0;
 		try {
-			InputStream is = ToolDialog.class.getResourceAsStream("hints_" + getLocale(getPropertyString(LANG)).getLanguage() + ".txt");
+			InputStream is = getLocalizedStream("hints_", ".txt");
 			BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+
 			int lastInd = 0;
 			
 			int number = 0;

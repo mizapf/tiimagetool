@@ -92,6 +92,7 @@ bearbeiten, etwa um dieses zu reparieren. Es werden alle Formate unterstützt,
 einschließlich der CHD-Container von MAME oder HFE von Lotharek.
 34 = TIImageTool bietet seine Oberfläche in verschiedenen Sprachen an, 
 die man in den <em>Einstellungen</em> ändern kann.
-35 = Es ist möglich, eine Compact-Flash-Karten mit TIImageTool zu lesen und als
-Image abzulegen. Auf diesem Image können CF7-Volumes formatiert, diese
-bearbeitet und schließlich alles wieder auf die CF-Karte geschrieben werden.
+35 = Es ist möglich, Compact-Flash-Karten (oder andere Speicherkarten) 
+mit TIImageTool zu lesen und als Image abzulegen. Auf diesem Image können 
+CF7-Volumes formatiert, bearbeitet und schließlich alles wieder auf die 
+Speicherkarte geschrieben werden.
