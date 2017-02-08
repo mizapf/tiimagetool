@@ -237,8 +237,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	// so the language names can be translated as well
 	// Note that you need a Strings_xx.properties, hints_xx.txt, and command_xx.txt file for
 	// each language
-	private static final Locale[] locale = { Locale.ENGLISH, Locale.GERMAN, Locale.ITALIAN };
-	private static final String[] langs = { "English", "German", "Italian" }; 
+	private static final Locale[] locale = { Locale.ENGLISH, Locale.GERMAN, Locale.ITALIAN, Locale.FRENCH };
+	private static final String[] langs = { "English", "German", "Italian", "French" }; 
 
 	public final static String LANGTEXT = "de.mizapf.timt.ui.Strings";
 
