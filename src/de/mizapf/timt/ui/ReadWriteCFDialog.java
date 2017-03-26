@@ -199,12 +199,12 @@ class ReadWriteCFDialog extends ToolDialog {
 				sb.append("\"").append(command).append("\" ");
 				if (m_read) {
 					// Add the special path prefix for Windows raw devices
-					sb.append("if=\"\\\\.\\").append(cfcard).append("\" ");
-					sb.append("of=\"").append(image).append("\" ");
+					sb.append("\"if=\\\\.\\").append(cfcard).append("\" ");
+					sb.append("\"of=").append(image).append("\" ");
 				}
 				else {
-					sb.append("if=\"").append(image).append("\" ");
-					sb.append("of=\"\\\\.\\").append(cfcard).append("\" ");
+					sb.append("\"if=").append(image).append("\" ");
+					sb.append("\"of=\\\\.\\").append(cfcard).append("\" ");
 				}
 			}
 			else {
@@ -387,6 +387,7 @@ class ReadWriteCFDialog extends ToolDialog {
 				c = sLine.charAt(i);
 				if (c == '\"') {
 					inQuotes = !inQuotes;
+					// Leave the quotes in the Windows environment
 					if (m_type == UNIX) continue;
 				}
 				if (c != ' ' || inQuotes) sb.append(c);
