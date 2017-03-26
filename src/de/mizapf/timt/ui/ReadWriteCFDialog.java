@@ -33,7 +33,7 @@ class ReadWriteCFDialog extends ToolDialog {
 
 	TIImageTool imagetool;
 	JFrame m_parent;
-	boolean m_windows;
+	int m_type;
 	JTextField m_tfDevice;
 	JTextField m_tfImageFile;
 	JTextField m_tfddpath;
@@ -43,13 +43,17 @@ class ReadWriteCFDialog extends ToolDialog {
 	private final static int FILE = 2;
 	private final static int DD = 3;
 	
+	public final static int UNIX = 1;
+	public final static int MACOS = 2;
+	public final static int WINDOWS = 3;
+	
 	JTextField m_tfCommandLine;
 			
-	ReadWriteCFDialog(JFrame owner, TIImageTool timt, boolean windows, boolean read) {
+	ReadWriteCFDialog(JFrame owner, TIImageTool timt, int type, boolean read) {
 		super(owner, TIImageTool.langstr(read? "ReadWriteCFTitleR" : "ReadWriteCFTitleW"));
 		imagetool = timt;
 		m_parent = owner;
-		m_windows = windows;
+		m_type = type;
 		m_read = read;
 	}	
 	
@@ -79,56 +83,45 @@ class ReadWriteCFDialog extends ToolDialog {
 		// ======================
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("ReadwriteCFColumn"));
-
-		boolean isMac = System.getProperty("os.name").startsWith("Mac");
-		
-		// m_windows = true;
-		// isMac = true;
-		
+				
 		if (m_read) {
 			putTextLine(this, "!" + TIImageTool.langstr("ReadWriteCFTitleRLong"), 0);
 			add(Box.createVerticalStrut(10));
-			if (m_windows) {
+			switch (m_type) {
+			case WINDOWS:
 				putMultiTextLine(this,	TIImageTool.langstr("ReadWriteCFHintRWin"));
-			}
-			else {
-				if (isMac) {
-					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintRMac"));	
-				} 
-				else {
-					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintRLin"));
-				}  
+				break;
+			case MACOS:
+				putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintRMac"));
 				add(Box.createVerticalStrut(10));
-				if (isMac) {
-					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevMac"));
-				} 
-				else {
-					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevLin"));
-				}	
-			}
+				putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevMac"));
+				break;
+			default:
+				putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintRLin"));
+				add(Box.createVerticalStrut(10));
+				putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevLin"));
+				break;
+			}		
 			add(Box.createVerticalStrut(10));
 			putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFRCheck"));  
 		}
 		else { // Writing on CF
 			putTextLine(this, "!" + TIImageTool.langstr("ReadWriteCFTitleWLong"), 0);
 			add(Box.createVerticalStrut(10));
-			if (m_windows) {
+			switch (m_type) {
+			case WINDOWS:
 				putMultiTextLine(this,	TIImageTool.langstr("ReadWriteCFHintWWin"));
-			}
-			else {
-				if (isMac) {
-					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintWMac"));
-				} 
-				else {
-					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintWLin"));
-				}
+				break;
+			case MACOS:
+				putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintWMac"));
 				add(Box.createVerticalStrut(10));
-				if (isMac) {
-					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevMac"));
-				} 
-				else {
-					putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevLin")); 
-				}
+				putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevMac"));
+				break;
+			default:
+				putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFHintWLin"));
+				add(Box.createVerticalStrut(10));
+				putMultiTextLine(this, TIImageTool.langstr("ReadWriteCFElevLin")); 
+				break;
 			}
 			add(Box.createVerticalStrut(10));
 			putMultiTextLine(this, "!" + TIImageTool.langstr("ReadWriteCFWCheck"));
@@ -139,7 +132,10 @@ class ReadWriteCFDialog extends ToolDialog {
 		
 		add(Box.createVerticalStrut(10));
 
-		String devprompt = TIImageTool.langstr(m_windows? "ReadWriteCFPathWin" : (isMac)? "ReadWriteCFPathMac" : "ReadWriteCFPathLin");
+		String devprompt = TIImageTool.langstr("ReadWriteCFPathLin");
+		if (m_type == WINDOWS) devprompt = TIImageTool.langstr("ReadWriteCFPathWin");
+		else if (m_type == MACOS) devprompt = TIImageTool.langstr("ReadWriteCFPathMac");
+		
 		String lastPath = imagetool.getPropertyString(imagetool.CFCARD);
 		String fileprompt = TIImageTool.langstr("ReadWriteCFImage");
 		String ddprompt = TIImageTool.langstr("ReadWriteCFDD");
@@ -160,7 +156,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			add(Box.createVerticalStrut(10));
 		}
 		
-		if (m_windows) {
+		if (m_type == WINDOWS) {
 			m_tfddpath = new JTextField(imagetool.getPropertyString(imagetool.DDPATH));
 			addChoiceLine(nColumnWidth, ddprompt, DDLINE, DD, m_tfddpath, 45);
 			add(Box.createVerticalStrut(10));
@@ -185,7 +181,7 @@ class ReadWriteCFDialog extends ToolDialog {
 		// We don't need this for Windows. Linux and Mac can only access the
 		// flash card as root, and the dump file must be given to the current
 		// user afterwards.
-		if (!m_windows) {
+		if (m_type==UNIX || m_type==MACOS) {
 			elevate = imagetool.getPropertyString(imagetool.SUPATH);
 			chown = imagetool.getPropertyString(imagetool.COPATH);
 			user = System.getProperty("user.name");
@@ -199,26 +195,36 @@ class ReadWriteCFDialog extends ToolDialog {
 			&& !command.equals(TIImageTool.langstr("ClickToSelect"))) {
 
 			if (elevate.length()>0) sb.append(elevate).append(" -c \"");
-			sb.append(command).append(" ");
-			sb.append("if=");
-			if (m_read) {
-				// Add the special path prefix for Windows raw devices
-				if (m_windows) sb.append("\\\\.\\");
-				sb.append(cfcard).append(" ");
-				sb.append("of=").append(image).append(" ");
+			if (m_type==WINDOWS) {
+				sb.append("\"").append(command).append("\" ");
+				if (m_read) {
+					// Add the special path prefix for Windows raw devices
+					sb.append("if=\"\\\\.\\").append(cfcard).append("\" ");
+					sb.append("of=\"").append(image).append("\" ");
+				}
+				else {
+					sb.append("if=\"").append(image).append("\" ");
+					sb.append("of=\"\\\\.\\").append(cfcard).append("\" ");
+				}
 			}
 			else {
-				sb.append(image).append(" ");
-				sb.append("of=");
-				if (m_windows) sb.append("\\\\.\\");
-				sb.append(cfcard).append(" ");
+				sb.append(command).append(" ");
+				if (m_read) {
+					sb.append("if=").append(cfcard).append(" ");
+					sb.append("of=").append(image).append(" ");
+				}
+				else {
+					sb.append("if=").append(image).append(" ");
+					sb.append("of=").append(cfcard).append(" ");
+				}
 			}
+
 			sb.append("bs=").append(bsize);			
 			
 			// For Linux and Mac, we have to add a chown command afterwards, 
 			// or our dump file will belong to root
 			// For writing there is nothing to do
-			if (!m_windows && m_read) {
+			if ((m_type==UNIX || m_type==MACOS) && m_read) {
 				sb.append("; ").append(chown).append(" ").append(user).append(" ").append(image);
 			}
 			
@@ -246,7 +252,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			String lastPath = imagetool.getPropertyString(imagetool.CFCARD);
 			if (lastPath != null && lastPath.length() > 0) {
 				try {
-					if (m_windows) {
+					if (m_type==WINDOWS) {
 						jfc = new JFileChooser();
 						File dummy_file = new File(new File("C:\\").getCanonicalPath());
 						jfc.setCurrentDirectory(dummy_file);
@@ -263,7 +269,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			}
 			else jfc = new JFileChooser(); 
 
-			if (m_windows) jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+			if (m_type==WINDOWS) jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			else jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			
 			Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
@@ -273,7 +279,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			
 			if (nReturn == JFileChooser.APPROVE_OPTION) {
 				File file = jfc.getSelectedFile();
-				if (m_windows) {
+				if (m_type==WINDOWS) {
 					String dev = file.getAbsolutePath();
 					// Strip off the trailing backslash
 					if (dev.endsWith(File.separator)) {
@@ -300,7 +306,7 @@ class ReadWriteCFDialog extends ToolDialog {
 				File file = jfc.getSelectedFile();
 				String filename = file.getAbsolutePath();
 				// TODO: I think that there are more special cases to catch
-				filename = filename.replaceAll(" ", "\\\\ ").replaceAll(":", "\\\\:").replaceAll("\\*", "\\\\*");
+				if (m_type != WINDOWS) filename = filename.replaceAll(" ", "\\\\ ").replaceAll(":", "\\\\:").replaceAll("\\*", "\\\\*");
 				m_tfImageFile.setText(filename);
 			}
 			setupCommand();
@@ -309,7 +315,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			String sLastDD = imagetool.getPropertyString(imagetool.DDPATH);
 			
 			if (sLastDD != null && sLastDD.length() > 0) {
-				if (m_windows) {
+				if (m_type==WINDOWS) {
 					jfc = new JFileChooser();
 				}
 				else {
@@ -335,51 +341,63 @@ class ReadWriteCFDialog extends ToolDialog {
 		}
 	}
 	
-	/*
-	 * This method generates an String array of commands to execute a device copy process with the Unix 'dd' on a Apple Macintosh.
-	 * These commands are wrapped around with some extra code for (un)mounting devices and obtaining super user access.
-	 */
-	String[] getMacCommandLine(boolean doWriting) {
-		String shellScript = m_tfCommandLine.getText();
-		if (shellScript.isEmpty()) return null;
-
-		String cfcard = m_tfDevice.getText();	// getting device for (un)mounting it
-		
-		/*
-		 * To avoid changes during copy process unmount the CF-Card device before operation begins. This is always not necessary for CF7
-		 * formatted cards cause they aren't mounted due to their unknown file system, but anyway, for safety.
-		 * Usually newly written CF-Cards cannot be mounted by macOS due to the change of the legacy CF7 file format. Therefore generally
-		 * no (re)mount is necessary.
-		 */
-		shellScript = "/usr/sbin/diskutil unmountDisk " + cfcard + "; " + shellScript.replaceAll("\\\\", "\\\\\\\\") + (doWriting? "" : "; /usr/sbin/diskutil mountDisk " + cfcard);
-		String[] retVal = {"/usr/bin/osascript", "-e", "do shell script \"" + shellScript + "\" with administrator privileges"};
-		return retVal;
-	}
-	
+	/* This method generates an String array of commands to execute a device 
+	   copy process with the Unix 'dd' on various operating systems.
+	*/
 	String[] getCommandLine() {
-		String sLine = m_tfCommandLine.getText();
-		if (sLine.isEmpty()) return null;
-		
-		boolean inQuotes = false;
-		StringBuilder sb = new StringBuilder();
-		
-		ArrayList<String> cmds = new ArrayList<String>();
-		char c = 0;
-		
-		for (int i=0; i < sLine.length(); i++) {
-			c = sLine.charAt(i);
-			if (c == '\"') {
-				inQuotes = !inQuotes;
-				continue;
-			}
-			if (c != ' ' || inQuotes) sb.append(c);
-			else {
-				cmds.add(sb.toString());
-				sb.setLength(0);
-			}
+		String[] result = null;
+		if (m_type == MACOS) {
+			/*	For Apple, these commands are wrapped around with some extra 
+			    code for (un)mounting devices and obtaining super user access. */		
+			
+			String shellScript = m_tfCommandLine.getText();
+			if (shellScript.isEmpty()) return null;
+			
+			String cfcard = m_tfDevice.getText();	// getting device for (un)mounting it
+			
+			/* To avoid changes during copy process unmount the CF-Card device
+			   before operation begins. This is usually unnecessary for CF7
+			   formatted cards because they are not mounted due to their unknown
+			   file system, but anyway, for safety.
+			   Usually newly written CF-Cards cannot be mounted by macOS due to 
+			   the change of the legacy CF7 file format. Therefore generally
+			   no (re)mount is necessary.
+			*/
+			StringBuilder sb = new StringBuilder();
+			sb.append("/usr/sbin/diskutil unmountDisk ");
+			sb.append(cfcard).append("; ");
+			sb.append(shellScript.replaceAll("\\\\", "\\\\\\\\"));
+			if (m_read) sb.append("; /usr/sbin/diskutil mountDisk ").append(cfcard);
+			result = new String[3];
+			result[0] = "/usr/bin/osascript";
+			result[1] = "-e";
+			result[2] = "do shell script \"" + sb.toString() + "\" with administrator privileges";
 		}
-		if (c=='\"') cmds.add(sb.toString());  // we had no chance to write the remainder
-		String[] result = cmds.toArray(new String[cmds.size()]);		
-		return result;
+		
+		if (m_type == UNIX || m_type == WINDOWS) {
+			String sLine = m_tfCommandLine.getText();
+			if (sLine.isEmpty()) return null;
+			boolean inQuotes = false;
+			StringBuilder sb = new StringBuilder();
+			
+			ArrayList<String> cmds = new ArrayList<String>();
+			char c = 0;
+			
+			for (int i=0; i < sLine.length(); i++) {
+				c = sLine.charAt(i);
+				if (c == '\"') {
+					inQuotes = !inQuotes;
+					if (m_type == UNIX) continue;
+				}
+				if (c != ' ' || inQuotes) sb.append(c);
+				else {
+					cmds.add(sb.toString());
+					sb.setLength(0);
+				}
+			}
+			if (c=='\"') cmds.add(sb.toString());  // we had no chance to write the remainder
+			result = cmds.toArray(new String[cmds.size()]);		
+		}
+		return result;			
 	}
 }

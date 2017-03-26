@@ -45,26 +45,25 @@ public class ReadCFCardAction extends Activity {
 	public void go() {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		Runtime runtime = Runtime.getRuntime();
-		
-		/* 
-		 * TODO: Use enum type to handle various system types.
-		 */
-		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-		boolean isMac = System.getProperty("os.name").startsWith("Mac");
-				
-		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, isWindows, true);
+
+		int type =  ReadWriteCFDialog.UNIX;
+
+		if (System.getProperty("os.name").startsWith("Windows")) type = ReadWriteCFDialog.WINDOWS;
+		else if (System.getProperty("os.name").startsWith("Mac")) type = ReadWriteCFDialog.MACOS;
+
+		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, type, true);
 
 		rwd.createGui(imagetool.boldFont);
 		rwd.setVisible(true);
 
 		if (rwd.confirmed()) {
-			String[] commands = isMac? rwd.getMacCommandLine(false) : rwd.getCommandLine();
+			String[] commands = rwd.getCommandLine();
 			if (commands == null || commands.length < 3) {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("AbortCommand"), TIImageTool.langstr("ReadCFTitle"), JOptionPane.ERROR_MESSAGE);
 			} 
 			else {
+				// for (String s: commands) System.out.println("command = " + s);
 				try {
-					// for (String s: commands) System.out.println("command = " + s);
 					Process p = runtime.exec(commands, null, null); 
 					p.waitFor();
 					int exit = p.exitValue();
@@ -87,6 +86,7 @@ public class ReadCFCardAction extends Activity {
 				}
 			}
 		}
+		
 
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}

@@ -47,19 +47,18 @@ public class WriteCFCardAction extends Activity {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		Runtime runtime = Runtime.getRuntime();
 		
-		/* 
-		 * TODO: Use enum type to handle various system types.
-		 */
-		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
-		boolean isMac = System.getProperty("os.name").startsWith("Mac");
+		int type =  ReadWriteCFDialog.UNIX;
+
+		if (System.getProperty("os.name").startsWith("Windows")) type = ReadWriteCFDialog.WINDOWS;
+		else if (System.getProperty("os.name").startsWith("Mac")) type = ReadWriteCFDialog.MACOS;
 						
-		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, isWindows, false);
+		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, type, false);
 
 		rwd.createGui(imagetool.boldFont);
 		rwd.setVisible(true);
 
 		if (rwd.confirmed()) {
-			String[] commands = isMac? rwd.getMacCommandLine(true) : rwd.getCommandLine();
+			String[] commands = rwd.getCommandLine();
 			if (commands == null || commands.length < 3) {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("AbortCommand"), TIImageTool.langstr("WriteCFTitle"), JOptionPane.ERROR_MESSAGE);
 			} 
