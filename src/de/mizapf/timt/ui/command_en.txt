@@ -3,6 +3,7 @@ Command overview
 ----------------
 
 <imagefile> is a disk image file in a supported dump format.
+Volumes of CF7 images are indicated by adding "#n" to the file name (0...max-1)
 
 Show directory:
    dir <imagefile> [<subdir>]
@@ -13,3 +14,6 @@ Output file contents:       (file may be a plain name, or path name like SUBDIR.
    type <imagefile> <file>
    list <imagefile> <basicfile>
 
+Exporting and importing
+   export <imagefile> [<subdir>]   exports into the current directory
+   import <imagefile> [<subdir>]   imports all files of the current directory

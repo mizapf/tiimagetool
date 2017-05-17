@@ -21,6 +21,7 @@
 package de.mizapf.timt;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.basic.BasicLine;
+import de.mizapf.timt.util.*;
 import java.util.*;
 import java.io.*;
 
@@ -98,6 +99,58 @@ public class CommandShell {
 					return;
 				}
 				System.out.println(com.list(arg[1], arg[2]));
+			}
+			if (arg[0].equals("export")) {
+				String sSubdir = null;
+				if (arg.length<2) {
+					System.err.println(TIImageTool.langstr("CommandMissArg"));
+					return;
+				}
+				if (arg.length>2) {
+					sSubdir = arg[2];
+				}
+				try {
+					com.export(arg[1], sSubdir);
+				}
+				catch (ImageException ix) {
+					System.err.println(TIImageTool.langstr("ImageError") + ": " + ix.getMessage());						
+					return;
+				}
+				catch (FileNotFoundException fnfx) {
+					System.err.println(TIImageTool.langstr("FileNotFound") + ": " + fnfx.getMessage());
+					return;
+				} 
+				catch (IOException iox) {
+					System.err.println(TIImageTool.langstr("IOError") + ": " + iox.getClass().getName());
+					iox.printStackTrace();
+					return;
+				}
+			}
+			if (arg[0].equals("import")) {
+				String sSubdir = null;
+				if (arg.length<2) {
+					System.err.println(TIImageTool.langstr("CommandMissArg"));
+					return;
+				}
+				if (arg.length>2) {
+					sSubdir = arg[2];
+				}
+				try {
+					com.importFile(arg[1], sSubdir);
+				}
+				catch (ImageException ix) {
+					System.err.println(TIImageTool.langstr("ImageError") + ": " + ix.getMessage());						
+					return;
+				}
+				catch (FileNotFoundException fnfx) {
+					System.err.println(TIImageTool.langstr("FileNotFound") + ": " + fnfx.getMessage());
+					return;
+				} 
+				catch (IOException iox) {
+					System.err.println(TIImageTool.langstr("IOError") + ": " + iox.getClass().getName());
+					iox.printStackTrace();
+					return;
+				}
 			}
 		}
 		catch (ImageException ix) {
@@ -317,5 +370,103 @@ public class CommandShell {
 			return fl.listBasic(BasicLine.EX_BASIC, "~%");
 		}
 		else return TIImageTool.langstr("CommandListNotBasic");		
+	}
+
+	private String transliterate(String sExpFile, String sSubstSrc, String sSubstTar) {
+		StringBuilder sbNewFile = new StringBuilder();
+		for (int i=0; i < sExpFile.length(); i++) {
+			char ch = sExpFile.charAt(i);
+			if (ch>32 && ch<127) {
+				int nPos = sSubstSrc.indexOf(ch);
+				if (nPos != -1) {
+					char chNew = sSubstTar.charAt(nPos);
+					if (chNew != '?') sbNewFile.append(sSubstTar.charAt(nPos));
+				}
+				else sbNewFile.append(ch);
+			}
+			else {
+				String hex = Utilities.toHex((int)ch, 2, true);
+				sbNewFile.append('=').append(hex);
+			}
+		}
+		return sbNewFile.toString();
+	}
+	
+	public void export(String sImagename, String sDirname) throws FileNotFoundException, IOException, ImageException, FormatException {
+		Volume image = new Volume(sImagename);
+		// We need to descent to the given directory
+		String[] dirPath = getPath(sDirname);
+		Directory dirCurrent = descendToDirectory(image, dirPath, false);
+		
+		String fromList = "/\\*><:";
+		String toList = "__x___";
+		
+		for (TFile file : dirCurrent.getFiles()) {
+			
+			String sExpFile = file.getName();
+			
+			byte[] abyCont = null;
+			TIFiles tif = TIFiles.createFromFile(file);
+			abyCont = tif.toByteArray();
+			
+			// Transform the file name
+			sExpFile = transliterate(sExpFile, "_", ".");
+			sExpFile = transliterate(sExpFile, fromList, toList);
+			sExpFile = sExpFile.toLowerCase() + ".tfi";
+			
+			// Create full pathname for exporting
+			java.io.File iofSave = new java.io.File(sExpFile);
+
+			// Save the file
+			FileOutputStream fos = new FileOutputStream(iofSave);
+			fos.write(abyCont);
+			fos.close();
+		}		
+	}
+		
+	public void importFile(String sImagename, String sDirname) throws FileNotFoundException, IOException, ImageException, FormatException {
+		Volume image = new Volume(sImagename);
+		// We need to descent to the given directory
+		String[] dirPath = getPath(sDirname);
+		Directory dirCurrent = descendToDirectory(image, dirPath, false);
+		File iofDirectory = new File(".");
+		java.io.File[] aiof = iofDirectory.listFiles();
+	
+		for (java.io.File iofile : aiof) {
+			if (!iofile.isDirectory()) {
+				if (!iofile.getName().endsWith("meta.inf")) {
+					FileInputStream fis = new FileInputStream(iofile);
+					DataInputStream dis = new DataInputStream(fis);
+					byte[] abyTif = new byte[dis.available()];
+					dis.readFully(abyTif);
+					dis.close();
+					fis.close();
+
+					try {
+						String sName = TIFiles.getName(abyTif);
+						// Is this a TIFILES file?
+						if (TIFiles.hasHeader(abyTif)) {
+							dirCurrent.insertFile(abyTif, sName, false);
+						}
+						else {
+							System.err.println(iofile.getName() + " not a TIFILES file");
+						}
+					}
+					catch (ProtectedException px) {
+						System.err.println("Image is write protected");
+					}
+					catch (InvalidNameException ix) {
+						System.err.println(iofile.getName() + ": invalid name");
+					}
+					catch (FileExistsException fx) {
+						System.err.println(iofile.getName() + " already exists");
+					}
+					catch (EOFException ex) {
+						System.err.println(iofile.getName() + ": unexpected EOF");
+					}
+				}
+			}
+		}
+		
 	}
 }
