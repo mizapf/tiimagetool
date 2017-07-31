@@ -168,6 +168,14 @@ class ReadWriteCFDialog extends ToolDialog {
 		addButtons();		
 	}
 
+	boolean isRead() {
+		return m_read;
+	}
+	
+	String getTargetImage() {
+		return m_tfImageFile.getText();
+	}
+	
 	private void setupCommand() {
 		StringBuilder sb = new StringBuilder();
 		String cfcard = m_tfDevice.getText();

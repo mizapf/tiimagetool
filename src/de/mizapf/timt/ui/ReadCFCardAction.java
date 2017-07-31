@@ -55,7 +55,8 @@ public class ReadCFCardAction extends Activity {
 
 		rwd.createGui(imagetool.boldFont);
 		rwd.setVisible(true);
-
+		long lastMod = -1;
+		
 		if (rwd.confirmed()) {
 			String[] commands = rwd.getCommandLine();
 			if (commands == null || commands.length < 3) {
@@ -63,12 +64,32 @@ public class ReadCFCardAction extends Activity {
 			} 
 			else {
 				// for (String s: commands) System.out.println("command = " + s);
+				String targetImage = rwd.getTargetImage();
+				File target = new File(targetImage); 
+				if (rwd.isRead() && target.exists()) {
+					int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ExistsOverwrite"), TIImageTool.langstr("ReadCFTitle"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+					if (nRet == JOptionPane.NO_OPTION) {
+						m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+						return;
+					}
+					else lastMod = target.lastModified();
+				}
+				
 				try {
 					Process p = runtime.exec(commands, null, null); 
 					p.waitFor();
 					int exit = p.exitValue();
 					if (exit == 0) {
-						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ReadCFSuccess"), TIImageTool.langstr("ReadCFTitle"), JOptionPane.INFORMATION_MESSAGE);
+						// Check whether the image file was created
+						boolean fail = false;
+						if (rwd.isRead()) {
+							if (!target.exists() || target.lastModified()==lastMod) {
+								JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ReadCFFailed"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+								fail = true;
+							}
+						}
+						if (!fail)
+							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ReadCFSuccess"), TIImageTool.langstr("ReadCFTitle"), JOptionPane.INFORMATION_MESSAGE);
 					}
 					else {
 						// Only effective for the immediate command (e.g. kdesu)

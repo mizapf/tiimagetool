@@ -23,6 +23,12 @@
 	TODOs for 2.x
 	-------------
     
+	New for 2.4.4
+	[ ] Add default hard disk format selection ("Seagate ST-225 | ... | user-defined")
+	[ ] Add check for CF card read (check for newly created image file)
+	[ ] Change MacOS defaults (see below in this file)
+	[ ] Search for CF7 card and for dd / chown automatically.
+	
 	New for 2.4
     [x] Open EMULATE files 
     [x] Open CF7
