@@ -26,8 +26,9 @@
 	New for 2.4.4
 	[ ] Add default hard disk format selection ("Seagate ST-225 | ... | user-defined")
 	[ ] Add check for CF card read (check for newly created image file)
-	[ ] Change MacOS defaults (see below in this file)
+	[x] Change MacOS defaults (see below in this file)
 	[ ] Search for CF7 card and for dd / chown automatically.
+	[ ] Check for CF7 open issues in Windows
 	
 	New for 2.4
     [x] Open EMULATE files 
@@ -129,12 +130,18 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.4.3";
-	public final static String MONTH = "March";
+	public final static String VERSION = "2.4.4";
+	public final static String MONTH = "August";
 	public final static String YEAR = "2017";
 	
 	private static final String TITLE = "TIImageTool";
-	
+
+	// ============= Supported OS =====================
+
+	public final static int UNIX = 1;
+	public final static int MACOS = 2;
+	public final static int WINDOWS = 3;
+		
 	// ============= Properties ======================
 	
 	public final static String CONTFONT = "contentfont";
@@ -1108,11 +1115,75 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		catch (NumberFormatException nfx) {
 			fontSize = 12;
 			System.err.println(langstr("ParseError") + ": " + nfx.getMessage());
-		}
+		}		
+		
+		findPathsForCF();
 		
 		SwingUtilities.invokeLater(new CreateGui());
 	}
 
+	private void findPathsForCF() {
+		// Find chown, dd, graphical su
+		if (getOperatingSystem() != WINDOWS) {
+			String chown = getPropertyString(COPATH);
+			File flChown = null;
+			if (chown != null) flChown = new File(chown);
+			if (flChown == null || !flChown.exists()) {
+				System.out.print("Searching chown command ... ");
+				// Need to find chown
+				FileFinder ff = new FileFinder("/usr/bin;/usr/sbin;/bin;/sbin");
+				String chownfound = ff.find("chown");
+				if (chownfound == null) System.out.println("not found");
+				else {
+					setProperty(COPATH, chownfound);
+					System.out.println("found");
+				}
+			}
+			
+			String dd = getPropertyString(DDPATH);
+			File flDD = null; 
+			if (dd != null) flDD = new File(dd);
+			if (flDD == null || !flDD.exists()) {
+				System.out.print("Searching dd command ... ");
+				// Need to find dd
+				FileFinder ff = new FileFinder("/usr/bin;/usr/sbin;/bin;/sbin");
+				String ddfound = ff.find("dd");
+				if (ddfound == null) System.out.println("not found");
+				else {
+					setProperty(DDPATH, ddfound);
+					System.out.println("found");
+				}									
+			}
+			
+			if (getOperatingSystem() == UNIX) {
+				// Find graphical su for Linux
+				// MacOS uses osascript
+				String gsu = getPropertyString(SUPATH);
+				File flgsu = null;
+				if (gsu != null) flgsu = new File(gsu);
+				if (flgsu == null || !flgsu.exists()) {
+					System.out.print("Searching graphical su command ... ");
+					// Need to find kdesu
+					FileFinder ff = new FileFinder("/usr/bin;/usr/sbin;/bin;/sbin");
+					String sufound = ff.find("kdesu");
+					// If not found, try to find gksu
+					if (sufound == null) {
+						sufound = ff.find("gksu");
+						if (sufound==null) System.out.println("not found");
+						else {
+							setProperty(SUPATH, sufound);
+							System.out.println("found");
+						}
+					}
+					else {
+						setProperty(SUPATH, sufound);
+						System.out.println("found");
+					}
+				}
+			}
+		}		
+	}
+	
 	public JFrame getMainFrame() {
 		return m_frmMain;
 	}
@@ -1188,8 +1259,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 
 	private void loadProperties() {
 
-		boolean windows = System.getProperty("os.name").startsWith("Windows");
-		String sFile = (windows)? "tiimagetool.prop" : ".tiimagetoolrc";
+		String sFile = (getOperatingSystem()==WINDOWS)? "tiimagetool.prop" : ".tiimagetoolrc";
 				
 		// Try to load
 		// 1. from the current directory
@@ -1206,7 +1276,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		catch (FileNotFoundException fx) {
 			// Try to get the value and pre-set it if not available 
-			setDefaults(windows);
+			setDefaults();
 			saveProperties(); // No properties
 			return;
 		}
@@ -1218,7 +1288,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			System.err.println(langstr("MainNoProperties"));
 		}
 		
-		setDefaults(windows);
+		setDefaults();
 		
 		try {
 			fr.close();
@@ -1228,14 +1298,15 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 	}
 	
-	private void setDefaults(boolean windows) {
+	private void setDefaults() {
+		int type = getOperatingSystem();
 		getPropertyString(CONVERT, "/\\* __x");
 		getPropertyString(SUFFIX, ".tfi");
 		getPropertyString(UNDERSCORE, "true");		
 		getPropertyString(EXPLOWER, "true");	
-		getPropertyString(CFCARD, (windows)? "e:" : "/dev/sdc");
-		getPropertyString(DDPATH, (windows)? "" : "/usr/bin/dd");
-		getPropertyString(COPATH, (windows)? "" : "/usr/bin/chown");
+		getPropertyString(CFCARD, (type==WINDOWS)? "k:" : ((type==MACOS)? "/dev/disk4" : "/dev/sdg"));
+		getPropertyString(DDPATH, (type==WINDOWS)? "" : ((type==MACOS)? "/bin/dd" : "/usr/bin/dd"));
+		getPropertyString(COPATH, (type==WINDOWS)? "" : ((type==MACOS)? "/usr/sbin/chown" : "/usr/bin/chown"));
 		getPropertyString(BSIZE, "4096");
 		getPropertyString(CONVERT, "true");	
 		getPropertyString(KEEPNAME, "false");	
@@ -1380,6 +1451,14 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			lang[i] = langstr(langs[i]);
 		}
 		return lang;
+	}
+	
+	public int getOperatingSystem() {
+		if (System.getProperty("os.name").startsWith("Windows")) return WINDOWS;
+		else {
+			if (System.getProperty("os.name").startsWith("Mac")) return MACOS;
+			else return UNIX;
+		}
 	}
 	
 // JComponent.getComponentGraphics -> getFontMetrics -> stringWidth

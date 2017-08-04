@@ -23,6 +23,7 @@
 package de.mizapf.timt.ui;
 
 import java.awt.Cursor;
+import java.io.File;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,12 +48,46 @@ public class WriteCFCardAction extends Activity {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		Runtime runtime = Runtime.getRuntime();
 		
-		int type =  ReadWriteCFDialog.UNIX;
+		// Find missing commands
+		if (imagetool.getOperatingSystem()==TIImageTool.WINDOWS) {
+			String ddpath = imagetool.getPropertyString(TIImageTool.DDPATH);
+			if (ddpath == null) ddpath = "";
+			if (ddpath.length() > 0) {
+				// Test whether the path is still valid
+				File ddfile = new File(ddpath);
+				if (!ddfile.exists()) {
+					ddpath = "";
+					imagetool.setProperty(TIImageTool.DDPATH, ddpath);
+				}
+			}
+			
+			// Path is not valid; let's search for the proper path
+			if (ddpath.length()==0) {
+				FindCFUtilDialog findd = new FindCFUtilDialog(m_parent, imagetool);
+				findd.createGui(imagetool.boldFont);
+				findd.setVisible(true);
+				
+				if (!findd.confirmed()) {
+					m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+					return;
+				}
+				else {
+					ddpath = findd.getDDPath();
+					if (ddpath == null) ddpath = "";
+					imagetool.setProperty(TIImageTool.DDPATH, ddpath);
+				}
+				ddpath = imagetool.getPropertyString(TIImageTool.DDPATH);
+			}
+			
+			if (ddpath.length()==0) {
+				JOptionPane.showMessageDialog(m_parent, "No DD.EXE found. This is required for CF operations.", TIImageTool.langstr("ReadCFTitle"), JOptionPane.ERROR_MESSAGE);				
+				return;
+			}
+		}
+				
+		// Continue
 
-		if (System.getProperty("os.name").startsWith("Windows")) type = ReadWriteCFDialog.WINDOWS;
-		else if (System.getProperty("os.name").startsWith("Mac")) type = ReadWriteCFDialog.MACOS;
-						
-		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, type, false);
+		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, false);
 
 		rwd.createGui(imagetool.boldFont);
 		rwd.setVisible(true);
@@ -64,12 +99,22 @@ public class WriteCFCardAction extends Activity {
 			} 
 			else {
 				try {
+					long startTime = System.currentTimeMillis();
 					// for (String s: commands) System.out.println("command = " + s);
 					Process p = runtime.exec(commands, null, null); 
 					p.waitFor();
+					long endTime = System.currentTimeMillis();
 					int exit = p.exitValue();
 					if (exit == 0) {
-						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("WriteCFSuccess"), TIImageTool.langstr("WriteCFTitle"), JOptionPane.INFORMATION_MESSAGE);
+						if (endTime - startTime < 5000) {
+							// If it takes less than 5 secs, this obviously failed. 
+							// Looks like an ugly hack, but this should be a safe 
+							// way to find it out for different OS
+							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("WriteCFFailed"), TIImageTool.langstr("WriteCFTitle"), JOptionPane.ERROR_MESSAGE);
+						}
+						else {
+							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("WriteCFSuccess"), TIImageTool.langstr("WriteCFTitle"), JOptionPane.INFORMATION_MESSAGE);
+						}
 					}
 					else {
 						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("WriteCFFailed"), TIImageTool.langstr("WriteCFTitle"), JOptionPane.ERROR_MESSAGE);

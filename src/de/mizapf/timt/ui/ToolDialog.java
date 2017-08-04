@@ -48,6 +48,7 @@ public class ToolDialog extends JDialog implements ActionListener {
 	protected static final String CFICON = "cfcard1.png";
 	protected static final String IMGICON = "imgicon1.png";
 	protected static final String PRGICON = "gear1.png";
+	protected static final String SEAICON = "automt.png";
 	
 	protected static final String DISKSICON = "disks.png";
 	
@@ -348,9 +349,54 @@ public class ToolDialog extends JDialog implements ActionListener {
 		return arb;
 	}
 
+	protected void addChoiceLineWithAuto(int nColumnWidth, String prompt, int line, int number, JTextField textField, int width) {
+		addChoiceLineAuto(nColumnWidth, prompt, line, number, textField, width, true);
+	}
+
 	protected void addChoiceLine(int nColumnWidth, String prompt, int line, int number, JTextField textField, int width) {
+		addChoiceLineAuto(nColumnWidth, prompt, line, number, textField, width, false);
+	}
+
+	protected void addSearchLine(int nColumnWidth, String prompt, JTextField textField) {
+		JButton searchbutton = null;
+		Box box = new Box(BoxLayout.X_AXIS);
+		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		JLabel jl = new JLabel(prompt, SwingConstants.LEFT);
+		// jl.setMinimumSize(new Dimension(nColumnWidth, TIImageTool.dialogHeight));
+//		jl.setPreferredSize(new Dimension(nColumnWidth, TIImageTool.dialogHeight));
+//		jl.setMaximumSize(new Dimension(nColumnWidth, TIImageTool.dialogHeight));
+		box.add(jl);
+		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+
+		ImageIcon searchicon = null;
+		java.net.URL searchurl = ToolDialog.class.getResource(SEAICON);
+		searchicon = new ImageIcon(searchurl);
+		searchbutton = new JButton(searchicon);			
+		
+		box.add(Box.createHorizontalStrut(10));
+
+		textField.setEditable(false);
+		textField.setMinimumSize(new Dimension(300, 20));
+		textField.setPreferredSize(new Dimension(300, 20));
+		textField.setMaximumSize(new Dimension(100000, 20));
+
+		box.add(textField);
+		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		searchbutton.setActionCommand("AUTOSEARCH");
+		searchbutton.addActionListener(this);
+		searchbutton.setMinimumSize(new Dimension(38, 35));
+		searchbutton.setPreferredSize(new Dimension(38, 35));
+		searchbutton.setMaximumSize(new Dimension(38, 35));
+		box.add(searchbutton);		
+		
+		add(box);
+		add(Box.createVerticalStrut(TIImageTool.dialogHeight));		
+	}
+	
+	protected void addChoiceLineAuto(int nColumnWidth, String prompt, int line, int number, JTextField textField, int width, boolean withAuto) {
 
 		JButton button = null;
+		JButton searchbutton = null;
 			
 		Box box = new Box(BoxLayout.X_AXIS);
 		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
@@ -368,7 +414,10 @@ public class ToolDialog extends JDialog implements ActionListener {
 		
 		// Button
 		ImageIcon diskicon = null;
+		ImageIcon searchicon = null;
 		java.net.URL iconurl = null;
+		java.net.URL searchurl = ToolDialog.class.getResource(SEAICON);
+		
 		switch (line) {
 		case DEVLINE: 
 			iconurl = ToolDialog.class.getResource(CFICON);
@@ -380,10 +429,13 @@ public class ToolDialog extends JDialog implements ActionListener {
 			iconurl = ToolDialog.class.getResource(PRGICON);
 			break;
 		}
-
-		if (iconurl != null) {
+		
+		if (iconurl != null && searchurl != null) {
 			diskicon = new ImageIcon(iconurl);
 			button = new JButton(diskicon);
+			
+			searchicon = new ImageIcon(searchurl);
+			searchbutton = new JButton(searchicon);			
 		} 
 		else {
 			System.err.println(TIImageTool.langstr("NoImage") + " " + iconurl);
@@ -405,6 +457,15 @@ public class ToolDialog extends JDialog implements ActionListener {
 
 		box.add(textField);
 		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		
+		if (line==DEVLINE) {
+			searchbutton.setActionCommand("AUTO");
+			searchbutton.addActionListener(this);
+			searchbutton.setMinimumSize(new Dimension(38, 35));
+			searchbutton.setPreferredSize(new Dimension(38, 35));
+			searchbutton.setMaximumSize(new Dimension(38, 35));
+			box.add(searchbutton);		
+		}
 		
 		add(box);
 		add(Box.createVerticalStrut(TIImageTool.dialogHeight));
