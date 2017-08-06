@@ -88,7 +88,7 @@ class NewCF7Dialog extends ToolDialog {
 		add(Box.createVerticalStrut(10));
 		add(Box.createVerticalGlue());
 
-		addButtons(m_fullImage);
+		addButtons(m_fullImage? ONLY_OK : OK_AND_CANCEL);
 	}
 	
 	String getDiskName() {

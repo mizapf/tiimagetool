@@ -52,8 +52,18 @@ public class ToolDialog extends JDialog implements ActionListener {
 	
 	protected static final String DISKSICON = "disks.png";
 	
+	public static final int ONLY_OK = 1;
+	public static final int OK_AND_CANCEL = 2;
+	public static final int ONLY_CANCEL = 3;
+	public static final int NONE = 4;
+	
 	protected ToolDialog(JFrame owner, String sTitle) {
 		super(owner, sTitle, true);
+		m_frmMain = owner;
+	}
+	
+	protected ToolDialog(JFrame owner, String sTitle, boolean modal) {
+		super(owner, sTitle, modal);
 		m_frmMain = owner;
 	}
 	
@@ -64,10 +74,10 @@ public class ToolDialog extends JDialog implements ActionListener {
 	}
 	
 	protected void addButtons() {
-		addButtons(false);
+		addButtons(OK_AND_CANCEL);
 	}
 		
-	protected void addButtons(boolean onlyOK) {
+	protected void addButtons(int buttons) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.boldDialogFont);		
 		int textWidth = fm.stringWidth(TIImageTool.langstr("ButtonSampleText"));
 		
@@ -75,15 +85,18 @@ public class ToolDialog extends JDialog implements ActionListener {
 		
 		Insets margin = (Insets)UIManager.get("Button.margin");
 		add(Box.createVerticalStrut(textHeight/2));		
-		Box box7 = new Box(BoxLayout.X_AXIS);		
-		m_btnOK = new JButton(TIImageTool.langstr("OK"));
-		m_btnOK.addActionListener(this);
-		m_btnOK.setPreferredSize(new Dimension(textWidth + margin.left + margin.right + 10, textHeight + margin.top + margin.bottom + 10));
-		box7.add(Box.createHorizontalGlue());		
-		box7.add(Box.createHorizontalStrut(textHeight/2));		
-		box7.add(m_btnOK);
+		Box box7 = new Box(BoxLayout.X_AXIS);
 
-		if (!onlyOK) {
+		if (buttons == ONLY_OK || buttons == OK_AND_CANCEL) {		
+			m_btnOK = new JButton(TIImageTool.langstr("OK"));
+			m_btnOK.addActionListener(this);
+			m_btnOK.setPreferredSize(new Dimension(textWidth + margin.left + margin.right + 10, textHeight + margin.top + margin.bottom + 10));
+			box7.add(Box.createHorizontalGlue());		
+			box7.add(Box.createHorizontalStrut(textHeight/2));		
+			box7.add(m_btnOK);
+		}
+
+		if (buttons == ONLY_CANCEL || buttons == OK_AND_CANCEL) {
 			m_btnCancel = new JButton(TIImageTool.langstr("Cancel"));
 			m_btnCancel.addActionListener(this);
 			m_btnCancel.setPreferredSize(new Dimension(textWidth + margin.left + margin.right + 10, textHeight + margin.top + margin.bottom + 10));
@@ -91,8 +104,11 @@ public class ToolDialog extends JDialog implements ActionListener {
 			box7.add(m_btnCancel);
 			box7.add(Box.createHorizontalStrut(textHeight/2));		
 		}
-		box7.add(Box.createHorizontalGlue());		
-		add(box7);		
+		
+		if (buttons != NONE) {
+			box7.add(Box.createHorizontalGlue());		
+			add(box7);
+		}
 		add(Box.createVerticalStrut(textHeight/2));		
 		
 		pack();

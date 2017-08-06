@@ -102,7 +102,13 @@ public class WriteCFCardAction extends Activity {
 					long startTime = System.currentTimeMillis();
 					// for (String s: commands) System.out.println("command = " + s);
 					Process p = runtime.exec(commands, null, null); 
+
+					WaitForCF7Dialog wd = new WaitForCF7Dialog(m_parent, imagetool, false);
+					wd.createGui(imagetool.boldFont);
+					wd.setVisible(true);
 					p.waitFor();
+					wd.dispose();
+
 					long endTime = System.currentTimeMillis();
 					int exit = p.exitValue();
 					if (exit == 0) {

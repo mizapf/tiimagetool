@@ -29,6 +29,7 @@
 	[x] Change MacOS defaults (see below in this file)
 	[ ] Search for CF7 card and for dd / chown automatically.
 	[ ] Check for CF7 open issues in Windows
+	[ ] "Please wait" window for CF7
 	
 	New for 2.4
     [x] Open EMULATE files 
