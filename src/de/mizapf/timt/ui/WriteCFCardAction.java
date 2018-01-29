@@ -81,6 +81,15 @@ public class WriteCFCardAction extends Activity {
 			
 			if (ddpath.length()==0) {
 				JOptionPane.showMessageDialog(m_parent, "No DD.EXE found. This is required for CF operations.", TIImageTool.langstr("ReadCFTitle"), JOptionPane.ERROR_MESSAGE);				
+				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));				
+				return;
+			}
+		}
+		else {
+			// If we're on MAC/UNIX, check whether the chown/dd(/gksu/kdesu) tools were found
+			if (!imagetool.allToolsFound()) {
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ReadWriteCFNoUtils"), TIImageTool.langstr("ReadCFTitle"), JOptionPane.ERROR_MESSAGE);				
+				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));				
 				return;
 			}
 		}

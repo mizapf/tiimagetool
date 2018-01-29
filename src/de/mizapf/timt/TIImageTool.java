@@ -29,38 +29,7 @@
 	[x] Change MacOS defaults (see below in this file)
 	[ ] Search for CF7 card and for dd / chown automatically.
 	[ ] Check for CF7 open issues in Windows
-	[ ] "Please wait" window for CF7
-	
-	New for 2.4
-    [x] Open EMULATE files 
-    [x] Open CF7
-    [x] Sector editor
-    [x] Rename volume
-    [x] Add RLE-128 format
-    [x] Read/Write CF7 card
-    [x] Format CF7
-    [x] New dialog for CHDRaw/RawCHD (from SearchDialog)	
-    [x] Split properties settings into tabs
-    [x] Fix double output in Console
-    [x] Fix Drag and drop
-    [x] Fix marking in directory panel
-    [x] Base address for plain dump
-    [x] I18n, L10n for English and German
-	
-    New for 2.1+
-    [x] Redirect standard output
-    [x] Open recent
-    [x] Fix copying of file sets with an empty file included 
-    [x] Fix LONG format issue with small BASIC programs (programs that are too short cannot be saved as LONG)
-    [x] Fix L3 issue; add to CheckFS ("The file xx has a swapped L3 count (see manual). Shall this be fixed?") 
-    [x] Enhanced filesystem check, opens text window for results
-    [x] Create sparsely labeled disassembly for PRG files
-	[x] Drag and Drop
-	[x] Hints
-    [x] Import text as BASIC
-    [x] Search function
-    [x] Fix import of CRLF in imported texts
-    [x] Fix plain dump for dis/fix 80 (ends too early)
+	[x] "Please wait" window for CF7
 */
 
 package de.mizapf.timt;
@@ -131,8 +100,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.4.4";
-	public final static String MONTH = "August";
+	public final static String VERSION = "2.4.5";
+	public final static String MONTH = "December";
 	public final static String YEAR = "2017";
 	
 	private static final String TITLE = "TIImageTool";
@@ -238,6 +207,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	/** Console output buffer. */
 	java.io.File m_logFile;
 	
+	/** Serial package */
+	public static final String SERIALPACKAGE="gnu.io.";
+	// public static final String SERIALPACKAGE="com.fazecast.jSerialComm.";	 // TIMT does not compile with JSerialComm (missing objects/methods)
+	
 	// ===============================================
 	
 	/** Directory on the PC file system where to open the file dialog. */
@@ -292,6 +265,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	// Title icon
 	public ImageIcon m_frameicon = null;
+	
+	// Have we found all required utilities for CF operations?
+	boolean m_utilsfound;
 	
 	// ===============================================
 	// Clipboard for cut-copy-paste
@@ -506,8 +482,18 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			try {
 				// Check for presence of RXTX
 				// If not available, block the remote functions
-				Class cls = Class.forName("gnu.io.SerialPort");
+				Class cls = Class.forName(SERIALPACKAGE + "SerialPort");
 				m_bSerial = true;
+				System.out.println("load");
+				gnu.io.DriverManager.getInstance().loadDrivers();
+				
+				/* java.util.Enumeration<gnu.io.CommPortIdentifier> identifiers =
+					gnu.io.CommPortIdentifier.getPortIdentifiers();
+					while(identifiers.hasMoreElements()){
+						gnu.io.CommPortIdentifier a = identifiers.nextElement();
+						System.out.println(a.getName());
+					}
+                */
 			}
 			catch (ClassNotFoundException cnfx) {
 				m_bSerial = false;
@@ -884,7 +870,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				try {
 					// Check for presence of RXTX
 					// If not available, block the remote functions
-					Class cls = Class.forName("gnu.io.SerialPort");
+					Class cls = Class.forName(SERIALPACKAGE + "SerialPort");
 				}
 				catch (ClassNotFoundException cnfx) {
 					System.err.println(langstr("MainSerialMissing"));
@@ -1123,8 +1109,13 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		SwingUtilities.invokeLater(new CreateGui());
 	}
 
+	public boolean allToolsFound() {
+		return m_utilsfound;
+	}
+	
 	private void findPathsForCF() {
 		// Find chown, dd, graphical su
+		m_utilsfound = true;
 		if (getOperatingSystem() != WINDOWS) {
 			String chown = getPropertyString(COPATH);
 			File flChown = null;
@@ -1134,7 +1125,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				// Need to find chown
 				FileFinder ff = new FileFinder("/usr/bin;/usr/sbin;/bin;/sbin");
 				String chownfound = ff.find("chown");
-				if (chownfound == null) System.out.println("not found");
+				if (chownfound == null) {
+					System.out.println("not found");
+					m_utilsfound = false;
+				}
 				else {
 					setProperty(COPATH, chownfound);
 					System.out.println("found");
@@ -1149,7 +1143,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				// Need to find dd
 				FileFinder ff = new FileFinder("/usr/bin;/usr/sbin;/bin;/sbin");
 				String ddfound = ff.find("dd");
-				if (ddfound == null) System.out.println("not found");
+				if (ddfound == null) {
+					System.out.println("not found");
+					m_utilsfound = false;
+				}
 				else {
 					setProperty(DDPATH, ddfound);
 					System.out.println("found");
@@ -1163,14 +1160,17 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				File flgsu = null;
 				if (gsu != null) flgsu = new File(gsu);
 				if (flgsu == null || !flgsu.exists()) {
-					System.out.print("Searching graphical su command ... ");
+					System.out.print("Searching graphical su command (gksu or kdesu) ... ");
 					// Need to find kdesu
 					FileFinder ff = new FileFinder("/usr/bin;/usr/sbin;/bin;/sbin");
 					String sufound = ff.find("kdesu");
 					// If not found, try to find gksu
 					if (sufound == null) {
 						sufound = ff.find("gksu");
-						if (sufound==null) System.out.println("not found");
+						if (sufound==null) {
+							System.out.println("not found");
+							m_utilsfound = false;
+						}
 						else {
 							setProperty(SUPATH, sufound);
 							System.out.println("found");

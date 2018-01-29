@@ -25,8 +25,6 @@ import javax.swing.*;
 import java.io.IOException;
 import de.mizapf.timt.conn.*;
 
-import gnu.io.*;
-
 import static de.mizapf.timt.conn.XModem.*;
 
 import java.io.InputStream;

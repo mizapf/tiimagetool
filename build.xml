@@ -8,6 +8,7 @@
 <property name="dist"  value="dist"/>
 <property name="ext"  value="ext"/>
 <property name="util"  value="util"/>
+<property name="serial" value="RXTXcomm.jar"/>
 
 <!-- property name="build.compiler" value="classic"/ -->
 
@@ -19,16 +20,16 @@
 </target>
 
 <target name="tiimagetool" depends="init">
-<!-- Check for RXTXcomm.jar -->
-   <available file="${ext}/RXTXcomm.jar" property="rxtx.available"/>
-   <fail message="RXTXcomm.jar not found in folder ${ext}" unless="rxtx.available"/>
+<!-- Check for the serial package -->
+   <available file="${ext}/${serial}" property="rxtx.available"/>
+   <fail message="${serial} not found in folder ${ext}" unless="rxtx.available"/>
 
    <echo>
      ****    Building TIImageTool  ****
    </echo>
    <!-- Compile the java code from ${src} into ${build} -->
    <javac srcdir="${src}" destdir="${build}" debug="on" includeAntRuntime="false" 
-         classpath="${ext}/RXTXcomm.jar"
+         classpath="${ext}/${serial}"
          encoding="utf-8" 
          includes="de/mizapf/timt/**/*.java" >
        <compilerarg value="-Xlint:unchecked" />

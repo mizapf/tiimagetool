@@ -87,7 +87,7 @@ public class SerialBridgeAction extends Activity implements Runnable {
 			sbd.setVisible(true);	
 		}
 		catch (IOException iox) {
-			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("SBActionError") + ": " + iox.getClass().getName(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("SBActionError") + ": " + iox.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 			return;
 		}
 		

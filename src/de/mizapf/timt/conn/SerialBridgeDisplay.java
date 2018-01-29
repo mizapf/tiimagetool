@@ -22,8 +22,6 @@
 package de.mizapf.timt.conn;
 
 import java.io.*;
-//import java.util.*;
-//import gnu.io.*;
 
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;

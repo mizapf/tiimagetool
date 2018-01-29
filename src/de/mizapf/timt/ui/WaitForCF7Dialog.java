@@ -33,7 +33,7 @@ class WaitForCF7Dialog extends ToolDialog {
 	boolean   m_read;
 	
 	WaitForCF7Dialog(JFrame owner, TIImageTool timt, boolean read) {
-		super(owner, "Transfer in progress", false);
+		super(owner, TIImageTool.langstr(read? "ReadWriteCFTitleR" : "ReadWriteCFTitleW"));
 		imagetool = timt;
 		m_read = read;
 	}
@@ -50,10 +50,10 @@ class WaitForCF7Dialog extends ToolDialog {
 		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("NewCF7Column"));
 
 		add(Box.createVerticalStrut(10));
-		if (m_read) putTextLine(this, "Reading CF card ... please wait.", 0);
-		else putTextLine(this, "Writing CF card ... please wait.", 0);
+		if (m_read) putTextLine(this, TIImageTool.langstr("ReadCFWait"), 0);
+		else putTextLine(this, TIImageTool.langstr("WriteCFWait"), 0);
 		add(Box.createVerticalStrut(10));
-		putTextLine(this, "This may take a long time, depending on the capacity and speed.", 0);
+		putTextLine(this, TIImageTool.langstr("ReadWriteCFWaitLong"), 0);
 		add(Box.createVerticalStrut(10));
 		add(Box.createVerticalGlue());
 		addButtons(NONE);

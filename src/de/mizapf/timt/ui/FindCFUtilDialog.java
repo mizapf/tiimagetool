@@ -43,7 +43,7 @@ class FindCFUtilDialog extends ToolDialog {
 	String m_ddpath;
 			
 	FindCFUtilDialog(JFrame owner, TIImageTool timt) {
-		super(owner, "Find CF utilities");
+		super(owner, TIImageTool.langstr("FindCFUtils"));
 		imagetool = timt;
 		m_parent = owner;
 	}	
@@ -72,9 +72,9 @@ class FindCFUtilDialog extends ToolDialog {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("ReadwriteCFColumn"));
 
-		putTextLine(this, "!Find CF utilties", 0);
+		putTextLine(this, "!" + TIImageTool.langstr("FindCFUtils"), 0);
 		add(Box.createVerticalStrut(10));
-		putMultiTextLine(this, "Please provide the path to the DD.EXE tool.");
+		putMultiTextLine(this, TIImageTool.langstr("FindCFPath"));
 		add(Box.createVerticalStrut(10));
 		String ddprompt = TIImageTool.langstr("ReadWriteCFDD");
 		
@@ -108,7 +108,6 @@ class FindCFUtilDialog extends ToolDialog {
 			dispose();
 		}
 		if (ae.getActionCommand().equals("AUTOSEARCH")) {
-			System.out.println("Autosearch");
 			// Open a FileOpenDialog
 			try {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
@@ -119,7 +118,7 @@ class FindCFUtilDialog extends ToolDialog {
 				jfc.changeToParentDirectory();
 				int nReturn = jfc.showOpenDialog(m_parent);
 				if (nReturn == JFileChooser.APPROVE_OPTION) {
-					updateText("searching...");
+					updateText(TIImageTool.langstr("FindCFSearching") + "...");
 					File file = jfc.getSelectedFile();
 					String ddpath = file.getAbsolutePath();
 					File ddfl = new File(ddpath);
@@ -129,7 +128,7 @@ class FindCFUtilDialog extends ToolDialog {
 							m_ddpath = ddpath;
 						}
 						else {
-							updateText("Invalid file");
+							updateText(TIImageTool.langstr("FindCFInvalid"));
 						}
 					}
 					else {
@@ -139,7 +138,7 @@ class FindCFUtilDialog extends ToolDialog {
 							updateText(path);
 							m_ddpath = path;
 						}
-						else updateText("not found");
+						else updateText(TIImageTool.langstr("FindCFNotFound"));
 					}					
 				}				
 			}

@@ -25,8 +25,6 @@ import java.awt.*;
 import java.awt.font.*;
 import java.awt.event.*;
 import java.io.*;
-//import java.util.*;
-//import gnu.io.*;
 
 import de.mizapf.timt.TIImageTool;
 

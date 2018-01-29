@@ -25,6 +25,7 @@ import java.io.*;
 import java.util.Enumeration;
 import java.util.TooManyListenersException;
 import gnu.io.*;
+//import com.fazecast.jSerialComm.*;   // TIMT does not compile with JSerialComm (missing objects/methods)
 
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;

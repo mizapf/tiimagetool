@@ -362,7 +362,7 @@ d29e d645 ffe7
 								// if (symbol.equalsIgnoreCase(BasicLine.basicToken[i]) && supported(i)) {
 								if (matches(symbol, i)) {
 									if ((BasicLine.tokenType[i] & BasicLine.DIRECT) != 0) {
-										System.err.println(ILLEGAL_IN_PRG);
+//										System.err.println(symbol + " (" + i + "): error " + ILLEGAL_IN_PRG);
 										throw new CrunchException(ILLEGAL_IN_PRG, symbol, m_linenumber, m_inloc, m_textLine);
 									}
 									token = i;
@@ -468,7 +468,7 @@ d29e d645 ffe7
 		String full = null;
 		if (pos == -1) test = BasicLine.basicToken[i];
 		else {
-			test = BasicLine.basicToken[i].substring(0, pos-1);
+			test = BasicLine.basicToken[i].substring(0, pos);
 			full = test + BasicLine.basicToken[i].substring(pos+1);
 		}
 		

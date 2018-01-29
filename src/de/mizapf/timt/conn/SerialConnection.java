@@ -24,6 +24,7 @@ package de.mizapf.timt.conn;
 import java.io.*;
 import java.util.*;
 import gnu.io.*;
+//import com.fazecast.jSerialComm.*;   // TIMT does not compile with JSerialComm (missing objects/methods)
 import de.mizapf.timt.TIImageTool;
 
 public class SerialConnection {
