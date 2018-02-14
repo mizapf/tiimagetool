@@ -3,6 +3,8 @@ package de.mizapf.timt.util;
 import java.io.*;
 import java.nio.charset.*;
 
+import de.mizapf.timt.files.*;
+
 /** Reads a HFE format file.
 */
 public class HFEReader {
@@ -12,28 +14,30 @@ public class HFEReader {
 	int[] m_trackoffset;
 	int m_sectpertrack;
 	int m_tracks;
+	HFEFormat m_format;
 	
 	public static void main(String[] arg) {
 		byte[] abyFile = null;
 		try {
-			FileInputStream fis = new FileInputStream(arg[0]);
-			DataInputStream dis = new DataInputStream(fis);
-			abyFile = new byte[fis.available()];
-			int i=0;
-			while (true) {
-				int ch = fis.read();
-				if (ch==-1) break;
-				abyFile[i++] = (byte)ch;
+			ImageFormat format = ImageFormat.getImageFormat(arg[0]);
+			if (format instanceof HFEFormat) {
+				HFEReader readhfe = new HFEReader((HFEFormat)format);
+				byte[] output = readhfe.read(abyFile);
+				if (arg.length >= 2) {
+					FileOutputStream fos = new FileOutputStream(arg[1]);
+					fos.write(output);
+					fos.close();
+				}
+				else {
+					System.out.println(Utilities.hexdump(output));
+				}
 			}
-
-			HFEReader readhfe = new HFEReader();
-			byte[] output = readhfe.read(abyFile);
-			
-			if (arg.length >= 2) {
-				FileOutputStream fos = new FileOutputStream(arg[1]);
-				fos.write(output);
-				fos.close();
+			else {
+				System.err.println("Not a HFE format image");
 			}
+		}
+		catch (ImageException ix) {
+			System.err.println("Image exception: " + ix.getMessage());
 		}
 		catch (FileNotFoundException fnfx) {
 			System.err.println("File not found: " + fnfx.getMessage());
@@ -43,200 +47,25 @@ public class HFEReader {
 		}
 	}
 	
-	public HFEReader() {
+	public HFEReader(HFEFormat form) {
+		m_format = form;
 	}
 	
-	public byte[] read(byte[] content) throws IOException {
-		String sig = null;
+	public byte[] read(byte[] content) throws IOException, ImageException {
 		
-		try {
-			sig = new String(content, 0, 8, Charset.forName("ISO-8859-1"));
+		System.out.println(m_format.getHeaderInformation());
+		
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		for (int i=0; i < m_format.getCylinders(); i++) {
+			baos.write(m_format.getTrackBytes(i, 0));
 		}
-		catch (UnsupportedCharsetException ux) {
-			ux.printStackTrace();
-			sig = new String(content, 0, 8);
-		}
-		catch (StringIndexOutOfBoundsException six) {
-			six.printStackTrace();
-			sig = "*unknown**";
-		} 
-		
-		if (!sig.equals("HXCPICFE")) {
-			throw new IOException("Not a HFE format file");
-		}
-		
-		String[] encoding = { "ISO MFM", "Amiga MFM", "ISO FM", "EMU FM", "unknown" };
-		String[] flopintf = { "IBM PC DD", "IBM PC HD", "Atari ST DD", "Atari ST HD",
-			"Amiga DD", "Amiga HD", "CPC DD", "Generic Shugart DD", "IBM PC ED",
-		"MSX2 DD", "C64 DD", "EMU Shugart", "S950 DD", "S950 HD", "Disable" };
-		
-		int revision = content[8] & 0xff;
-		m_tracks = content[9] & 0xff;
-		int sides = content[10] & 0xff;
-		int enc = content[11] & 0xff;
-		int bitrate = Utilities.getInt16rev(content, 12);
-		int rpm = Utilities.getInt16rev(content, 14);
-		int mode = content[16] & 0xff;
-		int tracklistoffset = Utilities.getInt16rev(content, 18); 
-		boolean writable = (content[20] & 0xff) == 0xff;
-		boolean singlestep = (content[21] & 0xff)==0xff;
-		boolean track0s0_alt = (content[22] & 0xff)==0x00;
-		int track0s0_enc = content[23] & 0xff;
-		boolean track0s1_alt = (content[24] & 0xff)==0x00;
-		int track0s1_enc = content[25] & 0xff;
-				
-		System.out.println("Revision = " + revision);
-		System.out.println("Tracks = " + m_tracks);
-		System.out.println("Sides = " + sides);
-		System.out.println("Encoding = " + encoding[enc]);
-		System.out.println("Bitrate = " + bitrate + " kHz");
-		System.out.println("RPM = " + rpm);
-		System.out.println("Interface mode = " + flopintf[mode]);
-		System.out.println("Track list offset = " + tracklistoffset);
-		System.out.println("writable = " + (writable? "yes" : "no"));
-		System.out.println("singlestep = " + singlestep);
-		if (track0s0_alt) System.out.println("Special encoding for track 0, side 0 = " + track0s0_enc);
-		if (track0s1_alt) System.out.println("Special encoding for track 0, side 1 = " + track0s1_enc);
-		
-		// Lookup Table
-		m_trackoffset = new int[m_tracks];
-		m_tracklen = new int[m_tracks];
-		
-		for (int i=0; i < m_tracks; i++) {
-			m_trackoffset[i] = 512 * Utilities.getInt16rev(content, tracklistoffset * 512 + 4*i);
-			m_tracklen[i] = Utilities.getInt16rev(content, tracklistoffset * 512 + 4*i + 2);
-			// System.out.println("Track " + i + ": " + trackoffset[i] + ", length = " + tracklen[i]);
-		}
-		
-		m_sectpertrack = ((enc==2)?9 : 18);
-		byte[] image = new byte[256 * sides * m_tracks * m_sectpertrack];
-		
-		boolean doublesamp = (bitrate == 250 && enc == 2);
-
-		// Track 0
-		for (int track = 0; track < m_tracks; track++) {
-			
-			// Read side 1
-			byte[] side1 = new byte[m_tracklen[track]/2];
-			byte[] side2 = new byte[m_tracklen[track]/2];
-			int pos1 = 0;
-			
-			int remaining = m_tracklen[track];
-			
-			int count = 512;
-			int pos = m_trackoffset[track];		
-			
-			while (remaining > 0) {
-				// System.out.println("Remaining = " + remaining);
-				if (remaining < 512) {
-					count = remaining/2;
-					remaining = 0;
-				}
-				else {
-					count = 256;
-					remaining -= 512;
-				}
-				
-				for (int i=0; i < count; i++) {
-					side1[pos1] =  content[pos+i];
-					side2[pos1] =  content[pos+i+256];
-					pos1++;
-				}
-				pos += 512;				
-			}
-						
-			readTrack(side1, track, image, doublesamp, false);
-			readTrack(side2, track, image, doublesamp, false);
-		}
-		return image;
-	}
-
-	void readTrack(byte[] currentTrack, int track, byte[] image, boolean doublesamp, boolean debug) {
-
-		//			System.out.print("<" + Utilities.toHex(b, 2) +"> ");
-		int value = 0;
-		int bits = 0;
-		int previousdata = 0;
-		int clock = 0;
-		int currentdata = 0;
-		boolean mark = false;
-		int header = 0;
-		int body = 0;
-		boolean lastmark = false;
-		int trackno = 0;
-		int headno = 0;
-		int sectno = 0;
-		int pos = 0;
-		
-		for (int i=0; i < m_tracklen[track]/2; i++) {
-			byte b = currentTrack[i];
-	
-			for (int j=0; j < 8; j++) {
-				if (doublesamp) {
-					if ((j&1)==1) {
-						// System.out.print((char)((b&1) + 0x30));
-						value = (value << 1) | (b & 1);
-						bits++;
-					}
-				}
-				else {
-					//				System.out.print((char)((b&1) + 0x30));
-					// 4489 = 01 00 01 00 10 00 10 01
-					if ((j&1)==1) {
-						currentdata = (b&1);
-						value = (value << 1) | currentdata;
-						if (currentdata == 0 && previousdata == 0) {
-							if (clock != 1) mark = true;
-						}
-						previousdata = currentdata;							
-						bits++;
-					}
-					else {
-						clock = (b&1);
-					}
-				}
-				// 0100 1001
-				b >>= 1;
-			}
-			
-			if (bits==8) {
-				if (debug) {
-					if (mark && !lastmark) System.out.println("");
-					if (mark) System.out.print("[" + Utilities.toHex(value, 2) + "] ");
-					else System.out.print(Utilities.toHex(value, 2) + " ");
-				}
-				
-				if (header>0) {
-					if (header == 4) trackno = value;
-					if (header == 3) headno = value;
-					if (header == 2) sectno = value;
-					// else System.out.print(Utilities.toHex(value, 2) + " ");
-					header--;
-				}
-				else {					
-					if (body>0) {
-						if (body==256) {
-							if (headno==0) pos = (trackno * m_sectpertrack + sectno)*256;
-							else pos = (((2*m_tracks-1)-trackno) * m_sectpertrack + sectno)*256;
-						}
-						body--;
-						image[pos++] = (byte)(value&255);
-						// if (debug) if (body==0) System.out.println("");
-					}
-					else {
-						if (lastmark) {
-							header = (!mark && value == 0xfe)? 4 : 0;
-							body = (!mark && value == 0xfb)? 256 : 0;
-						}
-						// System.out.print(Utilities.toHex(value, 2) + " ");
-					}
-				}				
-				bits = 0;
-				value = 0;
-				lastmark = mark;
-				mark = false;
+		if (m_format.getHeads()>1) {
+			for (int i=m_format.getCylinders()-1; i >=0; i--) {
+				baos.write(m_format.getTrackBytes(i, 1));
 			}
 		}
+
+		return baos.toByteArray();
 	}
 }
 

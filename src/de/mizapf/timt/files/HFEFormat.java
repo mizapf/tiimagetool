@@ -27,6 +27,7 @@ import java.io.EOFException;
 import java.io.FileNotFoundException;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
 import de.mizapf.timt.util.Utilities;
@@ -128,7 +129,7 @@ import de.mizapf.timt.TIImageTool;
      so that the read process may have to be advanced by one sample.	
 */
 
-class HFEFormat extends ImageFormat {
+public class HFEFormat extends ImageFormat {
 	
 	/** Taken from the official documentation. */
 	class HFEHeader {
@@ -294,6 +295,10 @@ class HFEFormat extends ImageFormat {
 	HFEFormat() {
 	}
 	
+	public String getHeaderInformation() {
+		return m_header.toString();
+	}
+	
 	public String getDumpFormatName() {
 		return TIImageTool.langstr("HFEImage");
 	}
@@ -453,6 +458,30 @@ class HFEFormat extends ImageFormat {
 		if (m_nTotalSectors == 0) m_nTotalSectors = m_nSectorsByFormat * m_nCylinders * m_nHeads;
 		
 		return secindex;
+	}
+	
+	/** Called from HFEReader. Similar to the method above, just not trying to find sectors. */
+	public byte[] getTrackBytes(int cylinder, int head) throws IOException, ImageException {
+		Location loc = new Location(cylinder, head, 0, 0);
+
+		m_currentCylinder = loc.cylinder;
+		m_currentHead = loc.head;
+
+		m_bCellTrack = new byte[m_tracklen[loc.cylinder]];
+		m_FileSystem.seek(m_trackpos[loc.cylinder]);
+		m_FileSystem.readFully(m_bCellTrack);
+		
+		m_cells = m_bCellTrack.length * 4;  // All bits for either head
+			
+		// Reset to start
+		m_positionInTrack = 0;
+		m_first = true;
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		while (m_positionInTrack < m_tracklen[loc.cylinder] * 4) {
+			baos.write(readBits(8));
+		}
+
+		return baos.toByteArray();
 	}
 	
 	/** The HFE format has its own way of reading sectors. We return
