@@ -31,6 +31,8 @@
    <javac srcdir="${src}" destdir="${build}" debug="on" includeAntRuntime="false" 
          classpath="${ext}/${serial}"
          encoding="utf-8" 
+         source="1.7"
+         target="1.7"
          includes="de/mizapf/timt/**/*.java" >
        <compilerarg value="-Xlint:unchecked" />
    </javac>
