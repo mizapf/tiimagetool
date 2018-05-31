@@ -1,0 +1,87 @@
+# Hint file
+# Number = Text
+0 = Una nuova funzione chiamata "Suggerimenti" permette alla partenza o tramite selezione
+dal menu Aiuto di ottenere informazioni utili sulle novità del programma e su
+come usarle al meglio. Potete disattivare completamente i suggerimenti oppure 
+disattivarli uno ad uno in qualsiasi momento.
+1 = Potete trovare un manuale ben fornito per TIImageTool nel menu Aiuto
+2 = Provate a dare un'occhiata alle impostazioni nel menu <em>File->Preferenze</em> 
+3 = Potete creare immagini disco da SSSD a DSHD (da 90 KB a 1.4 MB), 
+preformattate o vuote solo con un paio di clic (<em>File->Nuovo</em>).
+4 = Gli ultimi 10 file immagine creati sono disponibili con un singolo clic alla voce Apri Recenti del menu.
+5 = You can create ready-to-use hard disk images (CHD) for use in MAME under <em>File->New</em>.
+6 = E' presente il supporto pieno a funzioni di copia/incolla per il trasferimento file tra immagini, 
+cartelle e persino per l'importazione e l'esportazione: Premere Ctrl-C durante la visualizzazione di una cartella 
+ed avrete la possibilità di incollare il file nel vostro file system residente. 
+L'operazione di taglio non è supportata per l'esportazione e l'importazione, è disponibile solo per il trasferimento 
+tra immagini disco.
+7 = Potete trascinare i file e le cartelle non solo fra finestre delle cartelle 
+in TIImageTool, ma anche verso il file system del vostro PC.
+8 = E' disponbile il pieno supporto a XModem per poter inviare e ricevere file 
+attraverso una connessione seriale (<em>Modifica->Importa</em> da remoto). Potete ad esempio lanciare TELCO
+sul vostro TI per scambiare file con TIImageTool.
+9 = I file creati da Archiver possono essere aperti esattamente come una cartella e potete anche
+tagliare, copiare e incollare file da o verso di esso al volo. Sì, potete aprire
+archivi all'interno di altri archivi. Potete anche rinominare un file all'interno di un archivio nidificato.
+10 = Si possono importare file binari come file di tipo PROGRAM.
+11 = Si possono importare file di testo come file DIS/VAR 80, molto utile per codice 
+sorgente in assembly.
+12 = TIImageTool scopre automaticamente se un file PROGRAM è un programma BASIC, 
+e se lo è, genera un listato BASIC. Può anche caricare programmi BASIC
+in formato MERGE ed anche in formato LONG.
+13 = Diversi formati immagine sono riconosciuti: TI-ARTIST, MyArt, YAPP, RLE-128,
+e FRACTALS. Doppio clic su file di questo tipo apre l'immagine in una finestra. 
+14 = Potete creare cartelle su immagini di disco rigido o dischetto, ma sulle immagini dischetto,
+potete creare solamente tre cartelle nella directory radice e nessuna 
+nei livelli inferiori.
+15 = E' disponibile una funzione di controllo nel menu <em>Utilità->Controlla filesystem</em> che
+verifica eventuali problemi di allocazione, errori di conteggio record L3 ed errori CRC 
+nelle immagini track dump.
+16 = E' disponibile un menu contestuale che viene mostrato quando si clicca il tasto destro del mouse
+all'interno di una finestra cartella.
+17 = Le finestre directory possono essere distaccate dalla finestra principale in modo da poter
+facilmente confrontare i contenuti delle immagini ed utilizzare il trascinamento per copiare o spostare contenuti. 
+Quando chiudete una finestra scollegata diventa un tab nella finestra principale. Quando chiudete la
+finestra principale, tutte le finestre vengono chiuse.
+18 = Potete aprire un'immagine più di una volta, questo rende molto semplice utilizzare
+taglia/copia/incolla o il trascinamento all'interno dell'immagine.
+19 = I file possono essere esportati nel formato TIFILES verso il filesystem del PC e 
+potete specificare in <em>File->Preferenze</em> come il nome del file esterno debba 
+essere determinato.
+20 = Oltre ai file, potete esportare cartelle ed i file e le sottocartelle 
+in esse contenuti. Per conservare il nome della cartella, il nome
+viene memorizzato in un file chiamato <em>meta.inf</em>.
+21 = Quando importate un file potete istruire TIImageTool a ignorare il nome del file 
+nell'intestazione TIFILES e prendere il filename dal filesystem del PC con la 
+sostituzione automatica dei caratteri non supportati.
+22 = In TIImageTool è disponibile un disassemblatore per TMS9900 che consente di
+specificare le parti che non devono essere disassemblate (testo o dati). Queste impostazioni
+sono memorizzate permanentemente per ciascun file così non dovete reinserirli di nuovo.
+23 = Il disassemblatore TMS9900 prende i file PROGRAM o DIS/FIX 80 e può 
+generare codice sorgente sintatticamente corretto che può essere assemblato di nuovo.
+24 = In TIImageTool è disponibile un disassemblatore GPL che può essere configurato per
+escludere alcune parti dal disassemblatore e che memorizza le sue impostazioni per ogni file
+in modo che non dobbiate reinserirli di nuovo.
+25 = Potete creare un floppy Geneve oppure un disco di boot con la funzione 
+<em>Utilità->Installa Geneve OS</em>. Tutti i file necessari, compreso GeneveOS, sono 
+contenuti in questa distribuzione di TIImageTool. Se avete il dump del boot EPROM, 
+potete far partire subito l'emulazione MAME Geneve.
+26 = Potete creare i file CHD (contenitori di hard disk MAME) a partire dal dump
+di un drive SCSI e potete effettuare di nuovo la scrittura di un dump.
+27 = TIImageTool fornisce la funzione Serial Bridge, che consente ad un sistema MAME
+di comunicare con un TI fisico attraverso una connessione seriale.
+28 = E' disponibile una modalità a linea di comando in TIImageTool che può essere usata per 
+ottenere un elenco delle directory o per produrre in output un file di testo che si trova
+all'interno di un file immagine. Usare <em>java -jar tiimagetool.jar CommandShell -h</em> per maggiori informazioni.
+29 = Potete importare programmi BASIC da un file di testo o dall'editor di testo integrato;
+basta copiare e incollare un listato BASIC da un sito web nel vostro file immagine.
+30 = I dati di output di un programma, compresi i messaggi d'errore, possono ora essere convogliati in un
+file di log; potete impostare il filename nelle preferenze.
+31 = Potete leggere, scrivere e creare file immagine direttamente per l'emulatore di Floppy Disk Lotharek.
+32 = E' disponibile una funzione di Ricerca nem menu Utilità con la quale potete ricercare i file per nome 
+e persino per i contenuti dei file.
+33 = E' disponibile un editor di settori nel menu <em>Utilità</em> che consente di modificare singoli
+settori di immagini floppy, HD o anche immagini HFE.
+34 = TIImageTool offre svariati lingue che è possibile cambiare nelle preferenze.
+35 = Potete leggere le card Compact Flash con TIImageTool e potete anche formattare volumi CF7
+oppure spostare e copiare file direttamente da e verso di esse. 
