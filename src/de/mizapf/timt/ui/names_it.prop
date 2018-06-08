@@ -1,7 +1,7 @@
 contentfont=output:s:Font per codice programma
 lookandfeel=general:s:Aspetto
 tempdir=paths:p:Directory Temporanea
-cfcard=cfcard:p:Percorso di default CF card
+cfcard=cfcard:p:Percorso di default scheda CF
 ddpath=cfcard:p:Comando DD
 bsize=cfcard:s:Dimensione blocco dati
 supath=cfcard:u:Comando grafico sudo

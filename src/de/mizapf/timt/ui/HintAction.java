@@ -52,12 +52,20 @@ public class HintAction extends Activity {
 		entry[3] = TIImageTool.langstr("Hint4"); 
 		entry[4] = TIImageTool.langstr("Hint5"); 
 		
+		int fontsize = 12;
+		try {
+			fontsize = Integer.parseInt(imagetool.getPropertyString(TIImageTool.FONTSIZE, "12"));
+		}
+		catch (NumberFormatException nfx) {
+			fontsize = 12;
+		}			
+		
 		String head1 = "<html><body style='width: ";
 		String head2 = "px'>"; 
 		String foot = "</body></html>";
 		StringBuilder sb = new StringBuilder();
-		sb.append(head1).append("300").append(head2);
-		sb.append("<h3>");
+		sb.append(head1).append(fontsize*25).append(head2);
+		sb.append("<h3 style='font-size:").append(fontsize).append("'>");
 		sb.append(entry[(int)(Math.random()*entry.length)]);
 		sb.append("...</h3>");
 		String hint = imagetool.getHint();
