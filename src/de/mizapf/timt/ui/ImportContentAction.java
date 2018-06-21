@@ -223,8 +223,8 @@ public class ImportContentAction extends Activity {
 					// Hand over to TIFiles
 				}
 				else {
-					if (impdia.importAsBinary()) {
-						abyTif = TIFiles.createTfi(abyContent, impdia.getFileName(), TFile.PROGRAM, 0, 0);
+					if (impdia.importAsBinary() || impdia.importAsOther()) {
+						abyTif = TIFiles.createTfi(abyContent, impdia.getFileName(), impdia.getFlags(), impdia.getRecordLength(), 0);
 					}
 					else {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImportContentBug"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);

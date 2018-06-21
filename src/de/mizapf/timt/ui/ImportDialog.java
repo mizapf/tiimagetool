@@ -343,7 +343,7 @@ public class ImportDialog extends ToolDialog {
 	}
 
 	boolean importAsText() {
-		return m_rbtOpt1.isSelected() || (m_nMode!=BASIC && m_rbtOpt3.isSelected());
+		return m_rbtOpt1.isSelected();
 	}
 	
 	boolean importAsBasic() {
@@ -351,7 +351,11 @@ public class ImportDialog extends ToolDialog {
 	}
 	
 	boolean importAsBinary() {
-		return (m_nMode!=BASIC && (m_rbtOpt2.isSelected()));
+		return (m_nMode!=BASIC && m_rbtOpt2.isSelected());
+	}
+
+	boolean importAsOther() {
+		return (m_nMode!=BASIC && m_rbtOpt3.isSelected());
 	}
 
 	boolean importAsFixed() {
@@ -376,6 +380,7 @@ public class ImportDialog extends ToolDialog {
 	byte getFlags() {
 		byte[] aby = { (byte)0x00, (byte)0x80, (byte)0x02, (byte)0x82, (byte)0x01 };
 		if (m_rbtOpt1.isSelected()) return aby[1];
+		if (importAsBinary()) return aby[4];
 		return aby[m_jcFormat.getSelectedIndex()];
 	}
 
