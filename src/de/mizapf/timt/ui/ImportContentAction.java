@@ -133,7 +133,7 @@ public class ImportContentAction extends Activity {
 			}
 			else {
 				
-				if (impdia.importAsText()) {
+				if (impdia.importAsText() || impdia.importAsWideText()) {
 					
 					StringBuilder special = new StringBuilder();
 					String sneu = new String(abyContent);
@@ -203,11 +203,11 @@ public class ImportContentAction extends Activity {
 					String split = Utilities.getSeparator(text);
 					String[] lines = text.split(split);		
 
-					if (impdia.importAsFixed()) {
+					if (impdia.importAsWideText()) {
 						TIFiles impfile = new TIFiles(impdia.getFileName(), TFile.flagsToType(impdia.getFlags()), impdia.getRecordLength());
 						try {
 							for (int i=0; i < lines.length; i++) {
-								impfile.writeRecord(lines[i].getBytes());
+								impfile.writeRecord(lines[i].getBytes(), 0x20);
 							}
 						}
 						catch (IOException iox) {

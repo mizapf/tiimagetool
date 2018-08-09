@@ -361,6 +361,11 @@ public class TIFiles {
 	
 	/** Used to create a new file by writing records. */
 	public void writeRecord(byte[] content) throws IOException {
+		writeRecord(content, 0x00);
+	}
+
+	/** Used to create a new file by writing records. */
+	public void writeRecord(byte[] content, int fill) throws IOException {
 		if (content.length > 254) throw new IOException(TIImageTool.langstr("TFIRecord") + ": " + content.length);
 			
 		if (m_type == TFile.T_DISVAR || m_type == TFile.T_INTVAR) {
@@ -369,7 +374,7 @@ public class TIFiles {
 				m_baos.write(0xff);
 				// Fill the rest with 0x00
 				m_pos++;
-				while (m_pos++ < 256) m_baos.write(0x00);
+				while (m_pos++ < 256) m_baos.write(fill);
 				// always relative to the recent sector
 				m_pos = 0;
 				// next sector
@@ -388,7 +393,7 @@ public class TIFiles {
 			if (m_type == TFile.T_DISFIX || m_type == TFile.T_INTFIX) {
 				if (m_records % recpersect == 0 && m_pos > 0) {
 					// Fill the last sector
-					while (m_pos++ < 256) m_baos.write(0x00);
+					while (m_pos++ < 256) m_baos.write(fill);
 					m_pos = 0;
 					// next sector
 					m_sectors++;
@@ -398,7 +403,7 @@ public class TIFiles {
 				m_pos = m_pos + content.length;
 				// Fill up to record length
 				while (m_pos % m_reclen != 0) {
-					m_baos.write(0x00);
+					m_baos.write(fill);
 					m_pos++;
 				}
 			}

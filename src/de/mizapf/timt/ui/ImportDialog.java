@@ -346,6 +346,10 @@ public class ImportDialog extends ToolDialog {
 		return m_rbtOpt1.isSelected();
 	}
 	
+	boolean importAsWideText() {
+		return m_nMode!=BASIC && m_rbtOpt3.isSelected() && getRecordLength()==128 && getFlags()==0x00;
+	}
+
 	boolean importAsBasic() {
 		return (m_nMode==BASIC && (m_rbtOpt2.isSelected() || m_rbtOpt3.isSelected()));
 	}
