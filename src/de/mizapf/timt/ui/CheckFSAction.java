@@ -155,6 +155,7 @@ public class CheckFSAction extends Activity {
 				jp.add(jl);			
 				jp.add(Box.createVerticalStrut(10));
 				cb = new JCheckBox(TIImageTool.langstr("RepeatAUAlloc"));
+				cb.setFont(TIImageTool.dialogFont);
 				jp.add(cb);
 				nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 			}
@@ -224,6 +225,7 @@ public class CheckFSAction extends Activity {
 					jp.add(jl);
 					jp.add(Box.createVerticalStrut(10));
 					cb = new JCheckBox(TIImageTool.langstr("RepeatAUFree"));
+					cb.setFont(TIImageTool.dialogFont);
 					jp.add(cb);
 					nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 				}
@@ -413,6 +415,7 @@ public class CheckFSAction extends Activity {
 				JLabel jl = new JLabel(sbMsg.toString());
 				jp.add(jl);
 				cb2 = new JCheckBox(TIImageTool.langstr("RepeatL3"));
+				cb2.setFont(TIImageTool.dialogFont);
 				jp.add(cb2);
 				
 				nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
@@ -464,6 +467,7 @@ public class CheckFSAction extends Activity {
 				JLabel jl = new JLabel(sbMsg.toString());
 				jp.add(jl);
 				cb2 = new JCheckBox(TIImageTool.langstr("ResetF7F7"));
+				cb2.setFont(TIImageTool.dialogFont);
 				jp.add(cb2);
 				nRet = JOptionPane.showConfirmDialog(m_parent, jp, TIImageTool.langstr("FileSystemCheck"), JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 				if (nRet == JOptionPane.CANCEL_OPTION) {
