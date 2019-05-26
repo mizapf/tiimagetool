@@ -93,6 +93,7 @@ public class ImageCheck {
 			}
 			else {
 				ps.print(String.format(TIImageTool.langstr("SectorDDR"), ad[i].getDDRSector(), sbFullname.toString()));
+				ps.print("\n");
 			}
 			// Recurse
 			StringBuilder sbNew = new StringBuilder();

@@ -41,6 +41,12 @@ public class XModem {
 	public final static int XMODEM_UP_1K = 1;
 	public final static int XMODEM_DOWN_CRC = 1;
 	
+	public final static boolean TRACE = true;
+	
+	private synchronized void debug(String s) {
+		System.out.println(s);
+	}
+
 	public XModem(InputStream is, OutputStream os, ProgressView view) {
 		m_is = is;
 		m_os = os;
@@ -68,28 +74,44 @@ public class XModem {
 		boolean bAbort = false;
 		
 		while (!bAbort && by == -1) {
+			if (TRACE) debug("Trying to read from receiver");
 			by = (byte)m_is.read();
 
 			if (m_view.stopRequested() || nRetry==0) {
 				bAbort = true;
 			}
 			
-			if (by==CRC) {
+			if (by==CRC) {  // 'C'
 				// XModem/CRC
-				// if (nBlockSize==1024) {
-				//System.out.println("Starting XModem-1K");
-				// }
-				// else System.out.println("Starting XModem/CRC");
+				if (TRACE) {
+					if (nBlockSize==1024) {
+						debug("Starting XModem-1K");
+					}
+					else debug("Starting XModem/CRC");
+				}
 				bCRC = true;
 			}
 			else { 
 				if (by==NAK) {
-					// System.out.println("Starting normal XModem");
+					if (TRACE) debug("Starting normal XModem");
 					nBlockSize = 128;
 				}
 				else {
 					nRetry--;
+					by = -1;
 				}
+			}
+		}
+		
+		// Consume more bytes from the receiver if available
+		// maybe from previous timeouts
+		by = 0;
+		
+		if (TRACE) debug("Still " + m_is.available() + " bytes in the input queue");
+		if (m_is.available() > 0) {
+			while (by != -1) {
+				if (TRACE) debug("Consume byte " + by + " from receiver before sending");
+				by = (byte)m_is.read();
 			}
 		}
 
@@ -112,11 +134,13 @@ public class XModem {
 
 			if (nPosition < abyTIFile.length) {
 				// create packet
+				if (TRACE) debug("Write start");
 				if (nBlockSize==1024) m_os.write(STX);
 				else m_os.write(SOH);
 				
 				if (nNumber==256) nNumber = 0;	// see XModem spec
 
+				if (TRACE) debug("Write number: " + nNumber);
 				m_os.write((byte)nNumber);
 				m_os.write((byte)(255-nNumber));
 
@@ -141,6 +165,7 @@ public class XModem {
 					}
 				}
 
+				if (TRACE) debug("Write CRC/Checksum");
 				if (bCRC) {
 					m_os.write((byte)((nCrc >> 8)&0xff));
 					m_os.write((byte)(nCrc & 0xff));
@@ -151,9 +176,10 @@ public class XModem {
 				m_os.flush();
 				
 				// Wait for ack
+				if (TRACE) debug("Wait for Acknowledge");
 				by = (byte)m_is.read();
 				if (by==ACK) {
-					// System.out.println("Transmission of bytes " + nPosition + " to " + (nPosition+nBlockSize) + " acknowlegded");
+					if (TRACE) debug("Transmission of bytes " + nPosition + " to " + (nPosition+nBlockSize) + " acknowledged");
 					nNumber++;
 					nPosition += nBlockSize;
 					m_view.setTransferredBytes(nPosition);
@@ -162,16 +188,19 @@ public class XModem {
 				}
 				else {
 					if (by==NAK) {
-						// System.err.println("Transmission of bytes " + nPosition + " to " + (nPosition+nBlockSize-1) + " not acknowlegded");
+						if (TRACE) debug("Transmission of bytes " + nPosition + " to " + (nPosition+nBlockSize-1) + " not acknowledged");
 						m_view.setStatus(TIImageTool.langstr("Error"));
 						nRetry--;
 						if (nRetry==0) {
-							// System.err.println("Abort transmission");
+							if (TRACE) debug("Abort transmission");
 							m_view.setStatus(TIImageTool.langstr("Abort"));
 							m_os.write(CAN);
 							m_os.write(CAN);
 							bDone = true;
 						}
+					}
+					else {
+						if (TRACE) debug("Unknown value received: " + by);
 					}
 				}
 			}
@@ -186,7 +215,7 @@ public class XModem {
 					by = (byte)m_is.read();
 					if (by==ACK) {
 						// ACK
-						// System.out.println("Transfer completed successfully");
+						if (TRACE) debug("Transfer completed successfully");
 						m_view.setStatus(TIImageTool.langstr("XModemComplete"));
 						break;
 					}
@@ -269,7 +298,7 @@ public class XModem {
 			
 			switch (by) {
 			case TIMEOUT:
-				// System.out.println("Timeout");
+				if (TRACE) debug("Timeout");
 				m_view.setStatus(TIImageTool.langstr("XModemTimeout"));
 				nRetry--;
 				if (nRetry==0) {
@@ -283,12 +312,12 @@ public class XModem {
 					sendHandshake(bUseCrc);
 				}
 				else {
-					// System.out.println("Sending NAK");
+					if (TRACE) debug("Sending NAK");
 					m_os.write(NAK);
 				}
 				break;
 			case STX: 
-				// System.out.print("XModem block ");
+				if (TRACE) debug("XModem block ");
 				m_view.setBlockSize(1024);
 				bStart = false;
 				abyRecord = getRecord(1024);
@@ -301,7 +330,7 @@ public class XModem {
 				}
 				break;
 			case SOH:
-				// System.out.print("XModem block ");
+				if (TRACE) debug("XModem block ");
 				m_view.setBlockSize(128);
 				bStart = false;
 				abyRecord = getRecord(128);
@@ -314,7 +343,7 @@ public class XModem {
 				}
 				break;
 			case EOT: 
-				// System.out.println("Got EOT");
+				if (TRACE) debug("Got EOT");
 				m_view.setStatus(TIImageTool.langstr("XModemComplete"));
 				m_os.write(ACK);
 				bDone = true;
@@ -346,12 +375,12 @@ public class XModem {
 		if (bUseCrc) {
 			m_os.write(CRC);
 			m_bUseCrc = true;
-			// System.out.println("Starting XModem/CRC or 1K");
+			if (TRACE) debug("Starting XModem/CRC or 1K");
 		}
 		else {
 			m_os.write(NAK);
 			m_bUseCrc = false;
-			// System.out.println("Starting plain XModem");
+			if (TRACE) debug("Starting plain XModem");
 		}
 		m_os.flush();
 	}
@@ -368,7 +397,7 @@ public class XModem {
 		int nCheckNumber = m_is.read() & 0xff;
 		byte[] abyRecord = new byte[nBlockSize];
 		
-		// System.out.println(nNumber + ", " + nBlockSize + " bytes, crc = " + m_bUseCrc);
+		if (TRACE) debug(nNumber + ", " + nBlockSize + " bytes, crc = " + m_bUseCrc);
 		
 		if (nNumber + nCheckNumber != 255) {
 			System.err.println(TIImageTool.langstr("XModemDataError"));
@@ -376,7 +405,7 @@ public class XModem {
 			bError = true;
 		}
 		else {
-			// System.out.println("Record number OK");
+			if (TRACE) debug("Record number OK");
 			short nCrc = init_crc16();
 			short nChecksum = 0;
 			for (int i=0; i < nBlockSize; i++) {
@@ -411,7 +440,7 @@ public class XModem {
 			return null;
 		}
 
-		// System.out.println(Utilities.hexdump(0, 0, abyRecord, nBlockSize, false));
+		if (TRACE) debug(Utilities.hexdump(0, 0, abyRecord, nBlockSize, false));
 		return abyRecord;
 	}
 }

@@ -264,7 +264,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	
 	private void adjustSerialParameters() throws ConnectionException {
 		if (TRACECONF) debug("speed=" + m_nSpeed + ", data=" + m_nData + ", stop=" + m_nStop + ", parity=" + m_nParity + "\n");
-
+		if (m_nSpeed > 19200) m_nSpeed = 19200;
 		try {
 			m_sp.setSerialPortParams(m_nSpeed, m_nData, m_nStop, m_nParity);
 		}
