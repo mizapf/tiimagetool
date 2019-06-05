@@ -589,7 +589,7 @@ public class Volume {
 		reopenForRead();
 	}
 	
-	public void writeVIB() throws IOException, ImageException, ProtectedException {
+	public byte[] createVIB() throws IOException, ImageException, ProtectedException {
 		// Create a new VIB
 		byte[] abyNewVIB = new byte[256];
 
@@ -664,12 +664,13 @@ public class Volume {
 				j=j+2;
 			}			
 		}
-		writeSector(0, abyNewVIB);
+		return abyNewVIB;
 	}
 	
 	public void update() throws IOException, ImageException, ProtectedException {
 		// Write the allocation map and the VIB
-		writeVIB();
+		byte[] abyVIB = createVIB();
+		writeSector(0, abyVIB);
 		if (m_nType!=FLOPPY && m_nType!=CF7) {
 			saveAllocationMap();
 		}		
@@ -764,7 +765,8 @@ public class Volume {
 		convert(sectors, speed, current, heads, buff!=0, precomp);
 		setType(HFDC);
 		reopenForWrite();
-		writeVIB();
+		byte[] abyVIB = createVIB();
+		writeSector(0, abyVIB);
 		reopenForRead();
 	}
 	
@@ -776,7 +778,8 @@ public class Volume {
 		convert(0, 0, 0, 1, false, 0);
 		setType(SCSI);
 		reopenForWrite();
-		writeVIB();
+		byte[] abyVIB = createVIB();
+		writeSector(0, abyVIB);
 		reopenForRead();
 	}
 }

@@ -201,16 +201,10 @@ class TrackDumpFormat extends ImageFormat {
 		int count=0;
 		byte[] bSector = null;
 		byte[] bHeader = new byte[4];
-		int initcrc = 0;
 		
 		while (m_positionInTrack < m_tracklen[loc.track]) {
 			if (nextIDAMFound()) {
 				// For MFM we have an ident byte to consume
-				if (m_encoding==MFM) {
-					initcrc = 0xb230;
-				}
-				else initcrc = 0xef21;
-
 				bHeader[0] = (byte)readBits(8);
 				bHeader[1] = (byte)readBits(8);
 				bHeader[2] = (byte)readBits(8);
@@ -218,26 +212,18 @@ class TrackDumpFormat extends ImageFormat {
 				
 				if ((bHeader[2]&0xff) == loc.sector) secindex = count;
 				int crch = readBits(16);
-				int crcc = Utilities.crc16_get(bHeader, 0, 4, initcrc);
-				if (crch != 0xf7f7 && crch != crcc) System.out.println(String.format(TIImageTool.langstr("BadHeaderCRC"), bHeader[0], bHeader[1], bHeader[2], Utilities.toHex(crcc, 4), Utilities.toHex(crch, 4)));
+				if (crch != 0xf7f7) System.out.println(String.format(TIImageTool.langstr("BadHeaderCRC"), bHeader[0], bHeader[1], bHeader[2], Utilities.toHex(0xf7f7, 4), Utilities.toHex(crch, 4)));
 									
 				if (nextDAMFound()) {
-					int mark = m_value;  // the DAM for FM and MFM
-					if (m_encoding==MFM) {
-						initcrc = (mark==0xfb)? 0xe295 : 0xd2f6;   // f8 is the "deleted" mark
-					}
-					else {
-						initcrc = (mark==0xfb)? 0xbf84 : 0x8fe7;
-					}
-					
+					int mark = m_value;  // the DAM for FM and MFM				
 					int pos = m_positionInTrack;
 					bSector = new byte[256];
 					readBits(bSector);
 					int crcd = readBits(16);
-					Sector sect = new Sector(loc.track*m_nSectorsByFormat + bHeader[2], bSector, pos, initcrc, mark); 
+					Sector sect = new Sector(loc.track*m_nSectorsByFormat + bHeader[2], bSector, pos, 0xffff, mark); 
 					sectors.add(sect);
 					//System.out.println("Sector " + sect.getNumber()  + ": Data CRC = " + Utilities.toHex(sect.getCrc(),4) + " (expected " +  Utilities.toHex(crcd, 4) + ")");
-					if (crcd != 0xf7f7 && crcd != sect.getCrc()) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), sect.getNumber(), Utilities.toHex(sect.getCrc(),4), Utilities.toHex(crcd, 4)));
+					if (crcd != 0xf7f7) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), sect.getNumber(), Utilities.toHex(0xf7f7,4), Utilities.toHex(crcd, 4)));
 					// System.out.println("loaded sector " + sect.getNumber() + " at track " + loc.track);
 					// System.out.println(sect);
 					count++;
@@ -374,7 +360,7 @@ class TrackDumpFormat extends ImageFormat {
 				trackchanged = true;
 				m_positionInTrack = m_sector[i].getPosition();
 				writeBits(m_sector[i].getBytes(), Volume.SECTOR_LENGTH * 8);
-				writeBits(m_sector[i].getCrc(), 16);
+				writeBits(0xf7f7, 16);
 			}
 		}
 		if (trackchanged) {
@@ -407,7 +393,6 @@ class TrackDumpFormat extends ImageFormat {
 		
 		// Start number
 		int sector = 0;
-		int initcrc = 0;
 		
 		byte[] bHeader = new byte[4];
 		
@@ -428,12 +413,10 @@ class TrackDumpFormat extends ImageFormat {
 			// Sync gap
 			for (int k=0; k < gap[1]; k++) writeBits(0x00,8);
 
-			initcrc = 0xef21;
 			if (density != SINGLE_DENSITY) {			
 				writeBits(0xa1,8);
 				writeBits(0xa1,8);
 				writeBits(0xa1,8);
-				initcrc = 0xb230;
 			}
 			writeBits(0xfe,8);
 
@@ -442,8 +425,7 @@ class TrackDumpFormat extends ImageFormat {
 			bHeader[2] = (byte)sector;
 			bHeader[3] = (byte)0x01;					
 			for (byte b : bHeader) writeBits(b, 8);
-			int crcc = Utilities.crc16_get(bHeader, 0, 4, initcrc);
-			writeBits(crcc, 16);			
+			writeBits(0xf7f7, 16);			
 			
 			// Gap2
 			for (int k=0; k < gap[2]; k++) writeBits(gapval1,8);
@@ -462,7 +444,7 @@ class TrackDumpFormat extends ImageFormat {
 			for (int k=0; k < 256; k++) writeBits(0xe5,8);
 			
 			// CRC
-			writeBits((density==SINGLE_DENSITY)? 0xa40c : 0x7827,16);
+			writeBits(0xf7f7, 16);
 			
 			// GAP3
 			for (int k=0; k < gap[4]; k++) writeBits(gapval1,8);
@@ -535,6 +517,9 @@ class TrackDumpFormat extends ImageFormat {
 		fos.close();
 	}
 
+	/*
+		Check the CRC in the TDF. Actually, only F7F7 is accepted by the format.
+	*/
 	@Override
 	int checkCRC(boolean fix, boolean reset) throws IOException {	
 		
@@ -566,18 +551,11 @@ class TrackDumpFormat extends ImageFormat {
 		
 				byte[] bSector = null;
 				byte[] bHeader = new byte[4];
-				int initcrc = 0;
-				int actualcrc = 0; 
 				boolean changed = false;
 				
 				while (m_positionInTrack < m_tracklen[track]) {
 					if (nextIDAMFound()) {
-						// For MFM we have an ident byte to consume
-						if (m_encoding==MFM) {
-							initcrc = 0xb230;
-						}
-						else initcrc = 0xef21;
-						
+						// For MFM we have an ident byte to consume						
 						bHeader[0] = (byte)readBits(8);
 						bHeader[1] = (byte)readBits(8);
 						bHeader[2] = (byte)readBits(8);
@@ -586,43 +564,34 @@ class TrackDumpFormat extends ImageFormat {
 						int position = m_positionInTrack;
 						int crch = readBits(16);
 						
-						actualcrc = Utilities.crc16_get(bHeader, 0, 4, initcrc);
-						if (crch != 0xf7f7 && crch != actualcrc) {
+						if (crch != 0xf7f7) {
 							if (fix) {
 								m_positionInTrack = position;
-								writeBits(reset? 0xf7f7 : actualcrc, 16);
+								writeBits(0xf7f7, 16);
 								changed = true;
 							}
 							else {
-								System.out.println(String.format(TIImageTool.langstr("BadHeaderCRC"), bHeader[0], bHeader[1], bHeader[2], Utilities.toHex(actualcrc, 4), Utilities.toHex(crch, 4)));
+								System.out.println(String.format(TIImageTool.langstr("BadHeaderCRC"), bHeader[0], bHeader[1], bHeader[2], Utilities.toHex(0xf7f7, 4), Utilities.toHex(crch, 4)));
 							}
 							count++;
 						}
 						
 						if (nextDAMFound()) {
 							int mark = m_value;  // the DAM for FM and MFM
-							if (m_encoding==MFM) {
-								initcrc = (mark==0xfb)? 0xe295 : 0xd2f6;   // f8 is the "deleted" mark
-							}
-							else {
-								initcrc = (mark==0xfb)? 0xbf84 : 0x8fe7;
-							}
-							
 							int pos = m_positionInTrack;
 							bSector = new byte[256];
 							readBits(bSector);
 							position = m_positionInTrack;
 							int crcd = readBits(16);
-							actualcrc = Utilities.crc16_get(bSector, 0, bSector.length, initcrc);
 							
-							if (crcd != 0xf7f7 && crcd != actualcrc) {
+							if (crcd != 0xf7f7) {
 								if (fix) {
 									m_positionInTrack = position;
-									writeBits(reset? 0xf7f7 : actualcrc, 16);
+									writeBits(0xf7f7, 16);
 									changed = true;
 								}
 								else {
-									System.out.println(String.format(TIImageTool.langstr("BadDataCRC1"), bHeader[0], bHeader[1], bHeader[2], Utilities.toHex(actualcrc, 4), Utilities.toHex(crcd, 4)));
+									System.out.println(String.format(TIImageTool.langstr("BadDataCRC1"), bHeader[0], bHeader[1], bHeader[2], Utilities.toHex(0xf7f7, 4), Utilities.toHex(crcd, 4)));
 								}
 								count++;
 							}

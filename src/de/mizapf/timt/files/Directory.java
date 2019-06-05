@@ -808,7 +808,8 @@ public class Directory extends Element {
 			dir.writeDDR();
 			// Write the DDR of this directory
 			if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
-				m_Volume.writeVIB();
+				byte[] abyVIB = m_Volume.createVIB();
+				m_Volume.writeSector(0, abyVIB);
 			}
 			else writeDDR();			
 		}
