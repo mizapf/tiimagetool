@@ -100,9 +100,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.4.7";
+	public final static String VERSION = "2.5.0";
 	public final static String MONTH = "June";
-	public final static String YEAR = "2018";
+	public final static String YEAR = "2019";
 	
 	private static final String TITLE = "TIImageTool";
 
@@ -484,16 +484,18 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				// If not available, block the remote functions
 				Class cls = Class.forName(SERIALPACKAGE + "SerialPort");
 				m_bSerial = true;
-				System.out.println("load");
 				gnu.io.DriverManager.getInstance().loadDrivers();
 				
-				/* java.util.Enumeration<gnu.io.CommPortIdentifier> identifiers =
+				/* // No output
+				java.util.Enumeration<gnu.io.CommPortIdentifier> identifiers =
 					gnu.io.CommPortIdentifier.getPortIdentifiers();
+					
 					while(identifiers.hasMoreElements()){
 						gnu.io.CommPortIdentifier a = identifiers.nextElement();
 						System.out.println(a.getName());
 					}
-                */
+				*/
+                
 			}
 			catch (ClassNotFoundException cnfx) {
 				m_bSerial = false;

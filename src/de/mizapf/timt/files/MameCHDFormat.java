@@ -459,7 +459,7 @@ public class MameCHDFormat extends ImageFormat {
 	}
 	
 	@Override
-	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+	public Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException {
 		byte[] abySector = new byte[m_nSectorLength];
 		// Get sector offset in track
 		//			System.out.println("Read sector " + nSectorNumber);
@@ -471,7 +471,7 @@ public class MameCHDFormat extends ImageFormat {
 	}
 	
 	@Override
-	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSectorToImage(int nNumber, byte[] abySector) throws IOException, ImageException {
 		try {
 			int secoff = getSectorOffset(nNumber);
 			System.arraycopy(abySector, 0, m_abyTrack, secoff, Volume.SECTOR_LENGTH);

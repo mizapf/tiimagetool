@@ -33,6 +33,12 @@ public abstract class ImageFormat  {
 
 	RandomAccessFile m_FileSystem;
 
+	/** Generation. Used for undoing. */
+	int m_generation;
+	
+	/** Cached sectors of this image. */
+	SectorCache m_cache;
+	
 	/** Cached sectors of the current track. */
 	Sector[] m_sector;
 	int[] m_trackpos;
@@ -92,6 +98,7 @@ public abstract class ImageFormat  {
 		setGeometry(false /*Utilities.isRawDevice(sImageName)*/);
 		m_nCurrentTrack = NOTRACK;
 		m_abyTrack = new byte[m_nTrackLength];
+		m_cache = new SectorCache();
 	}
 	
 	protected ImageFormat() {
@@ -122,12 +129,25 @@ public abstract class ImageFormat  {
 	}
 	
 	/** Reads a sector.
-		@param ImageException if the sector cannot be found.
+		@throws ImageException if the sector cannot be found.
 	*/
-	public abstract Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException;
+	public final Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+		Sector sect = m_cache.readSector(nSectorNumber);
+		if (sect == null) sect = readSectorFromImage(nSectorNumber);
+		return sect;
+	}
+	
+	/** Reads a sector from the medium. */
+	public abstract Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException;
 	
 	/** Write a sector. Is public for SectorEditFrame. */
-	public abstract void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException;
+	public final void writeSector(Sector sect) throws IOException, ImageException {
+		m_cache.writeSector(sect);
+		writeSectorToImage(sect.getNumber(), sect.getBytes()); 
+	}
+
+	/** Write a sector to the medium. */
+	public abstract void writeSectorToImage(int nNumber, byte[] abySector) throws IOException, ImageException;
 	
 	int getDensity() {
 		return m_nDensity;

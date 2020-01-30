@@ -35,6 +35,7 @@
          target="1.7"
          includes="de/mizapf/timt/**/*.java" >
        <compilerarg value="-Xlint:unchecked" />
+       <compilerarg value="-Xlint:deprecation" />
    </javac>
    <!--        <compilerarg value="-Xmaxerrs"/>
 	 <compilerarg value="1"/>

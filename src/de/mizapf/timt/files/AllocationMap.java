@@ -187,7 +187,7 @@ public class AllocationMap implements Cloneable {
 		ArrayList<Integer> vct = new ArrayList<Integer>();
 		for (int i=inv.start; i<=inv.end; i++) {
 			if (!hasAllocated(i / m_nAUSize)) {
-				vct.add(new Integer(i));
+				vct.add(Integer.valueOf(i));
 			}
 		}
 		Integer[] result = vct.toArray(new Integer[vct.size()]);

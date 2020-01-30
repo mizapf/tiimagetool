@@ -131,7 +131,7 @@ class TrackDumpFormat extends ImageFormat {
 	/** We return the cached sector.
 	*/
 	@Override
-	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+	public Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException {
 		if (nSectorNumber > 10000) throw new ImageException(String.format(TIImageTool.langstr("BadSectorNumber"), nSectorNumber)); 
 		int secindex = readTrack(nSectorNumber);
 		if (secindex != NONE) {
@@ -143,7 +143,7 @@ class TrackDumpFormat extends ImageFormat {
 	}
 
 	@Override
-	public void writeSector(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSectorToImage(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
 		int secindex = readTrack(nSectorNumber);
 		if (secindex == NONE) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 		// Write the new data

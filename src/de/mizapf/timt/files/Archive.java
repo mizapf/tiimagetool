@@ -258,6 +258,7 @@ public class Archive extends Directory {
 		return content;
 	}
 	
+	@Override
 	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen) throws ProtectedException, IOException, InvalidNameException, ImageFullException, ImageException, FileExistsException {
 		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("ArchiveProtected"));
 

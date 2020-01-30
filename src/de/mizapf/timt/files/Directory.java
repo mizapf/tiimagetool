@@ -528,7 +528,7 @@ public class Directory extends Element {
 				catch (IndexOutOfBoundsException e) {
 					System.out.println(String.format(TIImageTool.langstr("DirectoryWritingFailed"), getName(), intv.toString(), nSect, contents.length, offset));
 				}
-				vol.writeSector(nSect, aby);
+				vol.writeSector(new Sector(nSect, aby));
 				offset += Volume.SECTOR_LENGTH;
 			}
 		}
@@ -809,7 +809,7 @@ public class Directory extends Element {
 			// Write the DDR of this directory
 			if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
 				byte[] abyVIB = m_Volume.createVIB();
-				m_Volume.writeSector(0, abyVIB);
+				m_Volume.writeSector(new Sector(0, abyVIB));
 			}
 			else writeDDR();			
 		}
@@ -854,7 +854,7 @@ public class Directory extends Element {
 		
 		if (!m_Volume.isFloppyImage() && !m_Volume.isCF7Volume()) Utilities.setInt16(abyNew, 254, m_nDDRSector / m_Volume.getAUSize());
 		// System.out.println("Writing the index record at " + m_nFileIndexSector);
-		m_Volume.writeSector(m_nFileIndexSector, abyNew);		
+		m_Volume.writeSector(new Sector(m_nFileIndexSector, abyNew));		
 	}
 	
 	/** Writes a new directory descriptor record. */
@@ -910,7 +910,7 @@ public class Directory extends Element {
 			}
 			
 			// write the new DDR
-			m_Volume.writeSector(nSector, aDDRNew);
+			m_Volume.writeSector(new Sector(nSector, aDDRNew));
 		}
 		// else: Root directory of HD: will be written on next update
 	}

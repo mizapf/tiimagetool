@@ -14,52 +14,48 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2011 Michael Zapf
+    Copyright 2019 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
 
 package de.mizapf.timt.files;
-
+import de.mizapf.timt.TIImageTool;
+import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.LinkedList;
 
-public class AllocationGapList {
+public class SectorCache {
 	
-	String m_sEntity;
-	List<Integer> m_lst;
+	HashMap<Integer,List<Sector>> m_cache;
+	int m_gen;
 	
-	public AllocationGapList(String sName) {
-		m_sEntity = sName;
-		m_lst = new ArrayList<Integer>();
+	SectorCache() {
+		m_cache = new HashMap<Integer,List<Sector>>();
+		m_gen = 0;
 	}
 	
-	public String getName() {
-		return m_sEntity;
-	}
-
-	public void addAU(int nAU) {
-		m_lst.add(Integer.valueOf(nAU));
+	void setGeneration(int gen) {
+		m_gen = gen;
 	}
 	
-	public void setList(Integer[] anAU) {
-		for (int au:anAU) {
-			addAU(au);
+	Sector readSector(int number) {
+		return null;
+	}
+	
+	void writeSector(Sector sect) {
+		List<Sector> secversions = m_cache.get(sect.getNumber());
+		if (secversions==null) {
+			// Create a new history
+			List<Sector> list = new LinkedList<Sector>();
+			sect.setGeneration(m_gen);
+			list.add(sect);
+			m_cache.put(sect.getNumber(), list);
+			System.out.println("Caching a new version (" + m_gen + ") of sector " + sect.getNumber());
 		}
-	}
-	
-	public int size() {
-		return m_lst.size();
-	}
-	
-	public int[] getAllocationGaps() {
-		int[] aGap = new int[m_lst.size()];
-		Iterator<Integer> it = m_lst.iterator();
-		int i=0;
-		while (it.hasNext()) {
-			aGap[i++] = it.next().intValue();
-		}
-		return aGap;
+		
+		// Walk along the list to find the recent version
 	}
 }
+
+

@@ -51,7 +51,7 @@ public class SectorFaultList {
 	}
 	
 	public void addSector(int nSector) {
-		m_lst.add(new Integer(nSector));
+		m_lst.add(Integer.valueOf(nSector));
 	}
 	
 	public void setList(Integer[] anSector) {

@@ -124,12 +124,12 @@ public class CF7ImageFormat extends ImageFormat {
 	}
 
 	@Override
-	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+	public Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException {
 		return null;
 	}
 	
 	@Override
-	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSectorToImage(int nNumber, byte[] abySector) throws IOException, ImageException {
 	}
 }
 

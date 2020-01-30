@@ -123,10 +123,10 @@ class RawHDFormat extends ImageFormat {
 	}
 	
 	@Override
-	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+	public Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException {
 		byte[] abySector = new byte[m_nSectorLength];
 		// Get sector offset in track
-		//			System.out.println("Read sector " + nSectorNumber);
+					System.out.println("Read sector " + nSectorNumber);
 		int[] offset = new int[2];
 		getOffset(nSectorNumber, offset);
 		System.arraycopy(m_abyTrack, offset[SECTOR], abySector, 0, m_nSectorLength);
@@ -136,7 +136,7 @@ class RawHDFormat extends ImageFormat {
 	/** For Windows systems and access to the physical device we must
 		adjust to block boundaries. */
 	@Override
-	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSectorToImage(int nNumber, byte[] abySector) throws IOException, ImageException {
 		// System.out.println("Writing sector " + nNumber);
 		try {
 			int[] offset = new int[2];

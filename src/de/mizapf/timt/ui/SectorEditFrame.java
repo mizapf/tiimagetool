@@ -691,7 +691,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 				Sector sect = m_sectormap.get(i);
 				if (sect.changed()) {
 					// System.out.println("Write back sector " + i);
-					m_image.writeSector(i, sect.getBytes());
+					m_image.writeSector(new Sector(i, sect.getBytes()));
 				}
 			}
 			m_image.flush();

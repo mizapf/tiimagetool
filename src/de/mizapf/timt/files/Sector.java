@@ -33,6 +33,8 @@ public class Sector implements Cloneable {
 	int m_crcinit;
 	int m_mark;
 	
+	int m_generation;
+	
 	public Sector(int nNumber, byte[] abySector) {
 		this(nNumber, abySector, -1, 0xffff, 0xfb);
 	}
@@ -45,6 +47,7 @@ public class Sector implements Cloneable {
 		setData(abySector);
 		m_cellOffset = cellOffset;
 		clean();
+		m_generation = 0;
 	}
 	
 	public Object clone() {
@@ -89,6 +92,14 @@ public class Sector implements Cloneable {
 	
 	public String toString() {
 		return dumpBytes(m_abySector);
+	}
+	
+	public void setGeneration(int gen) {
+		m_generation = gen;
+	}
+	
+	public int getGeneration() {
+		return m_generation;
 	}
 	
 	public static String dumpBytes(byte[] aby) {

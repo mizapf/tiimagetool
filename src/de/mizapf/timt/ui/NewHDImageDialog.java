@@ -31,6 +31,8 @@ import de.mizapf.timt.TIImageTool;
 
 class NewHDImageDialog extends ToolDialog implements ActionListener, FocusListener {
 	
+	// TODO: Add standard hard disk layouts
+	
 	JTextField 		m_tfName;
 	JTextField		m_tfCylinders;
 	JTextField		m_tfHeads;
