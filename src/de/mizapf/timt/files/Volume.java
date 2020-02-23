@@ -152,7 +152,7 @@ public class Volume {
 			m_tCreation = new Time(abySect0, 0x12);
 			m_nAUEmulate = Utilities.getInt16(abySect0, 0x1a);		
 			
-			m_nReservedAUs = (abySect0[0x0d] << 6) & 0xffff;
+			m_nReservedAUs = ((abySect0[0x0d] & 0xff) << 6);
 			if (m_nReservedAUs == 0) {
 				System.err.println(TIImageTool.langstr("VolumeNoReservedAU"));
 				m_nReservedAUs = 2048;
