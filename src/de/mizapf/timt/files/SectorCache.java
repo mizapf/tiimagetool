@@ -57,5 +57,20 @@ public class SectorCache {
 		// Walk along the list to find the recent version
 	}
 }
-
+/*
+	Concept for Sector Cache
+	------------------------
+	Cache belongs to ImageFormat (for this image)
+	
+	Key = sector number
+	
+	Problem: Cut operation joins two images
+	
+	(Cut operation fails when source image is closed before pasting (IOException, Stream closed);
+	source/dest remains unchanged)
+	
+	
+	
+	
+*/
 
