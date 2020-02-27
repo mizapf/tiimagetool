@@ -646,14 +646,14 @@ public class Directory extends Element {
 		}
 		else {
 			// Allocate a new DDR
-			Interval[] aDDR = m_Volume.findFreeSpace(1, m_Volume.getReservedAUs()*m_Volume.getAUSize());
+			Interval[] aDDR = m_Volume.findFreeSpace(1, 64);
 			if (aDDR == null) {
 				throw new ImageFullException(TIImageTool.langstr("DirectoryNoSpace") + ". " + TIImageTool.langstr("DirectoryNoSpaceDir"));
 			}
 			m_Volume.allocate(aDDR[0]);
 			
 			// Allocate a new FDIR
-			Interval[] aFDIR = m_Volume.findFreeSpace(1, m_Volume.getReservedAUs()*m_Volume.getAUSize());
+			Interval[] aFDIR = m_Volume.findFreeSpace(1, 64);
 			if (aFDIR == null) {
 				m_Volume.deallocate(aDDR[0]);
 				throw new ImageFullException(TIImageTool.langstr("DirectoryNoSpace") + ". " + TIImageTool.langstr("DirectoryNoSpaceTable"));
