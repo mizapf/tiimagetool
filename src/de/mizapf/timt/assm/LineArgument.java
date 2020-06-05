@@ -178,4 +178,8 @@ class LineArgument {
 	public boolean hasSymbol() {
 		return ((m_sym != null && !m_sym.isAbsolute()) || m_nAddrType==Assembler.T_JUMP);
 	}
+	
+	public boolean hasAbsoluteSymbol() {
+		return (m_sym != null && m_sym.isAbsolute());
+	}
 }

@@ -81,6 +81,7 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 		m_tabs.addTab(TIImageTool.langstr("PreferencesOutput"), createTab("output"));
 		m_tabs.addTab(TIImageTool.langstr("PreferencesImporting"), createTab("import"));
 		m_tabs.addTab(TIImageTool.langstr("PreferencesExporting"), createTab("export"));
+		m_tabs.addTab(TIImageTool.langstr("PreferencesTools"), createTab("tools"));
 		
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		add(Box.createVerticalStrut(10));

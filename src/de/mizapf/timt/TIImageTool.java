@@ -30,6 +30,11 @@
 	[ ] Search for CF7 card and for dd / chown automatically.
 	[ ] Check for CF7 open issues in Windows
 	[x] "Please wait" window for CF7
+	[ ] Cartridge creator (RPK)
+	[ ] Disassembler problem in symbolic mode; see disassembler file
+	[ ] Show embedded machine language in BASIC (or indicate at least)
+	[ ] Add access to xdt99
+	[ ] Allow for more DIS/VAR formats to be viewed
 */
 
 package de.mizapf.timt;

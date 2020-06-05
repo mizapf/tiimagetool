@@ -68,7 +68,7 @@ public class ViewDumpAction extends Activity {
 							skip = 6;
 						}
 						
-						String dump = Utilities.hexdump(start, skip, content, content.length, false, 0x00);
+						String dump = Utilities.hexdump(start, skip, content, length, false, 0x00);
 						imagetool.showTextContent(String.format(TIImageTool.langstr("ViewDumpContents"), selected.getName()), dump);
 					}
 					catch (EOFException eofx) {

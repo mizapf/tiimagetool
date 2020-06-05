@@ -80,7 +80,9 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	JMenuItem m_iViewText;
 	JMenuItem m_iViewImage;
 	JMenuItem m_iViewDump;
-	JMenuItem m_iViewUtil;
+//	JMenuItem m_iViewUtil;
+	JMenuItem m_iAssemble;
+	JMenuItem m_iLink;
 	JMenuItem m_iDisass;
 	JMenuItem m_iGPLDisass;
 	JMenuItem m_iList;
@@ -137,8 +139,10 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_iViewText = app.createMenuItem(new ViewTextAction());
 		m_iViewImage = app.createMenuItem(new ViewImageAction());
 		m_iViewDump = app.createMenuItem(new ViewDumpAction());
-		m_iViewUtil = app.createMenuItem(new ViewUtilAction());
-		m_iDisass = app.createMenuItem(new DisassembleAction());
+//		m_iViewUtil = app.createMenuItem(new ViewUtilAction());
+		m_iAssemble = app.createMenuItem(new AssembleAction());
+		m_iLink = app.createMenuItem(new LinkAction());
+        m_iDisass = app.createMenuItem(new DisassembleAction());
 		m_iGPLDisass = app.createMenuItem(new GPLDisassembleAction());
 		m_iList = app.createMenuItem(new ListAction());
 		m_iSaveTfi = app.createMenuItem(new SaveTFIAction()); 
@@ -477,8 +481,11 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		
 		boolean bText = false; //true;
 		boolean bDump = false; //true;
-		boolean bUtil = false; //true;
+//		boolean bUtil = false; //true;
 		boolean bImage = false; //true;
+
+		boolean bAssemble = false;
+		boolean bLink = false;
 		boolean bDisass = false; //true;
 		boolean bGDisass = false; //true;
 		boolean bBasic = false; //true;
@@ -529,12 +536,17 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_ctxmenu.add(m_iViewFIB);
 		if (!isEmulate) m_ctxmenu.add(m_iViewText);
 		if (!isEmulate) m_ctxmenu.add(m_iViewImage);
-		m_ctxmenu.add(m_iViewDump); 
+		m_ctxmenu.add(m_iViewDump);
 		if (!isEmulate) {
-			m_ctxmenu.add(m_iViewUtil); 
+			m_ctxmenu.add(m_iList); 			
+		}
+		if (!isEmulate) {
+			m_ctxmenu.addSeparator();
+//			m_ctxmenu.add(m_iViewUtil); 
+			m_ctxmenu.add(m_iAssemble);
+			m_ctxmenu.add(m_iLink);
 			m_ctxmenu.add(m_iDisass); 
 			m_ctxmenu.add(m_iGPLDisass); 
-			m_ctxmenu.add(m_iList); 
 		}
 		m_ctxmenu.addSeparator();
 		m_ctxmenu.add(m_iSaveTfi);
@@ -551,13 +563,18 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			bSaveRem = true;
 			bSaveDump = true;
 			bSaveTfi = true;	
-			bUtil = true;
+//			bUtil = true;
 			bImage = true;
 			bCut = true;
 			bCopy = true;
 			bBasic = true;
+			bText = true;
+			bDisass = true;
+			bGDisass = true;
+			bAssemble = true;
+			bLink = true;
 		}
-		
+				
 		for (Element el:selected) {
 			if (el instanceof TFile) {
 				TFile file = (TFile)el;
@@ -566,8 +583,22 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 						bBasic = false;
 						if (!file.isProgram()) {
 							bGDisass = false;
-							if (!file.isTaggedObjectCodeFile()) bDisass = false;
+							if (!file.isTaggedObjectCodeFile()) {
+								bDisass = false;
+								bLink = false;
+							}
 						}
+						else {
+							bLink = false;
+							bAssemble = false;
+						}
+					}
+					else {
+						bDisass = false;
+						bGDisass = false;
+						bImage = false;
+						bAssemble = false;
+						bLink = false;
 					}
 				}
 				catch (Exception iox) {
@@ -575,20 +606,20 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 					bDisass = false;
 					bGDisass = false;
 				}
-				try {
+/*				try {
 					if (!file.hasUtilFormat()) bUtil = false;
 				}
 				catch (Exception ex) {
 					bUtil = false;
 				}
-				
+*/				
 				if (!file.isTextFile()) {
 					bText = false;
-					bDisass = true;
-					bGDisass = true;
+					bAssemble = false;
 				}
-				else {
-					bText = true;
+				
+				if (!file.isAsmSourceCodeFile()) {
+					bAssemble = false;
 				}
 				
 				if (!file.isImageFile()) bImage = false;
@@ -596,7 +627,9 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			else {
 				bText = false;
 				bDump = false;
-				bUtil = false;
+//				bUtil = false;
+				bAssemble = false;
+				bLink = false;
 				bDisass = false;
 				bGDisass = false;
 				bBasic = false;
@@ -606,12 +639,6 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				bImage = false;
 				bArchive = false;
 			}
-		}
-		
-		if (bBasic) {
-			bDisass = false;
-			bGDisass = false;
-			bImage = false;
 		}
 		
 		if (!m_app.offersSerialConnection() || selected.size()>1) bSaveRem = false;
@@ -626,9 +653,11 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_iSelect.setEnabled(bCut);
 		m_iViewText.setEnabled(bText);
 		m_iViewImage.setEnabled(bImage);
-		m_iViewUtil.setEnabled(bUtil);
+//		m_iViewUtil.setEnabled(bUtil);
 		m_iViewDump.setEnabled(bDump);
 		m_iViewFIB.setEnabled(bDump);
+		m_iAssemble.setEnabled(bAssemble);
+		m_iLink.setEnabled(bLink);
 		m_iDisass.setEnabled(bDisass);
 		m_iGPLDisass.setEnabled(bGDisass);
 		m_iList.setEnabled(bBasic);

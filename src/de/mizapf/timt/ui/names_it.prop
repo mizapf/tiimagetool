@@ -23,3 +23,4 @@ dndc=general:b:Mostra opzioni per drag-and-drop
 verbose=output:b:Output completo sulla console
 fontsize=output:s:Dimensione del font
 uifont=output:s:Font per l'interfaccia utente
+asmtool=tools:s:Assembler invocation

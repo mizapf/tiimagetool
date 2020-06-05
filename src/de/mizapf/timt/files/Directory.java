@@ -374,6 +374,10 @@ public class Directory extends Element {
 	}
 	
 	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen) throws InvalidNameException, ImageFullException, ProtectedException, ImageException, IOException {
+		return insertFile(abyTif, sNewFilename, bReopen, false);
+	}
+	
+	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen, boolean bOverwrite) throws InvalidNameException, ImageFullException, ProtectedException, ImageException, IOException {
 
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 
@@ -417,8 +421,13 @@ public class Directory extends Element {
 		// Already there?
 		sContName = sContName.trim();
 		for (TFile file:m_Files) {
-			if (file.getName().trim().equals(sContName))
-				throw new FileExistsException(sContName);
+			if (file.getName().trim().equals(sContName)) {
+				if (!bOverwrite)
+					throw new FileExistsException(sContName);
+				else {
+					deleteFile(file, true);
+				}
+			}
 		}
 		
 		if (!TFile.validName(sContName)) throw new InvalidNameException(sContName); 

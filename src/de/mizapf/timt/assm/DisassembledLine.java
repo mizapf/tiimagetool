@@ -76,6 +76,19 @@ class DisassembledLine {
 		m_bShowData = ((nShowLocation & Hint.OPT_SHOWDATA)!=0);
 	}		
 	
+	// For DATA lines
+	DisassembledLine(Location count, int nLength, int nShowLocation) {
+	    m_bShowLocation = ((nShowLocation & Hint.OPT_SHOWLOC)!=0);
+		m_bShowData = false;
+		m_bReferenced = false;
+		m_bLabels = true;
+		m_aarg = new LineArgument[nLength];  
+		m_bPlain = false;
+		debug("location=" + count);				
+        if (count!=null) m_address = (Location)count.clone();	
+		m_nType = DL_DATA;	
+	}
+
 	DisassembledLine(Location count, int nCommand, LineArgument arg1) {
 	    this(count, nCommand, arg1, 0);
 	}
@@ -129,6 +142,7 @@ class DisassembledLine {
 	}
 	
 	void setReferenced() {
+		debug("set ref " + getLocation());
 		m_bReferenced = true;
 	}
 	
@@ -203,6 +217,15 @@ class DisassembledLine {
 	
 	LineArgument getLineArgument(int nPos) {
 		return m_aarg[nPos];
+	}
+	
+	void addLineArgument(LineArgument la) {
+		for (int i=0; i < m_aarg.length; i++) {
+			if (m_aarg[i] == null) {
+				m_aarg[i] = la;
+				break;
+			}
+		}
 	}
 	
 	boolean isJump() {
@@ -350,14 +373,13 @@ class DisassembledLine {
 		case DL_BRANCH:
 		case DL_JUMP:
 		case DL_DATA:
-		    if (m_aarg[0] != null) sb.append(" ").append(m_aarg[0].toString());
-		    if (m_aarg[1] != null) sb.append(",").append(m_aarg[1].toString());
+			sb.append(getAllLineArguments());
+
 		    // Tab to raw values
 			if (m_bShowData) {
 			    for (int i = sb.length() - nDiff; i < 58; i++) sb.append(" ");
 			    // Opcode
-			    if (m_aarg[0] != null && m_aarg[0].getAddressingType()==Assembler.T_DATA) sb.append(m_aarg[0].toValue());
-			    else {
+			    if (m_aarg[0] == null || m_aarg[0].getAddressingType()!=Assembler.T_DATA) {
 			        sb.append(Utilities.toHex(m_nOpcode,4, true));
 			        if (m_aarg[0] != null && m_aarg[0].hasValue()) sb.append(" ").append(m_aarg[0].toValue());
 			        if (m_aarg[1] != null && m_aarg[1].hasValue()) sb.append(" ").append(m_aarg[1].toValue());
@@ -379,6 +401,18 @@ class DisassembledLine {
 			
 		// Argument values (or null)
 		return sb.toString();
+	}
+	
+	String getAllLineArguments() {
+		StringBuilder sb = new StringBuilder();
+		for (int i=0; i < m_aarg.length; i++) {
+			if (m_aarg[i] != null) {
+				if (i==0) sb.append(" ");
+				else sb.append(",");
+				sb.append(m_aarg[i].toString());
+			}
+		}
+		return sb.toString();		
 	}
 }
 

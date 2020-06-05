@@ -367,12 +367,12 @@ public class PasteAction extends Activity {
 									// File name already exists
 									bRetry = true;
 									sImportName = getAlternativeName(true, file.getName(), dvCurrent.getFrame());
-									if (sImportName.equals("..")) {
+									if (sImportName.equals(NAME_SKIP)) {
 										bRetry = false; // skip
 										sImportName = null;
 									}
 									else {
-										if (sImportName.equals(".")) {
+										if (sImportName.equals(NAME_ABORT)) {
 											bAbort = true; 
 											sImportName = null;
 										}
@@ -382,12 +382,12 @@ public class PasteAction extends Activity {
 									// Invalid file name
 									bRetry = true;
 									sImportName = getAlternativeName(true, file.getName(), dvCurrent.getFrame());
-									if (sImportName.equals("..")) {
+									if (sImportName.equals(NAME_SKIP)) {
 										bRetry = false; // skip
 										sImportName = null;
 									}
 									else {
-										if (sImportName.equals(".")) {
+										if (sImportName.equals(NAME_ABORT)) {
 											bAbort = true; 
 											sImportName = null;
 										}
@@ -416,12 +416,12 @@ public class PasteAction extends Activity {
 									catch (FileExistsException fxx) {
 										bRetry = true;
 										sImportName = getAlternativeName(false, el.getName(), dvCurrent.getFrame());
-										if (sImportName.equals("..")) {
+										if (sImportName.equals(NAME_SKIP)) {
 											bRetry = false; // skip
 											sImportName = null;
 										}
 										else {
-											if (sImportName.equals(".")) {
+											if (sImportName.equals(NAME_ABORT)) {
 												bAbort = true; 
 												sImportName = null;
 											}
@@ -434,12 +434,12 @@ public class PasteAction extends Activity {
 									catch (InvalidNameException inx) {
 										bRetry = true;
 										sImportName = getAlternativeName(false, el.getName(), dvCurrent.getFrame());
-										if (sImportName.equals("..")) {
+										if (sImportName.equals(NAME_SKIP)) {
 											bRetry = false; // skip
 											sImportName = null;
 										}
 										else {
-											if (sImportName.equals(".")) {
+											if (sImportName.equals(NAME_ABORT)) {
 												bAbort = true;
 												sImportName = null;
 											}
@@ -449,12 +449,12 @@ public class PasteAction extends Activity {
 										// Invalid name
 										bRetry = true;
 										sImportName = getAlternativeName(false, el.getName(), dvCurrent.getFrame());
-										if (sImportName.equals("..")) {
+										if (sImportName.equals(NAME_SKIP)) {
 											bRetry = false; // skip
 											sImportName = null;
 										}
 										else {
-											if (sImportName.equals(".")) {
+											if (sImportName.equals(NAME_ABORT)) {
 												bAbort = true;
 												sImportName = null;
 											}
@@ -547,12 +547,12 @@ public class PasteAction extends Activity {
 				catch (FileExistsException fxx) {
 					bRetry = true;
 					sImportName = getAlternativeName(true, file.getName(), dvTarget.getFrame());
-					if (sImportName.equals("..")) {
+					if (sImportName.equals(NAME_SKIP)) {
 						bRetry = false; // skip
 						sImportName = null;
 					}
 					else {		
-						if (sImportName.equals(".")) {
+						if (sImportName.equals(NAME_ABORT)) {
 							bAbort = true;
 							sImportName = null;
 						}
@@ -561,7 +561,7 @@ public class PasteAction extends Activity {
 				catch (InvalidNameException ix) {
 					bRetry = true;
 					sImportName = getAlternativeName(true, file.getName(), dvTarget.getFrame());
-					if (sImportName.equals("..")) {
+					if (sImportName.equals(NAME_SKIP)) {
 						bRetry = false; // skip
 						sImportName = null;
 					}
@@ -585,17 +585,5 @@ public class PasteAction extends Activity {
 		for (int i=0; i < dirs.length; i++) {
 			copyDir(dirs[i], null, dirNew, dvTarget);
 		}
-	}
-	
-	private String getAlternativeName(boolean bFile, String sName, JFrame frame) {
-		NewNameDialog namedialog = new NewNameDialog(frame, bFile, sName);
-		namedialog.createGui();
-		namedialog.setVisible(true);
-		if (namedialog.ok()) {
-			return namedialog.getFileName();
-		}
-		if (namedialog.skipped()) return "..";
-		if (namedialog.aborted()) return ".";
-		return "."; 
 	}
 }

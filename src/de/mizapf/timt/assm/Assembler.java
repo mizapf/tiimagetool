@@ -17,6 +17,11 @@
     Copyright 2013 Michael Zapf
     www.mizapf.de
     
+    ISSUES:
+    - Symbolic disassembly: Missing comments in absolute mode
+    - Symbolic disassembly: Not all jump targets are shown
+    - Symbolic disassembly: ref(addr) does not work in absolute mode
+    
 ****************************************************************************/
 
 package de.mizapf.timt.assm;
@@ -29,7 +34,7 @@ import de.mizapf.timt.TIImageTool;
 
 public class Assembler {
 	
-	public static final boolean DEBUG = false;
+	public static final boolean DEBUG = true;
 	
 	byte[] m_Code;
 	static Command[] command; 
@@ -333,6 +338,7 @@ public class Assembler {
 					
 		int nOffset = nStartOffset;
 		int nDatalines = 0;
+		int nDataArgs = 0;
 
 		// Allocate an absolute counter
 		Location aCounter = new Location(ABSOLUTE);
@@ -341,7 +347,9 @@ public class Assembler {
 		m_Counter = aCounter; // Absolute counter 
 		
 		DisassembledLine dl = null;
+		DisassembledLine dlOld = null;
 		boolean bData = false;
+		boolean bAddToData = false;
 		
 		Symbol val1, val2, val3;
 		List<DisassembledLine> lines = new ArrayList<DisassembledLine>();
@@ -425,11 +433,15 @@ public class Assembler {
 				// Check if our counter is somewhere in a data area
 				for (Hint hdat : dataareas) {
 				    if (hdat.contains(m_Counter)) {
-				        // System.out.println(m_Counter + ": have it in " + hdat);
+				        // debug(m_Counter + ": have it in " + hdat);
 				        bData = true;
+				        if (nDataArgs==0) {
+				        	nDataArgs = hdat.getDataCount();
+				        }
+				        break;
 				    }
 				}
-				
+							
 				// The opcode must be an absolute symbol
 				val1 = new Symbol(Utilities.getInt16(m_Code, nOffset));
 				
@@ -446,23 +458,46 @@ public class Assembler {
 					val3 = new Symbol(nval3);
 
 					dl = disassembleLine(m_Counter, val1, val2, val3, nShowDataLoc);
+					bAddToData = false;
 				}
+				
+				// Put all params into the DATA line
+				if (nDatalines>0 && nDataArgs==0) nDataArgs = nDatalines;
 
 				if (dl==null) {
 					// not found or invalid or data line
+					// Create a new DATA line or add an argument to the last one
 					LineArgument la = new LineArgument(val1);
 					la.setAddressingType(T_DATA);
-					dl = new DisassembledLine(m_Counter, C_DATA, la); // creates DATA line
+					
+					if (bAddToData && nDataArgs > 0) {
+						// We still have room in the last data line
+						dl = dlOld;
+						dlOld.addLineArgument(la);
+					}
+					else { 
+						// Create a new DATA line
+						if (nDataArgs == 0) nDataArgs = 1;
+						dl = new DisassembledLine(m_Counter, nDataArgs, nShowDataLoc);
+						dl.addLineArgument(la);
+						bAddToData = false;
+					}
+					
 					if (nDatalines>0) nDatalines--;
+					if (nDataArgs>0) nDataArgs--;
 				}
 				else {
 					if (dl.isBranchToAddressCommand()) {
 						// Special handling: If the address is known for a 
 						// subroutine that expects datalines, let the 
 						// disassembler keep the contents unchanged
+						Location add = dl.getLineArgument(0).getLocation();
 						for (int j=0; j < hint.length; j++) {
-							Location add = dl.getLineArgument(0).getLocation();
-							if (hint[j].definesParamsFor(add)) nDatalines = hint[j].getParamCount();
+							if (hint[j].definesParamsFor(add)) 
+							{
+								nDatalines = hint[j].getParamCount();
+								bAddToData = false;
+							}
 						}
 					}
 					else {
@@ -470,11 +505,23 @@ public class Assembler {
 					}
 				}
 				
-				lines.add(dl);
-				dl.setReferenced();
-				dl.setDumpAddressMode(true);
-				nOffset += dl.getLength();
-				m_Counter.add(dl.getLength());
+				if (!bAddToData) {
+					lines.add(dl);
+					dl.setReferenced();
+					dl.setDumpAddressMode(true);
+					nOffset += dl.getLength();
+					m_Counter.add(dl.getLength());
+					if (nDataArgs > 0) {
+						dlOld = dl;
+						bAddToData = true;
+					}
+				}
+				else {
+					// DATA addition					
+					nOffset += 2;
+					m_Counter.add(2);
+					if (nDataArgs == 0) bAddToData = false;
+				}
 			}
 		}
 		catch (ArrayIndexOutOfBoundsException aax) {
@@ -486,7 +533,7 @@ public class Assembler {
 			sb.append(line.toString());
 		}
 		return sb.toString();
-	}
+	}	
 	
 	private DisassembledLine createNewTextLine(StringBuilder sbText, Location cntLast, int nShowDataLocs) {
 	    DisassembledLine dl = null;
@@ -532,6 +579,8 @@ public class Assembler {
 		boolean bLinesOK = false;
 		boolean bEndOfFile = false;
 		LineArgument la1 = null;
+		boolean bAddToData = false;
+		int nDataArgs = 0;
 
 		// Prepare TocFile
 		TocFile tocFile = null;		
@@ -622,12 +671,11 @@ public class Assembler {
 		    if (hu.getKind()==Hint.TEXT) textareas.add(hu);
 		}
 		
-		int nPass = 2;
-		
-		while (nPass > 0) {
+		for (int nPass = 1; nPass < 3; nPass++) {
 			boolean bFirstInBlock = true;
 			bodylines = new LinkedList<DisassembledLine>();
 			tocFile.setPosition(0);
+			System.out.println("pass " + nPass);
 			tocFile.setBranchTable(branchtable);
 			
 			debug("===================");
@@ -739,10 +787,13 @@ public class Assembler {
 						    if (hdat.contains(m_Counter)) {
 						        // System.out.println(m_Counter + ": have it in " + hdat);
 						        bData = true;
-						        dl = null;
+						        if (nDataArgs==0) {
+						        	nDataArgs = hdat.getDataCount();
+						        }
 						        break;
 						    }
 						}
+				        dl = null;
 						
 						if (!bData) {
 						    enta1 = tocFile.getNextDataEntity(m_Counter, 1, hint);
@@ -758,6 +809,15 @@ public class Assembler {
 							// not found or invalid or data line
 							LineArgument la = new LineArgument(ent.getSymbol());
 							la.setAddressingType(T_DATA);
+							
+							if (bAddToData && nDataArgs > 0) {
+								// dl = dlOld;
+								// dlOld.addLineArgument(la);
+							}							
+							else {
+								// HIER
+							}
+							
 							dl = new DisassembledLine(m_Counter, C_DATA, la); // creates DATA line						
 						}
 
@@ -975,7 +1035,7 @@ public class Assembler {
 						// file. Otherwise, we store the symbol in the branchtable
 						if (!sym.isReferenced()) {
 							symboltable.put(sym.toString(), sym);
-							if ((d.isBranchToAddressCommand() || d.isJumpToAddressCommand()) && !sym.isAbsolute()) {
+							if ((d.isBranchToAddressCommand() || d.isJumpToAddressCommand()) /* && !sym.isAbsolute() */) {
 								// debug("branch " + sym);
 								branchtable.put(sym.toString(), sym);
 							}
@@ -998,7 +1058,7 @@ public class Assembler {
 				            // Branch to a symbol with a name
 				            if (hint[i].definesParamsFor(sName)) {
 				                Location loc = d.getLocation();
-				                Hint hnew = new Hint(Hint.DATA, loc.getLocationAfter(4), loc.getLocationAfter(4+hint[i].getParamCount()*2-1));
+				                Hint hnew = new Hint(Hint.DATA, loc.getLocationAfter(4), loc.getLocationAfter(4+hint[i].getParamCount()*2-1), 1);
 				                dataareas.add(hnew);
 				            }
 				        }
@@ -1006,7 +1066,7 @@ public class Assembler {
 				            // Branch to a symbol with a name
 				            if (hint[i].definesParamsFor(la.getSymbol().toLocation())) {
 				                Location loc = d.getLocation();			                
-				                Hint hnew = new Hint(Hint.DATA, loc.getLocationAfter(4), loc.getLocationAfter(4+hint[i].getParamCount()*2-1));
+				                Hint hnew = new Hint(Hint.DATA, loc.getLocationAfter(4), loc.getLocationAfter(4+hint[i].getParamCount()*2-1), 1);
 				                dataareas.add(hnew);				                
 				            }
 				        }
@@ -1016,8 +1076,6 @@ public class Assembler {
 			
 			debug(symboltable);
 			debug(branchtable);
-			
-			nPass--;
 		}
 		
 		// Add the body lines to the list
@@ -1031,18 +1089,24 @@ public class Assembler {
 				debug("Checking " + dld);
 				if (dld.isDirective() && !dld.isBSS()) continue;
 				la1 = dld.getLineArgument(0);
-				if (la1!=null && la1.hasSymbol()) {
-					Symbol sym = la1.getSymbol();
-					// Not interested in REF'd symbols
-					if (!sym.isReferenced()) {
-						searchLocation(sym, bodylines);
+				if (la1!=null) {
+					if (la1.hasSymbol()) {
+						Symbol sym = la1.getSymbol();
+						// Not interested in REF'd symbols
+						if (!sym.isReferenced()) {
+							searchLocation(sym, bodylines);
+						}
 					}
+					if (la1.hasAbsoluteSymbol())
+						debug("abs:" + la1.getSymbol());
 				}
 				la1 = dld.getLineArgument(1);
-				if (la1!=null && la1.hasSymbol()) {
-					Symbol sym = la1.getSymbol();
-					if (!sym.isReferenced()) {
-						searchLocation(sym, bodylines);
+				if (la1!=null) {
+					if (la1.hasSymbol()) {
+						Symbol sym = la1.getSymbol();
+						if (!sym.isReferenced()) {
+							searchLocation(sym, bodylines);
+						}
 					}
 				}
 			}
@@ -1125,6 +1189,9 @@ public class Assembler {
 	        return new DisassembledLine(null, C_BYTE, la, nShowDataLocs);
 	    }
 	}
+	
+	// TODO: Determine absolute position intervals (should not be too many),
+	// and find the absolute label inside these intervals
 	
 	private void searchLocation(Symbol sym, LinkedList<DisassembledLine> bodylines) {
 		DisassembledLine dlBest = null;

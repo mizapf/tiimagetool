@@ -201,26 +201,27 @@ class TocFile {
 	
 	public TocEntity getNextDataEntity(Location count, int i, Hint[] hint) {
 		int nArg = 0;
-		debug("Get arg " + i);
+		debug("Get arg " + i + ", mEnt.len=" + m_aEntity.length);
 		
-		if (m_nPosition + nArg > m_aEntity.length) return null;
+		if (m_nPosition > m_aEntity.length) return null;
 		int nPos = m_nPosition+1;
 		
 		while (nPos < m_aEntity.length) {
-			debug("  checking " + m_aEntity[nPos]);
+			debug("  checking npos=" + nPos + ": " + m_aEntity[nPos]);
 			if (m_aEntity[nPos].isOfKind(TocEntity.DATA)) {
 				nArg++;
 				if (nArg==i) {
 					// We do not return a data entity as an argument 
 					// if there is a branch to it
-					String sLoc = count.getAddressWithOffset(i*2);
-					if (m_mapBranch.containsKey(sLoc)) {
-						debug("  found data, but there is a branch to this location " + sLoc + "; don't use as an argument");
+					Location count1 = count.getLocationAfter(i*2);
+					
+					if (m_mapBranch.containsKey(count1.toString())) {
+						debug("  found data, but there is a branch to this location " + count1 + "; don't use as an argument");
 						return null;
 					}
-					for (int k=0; k < hint.length; k++) {
-						if (hint[k].definesReferenceFor(count)) {
-						    debug("   found data, but this has been explicitly referenced; don't use as an argument");
+					for (int k=0; k < hint.length; k++) {					
+						if (hint[k].definesReferenceFor(count1)) {
+						    debug("   found data at " + count1 + ", but this has been explicitly referenced by '" + hint[k] + "'; don't use as an argument");
 						    return null;
 						}
 					}

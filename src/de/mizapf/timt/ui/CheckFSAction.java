@@ -502,7 +502,7 @@ public class CheckFSAction extends Activity {
 						if (changedL3) {
 							// Write all affected sectors
 							for (TFile f : fixL3) {
-								ps.println(String.format(TIImageTool.langstr("SwappedL3"), f.getPathname()));
+								// ps.println(String.format(TIImageTool.langstr("SwappedL3"), f.getPathname()));
 								f.rewriteFIB();
 							}
 						}

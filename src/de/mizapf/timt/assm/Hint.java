@@ -34,6 +34,7 @@ public class Hint {
 	private Location m_locStart;
 	private Location m_locEnd;
     private int m_nArgCount;	
+    private int m_nLength;
     
     private boolean m_bBiased;
 	
@@ -49,11 +50,12 @@ public class Hint {
 	public static final int OPT_SHOWDATA = 2;
 
 	/** Constructor for DATA and TEXT */
-	Hint(int kind, Location start, Location end) {
+	Hint(int kind, Location start, Location end, int len) {
 	    m_locStart = start;
 	    m_locEnd = end;
 	    m_nKind = kind;
 	    m_bBiased = false;
+	    m_nLength = len;
 	}
 
 	/** Constructor for PARAM */
@@ -97,6 +99,10 @@ public class Hint {
 	public String getSymbol() {
 	    return m_sSymbol;
 	}	
+	
+	public int getDataCount() {
+		return m_nLength;
+	}
 
 	public boolean contains(Location loc) {
 	    return (m_locStart.isLowerOrEqual(loc) && m_locEnd.isHigherOrEqual(loc)); 
@@ -150,7 +156,7 @@ public class Hint {
 	}
 
 	/* New hints
-		DATA area:     data(fromAddr,toAddr)
+		DATA area:     data(fromAddr,toAddr[,len])
 		TEXT area:     text(fromAddr,toAddr)
 		Referenced:    ref(addr)
 		Params:        param(addr,words), param(symbol,words)
@@ -186,6 +192,7 @@ public class Hint {
         int nPosLast = -1;
         String sArg1 = null;
         String sArg2 = null;
+        String sArg3 = null;
         String sSymbol = null;
         
         List<Hint> list = new ArrayList<Hint>();
@@ -202,7 +209,14 @@ public class Hint {
                 int nCommaPos = sArg.indexOf(",");
                 if (nCommaPos!=-1) {
                     sArg1 = sArg.substring(0, nCommaPos).trim();
-                    sArg2 = sArg.substring(nCommaPos+1, sArg.length()).trim();
+                    int nCommaPos1 = sArg.indexOf(",", nCommaPos+1);
+                    if (nCommaPos1 != -1) {
+  	                    sArg2 = sArg.substring(nCommaPos+1, nCommaPos1).trim();
+  	                    sArg3 = sArg.substring(nCommaPos1+1, sArg.length()).trim();
+                    }
+                    else {
+                    	sArg2 = sArg.substring(nCommaPos+1, sArg.length()).trim();
+                    }
                 }
                 else {
                     sArg1 = sArg;
@@ -230,15 +244,17 @@ public class Hint {
                 }
                 else {
                     if (sKind.equalsIgnoreCase("data")) {
-                        list.add(new Hint(DATA, Location.getInstance(sArg1), Location.getInstance(sArg2)));
+                    	int nLenData = 1;
+                    	if (sArg3 != null) nLenData = Integer.parseInt(sArg3); 
+                        list.add(new Hint(DATA, Location.getInstance(sArg1), Location.getInstance(sArg2), nLenData));
                     }
                     else {
                         if (sKind.equalsIgnoreCase("text")) {
-                            list.add(new Hint(TEXT, Location.getInstance(sArg1), Location.getInstance(sArg2)));
+                            list.add(new Hint(TEXT, Location.getInstance(sArg1), Location.getInstance(sArg2), 1));
                         }
                         else {
                             if (sKind.equalsIgnoreCase("btext")) {
-                                Hint hint = new Hint(TEXT, Location.getInstance(sArg1), Location.getInstance(sArg2));
+                                Hint hint = new Hint(TEXT, Location.getInstance(sArg1), Location.getInstance(sArg2), 1);
                                 hint.setBiased(true);
                                 list.add(hint);
                             }
@@ -248,7 +264,7 @@ public class Hint {
                                 }
                                 else {
                                     if (sKind.equalsIgnoreCase("nofmt")) {
-                                        list.add(new Hint(NOFMT, Location.getInstance(sArg1), Location.getInstance(sArg2)));
+                                        list.add(new Hint(NOFMT, Location.getInstance(sArg1), Location.getInstance(sArg2), 1));
                                     }
                                     else {
                                         throw new FormatException(TIImageTool.langstr("Hints"), TIImageTool.langstr("HintsUnknown") + " '" + sKind + "'");
@@ -272,7 +288,10 @@ public class Hint {
         StringBuilder sb = new StringBuilder();
         switch (m_nKind) {
         case DATA:
-            sb.append("data(").append(m_locStart).append(",").append(m_locEnd).append(")");
+        	if (m_nLength == 1)
+        		sb.append("data(").append(m_locStart).append(",").append(m_locEnd).append(")");
+        	else
+        		sb.append("data(").append(m_locStart).append(",").append(m_locEnd).append(",").append(m_nLength).append(")");
             break;
         case TEXT:
             sb.append(m_bBiased? "btext(" : "text(").append(m_locStart).append(",").append(m_locEnd).append(")");

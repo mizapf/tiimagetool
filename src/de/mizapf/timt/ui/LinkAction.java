@@ -14,50 +14,41 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2011 Michael Zapf
+    Copyright 2020 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
 package de.mizapf.timt.ui;
 
 import javax.swing.*;
-import java.awt.event.InputEvent;
+import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.awt.Cursor;
+
+import de.mizapf.timt.assm.Assembler;
+import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.files.*;
 import de.mizapf.timt.TIImageTool;
 
-abstract public class Activity {
-	
-	protected JFrame m_parent;
-	protected TIImageTool imagetool;
-	
-	protected final static String NAME_ABORT = ".abort";
-	protected final static String NAME_SKIP = ".skip";
-	
-	public void setLinks(TIImageTool timt, JFrame parent) {
-		m_parent = parent;
-		imagetool = timt;
-	}
-	
-	public abstract String getMenuName();
-	public abstract String getActionName();
-	
-	public abstract void go();
+public class LinkAction extends Activity {
 
-	public int getKeyCode() {
-		return 0;
-	}
-
-	public int getModifier() {
-		return InputEvent.CTRL_DOWN_MASK;
+	public String getMenuName() {
+		return TIImageTool.langstr("LinkObj") + "...";
 	}
 	
-	protected String getAlternativeName(boolean bFile, String sName, JFrame frame) {
-		NewNameDialog namedialog = new NewNameDialog(frame, bFile, sName);
-		namedialog.createGui();
-		namedialog.setVisible(true);
-		if (namedialog.ok()) {
-			return namedialog.getFileName();
-		}
-		if (namedialog.skipped()) return NAME_SKIP;
-		return NAME_ABORT; 
+	public String getActionName() {
+		return "LINKOBJ";
+	}
+	
+	public void go() {
+		DirectoryView dvCurrent = imagetool.getSelectedView();
+		Directory dirCurrent = dvCurrent.getDirectory();
+		DirectoryPanel dp = dvCurrent.getPanel();
+		
+		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+		
+		JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Not implemented", "Not implemented", JOptionPane.ERROR_MESSAGE); 
+
+		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 }

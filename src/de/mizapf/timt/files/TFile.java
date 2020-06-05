@@ -120,39 +120,48 @@ public class TFile extends Element {
 		m_bL3Swapped = false;
 		m_bL3Bad = false;
 		m_nBadNumberOfRecords = m_nNumberOfRecords;
-		if (hasFixedRecordLength()) {
-			if (getRecordCount()==0) {
-				if (m_nAllocatedSectors > 0) {
-					// System.err.print(String.format(TIImageTool.langstr("TFile0Records"), getVolume().getImageName(), getName()));
-					m_nNumberOfRecords = m_nRecordsPerSector * m_nAllocatedSectors;
-					// System.err.println(". " + String.format(TIImageTool.langstr("TFileAssume"), m_nNumberOfRecords, m_nAllocatedSectors, m_nRecordsPerSector));
-					m_bL3Bad = true;
-				}
-			}
-			else {
-				int nMinRec = m_nRecordsPerSector * (m_nAllocatedSectors-1) + 1;
-				if (nMinRec < 0) nMinRec = 0;
-				int nMaxRec = m_nRecordsPerSector * m_nAllocatedSectors;
-				if (getRecordCount() < nMinRec || getRecordCount() > nMaxRec) {
-					int nTry = ((getRecordCount() & 0xff) << 8) | ((getRecordCount()>>8) & 0xff); 
-					// Check whether this is a little-endian error 
-					if (nTry < nMinRec || nTry > nMaxRec) {
-						// No, treat it as corrupt
-						m_nBadNumberOfRecords = m_nNumberOfRecords;
-						// System.err.print(String.format(TIImageTool.langstr("TFileUnplausible"), getVolume().getImageName(), getPathname(), getRecordCount(), Utilities.toHex(getRecordCount(), 4), nMinRec, nMaxRec));
+		if (!isProgram()) {
+			if (hasFixedRecordLength()) {
+				if (getRecordCount()==0) {
+					if (m_nAllocatedSectors > 0) {
+						// System.err.print(String.format(TIImageTool.langstr("TFile0Records"), getVolume().getImageName(), getName()));
 						m_nNumberOfRecords = m_nRecordsPerSector * m_nAllocatedSectors;
 						// System.err.println(". " + String.format(TIImageTool.langstr("TFileAssume"), m_nNumberOfRecords, m_nAllocatedSectors, m_nRecordsPerSector));
 						m_bL3Bad = true;
 					}
-					else {
-						// Yes, swap it
-						// System.err.println(String.format(TIImageTool.langstr("TFileSwappedL3"), getVolume().getImageName(), getName()));
-						m_nNumberOfRecords = nTry;
-						m_bL3Swapped = true;
+				}
+				else {
+					int nMinRec = m_nRecordsPerSector * (m_nAllocatedSectors-1) + 1;
+					if (nMinRec < 0) nMinRec = 0;
+					int nMaxRec = m_nRecordsPerSector * m_nAllocatedSectors;
+					if (getRecordCount() < nMinRec || getRecordCount() > nMaxRec) {
+						int nTry = ((getRecordCount() & 0xff) << 8) | ((getRecordCount()>>8) & 0xff); 
+						// Check whether this is a little-endian error 
+						if (nTry < nMinRec || nTry > nMaxRec) {
+							// No, treat it as corrupt
+							m_nBadNumberOfRecords = m_nNumberOfRecords;
+							// System.err.print(String.format(TIImageTool.langstr("TFileUnplausible"), getVolume().getImageName(), getPathname(), getRecordCount(), Utilities.toHex(getRecordCount(), 4), nMinRec, nMaxRec));
+							m_nNumberOfRecords = m_nRecordsPerSector * m_nAllocatedSectors;
+							// System.err.println(". " + String.format(TIImageTool.langstr("TFileAssume"), m_nNumberOfRecords, m_nAllocatedSectors, m_nRecordsPerSector));
+							m_bL3Bad = true;
+						}
+						else {
+							// Yes, swap it
+							// System.err.println(String.format(TIImageTool.langstr("TFileSwappedL3"), getVolume().getImageName(), getName()));
+							m_nNumberOfRecords = nTry;
+							m_bL3Swapped = true;
+						}
 					}
 				}
+				if (m_nNumberOfRecords > 1000000) throw new ImageException(TIImageTool.langstr("TFileDamaged"));
 			}
-			if (m_nNumberOfRecords > 1000000) throw new ImageException(TIImageTool.langstr("TFileDamaged"));
+			else {
+				// Check whether the L3 count of variable files is correct
+				if (m_nNumberOfRecords != m_nAllocatedSectors) {
+					m_nNumberOfRecords = m_nAllocatedSectors;
+					m_bL3Bad = true;
+				}
+			}
 		}
 	}
 	
@@ -455,6 +464,12 @@ public class TFile extends Element {
 	/** Get bad L3 count. */
 	public int getBadRecordCount() {
 		return m_nBadNumberOfRecords;
+	}
+	
+	/** Delivers all intervals of this file over all FIBs of this file. 
+		The intervals refer to sectors. */
+	public Interval[] getAllocatedBlocks() {
+		return m_aCluster;
 	}
 	
 	/** Rewrite the FIB. This is done to swap the L3 values (which have been swapped already on loading). **/
@@ -859,10 +874,8 @@ public class TFile extends Element {
 		return (isDisplay() && hasFixedRecordLength() && getRecordLength()==80);
 	}
 	
-	/** Delivers all intervals of this file over all FIBs of this file. 
-		The intervals refer to sectors. */
-	public Interval[] getAllocatedBlocks() {
-		return m_aCluster;
+	public boolean isAsmSourceCodeFile() {
+		return isTextFile();
 	}
 	
 /*********************************************************************

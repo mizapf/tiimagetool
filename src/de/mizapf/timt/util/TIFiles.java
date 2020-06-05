@@ -68,13 +68,20 @@ public class TIFiles {
 	
 	/** Must be 128 + n*256, or at least as long as to hold all bytes. 
 		Returns a new byte array aligned to sector sizes.
+		
+		Note: Some variants do not pad the last sector with zeros. 
 	*/
 	public static byte[] normalizeLength(byte[] aby) {
 		int expectedSize = getTotalNumberOfSectors(aby) * Volume.SECTOR_LENGTH;
 		if (aby.length == expectedSize + 128) return aby;
 
 		byte[] newcont = new byte[expectedSize + 128];
-		System.arraycopy(aby, 0, newcont, 0, aby.length);
+		int count = aby.length;
+		if (count > newcont.length) {
+			System.err.println(String.format(TIImageTool.langstr("TFITrunc"), count - newcont.length));
+			count = newcont.length;
+		}
+		System.arraycopy(aby, 0, newcont, 0, count);
 		return newcont;
 	}
 	
