@@ -178,13 +178,34 @@ public class AssembleAction extends Activity {
 									}
 									sImportName = sImportName + asparm.getAppend();
 								}	
-								byte[] abyTif = TIFiles.createTfi(abyFile, sImportName, (byte)0, 80, 0);  // DIS/FIX 80
+								
+								// int l3count = ((abyFile.length + 79) / 80); 
+								// byte[] abyTif = TIFiles.createTfi(abyFile, sImportName, (byte)0, 80, l3count);  // DIS/FIX 80
+								
+								// Create an importable file
+								TIFiles impFile = new TIFiles(sImportName, TFile.T_DISFIX, 80); // DIS/FIX 80
+								byte[] abyRecord = new byte[80];  // Record
+
+								try {
+									int j = 0;
+									while (j < abyFile.length) {
+										for (int i=0; i < 80; i++) {
+											abyRecord[i] = (j < abyFile.length)? abyFile[j++] : (byte)0;
+										}
+										impFile.writeRecord(abyRecord, 0);
+									}
+								}
+								catch (IOException iox) {
+									iox.printStackTrace();
+								}
+								byte[] abyTif = impFile.closeAndGetBytes(false, false);
+								
 								dirCurrent.insertFile(abyTif, null, false, asparm.allowOverwrite());
 								imagetool.refreshPanel(dirCurrent.getVolume());
 								
 								// Remove the files
 								asmFile.delete();
-								objFile.delete();
+								// objFile.delete();
 								bRetry = false;
 							}
 							catch (FileNotFoundException fnfx) {
