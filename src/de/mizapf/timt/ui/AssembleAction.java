@@ -139,6 +139,7 @@ public class AssembleAction extends Activity {
 						}
 					}
 					catch (FormatException fx) {
+						JOptionPane.showMessageDialog(m_parent, fx.getMessage(), TIImageTool.langstr("AsmTMS"), JOptionPane.ERROR_MESSAGE);
 						fx.printStackTrace();
 						bOK = false;
 					}
@@ -265,8 +266,9 @@ public class AssembleAction extends Activity {
 	private String createCommandLine(String sTemplate, String sSource, String sObject) throws FormatException {
 		int nSrc = sTemplate.indexOf("$SRC");
 		int nObj = sTemplate.indexOf("$OBJ");
-		if ((nSrc==-1) || (nObj==-1)) throw new FormatException("property", "Missing parameters in assembler command string");
-
+		if (nSrc==-1) throw new FormatException("property", String.format(TIImageTool.langstr("AsmMissingParam"), "$SRC"));
+		if (nObj==-1) throw new FormatException("property", String.format(TIImageTool.langstr("AsmMissingParam"), "$OBJ"));
+		
 		StringBuilder sb = new StringBuilder();
 		sb.append(sTemplate.substring(0, nSrc));
 //		sb.append("\""); 
