@@ -39,13 +39,11 @@ public class Volume {
 	public final static int FLOPPY = 3;
 	public final static int CF7 = 4;
 	
-	public final static String PARENTDIR = "..";
-	
 	// Image format
 	ImageFormat m_Image;
 
 	long		m_nLastMod;
-	
+		
 	// Information from the VIB
 	String 		m_sVolumeName;
 	int 		m_nType = FLOPPY;
@@ -188,7 +186,8 @@ public class Volume {
 		return m_Image.readSector(nSectorNumber);
 	}
 	
-	public void writeSector(Sector sect) throws ProtectedException, IOException, ImageException {
+	// Called from Directory, TFile, this
+	void writeSector(Sector sect) throws ProtectedException, IOException, ImageException {
 		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 //		long time = m_Image.getLastModifiedTime();
 		// System.out.println("time = " + time + ", last mod = " + m_nLastMod);
@@ -236,6 +235,10 @@ public class Volume {
 		return m_sImageFileName.substring(m_sImageFileName.lastIndexOf(java.io.File.separator)+java.io.File.separator.length());
 	}
 		
+	public String getModShortImageName() {
+		return isModified()? ("*" + getShortImageName()) : getShortImageName(); 
+	}
+	
 	public static boolean hasFloppyVib(byte[] abySect) {
 		return (abySect[13]=='D' && abySect[14]=='S' && abySect[15]=='K');	
 	}
@@ -532,7 +535,7 @@ public class Volume {
 	public void toggleEmulateFlag(int nSector) throws IOException, ImageException, ProtectedException {
 		if (getAUEmulateSector()==nSector) m_nAUEmulate = 0;
 		else m_nAUEmulate = nSector / m_nSectorsPerAU;
-		update();
+		updateVIB();
 	}
 	
 	public boolean isCHDImage() {
@@ -585,7 +588,7 @@ public class Volume {
 	
 		m_sVolumeName = newName;
 		reopenForWrite();
-		update();
+		updateVIB();
 		reopenForRead();
 	}
 	
@@ -667,13 +670,24 @@ public class Volume {
 		return abyNewVIB;
 	}
 	
-	public void update() throws IOException, ImageException, ProtectedException {
-		// Write the allocation map and the VIB
-		byte[] abyVIB = createVIB();
-		writeSector(new Sector(0, abyVIB));
+	public void updateVIB() throws IOException, ImageException, ProtectedException {
+		// Write the VIB
+		writeSector(new Sector(0, createVIB()));
+	}
+	
+	public void updateAlloc() throws IOException, ImageException, ProtectedException {
+		// Write the allocation map
 		if (m_nType!=FLOPPY && m_nType!=CF7) {
 			saveAllocationMap();
 		}		
+	}
+	
+	public void saveImage() {
+		m_Image.writeBack();
+	}
+	
+	public boolean isModified() {
+		return m_Image.isDirty();
 	}
 	
 /*************************** Low-level routines *****************************/

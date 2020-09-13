@@ -497,7 +497,7 @@ public class CheckFSAction extends Activity {
 //				if (vol.isFloppyImage()) {
 					try {
 						vol.reopenForWrite();
-						if (bChangedSector0) vol.update();
+						if (bChangedSector0) vol.updateVIB(); 
 						if (bChangedAlloc) vol.saveAllocationMap();
 						if (changedL3) {
 							// Write all affected sectors

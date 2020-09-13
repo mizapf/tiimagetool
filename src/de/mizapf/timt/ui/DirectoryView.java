@@ -64,6 +64,8 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	
 	JMenuItem		m_iClose;
 	
+	JLabel			m_TabLabel;
+	
 	// Context menu	
 	JMenuItem m_iNewFile;
 	JMenuItem m_iNewDirectory;
@@ -167,7 +169,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 //		int nWidth = m_panel.getWidth();
 //		int nHeight = m_panel.getHeight();
 		// Create top-level window
-		m_frmOwn = new JFrame(m_dirCurrent.getVolume().getShortImageName());
+		m_frmOwn = new JFrame(m_dirCurrent.getVolume().getModShortImageName());
 		m_frmOwn.setIconImage(m_app.m_frameicon.getImage());
 		m_frmOwn.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		m_frmOwn.addWindowListener(this);
@@ -217,7 +219,8 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_frmOwn.dispose();
 		// Re-attach
 		Volume vol = m_dirCurrent.getVolume();
-		m_app.attachView(vol.getImageName(), this, false);
+		System.out.println("isModified: " + vol.isModified());
+		m_app.attachView(vol.getModShortImageName(), this, false);
 		m_frmOwn = null;
 		m_mEdit = m_app.getEditMenu();
 	}
@@ -276,6 +279,20 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	public void refreshView() {
 		m_panel.updateView();
 		activateEditMenu();
+		
+		Volume vol = getVolume();
+		if (vol != null) {
+			if (m_frmOwn != null) {
+				m_frmOwn.setTitle(vol.getModShortImageName());
+			}
+			else {
+				m_TabLabel.setText(vol.getModShortImageName());
+			}
+		}
+	}
+	
+	public void setTabLabel(JLabel jl) {
+		m_TabLabel = jl;
 	}
 	
 	int calcWidth(String sString) {
@@ -732,6 +749,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				}
 			}
 		}
+		m_app.updateMemoryInfo();
 	}
 	
 	// ===================================================================

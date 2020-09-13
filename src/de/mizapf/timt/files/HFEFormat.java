@@ -286,13 +286,16 @@ public class HFEFormat extends ImageFormat {
 	
 	HFEFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
 		super(filesystem, sImageName);
+		writeThrough(true);
 	}
 	
 	HFEFormat(File file) throws FileNotFoundException {
 		super(file);
+		writeThrough(true);
 	}
 	
 	HFEFormat() {
+		writeThrough(true);
 	}
 	
 	public String getHeaderInformation() {

@@ -166,6 +166,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenu     m_mOpenRecent;
 	JMenuItem m_iClose;
 	JMenuItem m_iCloseAll;
+	JMenuItem m_iSaveImage;
 	JMenuItem m_iExport;
 	JMenuItem m_iPreferences;
 	JMenuItem m_iQuit;
@@ -273,6 +274,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	// Have we found all required utilities for CF operations?
 	boolean m_utilsfound;
+	
+	public long m_maxMemory;
 	
 	// ===============================================
 	// Clipboard for cut-copy-paste
@@ -404,9 +407,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_mFile.add(m_iCloseAll);
 			
 			m_mFile.addSeparator();
-			
+						
 			m_iExport = createMenuItem(new ExportImageAction());
 			m_mFile.add(m_iExport);
+			
+			m_iSaveImage = createMenuItem(new SaveImageAction());
+			m_mFile.add(m_iSaveImage);
 			
 			m_mFile.addSeparator();
 			m_iPreferences = createMenuItem(new PreferencesAction());
@@ -505,7 +511,14 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			catch (ClassNotFoundException cnfx) {
 				m_bSerial = false;
 			}
-				
+			catch (NoClassDefFoundError nc) {
+				// We will only get here when the gnu.io.SerialPort is available, but not the gnu.io.DriverManager
+				// Does not make sense to try get it going here, because I cannot build TIMT for both versions.
+				// Reflection API?
+				System.err.println("Warning: The RXTX library is outdated and cannot be used with TIImageTool.");
+				m_bSerial = false;
+			}
+						
 			activateMenuItems();
 			
 			Dimension dim = getPropertyDim(WINDOWSIZE);
@@ -514,7 +527,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_frmMain.setSize(dim);
 			//		m_frmMain.repaint();
 			m_frames = new HashSet<JFrame>();
-
+			
+			SectorCache.init();
+			
 			// Shall we open an image now?
 			if (m_startImage != null) {
 				OpenImageAction act = (OpenImageAction)getActivity("OPENIMAGE"); 
@@ -542,10 +557,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		
 		public void run() {
-			String sShortName = dv.getDirectory().getVolume().getShortImageName();
-			m_jtViews.addTab(sName, dv.getPanel());
+			String sShortName = dv.getDirectory().getVolume().getModShortImageName();
+			m_jtViews.addTab(null, dv.getPanel());
 			int index = m_jtViews.indexOfComponent(dv.getPanel());
-			m_jtViews.setTabComponentAt(index, new CloseableTab(sShortName, dv));
+			CloseableTab ct = new CloseableTab(sShortName, dv);
+			m_jtViews.setTabComponentAt(index, ct);
+			dv.setTabLabel(ct.getLabel());
 			m_jtViews.setSelectedComponent(dv.getPanel());
 			selectView(dv);
 			activateMenuItems();
@@ -566,6 +583,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_jtViews.remove(m_dv.getPanel());
 			if (m_Views.size()==0) m_first = true;
 			activateMenuItems();
+			updateMemoryInfo();
 		}
 	}
 	
@@ -721,16 +739,26 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	// ===================  Tab with close button ===========================
 	
 	private class CloseableTab extends JPanel {
+		JLabel m_TabLabel = null;
+		
 		public CloseableTab(String sLabel, DirectoryView dv) {
 			super(new FlowLayout(FlowLayout.LEFT, 0, 0));
 			setOpaque(false);
-			JLabel label = new JLabel(sLabel);
-			label.setFont(boldFont);
-			add(label);
-			label.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
+			m_TabLabel = new JLabel(sLabel);
+			m_TabLabel.setFont(boldFont);
+			add(m_TabLabel);
+			m_TabLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 10));
 			add(new DetachTabButton(dv));
 			add(new CloseTabButton(dv));
 			setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
+		}
+		
+		public void setName(String sName) {
+			m_TabLabel.setText(sName);
+		}
+		
+		public JLabel getLabel() {
+			return m_TabLabel;
 		}
 	}
 
@@ -1112,10 +1140,23 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}		
 		
 		findPathsForCF();
-		
-		SwingUtilities.invokeLater(new CreateGui());
+		m_maxMemory = Runtime.getRuntime().freeMemory();
+
+		new CreateGui().run();
+		//SwingUtilities.invokeLater(new CreateGui());
 	}
 
+	public void updateMemoryInfo() {
+		long freeMem = Runtime.getRuntime().freeMemory();
+		int nPercent = (int)(freeMem*100/m_maxMemory);
+//		System.out.println("Free memory = " + (freeMem / 1024) + "KiB = " + nPercent + "%");
+		int nIndex = m_jtViews.getSelectedIndex();
+		if (nIndex != -1) {
+			DirectoryPanel dp = (DirectoryPanel)m_jtViews.getComponentAt(nIndex);
+			dp.updateMemoryInfo(nPercent);
+		}
+	}
+	
 	public boolean allToolsFound() {
 		return m_utilsfound;
 	}
@@ -1487,6 +1528,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	void processUserInput() {
 		while (m_bRunning) {
+			updateMemoryInfo();
 			synchronized(this) {
 				if (m_UserInput != null) {
 					try {
@@ -1873,6 +1915,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		DirectoryView dv = determineSelectedTab();
 		if (dv != null) selectView(dv);
 		else unselectAllViews();
+		updateMemoryInfo();
 	}
 
 	/** Find the currently selected tab. There can be only one selected tab if there

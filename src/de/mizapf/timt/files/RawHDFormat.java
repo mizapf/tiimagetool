@@ -64,6 +64,7 @@ class RawHDFormat extends ImageFormat {
 	RawHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
 		super(filesystem, sImageName);
 		m_nDensity = 0;
+		writeThrough(true);
 	}
 	
 	@Override

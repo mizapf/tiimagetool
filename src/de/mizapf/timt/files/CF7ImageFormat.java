@@ -50,6 +50,7 @@ public class CF7ImageFormat extends ImageFormat {
 	
 	public CF7ImageFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
 		super(filesystem, sImageName);
+		writeThrough(true);
 		
 		// Find volumes
 		byte[] header = new byte[32];

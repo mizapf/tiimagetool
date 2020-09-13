@@ -77,6 +77,9 @@ public abstract class ImageFormat  {
 
 	protected int m_nTotalSectors;
 	
+	protected boolean m_bWriteThrough;
+	protected boolean m_bDirty;
+	
 	protected static final int TRACK = 0;
 	protected static final int SECTOR = 1;
 	protected static final int HEAD = 2;
@@ -99,13 +102,23 @@ public abstract class ImageFormat  {
 		m_nCurrentTrack = NOTRACK;
 		m_abyTrack = new byte[m_nTrackLength];
 		m_cache = new SectorCache();
+		m_bWriteThrough = false;
+		m_bDirty = false;
 	}
 	
+	// Called from Volume.createFloppyImage (needed by subclass contructors)
 	protected ImageFormat() {
+		m_bWriteThrough = false;
+		m_bDirty = false;
 	}
 	
 	protected ImageFormat(File newfile) throws FileNotFoundException {
 		m_FileSystem = new RandomAccessFile(newfile, "rw");
+		m_bDirty = false;
+	}
+	
+	protected void writeThrough(boolean bWriteTh) {
+		m_bWriteThrough = bWriteTh;
 	}
 	
 	public int getCylinders() {
@@ -132,7 +145,7 @@ public abstract class ImageFormat  {
 		@throws ImageException if the sector cannot be found.
 	*/
 	public final Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		Sector sect = m_cache.readSector(nSectorNumber);
+		Sector sect = m_cache.read(nSectorNumber);
 		if (sect == null) sect = readSectorFromImage(nSectorNumber);
 		return sect;
 	}
@@ -142,8 +155,13 @@ public abstract class ImageFormat  {
 	
 	/** Write a sector. Is public for SectorEditFrame. */
 	public final void writeSector(Sector sect) throws IOException, ImageException {
-		m_cache.writeSector(sect);
-		writeSectorToImage(sect.getNumber(), sect.getBytes()); 
+		if (m_bWriteThrough) {
+			writeSectorToImage(sect.getNumber(), sect.getBytes());
+		}
+		else {
+			m_bDirty = true;
+			m_cache.write(sect);
+		}
 	}
 
 	/** Write a sector to the medium. */
@@ -161,6 +179,13 @@ public abstract class ImageFormat  {
 	long getLastModifiedTime() {
 		java.io.File file = new java.io.File(m_sImageName);
 		return file.lastModified();
+	}
+	
+	void writeBack() {
+	}
+	
+	boolean isDirty() {
+		return m_bDirty;
 	}
 	
 	public static ImageFormat getImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {

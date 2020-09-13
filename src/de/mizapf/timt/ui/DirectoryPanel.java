@@ -54,6 +54,8 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	boolean m_ctrl;
 	boolean m_moveAsDefault;
 	
+	JLabel m_FreeMem;
+	
 	static final Color NORM = new Color(250,255,255);
 	private static final Color COLTEXT = new Color(51,51,51);
 	private static final Color COLTEXTCONT = new Color(20,20,190);
@@ -239,7 +241,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		// Third line
 		sb = new StringBuilder();
 		sb.append(String.format(TIImageTool.langstr("PanelDir"), vol.getDeviceName(), dirCurrent.getFullPathname()));
-		comp.add(createHeadline(sb.toString()));
+		comp.add(createHeadlineWithMem(sb.toString()));
 		comp.add(Box.createVerticalStrut(10));
 		
 		JComponent title = createLine(TIImageTool.boldFont, null, false, 
@@ -271,7 +273,30 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		cnt.setMaximumSize(new Dimension(Short.MAX_VALUE, TIImageTool.boldHeight));
 		return cnt;
 	}
-		
+
+	private Box createHeadlineWithMem(String sText) {
+		Font font = TIImageTool.boldFont;
+		Box cnt = new Box(BoxLayout.X_AXIS);
+		cnt.add(Box.createHorizontalStrut(10));
+		JLabel field = new JLabel(sText);
+		field.setFont(font);
+		cnt.add(field);
+		cnt.setOpaque(false);	// let the background shine through
+		//		cnt.setBackground(NORM);
+		cnt.add(Box.createHorizontalGlue());
+		cnt.add(new JLabel("Free Mem" + ":"));
+		cnt.add(Box.createHorizontalStrut(10));
+		m_FreeMem = new JLabel("-");
+		cnt.add(m_FreeMem);		
+		cnt.add(Box.createHorizontalStrut(10));
+		cnt.setMaximumSize(new Dimension(Short.MAX_VALUE, TIImageTool.boldHeight));
+		return cnt;
+	}
+	
+	public void updateMemoryInfo(int nPercent) {
+		m_FreeMem.setText(String.valueOf(nPercent) + "%");
+	}
+	
 	Directory getDirectory() {
 		return m_dvCurrent.getDirectory();
 	}

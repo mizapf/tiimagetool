@@ -71,9 +71,12 @@ class SectorDumpFormat extends ImageFormat {
 		m_currentTrack = NONE;
 		m_currentHead = NONE;
 		m_positionInTrack = 0;
+		writeThrough(false);
 	}
 
+	// Called from Volume.createFloppyImage
 	SectorDumpFormat() {
+		writeThrough(false);
 	}
 
 	public String getDumpFormatName() {

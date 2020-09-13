@@ -56,9 +56,11 @@ class TrackDumpFormat extends ImageFormat {
 	
 	TrackDumpFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
 		super(filesystem, sImageName);
+		writeThrough(true);
 	}
 	
 	TrackDumpFormat() {
+		writeThrough(true);
 	}
 
 	@Override	

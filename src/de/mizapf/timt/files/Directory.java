@@ -32,7 +32,9 @@ import de.mizapf.timt.TIImageTool;
 
 public class Directory extends Element {
 	
-	public static Directory parent = new Directory("..");
+	public final static String PARENTDIR = "..";
+	
+	public static Directory parent = new Directory(PARENTDIR);
 	
 	Directory[] m_Subdirs;
 	TFile[]		m_Files;
@@ -115,7 +117,7 @@ public class Directory extends Element {
 	}
 	
 	public boolean isParentLink() {
-		return m_sName.equals("..");
+		return m_sName.equals(PARENTDIR);
 	}
 	
 	/** Builds a new floppy root directory.
@@ -267,7 +269,7 @@ public class Directory extends Element {
 	}
 	
 	public boolean hasSubdirectory(String sSubdir) {
-		if (sSubdir.equals(Volume.PARENTDIR) && m_dirParent != null) return true;
+		if (sSubdir.equals(PARENTDIR) && m_dirParent != null) return true;
 		for (Directory dir : m_Subdirs) {
 			if (dir.getName().equals(sSubdir)) return true; 
 		}
@@ -505,10 +507,12 @@ public class Directory extends Element {
 		writeDDR();
 		
 		// Write the allocation map
-		m_Volume.update();
+		m_Volume.updateVIB();
+		m_Volume.updateAlloc();
 		
 		if (bReopen) m_Volume.reopenForRead();
-		
+		SectorCache.nextGeneration();
+
 		return fileNew;
 	}
 	
@@ -579,6 +583,7 @@ public class Directory extends Element {
 		catch (IndexOutOfBoundsException ix) {
 			throw new ImageException(TIImageTool.langstr("DirectoryEntryCorrupt"));
 		}		
+		SectorCache.nextGeneration();
 	}
 	
 	/** Called from PasteAction, only for sourceVol == targetVol. */
@@ -626,7 +631,8 @@ public class Directory extends Element {
 		// Update file index
 		writeFDIR();
 
-		m_Volume.update();
+		m_Volume.updateVIB();
+		m_Volume.updateAlloc();
 		if (bReopen) m_Volume.reopenForRead();
 	}
 	
@@ -679,7 +685,8 @@ public class Directory extends Element {
 		
 		writeDDR();
 		
-		m_Volume.update();
+		m_Volume.updateVIB();
+		m_Volume.updateAlloc();
 		if (bReopen) m_Volume.reopenForRead();
 		return dirNew;
 	}
@@ -834,6 +841,8 @@ public class Directory extends Element {
 		byte[] abyTfiNew = TIFiles.createTfi(abySectorContent, file.getName(), file.getFlags(), file.getRecordLength(), nNewL3);
 		// System.out.println("Deleting old file " + file.getName());
 		deleteFile(file, true);
+		SectorCache.sameGeneration();
+
 		// System.out.println("Inserting new file");
 		TFile fNew = null;
 		try {
