@@ -49,6 +49,7 @@ public class ArchiveFile extends TFile {
 	}
 	
 	/** Retrieves the content as the sector content. The file is not truncated according to EOF. */
+	@Override
 	public byte[] getSectorContent() throws ImageException {
 		try {
 			byte[] abyReturn = new byte[m_nAllocatedSectors*Volume.SECTOR_LENGTH];

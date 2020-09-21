@@ -214,7 +214,7 @@ public class ImageCheck {
 		Volume image = dir.getVolume();
 		int nAuSize = image.getAUSize();
 
-		if (au * nAuSize == dir.getFdrSector()) {
+		if (au * nAuSize == dir.getFileIndexSector()) {
 			alloc.addEntity(dirName + ".#");
 //			System.out.println("found as FDR sector: " + au);
 		}

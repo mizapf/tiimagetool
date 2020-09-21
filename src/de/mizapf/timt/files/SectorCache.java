@@ -28,7 +28,7 @@ import java.util.LinkedList;
 public class SectorCache {
 	
 	HashMap<Integer,LinkedList<Sector>> m_cache;
-	private static int m_nGeneration;
+	private int m_nGeneration;
 	
 	SectorCache() {
 		m_cache = new HashMap<Integer,LinkedList<Sector>>();
@@ -38,15 +38,15 @@ public class SectorCache {
 		m_nGeneration = gen;
 	}
 	
-	public static void nextGeneration() {
+	public void nextGeneration() {
 		m_nGeneration++;
 	}
 	
-	public static void sameGeneration() {
+	public void sameGeneration() {
 		m_nGeneration--;
 	}
 
-	public static void init() {
+	public void init() {
 		m_nGeneration = 1;
 	}
 	
@@ -68,7 +68,7 @@ public class SectorCache {
 		}
 		secversions.add((Sector)sect.clone());
 		System.out.println("Caching a new version (" + m_nGeneration + ") of sector " + sect.getNumber());
-		if (sect.getNumber()<2) new Exception().printStackTrace();
+//		if (sect.getNumber()<2 || sect.getNumber()==20) new Exception().printStackTrace();
 
 	}
 }
@@ -92,6 +92,88 @@ public class SectorCache {
 	4. sector 0 written by commit(Directory.java:633): Volume.update
 	
 	PasteAction calls commit (not needed?)
+	
+	--------------------------
+	
+	Write operations and commit:
+	
+	
+	
+	CommandShell.importFile()                                  -> Directory.insertFile()
+	Archive.moveinFile() -> Archive.insertFile()#rollback     -/
+	Directory.updateFile()                                   -/
+	Directory.updateFile()#rollback                         -/
+	TIImageTool.putTIFileIntoImage()                       -/
+	TIImageTool.putBinaryFileIntoImage()                  -/
+	AssembleAction.go()                                  -/
+	CreateArchiveAction.go()                            -/
+	ImportContentAction.convertAndImport()             -/
+	ImportEmulateAction.go()                          -/
+	PasteAction.paste()                              -/
+	PasteAction.copyDir()                           -/
+	
+	
+	Directory.insertFile() -> Directory.writeFileContents() -> writeSector()
+	
+	RenameAction.go() -> Directory.renameElement() -> writeSector()
+	
+	Directory.insertFile()                                -> Directory.writeFDIR() -> writeSector()
+	Directory.commit()                                   -/
+	Directory.createSubdirectory()                      -/
+	RenameAction.go() -> Directory.renameElement()     -/
+	
+	
+	Directory.insertFile()                                -> Directory.writeDDR() -> writeSector()
+	Directory.commit()                                   -/
+	Directory.createSubdirectory()                      -/
+	RenameAction.go() -> Directory.renameElement()     -/
+	
+	Directory.insertFile()                           -> TFile.writeFIB() -> writeSector()
+	Directory.moveinFile()                          -/
+	RenameAction.go() -> Directory.renameElement() -/
+	CheckFSAction.go() -> TFile.rewriteFIB()      -/
+	
+	
+	
+	Directory.insertFile()           -> Volume.updateAlloc() -> Volume.saveAllocationMap() -> writeSector()
+	Directory.commit()              -/
+	Directory.createSubdirectory() -/  
+	
+	CheckFSAction.go() -> Volume.saveAllocationMap() -> writeSector()
+		
+	
+	Directory.insertFile()           -> Volume.updateVIB() -> writeSector()
+	Directory.commit()              -/
+	Directory.createSubdirectory() -/
+	Volume.toggleEmulateFlag()    -/
+	Volume.renameVolume()        -/
+	CheckFSAction.go()          -/
+	
+	NewCF7VolumeAction.go() -> Volume.createFloppyImage() -> writeSector()
+	NewImageAction.go()    -/
+	
+	ConvertToHFDCAction.go() -> Volume.scsi2hfdc() -> writeSector()
+	ConvertToSCSIAction.go() -> Volume.hfdc2scsi() -> writeSector()
+	
+	SectorEditFrame.actionPerformed() -> SectorEditFrame.writeBackAll() -> writeSector()
+	
+	Archive.moveoutFile() -> Archive.deleteFile() 
+	Directory.insertFile()#overwrite         -> Directory.deleteFile()
+	Directory.deleteDirectory()             -/
+	Directory.updateFile()#replace         -/
+	CreateArchiveAction.go()#rollback     -/
+	DeleteAction.go()                    -/
+	PasteAction.paste()#sameimagemove   -/
+	PasteAction.paste()#diffimagemove  -/
+	
+	Commit:
+	
+	Archive.renameElement()                  -> commit
+	CreateArchiveAction.go()#rollback#del   -/
+	DeleteAction.go()#deleteFile#delDir    -/
+	PasteAction.paste()#sameimagemove     -/
+	PasteAction.paste()#diffimagemove    -/
+	
 	
 */
 

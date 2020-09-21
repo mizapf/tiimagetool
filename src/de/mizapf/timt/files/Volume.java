@@ -613,7 +613,7 @@ public class Volume {
 					if (i < dirs.length) {
 						Directory sub = dirs[i];
 						Utilities.setString(abyNewVIB, 0x14 + i*12, sub.getName(), 10);
-						Utilities.setInt16(abyNewVIB, 0x1e + i*12, sub.getFdrSector()); 					
+						Utilities.setInt16(abyNewVIB, 0x1e + i*12, sub.getFileIndexSector()); 					
 					}
 					else {
 						for (int j=0; j < 12; j++) abyNewVIB[0x14 + j + i*12] = (byte)0;
@@ -639,7 +639,7 @@ public class Volume {
 			Utilities.setTime(abyNewVIB, 0x12, m_tCreation);
 			abyNewVIB[0x16] = (byte)(m_dirRoot.getFiles().length & 0xff);
 			abyNewVIB[0x17] = (byte)(m_dirRoot.getDirectories().length & 0xff);
-			Utilities.setInt16(abyNewVIB, 0x18, toAU(m_dirRoot.getFdrSector()));
+			Utilities.setInt16(abyNewVIB, 0x18, toAU(m_dirRoot.getFileIndexSector()));
 			
 			if (m_nType==HFDC) {
 				abyNewVIB[0x0c] = (byte)m_nSectorsPerTrack;
@@ -688,6 +688,14 @@ public class Volume {
 	
 	public boolean isModified() {
 		return m_Image.isDirty();
+	}
+	
+	public void nextGeneration() {
+		m_Image.nextGeneration();
+	}
+	
+	public void sameGeneration() {
+		m_Image.sameGeneration();
 	}
 	
 /*************************** Low-level routines *****************************/

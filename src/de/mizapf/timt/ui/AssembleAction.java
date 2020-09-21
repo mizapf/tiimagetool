@@ -31,6 +31,8 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 import java.awt.Cursor;
+import java.util.List;
+import java.util.LinkedList;
 
 import de.mizapf.timt.assm.Assembler;
 import de.mizapf.timt.util.Utilities;
@@ -52,8 +54,6 @@ public class AssembleAction extends Activity {
 		DirectoryView dvCurrent = imagetool.getSelectedView();
 		Directory dirCurrent = dvCurrent.getDirectory();
 		DirectoryPanel dp = dvCurrent.getPanel();
-		boolean bRetry = false;
-		boolean bAbort = false;
 		
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
@@ -62,19 +62,12 @@ public class AssembleAction extends Activity {
 		asparm.setVisible(true);
 		if (asparm.confirmed()) { 
 			
-			bAbort = false;
 			int nIndex = 0;
-			try {
-				dirCurrent.getVolume().reopenForWrite();
-			}
-			catch (IOException iox) {
-				iox.printStackTrace();
-				bAbort = true;
-			}
 			
+			List<String> fileList = new LinkedList<String>();
 			
 			for (Element selected : dvCurrent.getSelectedEntries()) {
-				if (!bAbort && (selected instanceof TFile)) {
+				if (selected instanceof TFile) {
 					nIndex++;
 					StringBuilder sb = new StringBuilder("_asm");
 					if (nIndex < 100) sb.append("0");
@@ -155,105 +148,123 @@ public class AssembleAction extends Activity {
 						bOK = false;
 					}
 					
-					// Successfully assembled
-					String sImportName = null;
 					if (bOK) {
-						bRetry = false;
-						bAbort = false;
-						do {
-							try {
-								System.out.println("Successfully assembled " + selected.getName());
-								
-								// Import the file and remove the temp files
-								FileInputStream fis = new FileInputStream(sObjFile);
-								DataInputStream dis = new DataInputStream(fis);
-								byte[] abyFile = new byte[dis.available()];
-								dis.readFully(abyFile);
-								
-								// Create import name
-								if (!bRetry) {
-									sImportName = selected.getName();
-									// System.out.println("sImportName = " + sImportName + ", asparm.remove=" + asparm.getRemove());
-									if (sImportName.endsWith(asparm.getRemove())) {
-										sImportName = sImportName.substring(0, sImportName.length()-asparm.getRemove().length());
-									}
-									sImportName = sImportName + asparm.getAppend();
-								}	
-								
-								// int l3count = ((abyFile.length + 79) / 80); 
-								// byte[] abyTif = TIFiles.createTfi(abyFile, sImportName, (byte)0, 80, l3count);  // DIS/FIX 80
-								
-								// Create an importable file
-								TIFiles impFile = new TIFiles(sImportName, TFile.T_DISFIX, 80); // DIS/FIX 80
-								byte[] abyRecord = new byte[80];  // Record
-
-								try {
-									int j = 0;
-									while (j < abyFile.length) {
-										for (int i=0; i < 80; i++) {
-											abyRecord[i] = (j < abyFile.length)? abyFile[j++] : (byte)0;
-										}
-										impFile.writeRecord(abyRecord, 0);
-									}
-								}
-								catch (IOException iox) {
-									iox.printStackTrace();
-								}
-								byte[] abyTif = impFile.closeAndGetBytes(false, false);
-								
-								dirCurrent.insertFile(abyTif, null, false, asparm.allowOverwrite());
-								imagetool.refreshPanel(dirCurrent.getVolume());
-								
-								// Remove the files
-								asmFile.delete();
-								// objFile.delete();
-								bRetry = false;
-							}
-							catch (FileNotFoundException fnfx) {
-								System.err.println("Object file " + sObjFile + " not found");
-							}
-							catch (IOException iox) {
-								iox.printStackTrace();
-							}
-							catch (InvalidNameException inx) {
-								System.err.println("Invalid name: " + sImportName);
-							}
-							catch (ImageFullException ifx) {					
-								JOptionPane.showMessageDialog(dvCurrent.getFrame(), sImportName + ": " + ifx.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
-								bAbort = true;
-							}
-							catch (ProtectedException px) {
-								JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP") + ": " + px.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
-								bAbort = true;
-							}
-							catch (FileExistsException fx) {
-								
-								bRetry = true;
-								sImportName = getAlternativeName(true, sImportName, dvCurrent.getFrame());
-								if (sImportName.equals(NAME_SKIP)) {
-									bRetry = false; // skip
-									sImportName = null;
-								}
-								else {
-									if (sImportName.equals(NAME_ABORT)) {
-										bAbort = true; 
-										sImportName = null;
-									}
-								}
-							}
-							catch (ImageException ix) {
-								ix.printStackTrace();
-								JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
-								bAbort = true;
-							}
-							
-						} while (bRetry && !bAbort);
+						System.out.println("Successfully assembled " + selected.getName());
+						fileList.add(selected.getName() + "." + sObjFile);
 					}
 				}
+			}
+				
+			// Now import the files
+			boolean bRetry = false;
+			boolean bAbort = false;
+
+			for (String sPart : fileList) {
+				int nPart = sPart.indexOf("."); 
+				String sImportName = sPart.substring(0, nPart);
+				String sObjFile = sPart.substring(nPart+1);
+				bRetry = false;
+				bAbort = false;
+				do {
+					try {						
+						// Import the file and remove the temp files
+						FileInputStream fis = new FileInputStream(sObjFile);
+						DataInputStream dis = new DataInputStream(fis);
+						byte[] abyFile = new byte[dis.available()];
+						dis.readFully(abyFile);
+						
+						// Create import name
+						if (!bRetry) {
+							// System.out.println("sImportName = " + sImportName + ", asparm.remove=" + asparm.getRemove());
+							if (sImportName.endsWith(asparm.getRemove())) {
+								sImportName = sImportName.substring(0, sImportName.length()-asparm.getRemove().length());
+							}
+							sImportName = sImportName + asparm.getAppend();
+						}	
+						
+						// int l3count = ((abyFile.length + 79) / 80); 
+						// byte[] abyTif = TIFiles.createTfi(abyFile, sImportName, (byte)0, 80, l3count);  // DIS/FIX 80
+						
+						// Create an importable file
+						TIFiles impFile = new TIFiles(sImportName, TFile.T_DISFIX, 80); // DIS/FIX 80
+						byte[] abyRecord = new byte[80];  // Record
+						
+						try {
+							int j = 0;
+							while (j < abyFile.length) {
+								for (int i=0; i < 80; i++) {
+									abyRecord[i] = (j < abyFile.length)? abyFile[j++] : (byte)0;
+								}
+								impFile.writeRecord(abyRecord, 0);
+							}
+						}
+						catch (IOException iox) {
+							iox.printStackTrace();
+						}
+						byte[] abyTif = impFile.closeAndGetBytes(false, false);
+						
+						dirCurrent.insertFile(abyTif, null, false, asparm.allowOverwrite());
+						System.out.println("Successfully imported " + sImportName);
+						imagetool.refreshPanel(dirCurrent.getVolume());
+						
+						// Remove the files
+						File asmFile = new File(sObjFile);
+						asmFile.delete();
+						// objFile.delete();
+						bRetry = false;
+					}
+					catch (FileNotFoundException fnfx) {
+						System.err.println("Object file " + sObjFile + " not found");
+					}
+					catch (IOException iox) {
+						iox.printStackTrace();
+					}
+					catch (InvalidNameException inx) {
+						System.err.println("Invalid name: " + sImportName);
+					}
+					catch (ImageFullException ifx) {					
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), sImportName + ": " + ifx.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
+						bAbort = true;
+					}
+					catch (ProtectedException px) {
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP") + ": " + px.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
+						bAbort = true;
+					}
+					catch (FileExistsException fx) {
+						
+						bRetry = true;
+						sImportName = getAlternativeName(true, sImportName, dvCurrent.getFrame());
+						if (sImportName.equals(NAME_SKIP)) {
+							bRetry = false; // skip
+							sImportName = null;
+						}
+						else {
+							if (sImportName.equals(NAME_ABORT)) {
+								bAbort = true; 
+								sImportName = null;
+							}
+						}
+					}
+					catch (ImageException ix) {
+						ix.printStackTrace();
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
+						bAbort = true;
+					}
+					
+				} while (bRetry && !bAbort);
+
 				if (bAbort) break;
 			}
 			try {
-				dirCurrent.getVolume().reopenForRead();
+				dirCurrent.commit(true);
+			}
+			catch (ProtectedException px) {
+				// JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP") + ": " + px.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);
+				px.printStackTrace();
+			}
+			catch (ImageException ix) {
+				ix.printStackTrace();
+				// JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 			}
 			catch (IOException iox) {
 				iox.printStackTrace();

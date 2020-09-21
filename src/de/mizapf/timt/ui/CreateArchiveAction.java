@@ -95,11 +95,14 @@ public class CreateArchiveAction extends Activity {
 				forArc.toArray(aforarc);			
 				
 				// then add the archive
+				System.out.println("Add the empty archive file " + ad.getArchiveName() + " to the current directory");
 				arkf = dirCurrent.insertFile(abyTfi, null, false);
 				ark = arkf.unpackArchive();
-
+				vol.sameGeneration();
+				System.out.println("Add all selected files to the archive");
 				ark.insertFiles(aforarc, null, false);
-				// FIXME: Element selection must be improved (select/deselect) 
+				System.out.println("done");
+			// FIXME: Element selection must be improved (select/deselect) 
 			}
 			catch (InvalidNameException inx) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ArchiveCannotPut"), inx.getMessage()), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE); 	

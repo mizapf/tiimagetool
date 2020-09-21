@@ -696,7 +696,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 			}
 			m_image.flush();
 			m_image.reopenForRead();
-			SectorCache.nextGeneration();
+			m_image.nextGeneration();
 		}
 		catch (ImageException ix) {
 			// Sector not found

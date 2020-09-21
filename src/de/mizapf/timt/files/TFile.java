@@ -354,7 +354,7 @@ public class TFile extends Element {
 	}
 	
 	/** Called from Directory.moveinFile/insertFile/renameFile. */
-	void writeFIB(int nSectorNumber, int nFDIRSector) throws ProtectedException, IOException, ImageException {
+	byte[] createFIB(int nSectorNumber, int nFDIRSector) throws ProtectedException, IOException, ImageException {
 		byte[] aFibNew = new byte[256];
 
 		Volume vol = getVolume();
@@ -448,7 +448,8 @@ public class TFile extends Element {
 			
 		}
 		// write the new FIB (always sector number)
-		vol.writeSector(new Sector(nSectorNumber, aFibNew));
+		// vol.writeSector(new Sector(nSectorNumber, aFibNew));
+		return aFibNew;
 	}
 	
 	/** Does this file have a swapped L3 count? */
@@ -478,7 +479,8 @@ public class TFile extends Element {
 		int fdir = (vol.isFloppyImage() || vol.isCF7Volume())? 1 : (m_nFDIRAU * vol.getAUSize());
 		m_bL3Swapped = false;
 		m_bL3Bad = false;
-		writeFIB(m_anFIBSector[0], fdir); 
+		byte[] aFibNew = createFIB(m_anFIBSector[0], fdir);
+		vol.writeSector(new Sector(m_anFIBSector[0], aFibNew));
 	}
 	
 	// File Size Type Length Protection Created Updated

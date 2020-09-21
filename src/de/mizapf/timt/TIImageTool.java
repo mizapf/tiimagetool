@@ -527,9 +527,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_frmMain.setSize(dim);
 			//		m_frmMain.repaint();
 			m_frames = new HashSet<JFrame>();
-			
-			SectorCache.init();
-			
+						
 			// Shall we open an image now?
 			if (m_startImage != null) {
 				OpenImageAction act = (OpenImageAction)getActivity("OPENIMAGE"); 

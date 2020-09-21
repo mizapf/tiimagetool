@@ -305,7 +305,9 @@ public class Archive extends Directory {
 		m_abyContent = rebuild();
 
 		// System.out.println(Utilities.hexdump(0, 0, m_abyContent, m_abyContent.length, false));
-		try {
+		
+/*		// This is done in commit
+	 	try {
 			m_fBase = dirParent.updateFile(m_fBase, m_abyContent, (m_abyContent.length/256)*2, bReopen);
 		}
 		catch (ImageFullException ifx) {
@@ -318,12 +320,13 @@ public class Archive extends Directory {
 
 			m_fBase = dirParent.insertFile(abyTfiOld, null, true);
 			throw ifx;
-		}
+		} */
 		return afNew;
 	}
 	
 	/** Used when creating an archive. This is more efficient since it 
 		compresses the archive only after adding all files. 
+		Called from CreateArchiveAction only.
 	*/		
 	public void insertFiles(TIFiles[] files, String sNewFilename, boolean bReopen) throws ProtectedException, IOException, InvalidNameException, ImageFullException, ImageException, FileExistsException {
 		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("ArchiveProtected"));
@@ -378,10 +381,12 @@ public class Archive extends Directory {
 		m_fBase = dirParent.updateFile(m_fBase, m_abyContent, (m_abyContent.length/256)*2, bReopen);
 	}	
 	
+	@Override
 	public String getFullPathname() {
 		return m_dirParent.getFullPathname() + "." + getName() + " (" + TIImageTool.langstr("ArchiveIndicator") + ")";
 	}
 	
+	@Override
 	public void deleteFile(TFile file, boolean bRemoveFromList) throws ProtectedException, FileNotFoundException {
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("ArchiveProtected"));
 		if (!containsInList(file)) throw new FileNotFoundException(file.getName());
@@ -391,14 +396,18 @@ public class Archive extends Directory {
 		// Remember to call commit!
 	}
 
+	@Override
 	public void commit(boolean bReopen) throws IOException, ImageException, ProtectedException {
 		// For archives, we now have to rebuild the byte array
+		System.out.println("Archive commit");
 		m_abyOldContent = m_abyContent;
 		Directory dirParent = getContainingDirectory();
+		System.out.println("Rebuild");
 		m_abyContent = rebuild();
 
 		// System.out.println(Utilities.hexdump(0, 0, m_abyContent, m_abyContent.length, false));
 		try {
+			System.out.println("Update file");
 			m_fBase = dirParent.updateFile(m_fBase, m_abyContent, (m_abyContent.length/256)*2, bReopen);
 		}
 		catch (ImageFullException ifx) {
@@ -410,10 +419,12 @@ public class Archive extends Directory {
 			inx.printStackTrace();
 			throw new ImageException(TIImageTool.langstr("ArchiveUnexp"));
 		}
+		System.out.println("Archive commit done");
 	}
 
 	/** Called from PasteAction, only for sourceVol == targetVol. Moving out of an archive always means to 
 		delete it from the archive.*/
+	@Override
 	public void moveoutFile(TFile file) throws ProtectedException, FileNotFoundException, IllegalOperationException {
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		// System.out.println("moveout a " + file.getName());
@@ -422,6 +433,7 @@ public class Archive extends Directory {
 	
 	/** Called from PasteAction, only for sourceVol == targetVol. Moving into an archive always means to 
 		insert it into the archive. */
+	@Override
 	public void moveinFile(TFile file) throws ProtectedException, FileExistsException, IOException, ImageException, IllegalOperationException {
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (containsInList(file)) throw new FileExistsException(file.getName());
@@ -435,6 +447,7 @@ public class Archive extends Directory {
 		}
 	}
 	
+	@Override
 	public void renameElement(Element el, String sName) throws FileExistsException, InvalidNameException, IOException, ImageException, ProtectedException {
 		sName = sName.trim();
 		m_Volume.reopenForWrite();
@@ -455,36 +468,37 @@ public class Archive extends Directory {
 	}
 	
 	/** Called from PasteAction. */
+	@Override
 	public void moveoutDir(Directory dir) throws ProtectedException, FileNotFoundException, IllegalOperationException  {
 		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotMoveOut"));
 	}
 
 	/** Called from PasteAction. */
+	@Override
 	public void moveinDir(Directory dir) throws ProtectedException, FileExistsException, IOException, ImageException, IllegalOperationException  {
 		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotMoveIn"));
 	}
 	
+	@Override
 	public Directory createSubdirectory(String sName, boolean bReopen) throws ProtectedException, InvalidNameException, FileExistsException, ImageFullException, ImageException, IOException, IllegalOperationException {
 		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotCreateDir"));
 	}
 
-	public void deleteDirectory(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
+	@Override
+	protected void deleteDirectory(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
 		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotDelDir"));
 	}
 	
+	@Override
 	public void delDir(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
 		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotDelDir"));
-	}
-	
-	public boolean isProtected() {
-		return m_bProtected;
 	}
 	
 	/** Recreates the archive when its contents have changed. If the archive
 		does not fit on the medium after the change, it must be reverted.
 		@throws IOException for File#getSectorContent
 	*/
-	public byte[] rebuild() throws ImageException {
+	private byte[] rebuild() throws ImageException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		int nPos = 0;
 		boolean bPadding = false;

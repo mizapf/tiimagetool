@@ -239,6 +239,7 @@ public class ImportContentAction extends Activity {
 			/* Insert it into the image */
 			try {
 				dirCurrent.insertFile(abyTif, impdia.getFileName(), bReopen);
+				dirCurrent.commit(bReopen);
 			}
 			catch (ProtectedException px) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 

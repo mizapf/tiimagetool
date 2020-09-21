@@ -188,6 +188,15 @@ public abstract class ImageFormat  {
 		return m_bDirty;
 	}
 	
+	// Also called from SectorEditFrame
+	public void nextGeneration() {
+		m_cache.nextGeneration();
+	}
+	
+	void sameGeneration() {
+		m_cache.sameGeneration();
+	}
+	
 	public static ImageFormat getImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
 		RandomAccessFile fileSystem = new RandomAccessFile(sFile, "r");
 		

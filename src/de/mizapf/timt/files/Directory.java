@@ -50,7 +50,8 @@ public class Directory extends Element {
 	/** Location of file index. */
 	int 	m_nFileIndexSector;
 
-	/** Location of the directory descriptor of this directory. */
+	/** Location of the directory descriptor of this directory. Always 0
+	    for floppy and CF7. */
 	int		m_nDDRSector;
 	
 	// ==========================================================
@@ -62,16 +63,17 @@ public class Directory extends Element {
 	private final static int CRELEN = 20;
 	private final static int UPDLEN = 18;
 
-	Directory(Volume vol, Sector sect, Directory dirParent) throws IOException, ImageException {
+	/** Called by recursion and by Volume.const#HD. */
+	Directory(Volume vol, Sector vibddr, Directory dirParent) throws IOException, ImageException {
 		m_Volume = vol;
 
 		TreeSet<TFile> files = new TreeSet<TFile>();
 		TreeSet<Directory> subdirs = new TreeSet<Directory>();
 
-		if (dirParent != null) m_sName = Utilities.getString10(sect.getBytes(), 0);
-		m_nFileIndexSector = Utilities.getInt16(sect.getBytes(), 0x18) * vol.getAUSize();
-		m_nDDRSector = sect.getNumber();
-		m_tCreation = new Time(sect.getBytes(), 0x12);
+		if (dirParent != null) m_sName = Utilities.getString10(vibddr.getBytes(), 0);
+		m_nFileIndexSector = Utilities.getInt16(vibddr.getBytes(), 0x18) * vol.getAUSize();
+		m_nDDRSector = vibddr.getNumber();
+		m_tCreation = new Time(vibddr.getBytes(), 0x12);
 		m_dirParent = dirParent;
 		setContainingDirectory(dirParent);
 		// Create files
@@ -97,11 +99,12 @@ public class Directory extends Element {
 			}
 		}
 		// Create directories
-		for (int nDir : getDirPointers(sect, vol.getAUSize())) {
-			Sector sectSubdir = vol.readSector(nDir);
-			subdirs.add(new Directory(vol, sectSubdir, this));
+		for (int nDir : getDirPointers(vibddr, vol.getAUSize())) {
+			Sector ddr = vol.readSector(nDir);
+			// Recurse
+			subdirs.add(new Directory(vol, ddr, this));
 		}
-		int nMaxAU = Utilities.getInt16(sect.getBytes(), 0x0a);
+		int nMaxAU = Utilities.getInt16(vibddr.getBytes(), 0x0a);
 		m_bBadAUCount = (nMaxAU > Volume.MAXAU);
 		
 		m_Subdirs = new Directory[subdirs.size()];
@@ -120,7 +123,7 @@ public class Directory extends Element {
 		return m_sName.equals(PARENTDIR);
 	}
 	
-	/** Builds a new floppy root directory.
+	/** Builds a new floppy root directory. Called from Volume.const.
 		@param vol Volume where this directory is located
 		@param sect Sector which contains the information of the root directory (usually 0)	
 	*/
@@ -166,7 +169,7 @@ public class Directory extends Element {
 	}
 
 	
-	/** Builds a new floppy subdirectory. 
+	/** Builds a new floppy subdirectory. Called from Directory.const.
 		@param vol Volume which contains this directory
 		@param sect Sector where this directory is specified (always 0 for floppy)
 		@param dirParent Parent directory (always root)
@@ -199,13 +202,13 @@ public class Directory extends Element {
 		files.toArray(m_Files);		
 	}
 	
-	/** Creates a new blank floppy subdirectory. Used for manually creating subdirectories. */
+	/** Creates a new blank floppy subdirectory. Called from createSubdirecory. */
 	private Directory(Volume vol, String sName, int nFDIRSector, Directory dirParent) {
 		this(vol, sName, 0, nFDIRSector, dirParent);
 		m_tCreation = new Time(); // cannot save time, so just don't show it at all
 	}
 
-	/** Creates a new blank HD subdirectory. Used for manually creating subdirectories. */
+	/** Creates a new blank HD subdirectory. Called from createSubdirecory. */
 	private Directory(Volume vol, String sName, int nDDRSector, int nFDIRSector, Directory dirParent) {
 		m_Volume = vol;
 		m_Files = new TFile[0];
@@ -219,11 +222,11 @@ public class Directory extends Element {
 		// No subdirectories		
 	}
 	
-	/** Constructor for an empty directory. */
+	/** Constructor for an empty directory. Required by Archive.const. */
 	protected Directory() {
 	}
 		
-	/* If negative, errors were found */
+	/** If negative, errors were found. Called from OpenImageAction#SCSI */
 	public static int checkDIB(Directory dir, boolean bWrite) throws IOException, ImageException, ProtectedException  {
 		boolean bFound = false;
 		int nCount = 1;
@@ -232,7 +235,9 @@ public class Directory extends Element {
 //				+ " contains an invalid MAXAU value (larger than the maximum). Setting the value to the maximum value: " + Volume.MAXAU);
 			bFound = true;
 			if (bWrite) {
-				dir.fixDDR();
+				// Fix the DDR
+				dir.m_bBadAUCount = false;
+				dir.writeDDR();
 //				System.out.println("Fixed directory");
 			}
 		}
@@ -333,7 +338,7 @@ public class Directory extends Element {
 		return m_dirParent == null;
 	}
 	
-	public int getFdrSector() {
+	public int getFileIndexSector() {
 		return m_nFileIndexSector;
 	}
 	
@@ -490,9 +495,10 @@ public class Directory extends Element {
 		// Set the clusters in the file
 		fileNew.setClusters(aint);
 		
-		// Tell file to write its FIB
+		// Create and write new FIB
 		if (bReopen) m_Volume.reopenForWrite();
-		fileNew.writeFIB(aFIB[0].start, getFdrSector());
+		byte[] aFibNew = fileNew.createFIB(aFIB[0].start, getFileIndexSector());  // FDIR sector only for HD
+		m_Volume.writeSector(new Sector(aFIB[0].start, aFibNew));
 		
 		// and its contents
 		writeFileContents(m_Volume, aint, abyTif);
@@ -500,23 +506,28 @@ public class Directory extends Element {
 		// Add the file to this directory; gets sorted automatically
 		addToList(fileNew);
 
-		// Commit the new file index record
+		/*
+		// Write the new file index record (new file entry)
 		writeFDIR();
 
-		// and update the directory entry on the image
-		writeDDR();
-		
-		// Write the allocation map
-		m_Volume.updateVIB();
-		m_Volume.updateAlloc();
-		
+		if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
+			// Write the allocation map
+			m_Volume.updateVIB();	
+		}
+		else {
+			// Update the directory entry on the image (changed number of files)
+			writeDDR();
+			// Write the allocation map
+			m_Volume.updateAlloc();
+		}
+		*/
 		if (bReopen) m_Volume.reopenForRead();
-		SectorCache.nextGeneration();
+		// m_Volume.nextGeneration();
 
 		return fileNew;
 	}
 	
-	void writeFileContents(Volume vol, Interval[] aCluster, byte[] abyFile) throws ProtectedException, IOException, ImageException {
+	private void writeFileContents(Volume vol, Interval[] aCluster, byte[] abyFile) throws ProtectedException, IOException, ImageException {
 		int offset = 0;
 		
 		int nNetLength = abyFile.length - 128;
@@ -583,7 +594,7 @@ public class Directory extends Element {
 		catch (IndexOutOfBoundsException ix) {
 			throw new ImageException(TIImageTool.langstr("DirectoryEntryCorrupt"));
 		}		
-		SectorCache.nextGeneration();
+		// m_Volume.nextGeneration();
 	}
 	
 	/** Called from PasteAction, only for sourceVol == targetVol. */
@@ -601,7 +612,8 @@ public class Directory extends Element {
 		// System.out.println("movein d " + file.getName());
 		addToList(file);
 		file.setContainingDirectory(this);
-		file.writeFIB(file.getFIBLocation(), getFdrSector());
+		byte[] aFibNew = file.createFIB(file.getFIBLocation(), getFileIndexSector());
+		m_Volume.writeSector(new Sector(file.getFIBLocation(), aFibNew));
 	}
 	
 	/** Called from PasteAction. */
@@ -634,6 +646,8 @@ public class Directory extends Element {
 		m_Volume.updateVIB();
 		m_Volume.updateAlloc();
 		if (bReopen) m_Volume.reopenForRead();
+		m_Volume.nextGeneration();
+		System.out.println("Commit done");
 	}
 	
 	/** Creates a new subdirectory. 
@@ -680,18 +694,27 @@ public class Directory extends Element {
 		addToList(dirNew);
 		if (bReopen) m_Volume.reopenForWrite();
 		
-		dirNew.writeDDR();
+		// Create the file index for the new directory
 		dirNew.writeFDIR();
 		
-		writeDDR();
-		
-		m_Volume.updateVIB();
-		m_Volume.updateAlloc();
+		if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
+			// Update the VIB (new dir entry and allocation map)
+			m_Volume.updateVIB();
+		}
+		else {
+			// Create new DDR
+			dirNew.writeDDR();
+			// Rewrite this directory's DDR (new dir entry)
+			writeDDR();
+			// Update the allocation map
+			m_Volume.updateAlloc();
+		}
+
 		if (bReopen) m_Volume.reopenForRead();
 		return dirNew;
 	}
 	
-	public void deleteDirectory(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
+	protected void deleteDirectory(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
 //		System.out.println("Deleting directory " + dir.getName());
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 
@@ -701,8 +724,10 @@ public class Directory extends Element {
 		Directory[] asubdir = dir.getDirectories();
 		TFile[] afile = dir.getFiles();
 		
+		// If the directory is not empty, deletion must be recursive
 		if ((asubdir.length > 0 || afile.length > 0) && !bRecurse) throw new FormatException(dir.getName(), TIImageTool.langstr("DirectoryNotEmpty"));  
 
+		// Recurse
 		for (int i=0; i < asubdir.length; i++) {
 			dir.deleteDirectory(asubdir[i], bRecurse);
 		}
@@ -712,14 +737,20 @@ public class Directory extends Element {
 		}
 		
 		// No more files or subdirectories in dir. Now delete dir itself.
-		m_Volume.deallocate(new Interval(dir.getFdrSector(), dir.getFdrSector()));
+		m_Volume.deallocate(new Interval(dir.getFileIndexSector(), dir.getFileIndexSector()));
+		
+		// Floppies and CF7 have directory entries in the VIB; no sector to free
 		if (!m_Volume.isFloppyImage() && !m_Volume.isCF7Volume()) {
 			m_Volume.deallocate(new Interval(dir.getDDRSector(), dir.getDDRSector()));
 		}
+		// TODO: rewrite VIB and alloc
 	}
 	
+	/** Called from DeleteAction and PasteAction. */
 	public void delDir(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException  {
+		// Remove from volume
 		deleteDirectory(dir, bRecurse);
+		// Remove from internal list
 		removeFromList(dir);
 	}
 	
@@ -767,6 +798,7 @@ public class Directory extends Element {
 		return false;
 	}
 	
+	/** Removes the file from the list of files, but not on the disk. */ 
 	protected void removeFromList(TFile delfile) {
 		TFile[] aold = m_Files;
 		m_Files = new TFile[aold.length-1];
@@ -778,6 +810,7 @@ public class Directory extends Element {
 		}
 	}
 
+	/** Removes the directory from the list of directories, but not on the disk. */ 
 	private void removeFromList(Directory deldir) {
 		Directory[] aold = m_Subdirs;
 		m_Subdirs = new Directory[aold.length-1];
@@ -804,9 +837,12 @@ public class Directory extends Element {
 			removeFromList(file);
 			file.setName(sName);
 			addToList(file);
-			file.writeFIB(file.getFIBLocation(), getFdrSector());
-			// Commit the new file index record
-			writeFDIR();			
+			// Change the file's FIB
+			byte[] aFibNew = file.createFIB(file.getFIBLocation(), getFileIndexSector());
+			m_Volume.writeSector(new Sector(file.getFIBLocation(), aFibNew));
+			
+			// Write the new file index record (order may have changed)
+			writeFDIR();
 		}
 		else {
 			if (!Directory.validName(sName)) throw new InvalidNameException(sName);
@@ -820,30 +856,38 @@ public class Directory extends Element {
 			dir.setName(sName);
 			addToList(dir);
 
-			// Write the DDR of the renamed directory
-			dir.writeDDR();
 			// Write the DDR of this directory
 			if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
-				byte[] abyVIB = m_Volume.createVIB();
-				m_Volume.writeSector(new Sector(0, abyVIB));
+				// Create a new VIB with updated directories
+				m_Volume.updateVIB();
 			}
-			else writeDDR();			
+			else {
+				// Write the DDR of the renamed directory (name changed)
+				dir.writeDDR();
+				// Update this directory's DDR (order may have changed)
+				writeDDR();
+			}
 		}
 		m_Volume.reopenForRead();
 	}
 
 	// =========================================================================
 	
-	/** Only called by Archives for updating the archive file in this directory. */
+	/** Only called by Archives for updating the archive file in this directory.
+		1. Deletes the file 
+		2. Inserts the new version.
+		If the new version is too big, inserts the old version again.
+		TODO: Remove this reinsert.
+	*/
 	protected TFile updateFile(TFile file, byte[] abySectorContent, int nNewL3, boolean bReopen) throws IOException, ImageException, InvalidNameException, ProtectedException {
 		// Keep the old file as a TIFiles image
 		TIFiles tfiOld = TIFiles.createFromFile(file);
 		byte[] abyTfiNew = TIFiles.createTfi(abySectorContent, file.getName(), file.getFlags(), file.getRecordLength(), nNewL3);
-		// System.out.println("Deleting old file " + file.getName());
+		System.out.println("Deleting old file " + file.getName());
 		deleteFile(file, true);
-		SectorCache.sameGeneration();
+		// m_Volume.sameGeneration();
 
-		// System.out.println("Inserting new file");
+		System.out.println("Inserting new file " + file.getName());
 		TFile fNew = null;
 		try {
 			fNew = insertFile(abyTfiNew, null, bReopen);
@@ -858,6 +902,9 @@ public class Directory extends Element {
 
 	// =========================================================================
 	
+	/** The FDIR is the list of sectors of the FIBs of the files in this directory.
+		It is sector 1 on floppy disks for the root directory.
+	*/
 	private void writeFDIR() throws IOException, ImageException, ProtectedException {
 		byte[] abyNew = new byte[256];
 		Arrays.fill(abyNew, 0, 0x100, (byte)0x00);
@@ -870,7 +917,9 @@ public class Directory extends Element {
 			i = i+2;
 		}
 		
-		if (!m_Volume.isFloppyImage() && !m_Volume.isCF7Volume()) Utilities.setInt16(abyNew, 254, m_nDDRSector / m_Volume.getAUSize());
+		if (!m_Volume.isFloppyImage() && !m_Volume.isCF7Volume()) 
+			Utilities.setInt16(abyNew, 254, m_nDDRSector / m_Volume.getAUSize());
+		
 		// System.out.println("Writing the index record at " + m_nFileIndexSector);
 		m_Volume.writeSector(new Sector(m_nFileIndexSector, abyNew));		
 	}
@@ -931,10 +980,5 @@ public class Directory extends Element {
 			m_Volume.writeSector(new Sector(nSector, aDDRNew));
 		}
 		// else: Root directory of HD: will be written on next update
-	}
-	
-	public void fixDDR() throws IOException, ImageException, ProtectedException {
-		m_bBadAUCount = false;
-		writeDDR();
 	}
 }
