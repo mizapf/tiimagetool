@@ -445,7 +445,7 @@ public class NewHDImageAction extends Activity {
 									
 									ImageFormat ifsource = null;
 									try {
-										ifsource = ImageFormat.getImageFormat(file.getAbsolutePath());
+										ifsource = ImageFormat.getImageFormat(file.getAbsolutePath(), imagetool.getGenerationCounter());
 										if (!(ifsource instanceof MameCHDFormat)) {
 											JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);				
 											bValid = false;
@@ -483,7 +483,7 @@ public class NewHDImageAction extends Activity {
 									
 									source.reopenForRead();
 									
-									vol = new Volume(file.getAbsolutePath());
+									vol = new Volume(file.getAbsolutePath(), imagetool.getGenerationCounter());
 
 									Directory root = vol.getRootDirectory();					
 									imagetool.addDirectoryView(root);

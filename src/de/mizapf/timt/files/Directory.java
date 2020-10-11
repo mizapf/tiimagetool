@@ -883,14 +883,12 @@ public class Directory extends Element {
 		// Keep the old file as a TIFiles image
 		TIFiles tfiOld = TIFiles.createFromFile(file);
 		byte[] abyTfiNew = TIFiles.createTfi(abySectorContent, file.getName(), file.getFlags(), file.getRecordLength(), nNewL3);
-		System.out.println("Deleting old file " + file.getName());
-		deleteFile(file, true);
-		// m_Volume.sameGeneration();
 
-		System.out.println("Inserting new file " + file.getName());
+		// This should not change the FDIR (same name)
+		System.out.println("Overwriting file " + file.getName());
 		TFile fNew = null;
 		try {
-			fNew = insertFile(abyTfiNew, null, bReopen);
+			fNew = insertFile(abyTfiNew, null, bReopen, true);
 		}
 		catch (ImageFullException ifx) {
 			// Restore old version
@@ -905,7 +903,7 @@ public class Directory extends Element {
 	/** The FDIR is the list of sectors of the FIBs of the files in this directory.
 		It is sector 1 on floppy disks for the root directory.
 	*/
-	private void writeFDIR() throws IOException, ImageException, ProtectedException {
+	protected void writeFDIR() throws IOException, ImageException, ProtectedException {
 		byte[] abyNew = new byte[256];
 		Arrays.fill(abyNew, 0, 0x100, (byte)0x00);
 
@@ -925,7 +923,7 @@ public class Directory extends Element {
 	}
 	
 	/** Writes a new directory descriptor record. */
-	private void writeDDR() throws IOException, ImageException, ProtectedException {
+	protected void writeDDR() throws IOException, ImageException, ProtectedException {
 		byte[] aDDRNew = null;
 		int nSector = 0;
 		

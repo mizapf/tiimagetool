@@ -217,9 +217,12 @@ public class PasteAction extends Activity {
 					// Commit after the loop
 					System.out.println("commit source");
 					dirSource.commit(false);
+					imagetool.getGenerationCounter().sameGeneration();
 					System.out.println("commit target");
 					dirTarget.commit(false);
 					volTarget.reopenForRead();
+					
+					// Should the generation better be static?
 				}
 				catch (FileNotFoundException fnfx) {
 					if (fnfx.getMessage().indexOf("ermission")!=-1) {

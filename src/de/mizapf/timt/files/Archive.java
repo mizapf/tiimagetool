@@ -372,13 +372,14 @@ public class Archive extends Directory {
 		}
 		
 		// For archives, we now have to rebuild the byte array
-		m_abyOldContent = m_abyContent;
-		Directory dirParent = getContainingDirectory();
+		// m_abyOldContent = m_abyContent;
+		// Directory dirParent = getContainingDirectory();
 		// Compression happens here
-		m_abyContent = rebuild();
+		// m_abyContent = rebuild();
 
 		// System.out.println(Utilities.hexdump(0, 0, m_abyContent, m_abyContent.length, false));
-		m_fBase = dirParent.updateFile(m_fBase, m_abyContent, (m_abyContent.length/256)*2, bReopen);
+		// m_fBase = dirParent.updateFile(m_fBase, m_abyContent, (m_abyContent.length/256)*2, bReopen);
+		commit(bReopen);
 	}	
 	
 	@Override
@@ -409,6 +410,18 @@ public class Archive extends Directory {
 		try {
 			System.out.println("Update file");
 			m_fBase = dirParent.updateFile(m_fBase, m_abyContent, (m_abyContent.length/256)*2, bReopen);
+			
+			// From Directory.commit
+			// if (bReopen) m_Volume.reopenForWrite();
+			// writeDDR();
+		
+			// Update file index
+			// writeFDIR();
+
+			// m_Volume.updateVIB();
+			// m_Volume.updateAlloc();
+			// if (bReopen) m_Volume.reopenForRead();
+//			m_Volume.nextGeneration();
 		}
 		catch (ImageFullException ifx) {
 			// Image is full; revert to previous state

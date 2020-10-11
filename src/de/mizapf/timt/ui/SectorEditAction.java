@@ -71,7 +71,7 @@ public class SectorEditAction extends Activity {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("SectorEditOpenImage"), TIImageTool.langstr("OpenError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			else {
-				ImageFormat iform = ImageFormat.getImageFormat(sAbsFile);
+				ImageFormat iform = ImageFormat.getImageFormat(sAbsFile, imagetool.getGenerationCounter());
 				java.io.File filePar = selectedFile.getParentFile();
 				imagetool.setSourceDirectory(filePar, "image");
 				imagetool.showSectorEditor(selectedFile.getName(), iform);

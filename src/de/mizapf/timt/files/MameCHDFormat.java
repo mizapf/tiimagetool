@@ -164,6 +164,7 @@ import java.util.Arrays;
 
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.GenCounter;
 
 public class MameCHDFormat extends ImageFormat {
 
@@ -270,8 +271,8 @@ public class MameCHDFormat extends ImageFormat {
 		return 100;
 	}
 
-	public MameCHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
-		super(filesystem, sImageName);
+	public MameCHDFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
+		super(filesystem, sImageName, gen);
 		m_nDensity = 0;
 		writeThrough(true);
 	}

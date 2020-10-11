@@ -153,7 +153,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_iChangeDirectory = m_app.createMenuItem(new ChangeDirectoryAction());
 		m_iToggleEmulate = m_app.createMenuItem(new ToggleEmulateAction());
 		m_iExportEmulate = m_app.createMenuItem(new ExportEmulateAction());
-		m_mEdit = app.getEditMenu();
+		m_mEdit = app.getEditMenu();   // use the main edit menu
 		
 		Volume vol = dir.getVolume();
 		app.attachView(vol.getImageName(), this, true);
@@ -186,7 +186,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_mFile.add(m_iClose);
 		
 		m_mbar.add(m_mFile);
-		m_mEdit = new EditMenu(m_frmOwn, m_app);
+		m_mEdit = new EditMenu(m_frmOwn, m_app);   // create an own edit menu
 		m_frmOwn.setJMenuBar(m_mbar);
 		m_mbar.add(m_mEdit);
 		
@@ -222,7 +222,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		System.out.println("isModified: " + vol.isModified());
 		m_app.attachView(vol.getModShortImageName(), this, false);
 		m_frmOwn = null;
-		m_mEdit = m_app.getEditMenu();
+		m_mEdit = m_app.getEditMenu();	// Use the edit menu of the main application
 	}
 
 	public void setPasteEnabled(boolean state) {

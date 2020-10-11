@@ -146,7 +146,7 @@ public class SearchAction extends Activity {
 	
 	private void search(File image, ArrayList<SearchResult> list) {
 		try {
-			Volume vol = new Volume(image.getAbsolutePath());
+			Volume vol = new Volume(image.getAbsolutePath(), imagetool.getGenerationCounter());
 			// System.out.println("Searching image " + image.getAbsolutePath());
 			m_view.setFilename(image.getAbsolutePath());
 			if (!m_view.stopRequested() && m_count < m_maxhits) {

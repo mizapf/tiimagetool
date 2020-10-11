@@ -24,49 +24,17 @@ import javax.swing.*;
 import java.awt.event.KeyEvent;
 import de.mizapf.timt.TIImageTool;
 
-public class SaveImageAction extends Activity {
+public class SaveAllImageAction extends Activity {
 
-	public int getKeyCode() {
-		return KeyEvent.VK_S;
-	}
-	
 	public String getMenuName() {
-		return TIImageTool.langstr("Save");
+		return TIImageTool.langstr("SaveAll");
 	}
 	
 	public String getActionName() {
-		return "SAVE";
+		return "SAVEALL";
 	}
 	
 	public void go() {
-		System.out.println("Save");
+		System.out.println("SaveAll");
 	}
 }
-
-/*
-Save concept
-
-- Determine Maximum heap space on startup
-- When an operation takes more space than available on the heap:
-  (or 75% of the maximum space)
-  
-  * Warning: This operation cannot be undone due to lack of buffer space. All
-             unsaved changes to this image will be written to disk before 
-             continuing.
-             [Continue] [Abort]
-  
-  (can be avoided by -Xmx parameter on startup)
-  
-  In this case, the previous image state is committed, and this change
-  is directly written to disk (write-around).
-  
-  The image is then marked as not modified.
-
-
-  This problem is only likely to appear with hard disk images
-  (e.g. recursive copy of all files from one HD to another)
-
-  This may require a pre-check for required buffer space.
-  
-  
-*/

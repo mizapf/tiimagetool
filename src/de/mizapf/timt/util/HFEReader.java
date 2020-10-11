@@ -19,7 +19,8 @@ public class HFEReader {
 	public static void main(String[] arg) {
 		byte[] abyFile = null;
 		try {
-			ImageFormat format = ImageFormat.getImageFormat(arg[0]);
+			GenCounter gen = new GenCounter();
+			ImageFormat format = ImageFormat.getImageFormat(arg[0], gen);
 			if (format instanceof HFEFormat) {
 				HFEReader readhfe = new HFEReader((HFEFormat)format);
 				byte[] output = readhfe.read(abyFile);

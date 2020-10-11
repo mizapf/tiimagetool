@@ -29,11 +29,14 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.io.File;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.GenCounter;
 
 public class CF7ImageFormat extends ImageFormat {
 
 	String[] m_volume;
 	int m_maxVolumes = 0;
+	
+	GenCounter m_gen;
 	
 	static int vote(RandomAccessFile fileSystem) throws IOException {
 		if (fileSystem.length() < 409600*2) return 0;  // maximum size?
@@ -48,8 +51,9 @@ public class CF7ImageFormat extends ImageFormat {
 		else return 0;
 	}
 	
-	public CF7ImageFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
-		super(filesystem, sImageName);
+	public CF7ImageFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
+		super(filesystem, sImageName, gen);
+		m_gen = gen;
 		writeThrough(true);
 		
 		// Find volumes
@@ -92,7 +96,7 @@ public class CF7ImageFormat extends ImageFormat {
 	}
 	
 	CF7VolumeFormat getSubvolume(int number) throws IOException, ImageException {
-		return new CF7VolumeFormat(m_FileSystem, m_sImageName, number);
+		return new CF7VolumeFormat(m_FileSystem, m_sImageName, number, m_gen);
 	}
 	
 	@Override	

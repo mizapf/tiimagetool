@@ -31,6 +31,7 @@ import java.io.File;
 
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.GenCounter;
 
 class TrackDumpFormat extends ImageFormat {
 
@@ -54,8 +55,8 @@ class TrackDumpFormat extends ImageFormat {
 		return 0;		
 	}
 	
-	TrackDumpFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
-		super(filesystem, sImageName);
+	TrackDumpFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
+		super(filesystem, sImageName, gen);
 		writeThrough(true);
 	}
 	

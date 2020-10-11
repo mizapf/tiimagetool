@@ -20,7 +20,7 @@
 ****************************************************************************/
 
 package de.mizapf.timt.files;
-import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.GenCounter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
@@ -28,38 +28,39 @@ import java.util.LinkedList;
 public class SectorCache {
 	
 	HashMap<Integer,LinkedList<Sector>> m_cache;
-	private int m_nGeneration;
+	private GenCounter m_gencount;
 	
-	SectorCache() {
+	SectorCache(GenCounter gen) {
 		m_cache = new HashMap<Integer,LinkedList<Sector>>();
+		m_gencount = gen;
 	}
 	
 	void setGeneration(int gen) {
-		m_nGeneration = gen;
+		m_gencount.setGeneration(gen);
 	}
 	
 	public void nextGeneration() {
-		m_nGeneration++;
+		m_gencount.nextGeneration();
 	}
 	
 	public void sameGeneration() {
-		m_nGeneration--;
+		m_gencount.sameGeneration();
 	}
-
-	public void init() {
-		m_nGeneration = 1;
+	
+	public int getGeneration() {
+		return m_gencount.getGeneration();
 	}
 	
 	Sector read(int number) {
 		LinkedList<Sector> secversions = m_cache.get(number);
 		if (secversions==null) return null;
-		System.out.println("Sector " + number + " from cache");
+		// System.out.println("Sector " + number + " from cache");
 		return secversions.getLast();
 	}
 	
 	void write(Sector sect) {
 		LinkedList<Sector> secversions = m_cache.get(sect.getNumber());
-		sect.setGeneration(m_nGeneration);
+		sect.setGeneration(m_gencount.getGeneration());
 
 		if (secversions==null) {
 			// Create a new history
@@ -67,7 +68,7 @@ public class SectorCache {
 			m_cache.put(sect.getNumber(), secversions);
 		}
 		secversions.add((Sector)sect.clone());
-		System.out.println("Caching a new version (" + m_nGeneration + ") of sector " + sect.getNumber());
+		System.out.println("Caching a new version (" + m_gencount.getGeneration() + ") of sector " + sect.getNumber());
 //		if (sect.getNumber()<2 || sect.getNumber()==20) new Exception().printStackTrace();
 
 	}

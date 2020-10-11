@@ -167,6 +167,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenuItem m_iClose;
 	JMenuItem m_iCloseAll;
 	JMenuItem m_iSaveImage;
+	JMenuItem m_iSaveAllImage;
+
 	JMenuItem m_iExport;
 	JMenuItem m_iPreferences;
 	JMenuItem m_iQuit;
@@ -276,6 +278,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	boolean m_utilsfound;
 	
 	public long m_maxMemory;
+	
+	/** Generation counter. */
+	public GenCounter m_gencount;	
 	
 	// ===============================================
 	// Clipboard for cut-copy-paste
@@ -400,7 +405,13 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				}
 			}
 			m_mOpenRecent.setEnabled(i > 0);
-			
+						
+			m_iSaveImage = createMenuItem(new SaveImageAction());
+			m_mFile.add(m_iSaveImage);
+
+			m_iSaveAllImage = createMenuItem(new SaveAllImageAction());
+			m_mFile.add(m_iSaveAllImage);
+
 			m_iClose = createMenuItem(new CloseAction());
 			m_mFile.add(m_iClose);
 			m_iCloseAll = createMenuItem(new CloseAllAction());
@@ -410,9 +421,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 						
 			m_iExport = createMenuItem(new ExportImageAction());
 			m_mFile.add(m_iExport);
-			
-			m_iSaveImage = createMenuItem(new SaveImageAction());
-			m_mFile.add(m_iSaveImage);
 			
 			m_mFile.addSeparator();
 			m_iPreferences = createMenuItem(new PreferencesAction());
@@ -1140,9 +1148,15 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		findPathsForCF();
 		m_maxMemory = Runtime.getRuntime().freeMemory();
 
+		m_gencount = new GenCounter();
+		
 		new CreateGui().run();
 		//SwingUtilities.invokeLater(new CreateGui());
 	}
+	
+	public GenCounter getGenerationCounter() {
+		return m_gencount;
+	}	
 
 	public void updateMemoryInfo() {
 		long freeMem = Runtime.getRuntime().freeMemory();
@@ -1998,7 +2012,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 
 	public void reloadVolume(Volume vol) throws FileNotFoundException, IOException, ImageException {
-		Volume volNew = new Volume(vol.getImageName());
+		Volume volNew = new Volume(vol.getImageName(), m_gencount);
 		SwingUtilities.invokeLater(new ViewRefresher(vol, true));
 	}
 	

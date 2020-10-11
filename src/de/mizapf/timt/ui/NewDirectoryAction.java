@@ -83,6 +83,7 @@ public class NewDirectoryAction extends Activity {
 			if (ok) {
 				try {
 					dirCurrent.createSubdirectory(sName, true);
+					imagetool.getGenerationCounter().nextGeneration();
 				}
 				catch (ImageFullException ifx) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NoSpaceLeft"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);

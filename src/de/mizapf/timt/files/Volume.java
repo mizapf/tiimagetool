@@ -26,6 +26,7 @@ import java.util.*;
 import de.mizapf.timt.util.TIFiles;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.GenCounter;
 
 public class Volume {
 
@@ -72,7 +73,7 @@ public class Volume {
 	
 	private String m_sImageFileName;
 	
-	public Volume(String sFile, boolean bCheck) throws FileNotFoundException, IOException, ImageException {
+	public Volume(String sFile, boolean bCheck, GenCounter gen) throws FileNotFoundException, IOException, ImageException {
 
 		Sector sector0 = null;
 		byte[] abySect0 = null;
@@ -94,11 +95,11 @@ public class Volume {
 		// Get the image format
 		if (number > -1) {
 			// We have a CF7
-			ImageFormat format = ImageFormat.getImageFormat(sFile);
+			ImageFormat format = ImageFormat.getImageFormat(sFile, gen);
 			m_Image = ((CF7ImageFormat)format).getSubvolume(number);
 		}
 		else {
-			m_Image = ImageFormat.getImageFormat(sFile);
+			m_Image = ImageFormat.getImageFormat(sFile, gen);
 		}
 		
 		m_nLastMod = m_Image.getLastModifiedTime();
@@ -178,8 +179,8 @@ public class Volume {
 			m_dirRoot = new Directory(this, sector0, null);
 	}
 	
-	public Volume(String sFile) throws FileNotFoundException, IOException, ImageException {
-		this(sFile, true);
+	public Volume(String sFile, GenCounter gen) throws FileNotFoundException, IOException, ImageException {
+		this(sFile, true, gen);
 	}
 	
 	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
@@ -690,83 +691,13 @@ public class Volume {
 		return m_Image.isDirty();
 	}
 	
+	/** Delegate to ImageFormat. */
 	public void nextGeneration() {
 		m_Image.nextGeneration();
 	}
 	
-	public void sameGeneration() {
-		m_Image.sameGeneration();
-	}
-	
 /*************************** Low-level routines *****************************/
-	
-	public static void createFloppyImage(File newImageFile, String volumeName, int type, int sides, int density, int tracks, boolean format) throws IOException, ImageException {
-
-		ImageFormat image = null;
 		
-		int sectorsPerTrack = 9 << density;
-
-		switch (type) {
-		case ImageFormat.SECTORDUMP:
-			image = new SectorDumpFormat();
-			break;
-		case ImageFormat.TRACKDUMP:
-			image = new TrackDumpFormat();
-			break;
-		case ImageFormat.HFE:
-			image = new HFEFormat();
-			break;
-		case ImageFormat.CF7VOLUME:
-			image = new CF7VolumeFormat();
-			sectorsPerTrack = 20;
-			break;
-		}
-		
-		image.createEmptyImage(newImageFile, sides, density, tracks, sectorsPerTrack, format);		
-		
-		if (format) {
-			
-			// Load it and write sectors 0 and 1
-			image = ImageFormat.getImageFormat(newImageFile.getAbsolutePath());
-			
-			// Sector 0
-			byte[] sector0 = new byte[SECTOR_LENGTH];
-			
-			Arrays.fill(sector0, 0, 10, (byte)' ');
-			System.arraycopy(volumeName.getBytes(), 0, sector0, 0, volumeName.getBytes().length);
-			
-			int nsectors = sides * tracks * sectorsPerTrack;
-			sector0[10] = (byte)(nsectors >> 8);
-			sector0[11] = (byte)(nsectors % 256);
-			sector0[12] = (byte)sectorsPerTrack;
-			sector0[13] = 'D';
-			sector0[14] = 'S';
-			sector0[15] = 'K';
-			sector0[16] = (byte)0x20;
-			sector0[17] = (byte)tracks;
-			sector0[18] = (byte)sides;
-			sector0[19] = (byte)(density+1);
-			for (int i=0x14; i < 0x38; i++) sector0[i] = (byte)0;
-			for (int i=0x38; i < 0x100; i++) sector0[i] = (byte)0xff;
-			
-			// Allocation bitmap
-			AllocationMap am = new AllocationMap(nsectors);
-			am.allocate(0);
-			if (am.getAUSize()==1) am.allocate(1);
-			
-			byte[] abyMap = am.toBitField();
-			System.arraycopy(abyMap, 0, sector0, 0x38, abyMap.length);
-			
-			// Sector 1
-			byte[] sector1 = new byte[SECTOR_LENGTH];
-			Arrays.fill(sector1, 0, SECTOR_LENGTH, (byte)0x00);
-			
-			image.writeSector(new Sector(0, sector0));
-			image.writeSector(new Sector(1, sector1));
-			image.close();
-		}
-	}
-	
 	/** Check CRC errors in Track Dump Format. */
 	public int checkCRC(boolean fix, boolean reset) throws IOException
 	{

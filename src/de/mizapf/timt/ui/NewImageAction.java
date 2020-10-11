@@ -110,19 +110,20 @@ public class NewImageAction extends Activity {
 					
 					imagetool.setSourceDirectory(file.getParentFile(), "image");
 					
-					Volume.createFloppyImage(file, 
+					ImageFormat.createFloppyImage(file, 
 									newimagedia.getDiskName(),
 									newimagedia.getImageType(),
 									newimagedia.getSides(), 
 									newimagedia.getDensity(),
 									newimagedia.getTrackCount(),
-									newimagedia.formatImage());
+									newimagedia.formatImage(),
+									imagetool.getGenerationCounter());
 				
 				}
 				// Open it when it is initialized
 				if (file != null) {
 					if (newimagedia.formatImage()) {
-						newVolume = new Volume(file.getAbsolutePath());
+						newVolume = new Volume(file.getAbsolutePath(), imagetool.getGenerationCounter());
 						Directory root = newVolume.getRootDirectory();					
 						imagetool.addDirectoryView(root);
 					}

@@ -92,18 +92,19 @@ public class NewCF7VolumeAction extends Activity {
 					
 					imagetool.setSourceDirectory(file.getParentFile(), "image");
 					
-					Volume.createFloppyImage(file, 
+					ImageFormat.createFloppyImage(file, 
 									newimagedia.getDiskName(),
 									ImageFormat.CF7VOLUME,
 									2, 
 									ImageFormat.DOUBLE_DENSITY,
 									40,
-									true);
+									true,
+									imagetool.getGenerationCounter());
 				
 				}
 				// Open it when it is initialized
 				if (file != null) {
-					newVolume = new Volume(file.getAbsolutePath());
+					newVolume = new Volume(file.getAbsolutePath(), imagetool.getGenerationCounter());
 					Directory root = newVolume.getRootDirectory();					
 					imagetool.addDirectoryView(root);
 				}

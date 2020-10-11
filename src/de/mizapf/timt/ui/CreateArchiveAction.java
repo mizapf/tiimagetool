@@ -98,9 +98,10 @@ public class CreateArchiveAction extends Activity {
 				System.out.println("Add the empty archive file " + ad.getArchiveName() + " to the current directory");
 				arkf = dirCurrent.insertFile(abyTfi, null, false);
 				ark = arkf.unpackArchive();
-				vol.sameGeneration();
+				// vol.sameGeneration();
 				System.out.println("Add all selected files to the archive");
 				ark.insertFiles(aforarc, null, false);
+				dirCurrent.commit(false);
 				System.out.println("done");
 			// FIXME: Element selection must be improved (select/deselect) 
 			}

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.io.File;
 
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.GenCounter;
 
 class SectorDumpFormat extends ImageFormat {
 
@@ -64,8 +65,8 @@ class SectorDumpFormat extends ImageFormat {
 		return 0;		
 	}
 
-	SectorDumpFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
-		super(filesystem, sImageName);
+	SectorDumpFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
+		super(filesystem, sImageName, gen);
 		m_nSectorsByFormat = NONE;
 		m_currentCylinder = NONE;
 		m_currentTrack = NONE;

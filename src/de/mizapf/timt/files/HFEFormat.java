@@ -32,6 +32,7 @@ import java.util.ArrayList;
 
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.GenCounter;
 
 /** The HFEFormat class implements the HFE format that is used for the Lotharek
 	floppy emulator.
@@ -284,8 +285,8 @@ public class HFEFormat extends ImageFormat {
 	
 	static final int ENDOFTRACK = -1;
 	
-	HFEFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
-		super(filesystem, sImageName);
+	HFEFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
+		super(filesystem, sImageName, gen);
 		writeThrough(true);
 	}
 	

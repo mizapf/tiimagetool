@@ -26,15 +26,14 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
+import java.util.Arrays;
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.util.GenCounter;
 import de.mizapf.timt.TIImageTool;
 
 public abstract class ImageFormat  {
 
 	RandomAccessFile m_FileSystem;
-
-	/** Generation. Used for undoing. */
-	int m_generation;
 	
 	/** Cached sectors of this image. */
 	SectorCache m_cache;
@@ -62,6 +61,8 @@ public abstract class ImageFormat  {
 	public final static int DOUBLE_DENSITY = 1;
 	public final static int HIGH_DENSITY = 2;
 	public final static int ULTRA_DENSITY = 3;
+	
+	public final static int SECTOR_LENGTH = 256;
 	
 	protected int m_nCylinders;
 	protected int m_nHeads;
@@ -94,14 +95,14 @@ public abstract class ImageFormat  {
 	protected int m_codeRate = 1;
 
 
-	protected ImageFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+	protected ImageFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
 		m_FileSystem = filesystem;
 		m_sImageName = sImageName;
 		m_nSectorLength = Volume.SECTOR_LENGTH;
 		setGeometry(false /*Utilities.isRawDevice(sImageName)*/);
 		m_nCurrentTrack = NOTRACK;
 		m_abyTrack = new byte[m_nTrackLength];
-		m_cache = new SectorCache();
+		m_cache = new SectorCache(gen);
 		m_bWriteThrough = false;
 		m_bDirty = false;
 	}
@@ -197,7 +198,15 @@ public abstract class ImageFormat  {
 		m_cache.sameGeneration();
 	}
 	
-	public static ImageFormat getImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
+	public int getGeneration() {
+		return m_cache.getGeneration();
+	}
+
+	public void setGeneration(int gen) {
+		m_cache.setGeneration(gen);
+	}
+	
+	public static ImageFormat getImageFormat(String sFile, GenCounter gen) throws FileNotFoundException, IOException, ImageException {
 		RandomAccessFile fileSystem = new RandomAccessFile(sFile, "r");
 		
 /*		if (Utilities.isRawDevice(sFile)) {
@@ -207,29 +216,29 @@ public abstract class ImageFormat  {
 		if (fileSystem.length()==0) throw new ImageException(TIImageTool.langstr("ImageEmpty"));
 		
 		if (CF7VolumeFormat.vote(fileSystem) > 50) {
-			return new CF7VolumeFormat(fileSystem, sFile);
+			return new CF7VolumeFormat(fileSystem, sFile, gen);
 		}
 		if (CF7ImageFormat.vote(fileSystem) > 50) {
-			return new CF7ImageFormat(fileSystem, sFile);
+			return new CF7ImageFormat(fileSystem, sFile, gen);
 		}
 		if (SectorDumpFormat.vote(fileSystem) > 50) {
-			return new SectorDumpFormat(fileSystem, sFile);
+			return new SectorDumpFormat(fileSystem, sFile, gen);
 		}
 		
 		if (TrackDumpFormat.vote(fileSystem) > 50) {
-			return new TrackDumpFormat(fileSystem, sFile);
+			return new TrackDumpFormat(fileSystem, sFile, gen);
 		}
 		
 		if (RawHDFormat.vote(fileSystem) > 50) {
-			return new RawHDFormat(fileSystem, sFile);
+			return new RawHDFormat(fileSystem, sFile, gen);
 		}
 
 		if (MameCHDFormat.vote(fileSystem) > 50) {
-			return new MameCHDFormat(fileSystem, sFile);
+			return new MameCHDFormat(fileSystem, sFile, gen);
 		}
 
 		if (HFEFormat.vote(fileSystem) > 50) {
-			return new HFEFormat(fileSystem, sFile);
+			return new HFEFormat(fileSystem, sFile, gen);
 		}
 				
 		throw new ImageException(sFile + ": " + TIImageTool.langstr("ImageUnknown"));
@@ -316,4 +325,73 @@ public abstract class ImageFormat  {
 	int checkCRC(boolean fix, boolean reset) throws IOException {	
 		return NONE;
 	}
+	
+		
+	public static void createFloppyImage(File newImageFile, String volumeName, int type, int sides, int density, int tracks, boolean format, GenCounter gen) throws IOException, ImageException {
+
+		ImageFormat image = null;
+		
+		int sectorsPerTrack = 9 << density;
+
+		switch (type) {
+		case SECTORDUMP:
+			image = new SectorDumpFormat();
+			break;
+		case TRACKDUMP:
+			image = new TrackDumpFormat();
+			break;
+		case HFE:
+			image = new HFEFormat();
+			break;
+		case CF7VOLUME:
+			image = new CF7VolumeFormat();
+			sectorsPerTrack = 20;
+			break;
+		}
+		
+		image.createEmptyImage(newImageFile, sides, density, tracks, sectorsPerTrack, format);		
+		
+		if (format) {
+			
+			// Load it and write sectors 0 and 1
+			image = ImageFormat.getImageFormat(newImageFile.getAbsolutePath(), gen);
+			
+			// Sector 0
+			byte[] sector0 = new byte[SECTOR_LENGTH];
+			
+			Arrays.fill(sector0, 0, 10, (byte)' ');
+			System.arraycopy(volumeName.getBytes(), 0, sector0, 0, volumeName.getBytes().length);
+			
+			int nsectors = sides * tracks * sectorsPerTrack;
+			sector0[10] = (byte)(nsectors >> 8);
+			sector0[11] = (byte)(nsectors % 256);
+			sector0[12] = (byte)sectorsPerTrack;
+			sector0[13] = 'D';
+			sector0[14] = 'S';
+			sector0[15] = 'K';
+			sector0[16] = (byte)0x20;
+			sector0[17] = (byte)tracks;
+			sector0[18] = (byte)sides;
+			sector0[19] = (byte)(density+1);
+			for (int i=0x14; i < 0x38; i++) sector0[i] = (byte)0;
+			for (int i=0x38; i < 0x100; i++) sector0[i] = (byte)0xff;
+			
+			// Allocation bitmap
+			AllocationMap am = new AllocationMap(nsectors);
+			am.allocate(0);
+			if (am.getAUSize()==1) am.allocate(1);
+			
+			byte[] abyMap = am.toBitField();
+			System.arraycopy(abyMap, 0, sector0, 0x38, abyMap.length);
+			
+			// Sector 1
+			byte[] sector1 = new byte[SECTOR_LENGTH];
+			Arrays.fill(sector1, 0, SECTOR_LENGTH, (byte)0x00);
+			
+			image.writeSector(new Sector(0, sector0));
+			image.writeSector(new Sector(1, sector1));
+			image.close();
+		}
+	}
+	
 }

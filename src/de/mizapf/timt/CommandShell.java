@@ -27,6 +27,8 @@ import java.io.*;
 
 public class CommandShell {
 
+	GenCounter m_gencount;
+	
 	public static void main(String[] arg) {
 		TIImageTool.localize();
 		if (arg.length < 1) {
@@ -169,6 +171,7 @@ public class CommandShell {
 	}
 		
 	CommandShell() {
+		m_gencount = new GenCounter();
 	}
 	
 	private static Directory descendToDirectory(Volume image, String[] aSubdir, boolean bDir) throws FileNotFoundException {
@@ -233,7 +236,7 @@ public class CommandShell {
 	}
 	
 	public String directory(String sImagename, String sSubdir, String sCommand) throws FileNotFoundException, IOException, ImageException {
-		Volume image = new Volume(sImagename);
+		Volume image = new Volume(sImagename, m_gencount);
 		boolean bOnlyNames = false;
 		boolean bDecorate = false;
 		
@@ -351,7 +354,7 @@ public class CommandShell {
 	}	
 	
 	public String type(String sImagename, String sFilename) throws FileNotFoundException, IOException, ImageException, FormatException {
-		Volume image = new Volume(sImagename);
+		Volume image = new Volume(sImagename, m_gencount);
 		// We need to descent to the given directory
 		String[] dirPath = getPath(sFilename);
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);
@@ -361,7 +364,7 @@ public class CommandShell {
 	
 	// TODO: Add method to help.html	
 	public String list(String sImagename, String sFilename) throws FileNotFoundException, IOException, ImageException, FormatException {
-		Volume image = new Volume(sImagename);
+		Volume image = new Volume(sImagename, m_gencount);
 		// We need to descent to the given directory
 		String[] dirPath = getPath(sFilename);
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);
@@ -393,7 +396,7 @@ public class CommandShell {
 	}
 	
 	public void export(String sImagename, String sDirname) throws FileNotFoundException, IOException, ImageException, FormatException {
-		Volume image = new Volume(sImagename);
+		Volume image = new Volume(sImagename, m_gencount);
 		// We need to descent to the given directory
 		String[] dirPath = getPath(sDirname);
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);
@@ -425,7 +428,7 @@ public class CommandShell {
 	}
 		
 	public void importFile(String sImagename, String sDirname) throws FileNotFoundException, IOException, ImageException, FormatException {
-		Volume image = new Volume(sImagename);
+		Volume image = new Volume(sImagename, m_gencount);
 		// We need to descent to the given directory
 		String[] dirPath = getPath(sDirname);
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);

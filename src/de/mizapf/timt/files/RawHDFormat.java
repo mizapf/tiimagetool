@@ -28,6 +28,7 @@ import java.io.FileNotFoundException;
 import java.io.File;
 
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.GenCounter;
 
 class RawHDFormat extends ImageFormat {
 
@@ -61,8 +62,8 @@ class RawHDFormat extends ImageFormat {
 		return TIImageTool.langstr("RAWType");
 	}
 	
-	RawHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
-		super(filesystem, sImageName);
+	RawHDFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
+		super(filesystem, sImageName, gen);
 		m_nDensity = 0;
 		writeThrough(true);
 	}

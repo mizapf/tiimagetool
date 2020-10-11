@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.io.File;
 
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.util.GenCounter;
 import de.mizapf.timt.TIImageTool;
 
 class CF7VolumeFormat extends SectorDumpFormat {
@@ -52,13 +53,13 @@ class CF7VolumeFormat extends SectorDumpFormat {
 	CF7VolumeFormat() {
 	}
 
-	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
-		super(filesystem, sImageName);
+	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
+		super(filesystem, sImageName, gen);
 		m_separate = true;
 	}
 
-	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName, int volnumber) throws IOException, ImageException {
-		super(filesystem, sImageName);
+	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName, int volnumber, GenCounter gen) throws IOException, ImageException {
+		super(filesystem, sImageName, gen);
 		m_separate = false;
 		m_volumeNumber = volnumber;
 		int volsize = 1600 * 256 * 2;
