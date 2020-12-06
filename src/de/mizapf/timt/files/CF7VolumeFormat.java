@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.io.File;
 
 import de.mizapf.timt.util.Utilities;
-import de.mizapf.timt.util.GenCounter;
 import de.mizapf.timt.TIImageTool;
 
 class CF7VolumeFormat extends SectorDumpFormat {
@@ -53,21 +52,21 @@ class CF7VolumeFormat extends SectorDumpFormat {
 	CF7VolumeFormat() {
 	}
 
-	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
-		super(filesystem, sImageName, gen);
+	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		m_separate = true;
 	}
 
-	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName, int volnumber, GenCounter gen) throws IOException, ImageException {
-		super(filesystem, sImageName, gen);
+	CF7VolumeFormat(RandomAccessFile filesystem, String sImageName, int volnumber) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		m_separate = false;
 		m_volumeNumber = volnumber;
 		int volsize = 1600 * 256 * 2;
 		m_rawVolume = new byte[volsize];
-		m_FileSystem.seek(volnumber * volsize);
-		m_FileSystem.readFully(m_rawVolume);
+		m_ImageFile.seek(volnumber * volsize);
+		m_ImageFile.readFully(m_rawVolume);
 		// We do not keep the filesystem open in this case.
-		m_FileSystem.close();
+		m_ImageFile.close();
 		
 /*		byte[] test = new byte[1600*256];
 		for (int i=0; i < test.length; i++) test[i] = m_rawVolume[i*2];
@@ -79,10 +78,14 @@ class CF7VolumeFormat extends SectorDumpFormat {
 	}
 	
 	@Override
+	int getFormatType() {
+		return FLOPPY_FORMAT; 
+	}
+	
 	void readFromImage(byte[] content, int offset) throws IOException {
 		if (m_separate) {
-			m_FileSystem.seek(offset);
-			m_FileSystem.readFully(m_abyTrack);
+			m_ImageFile.seek(offset);
+			m_ImageFile.readFully(m_abyTrack);
 		}
 		else {
 			int pos = offset*2;
@@ -98,10 +101,10 @@ class CF7VolumeFormat extends SectorDumpFormat {
 	void writeOnImage() throws IOException {
 		if (m_separate) {		
 			// Write back the whole track
-			m_FileSystem = new RandomAccessFile(m_sImageName, "rw");		
-			m_FileSystem.seek(m_trackpos[m_currentTrack]);
-			m_FileSystem.write(m_abyTrack);
-			m_FileSystem = new RandomAccessFile(m_sImageName, "r");		
+			m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
+			m_ImageFile.seek(m_trackpos[m_currentTrack]);
+			m_ImageFile.write(m_abyTrack);
+			m_ImageFile = new RandomAccessFile(m_sImageName, "r");		
 		}
 		else {
 			// Write into the cache
@@ -110,9 +113,9 @@ class CF7VolumeFormat extends SectorDumpFormat {
 				m_rawVolume[pos + i*2] = m_abyTrack[i];
 			}
 			// Write through (only the track) 
-			m_FileSystem = new RandomAccessFile(m_sImageName, "rw");		
-			m_FileSystem.seek(m_volumeNumber * (1600*256*2) + pos);
-			m_FileSystem.write(m_rawVolume, pos, m_abyTrack.length * 2);
+			m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
+			m_ImageFile.seek(m_volumeNumber * (1600*256*2) + pos);
+			m_ImageFile.write(m_rawVolume, pos, m_abyTrack.length * 2);
 		}
 	}
 
@@ -123,7 +126,7 @@ class CF7VolumeFormat extends SectorDumpFormat {
 		m_nSectorsPerTrack = 20;
 		m_nSectorsByFormat = 20;
 		m_nSectorLength = 256;
-		m_encoding = DOUBLE_DENSITY;
+		m_encoding = FloppyFileSystem.DOUBLE_DENSITY;
 
 		int tracklen = Volume.SECTOR_LENGTH * m_nSectorsPerTrack;
 

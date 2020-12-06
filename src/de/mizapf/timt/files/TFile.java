@@ -47,6 +47,9 @@ public class TFile extends Element {
 	protected boolean		m_bL3Swapped;
 	protected boolean		m_bL3Bad;
 	
+	protected boolean		m_bArchiveChecked;
+	protected boolean		m_bArchive;
+	
 	public final static byte VARIABLE = (byte)0x80;
 	public final static byte EMULATE = (byte)0x20;
 	public final static byte MODIFIED = (byte)0x10;
@@ -71,7 +74,9 @@ public class TFile extends Element {
 	protected final static int CRELEN = 20;
 	protected final static int UPDLEN = 18;
 		
-	/** Also accessed by ImageManager. */
+	/** Called by Directory.insertFile and Archive.insertFile(s). The file
+		has no content at this point; it must be inserted later.
+	*/
 	public TFile(byte[] abyTif) throws ImageException {
 		TIFiles tif = new TIFiles(abyTif);
 		m_sName = tif.getTFIName();
@@ -86,10 +91,12 @@ public class TFile extends Element {
 		checkL3();		
 		m_dirParent = null;
 		m_bProtected = false;
+		m_bArchive = false;
+		m_bArchiveChecked = false;
 	}
 		
-	TFile(Volume vol, Sector sectFile, Directory dirParent) throws IOException, ImageException {
-		byte[] aby = sectFile.getBytes();
+	TFile(Volume vol, Sector sectFIB, Directory dirParent) throws IOException, ImageException {
+		byte[] aby = sectFIB.getBytes();
 		m_sName = Utilities.getString10(aby, 0);
 		m_nRecordLength = (Utilities.getInt16(aby, 0x0a)<<8) + (aby[0x11] & 0xff);
 		m_byFlags = aby[0x0c];
@@ -104,11 +111,12 @@ public class TFile extends Element {
 		}
 		m_tCreation = new Time(aby, 0x14);
 		m_tUpdate = new Time(aby, 0x18);
-		m_anFIBSector = getAllFIB(vol, sectFile);
+		m_anFIBSector = getAllFIB(vol, sectFIB);
 		m_aCluster = getAllClusters(vol, m_anFIBSector);
 		m_dirParent = dirParent;
 		m_bProtected = false;
 		checkL3();		
+		checkArchiveFormat();
 	}
 	
 	/** Used for archive files. */
@@ -319,6 +327,13 @@ public class TFile extends Element {
 		return m_nRecordLength;
 	}
 		
+	public boolean hasArchiveFormat() {
+		// We need to postpone the archive check when an Archive is inserted
+		// into an Archive
+		if (!m_bArchiveChecked) checkArchiveFormat();
+		return m_bArchive;
+	}
+	
 	public static boolean validName(String sName) {
 		if (sName==null) return false;
 		byte[] abyName = sName.getBytes();
@@ -1153,32 +1168,35 @@ public class TFile extends Element {
 	}
 	
 	/** Check for Archive format. */
-	public boolean hasArchiveFormat() {
-		try {
-			if (!hasFixedRecordLength() || getRecordLength()!=128 || isProgram()) return false;
-			byte[] content = getRawContent();
+	public void checkArchiveFormat() {
+		m_bArchive = false;
+		m_bArchiveChecked = true;
 
-			if (Archive.hasPlainArchiveFormat(content)) return true;
-			
-			if (!isDisplay() && content.length>0) {
-				if (content[0] == (byte)0x80) return true;
+		try {
+			if (hasFixedRecordLength() && getRecordLength()==128 && !isProgram()) {
+				byte[] content = getRawContent();
+				
+				if (Archive.hasPlainArchiveFormat(content)) m_bArchive = true;
+				else {
+					if (!isDisplay() && content.length>0) {
+						if (content[0] == (byte)0x80) m_bArchive = true;
+					}
+				}
 			}
-			return false;
 		}
 		catch (ArrayIndexOutOfBoundsException ax) {
 			ax.printStackTrace();
-			return false;
 		}
 		catch (IOException iox) {
-			return false;
+			iox.printStackTrace();
 		}
 		catch (ImageException ix) {
-			return false;
+			ix.printStackTrace();
 		}
 	}
 	
 	public Archive unpackArchive() throws IllegalOperationException, FormatException, IOException, ImageException {
-		if (!hasArchiveFormat()) throw new IllegalOperationException(TIImageTool.langstr("ArchiveNot"));
+		if (!m_bArchive) throw new IllegalOperationException(TIImageTool.langstr("ArchiveNot"));
 		boolean bCompressed = false;
 		
 		byte[] content = getRawContent();

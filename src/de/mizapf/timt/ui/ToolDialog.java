@@ -65,6 +65,11 @@ public class ToolDialog extends JDialog implements ActionListener {
 		m_frmMain = owner;
 	}
 	
+	protected FontMetrics getDialogFontMetrics() {
+		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.dialogFont);
+		return fm;
+	}
+	
 	protected void prepareGui() {
 		m_bSet = false;			
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
@@ -113,6 +118,63 @@ public class ToolDialog extends JDialog implements ActionListener {
 		setLocationRelativeTo(getParent());
 	}
 	
+	protected Box createPathSelectBox(JComponent[] comp, String sLabel, String sPath, int nColumnWidth) {
+		ImageIcon diskicon = null;
+		java.net.URL iconurl = ToolDialog.class.getResource(DISKSICON);
+		JButton btn = null;
+		FontMetrics fm = getDialogFontMetrics();
+		
+		if (iconurl != null) {
+			diskicon = new ImageIcon(iconurl);
+			btn = new JButton(diskicon);
+		} 
+		else {
+			System.err.println(TIImageTool.langstr("NoImage") + " " + iconurl);
+			btn = new JButton(TIImageTool.langstr("ImagePlaceholder"));
+		}
+		comp[0] = btn;
+		
+		Box box = new Box(BoxLayout.X_AXIS);
+		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		JLabel jl = new JLabel(sLabel, SwingConstants.LEFT); 
+		jl.setFont(TIImageTool.dialogFont);
+		String lastPath = sPath;
+		add(Box.createVerticalStrut(20));
+
+		// Path setup
+		// Prompt
+		jl.setMinimumSize(new Dimension(nColumnWidth, 25));
+		if (nColumnWidth!=0) {
+			jl.setPreferredSize(new Dimension(nColumnWidth, 25));
+			jl.setMaximumSize(new Dimension(nColumnWidth, 25));
+		}
+		box.add(jl);
+		box.add(Box.createHorizontalStrut(10));
+		
+		// Button
+		btn.setMinimumSize(new Dimension(35, 32));
+		btn.setPreferredSize(new Dimension(35, 32));
+		btn.setMaximumSize(new Dimension(35, 32));
+		box.add(btn);
+		box.add(Box.createHorizontalStrut(10));
+		
+		// Selected path
+		int nPathWidth = fm.stringWidth(lastPath);
+		JTextField text = new JTextField(lastPath);
+		text.setEditable(false);
+		text.setFont(TIImageTool.dialogFont);
+		text.setMinimumSize(new Dimension(nPathWidth, 20));
+		text.setMaximumSize(new Dimension(1000, 20));
+
+		box.add(text);
+		box.add(Box.createHorizontalStrut(10));
+
+		comp[1] = text;
+
+		return box;
+	}
+	
+	
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getSource()==m_btnOK) {
 			m_bSet = true;
@@ -124,6 +186,13 @@ public class ToolDialog extends JDialog implements ActionListener {
 		}
 	}
 			
+	protected int getColumnWidth(int count) {
+		StringBuilder sb = new StringBuilder();
+		while (count-- > 0) sb.append("x");
+		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.dialogFont);
+		return fm.stringWidth(sb.toString());
+	}
+	
 	protected void determineWidth(String s) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.dialogFont);
 		m_nColumnWidth = fm.stringWidth(s);

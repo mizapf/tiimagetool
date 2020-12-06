@@ -20,47 +20,89 @@
 ****************************************************************************/
 
 package de.mizapf.timt.files;
-import de.mizapf.timt.util.GenCounter;
-import java.util.HashMap;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.List;
 import java.util.LinkedList;
 
+/** Caches new sector contents. It contains only new contents and delivers
+    them in place of the sector content in the image file.
+*/
 public class SectorCache {
 	
-	HashMap<Integer,LinkedList<Sector>> m_cache;
-	private GenCounter m_gencount;
+	SortedMap<Integer,LinkedList<Sector>> m_cache;
 	
-	SectorCache(GenCounter gen) {
-		m_cache = new HashMap<Integer,LinkedList<Sector>>();
-		m_gencount = gen;
+	boolean m_bCommitted;
+	private static int m_gen;
+	
+	byte[] m_abyFill;
+	
+	SectorCache() {
+		m_cache = new TreeMap<Integer,LinkedList<Sector>>();
+		m_bCommitted = true;
 	}
 	
-	void setGeneration(int gen) {
-		m_gencount.setGeneration(gen);
+	void setFillPattern(byte[] fill) {
+		m_abyFill = fill;
 	}
 	
-	public void nextGeneration() {
-		m_gencount.nextGeneration();
+	// Static version
+	public static void setGen(int gen) {
+		m_gen = gen;
+	}
+
+	public static void nextGen() {
+		System.out.println("++- next gen");
+		m_gen++;
 	}
 	
-	public void sameGeneration() {
-		m_gencount.sameGeneration();
+	public static void sameGen() {
+		m_gen--;
 	}
 	
-	public int getGeneration() {
-		return m_gencount.getGeneration();
+	public static int getGen() {
+		return m_gen;
 	}
 	
+	public boolean hasEntries() {
+		return m_cache.size()>0;
+	}
+	
+	public void wipe() {
+		m_cache = new TreeMap<Integer,LinkedList<Sector>>();
+		m_bCommitted = true;		
+	}
+	
+	public void setCommitted(boolean comm) {
+		m_bCommitted = comm;
+	}
+	
+	/** Get the contents of a given sector.
+	    @param number Sector number
+		@return Sector, or null if the sector was never written to after start
+		or after a write back, or a sector filled with a fill pattern when the
+		volume has just been created
+	*/
 	Sector read(int number) {
 		LinkedList<Sector> secversions = m_cache.get(number);
-		if (secversions==null) return null;
+		if (secversions==null) {
+			if (m_bCommitted) return null;
+			else {
+				return new Sector(number, m_abyFill);
+			}
+		}
 		// System.out.println("Sector " + number + " from cache");
 		return secversions.getLast();
 	}
 	
+	/** Store the contents of the sector at the current generation. Does not
+	    change the generation number. If this is the first write operation
+	    of this sector, creates a new entry in the map.
+	    @param sect Sector
+	*/
 	void write(Sector sect) {
 		LinkedList<Sector> secversions = m_cache.get(sect.getNumber());
-		sect.setGeneration(m_gencount.getGeneration());
+		sect.setGeneration(m_gen);
 
 		if (secversions==null) {
 			// Create a new history
@@ -68,10 +110,22 @@ public class SectorCache {
 			m_cache.put(sect.getNumber(), secversions);
 		}
 		secversions.add((Sector)sect.clone());
-		System.out.println("Caching a new version (" + m_gencount.getGeneration() + ") of sector " + sect.getNumber());
-//		if (sect.getNumber()<2 || sect.getNumber()==20) new Exception().printStackTrace();
+		System.out.println("Caching a new version (" + m_gen + ") of sector " + sect.getNumber());
+		// if (sect.getNumber()<2 || sect.getNumber()==20) Thread.currentThread().dumpStack();
 
 	}
+		
+	Integer[] getSectorSequence() {
+		Integer[] list = new Integer[m_cache.size()]; 
+		m_cache.keySet().toArray(list);
+		
+		/* System.out.print("[ ");
+		for (int i : list) {
+			System.out.print(i + " ");			
+		}
+		System.out.println("]"); */
+		return list;
+	}	
 }
 /*
 	Concept for Sector Cache

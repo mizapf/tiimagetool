@@ -350,7 +350,9 @@ public class NewHDImageAction extends Activity {
 					sb.append("<p></p>");
 					sb.append("<p>").append(TIImageTool.langstr("NewHDTooBig")).append("</p>");
 				}
+				
 				if (!parm.format) {
+					// Image will not be formatted; warn user
 					sb.append("<p>").append(TIImageTool.langstr("NewHDNeedsFormat")).append("</p>");
 					sb.append("<p>").append(TIImageTool.langstr("NewHDNote")).append(":</p>");
 					sb.append("<ul>");
@@ -361,6 +363,7 @@ public class NewHDImageAction extends Activity {
 				}
 				else {
 					if (!parm.forHfdc) {
+						// Warn user that SCSI may be unsupported
 						sb.append("<p></p>");
 						sb.append("<p><b>").append(TIImageTool.langstr("Warning")).append("</b>: ");
 						sb.append(TIImageTool.langstr("NewHDSCSIWarn"));
@@ -377,6 +380,7 @@ public class NewHDImageAction extends Activity {
 				JLabel jp = new JLabel(sb.toString());
 				jp.setFont(TIImageTool.dialogFont);
 				
+				// Ask for confirmation
 				int nCheck = JOptionPane.showConfirmDialog(m_parent, jp);
 				if (nCheck==JOptionPane.CANCEL_OPTION) {
 					bValid = true;
@@ -387,6 +391,7 @@ public class NewHDImageAction extends Activity {
 					}
 					else {
 						try {
+							// We only support the CHD format for hard disks right now
 							byte[] abyNewImage = MameCHDFormat.createEmptyCHDImage(parm);
 							
 							// Fix the oversized parameters
@@ -409,6 +414,7 @@ public class NewHDImageAction extends Activity {
 							jfc.addChoosableFileFilter(im);
 							jfc.setFileFilter(im);
 							
+							// Show the Save dialog
 							int nReturn = jfc.showSaveDialog(m_parent);
 							java.io.File file = null;
 							if (nReturn == JFileChooser.APPROVE_OPTION) {
@@ -438,14 +444,19 @@ public class NewHDImageAction extends Activity {
 								
 								imagetool.setSourceDirectory(file.getParentFile(), "image");
 								
+								// Write the new image (unformatted)
 								FileOutputStream fos = new FileOutputStream(file);
 								fos.write(abyNewImage);
 								fos.close();		
+								
 								if (parm.format) {
+									// We want to initialize the file system
+									// and to open it afterwards
 									
+									// Open it again 
 									ImageFormat ifsource = null;
 									try {
-										ifsource = ImageFormat.getImageFormat(file.getAbsolutePath(), imagetool.getGenerationCounter());
+										ifsource = ImageFormat.getImageFormat(file.getAbsolutePath());
 										if (!(ifsource instanceof MameCHDFormat)) {
 											JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);				
 											bValid = false;
@@ -468,23 +479,12 @@ public class NewHDImageAction extends Activity {
 										return;
 									}
 									
+									// File opened; now initialize it
 									MameCHDFormat source = (MameCHDFormat)ifsource;
-									source.reopenForWrite();
-									
-									// Get the first 5 hunks
-									int nHunkBytes = 0x1000;
-									byte[] abyHead = MameCHDFormat.getPreparedHunks(parm, nHunkBytes);
-									// System.out.println("abyHead.length = " + abyHead.length);
-									byte[] abyPart = new byte[nHunkBytes];
-									for (int i=0; i < abyHead.length / nHunkBytes; i++) {
-										System.arraycopy(abyHead, i*nHunkBytes, abyPart, 0, nHunkBytes);
-										source.writeHunkContents(abyPart, i);
-									}
-									
-									source.reopenForRead();
-									
-									vol = new Volume(file.getAbsolutePath(), imagetool.getGenerationCounter());
-
+									source.initializeFileSystem(parm);
+																	
+									// Now open the newly created file system in a view
+									vol = new Volume(file.getAbsolutePath());
 									Directory root = vol.getRootDirectory();					
 									imagetool.addDirectoryView(root);
 								}

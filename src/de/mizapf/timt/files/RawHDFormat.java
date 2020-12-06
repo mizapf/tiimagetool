@@ -28,7 +28,6 @@ import java.io.FileNotFoundException;
 import java.io.File;
 
 import de.mizapf.timt.TIImageTool;
-import de.mizapf.timt.util.GenCounter;
 
 class RawHDFormat extends ImageFormat {
 
@@ -61,9 +60,14 @@ class RawHDFormat extends ImageFormat {
 	public String getDumpFormatName() {
 		return TIImageTool.langstr("RAWType");
 	}
+
+	@Override
+	int getFormatType() {
+		return HD_FORMAT; 
+	}
 	
-	RawHDFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
-		super(filesystem, sImageName, gen);
+	RawHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		m_nDensity = 0;
 		writeThrough(true);
 	}
@@ -75,8 +79,8 @@ class RawHDFormat extends ImageFormat {
 		int nTrackOffset = nTrackNumber * m_nTrackLength; 
 
 		if (nTrackNumber != m_nCurrentTrack) {
-			m_FileSystem.seek(nTrackOffset);
-			m_FileSystem.readFully(m_abyTrack);
+			m_ImageFile.seek(nTrackOffset);
+			m_ImageFile.readFully(m_abyTrack);
 			m_nCurrentTrack = nTrackNumber;
 		}
 		return nTrackOffset;
@@ -100,8 +104,8 @@ class RawHDFormat extends ImageFormat {
 
 		// Read the start of the image
 		byte[] abyStart = new byte[BLOCKSIZE];
-		m_FileSystem.seek(0);
-		m_FileSystem.readFully(abyStart);
+		m_ImageFile.seek(0);
+		m_ImageFile.readFully(abyStart);
 		
 		m_nSectorsPerTrack = abyStart[0x0c]&0xff;
 		if (m_nSectorsPerTrack == 0) m_nSectorsPerTrack = 32;
@@ -116,19 +120,33 @@ class RawHDFormat extends ImageFormat {
 			m_nCylinders = m_nTotalSectors / m_nSectorsPerTrack;
 		}
 		else {
-			m_nTotalSectors = (int)(m_FileSystem.length() / Volume.SECTOR_LENGTH);
-			m_nCylinders = (int)((m_FileSystem.length() / m_nTrackLength) / m_nHeads);
+			m_nTotalSectors = (int)(m_ImageFile.length() / Volume.SECTOR_LENGTH);
+			m_nCylinders = (int)((m_ImageFile.length() / m_nTrackLength) / m_nHeads);
 		}
 		
-		if (m_nTotalSectors > Volume.MAXAU * nSectorsPerAU)
-			m_nTotalSectors = Volume.MAXAU * nSectorsPerAU;
+		if (m_nTotalSectors > TFileSystem.MAXAU * nSectorsPerAU)
+			m_nTotalSectors = TFileSystem.MAXAU * nSectorsPerAU;
+	}
+	
+	/** Newly created. */
+	@Override	
+	void setGeometry(TFileSystem fs) {
+	}
+
+	@Override
+	void createTrack() {
 	}
 	
 	@Override
-	public Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException {
+	int loadTrack(Location loc) {
+		return 0;
+	}
+	
+	@Override
+	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
 		byte[] abySector = new byte[m_nSectorLength];
 		// Get sector offset in track
-					System.out.println("Read sector " + nSectorNumber);
+		// System.out.println("Read sector " + nSectorNumber);
 		int[] offset = new int[2];
 		getOffset(nSectorNumber, offset);
 		System.arraycopy(m_abyTrack, offset[SECTOR], abySector, 0, m_nSectorLength);
@@ -138,7 +156,7 @@ class RawHDFormat extends ImageFormat {
 	/** For Windows systems and access to the physical device we must
 		adjust to block boundaries. */
 	@Override
-	public void writeSectorToImage(int nNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
 		// System.out.println("Writing sector " + nNumber);
 		try {
 			int[] offset = new int[2];
@@ -174,8 +192,8 @@ class RawHDFormat extends ImageFormat {
 			// Copy the block in the track into the buffer to be written
 			System.arraycopy(m_abyTrack, nBlockOff, abyNewBlock, 0, BLOCKSIZE);
 			
-			m_FileSystem.seek(nPos);
-			m_FileSystem.write(abyNewBlock);
+			m_ImageFile.seek(nPos);
+			m_ImageFile.write(abyNewBlock);
 		}
 		catch (EOFException eofx) {
 			throw new EOFException(String.format(TIImageTool.langstr("ImageBeyond"), nNumber));

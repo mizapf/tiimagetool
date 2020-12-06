@@ -674,7 +674,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	
 	private void closeFrame() {		
 		if (m_thereAreChanges) {
-			int doCheck = JOptionPane.showConfirmDialog(this, TIImageTool.langstr("SectorEditUnsaved"), TIImageTool.langstr("Attention"), JOptionPane.ERROR_MESSAGE);
+			int doCheck = JOptionPane.showConfirmDialog(this, TIImageTool.langstr("UnsavedChanges") + ". " + TIImageTool.langstr("ReallyClose"), TIImageTool.langstr("Attention"), JOptionPane.ERROR_MESSAGE);
 			if (doCheck == JOptionPane.YES_OPTION) {
 				m_app.closeFrame(this);
 			}
@@ -691,12 +691,12 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 				Sector sect = m_sectormap.get(i);
 				if (sect.changed()) {
 					// System.out.println("Write back sector " + i);
-					m_image.writeSector(new Sector(i, sect.getBytes()));
+					m_image.writeSector(i, sect.getBytes());  // directly written through
 				}
 			}
 			m_image.flush();
 			m_image.reopenForRead();
-			m_image.nextGeneration();
+			SectorCache.nextGen();
 		}
 		catch (ImageException ix) {
 			// Sector not found

@@ -26,199 +26,226 @@ import java.util.*;
 import de.mizapf.timt.util.TIFiles;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
-import de.mizapf.timt.util.GenCounter;
 
 public class Volume {
 
-	public final static int ROOT_SECTOR = 0;
 	public final static int SECTOR_LENGTH=0x100;   
 
-	public final static int MAXAU = 0xf800;
-
-	public final static int SCSI = 1;
-	public final static int HFDC = 2;
-	public final static int FLOPPY = 3;
-	public final static int CF7 = 4;
-	
-	// Image format
+	/** Image format */
 	ImageFormat m_Image;
+	
+	/** File system */
+	TFileSystem m_FileSystem;
+	
+	/** Cached sectors of this volume. */
+	SectorCache m_cache;
 
-	long		m_nLastMod;
-		
-	// Information from the VIB
-	String 		m_sVolumeName;
-	int 		m_nType = FLOPPY;
-	int 		m_nTotalSectors = 0;
-	int 		m_nSectorsPerTrack = 0;
-	AllocationMap m_allocMap;
-	Directory 	m_dirRoot = null;
-	int 		m_nHeads = 0;
-
-	// HD-specific
-	int 		m_nReservedAUs = 0;
-	int 		m_nStepSpeed = 0;
-	int 		m_nReducedWriteCurrent = 0;
-	int 		m_nSectorsPerAU = 0;
-	boolean 	m_bBufferedStep = false;
-	int 		m_nWritePrecomp;
-	int			m_nAUEmulate;
-	Time		m_tCreation;
-	
-	// Floppy-specific
-	int 		m_nTracksPerSide = 0;
-	int 		m_nDensity = 0;
-	boolean		m_bProtection = false;
-	
-	boolean		m_cf7Inconsistency;
-	
+	// long		m_nLastMod;
+			
 	private String m_sImageFileName;
 	
-	public Volume(String sFile, boolean bCheck, GenCounter gen) throws FileNotFoundException, IOException, ImageException {
+	// Used for displaying still unnamed volumes
+	private int m_nUnnamedIndex;
+	
+	// Fill pattern of empty sectors
+	private byte[] m_abyEmpty;
+	
+	/** Create the volume from the given file name. 
+		@param sFile File name of the image file.
+		@param bCheck if true, check for the DSK signature in the floppy image
+	*/
+	public Volume(String sFile, boolean bCheck) throws FileNotFoundException, IOException, ImageException {
 
-		Sector sector0 = null;
-		byte[] abySect0 = null;
-		int number = -1;
-		m_cf7Inconsistency = false;
+		m_Image = null;
 		
 		// Check whether we have a number at the end of the name
+		// This would be a subvolume of a CF7 image file
 		int volnumpos = sFile.lastIndexOf("#");
 		if (volnumpos > 0 && volnumpos < sFile.length()-1) {
 			try {
-				number = Integer.parseInt(sFile.substring(volnumpos+1));
 				sFile = sFile.substring(0, volnumpos);
+				int number = Integer.parseInt(sFile.substring(volnumpos+1));
+				ImageFormat format = ImageFormat.getImageFormat(sFile);
+				m_Image = ((CF7ImageFormat)format).getSubvolume(number);
+				// We continue with a CF7VolumeFormat
 			}
 			catch (NumberFormatException nfx) {
 				// Did not work, so what. 
 			}
 		}
 				
-		// Get the image format
-		if (number > -1) {
-			// We have a CF7
-			ImageFormat format = ImageFormat.getImageFormat(sFile, gen);
-			m_Image = ((CF7ImageFormat)format).getSubvolume(number);
+		// Determine the file system; throws an ImageException when unknown
+		if (m_Image == null) m_Image = ImageFormat.getImageFormat(sFile);
+		
+		// When we are here, the format could be determined
+		if (m_Image.getFormatType() == ImageFormat.FLOPPY_FORMAT) {
+			m_FileSystem = new FloppyFileSystem();
 		}
 		else {
-			m_Image = ImageFormat.getImageFormat(sFile, gen);
+			m_FileSystem = new HarddiskFileSystem();
 		}
 		
-		m_nLastMod = m_Image.getLastModifiedTime();
+		if (m_FileSystem.isWriteCached()) {
+			m_cache = new SectorCache();
+			m_cache.setCommitted(true);
+		}
+
+		else m_cache = null;
 		
+		// m_nLastMod = m_Image.getLastModifiedTime();
 		m_sImageFileName = sFile;
 		
-		sector0 = readSector(0);
-		abySect0 = sector0.getBytes();
+		// Read sector 0 
+		Sector sector0 = readSector(0);
+		byte[] abySect0 = sector0.getBytes();
 
-		if (m_Image instanceof SectorDumpFormat || m_Image instanceof TrackDumpFormat || m_Image instanceof HFEFormat) {
-			m_nType = FLOPPY;
-			if (!hasFloppyVib(abySect0) && bCheck) throw new MissingHeaderException();  
-
-			// TODO: Check with image
-			m_nTotalSectors = Utilities.getInt16(abySect0, 0x0a);
-			
-			m_nHeads = abySect0[0x12] & 0xff;
-			m_nTracksPerSide = abySect0[0x11] & 0xff;
-			m_nDensity = abySect0[0x13] & 0xff;		
-
-			if (m_Image instanceof CF7VolumeFormat) {
-				m_nType = CF7;
-				// There may be inconsistencies with CF7 volumes.
-				// TODO: This should be checked; maybe offer to fix the volume?
-			}
+		// Read the allocation map
+		// Sectors 1-31 constitute the AM for hard disks, sector 0 for floppies
+		ByteArrayOutputStream baosAlloc = new ByteArrayOutputStream();
+		int allocStart = m_FileSystem.getAllocMapStart();
+		int allocEnd = m_FileSystem.getAllocMapEnd();
 		
-			m_nSectorsPerAU = (int)(m_nTotalSectors/1601) + 1;
-			m_bProtection = (abySect0[0x10]=='P');
-			m_nReservedAUs = 0x21;
-			
-			m_allocMap = new AllocationMap(m_nTotalSectors / m_nSectorsPerAU, m_nSectorsPerAU, true);
-			m_allocMap.setMapFromBitfield(abySect0, 0x38, 0);
-			
-			if (m_nDensity != m_Image.getDensity()) {
-				System.err.println(String.format(TIImageTool.langstr("VolumeDensityMismatch"), m_nDensity, m_Image.getDensity())); 
+		for (int sect = allocStart/SECTOR_LENGTH; sect <= allocEnd/SECTOR_LENGTH; sect++) {
+			baosAlloc.write(readSector(sect).getBytes());
+		}
+		byte[] abyAlloc = baosAlloc.toByteArray();	
+
+		// Set up the file system
+		m_FileSystem.setupFromFile(abySect0, abyAlloc, bCheck);
+		
+		Directory dirRoot = null;
+		if (m_FileSystem instanceof FloppyFileSystem) {
+			int fsDensity = ((FloppyFileSystem)m_FileSystem).getDensity();
+			if (fsDensity != m_Image.getDensity()) {
+				System.err.println(String.format(TIImageTool.langstr("VolumeDensityMismatch"), fsDensity, m_Image.getDensity())); 
 			}
+			dirRoot = new Directory(this, sector0);  // used for floppy
 		}
 		else {
-			if ((abySect0[0x10] & 0x0f)==0) m_nType = SCSI;
-			else m_nType = HFDC;
-			if (hasFloppyVib(abySect0)) throw new ImageException(TIImageTool.langstr("VolumeUnexpFloppyVIB"));
-
-			m_nStepSpeed = abySect0[0x0e] & 0xff;
-			m_nReducedWriteCurrent = abySect0[0x0f] & 0xff;
-			m_nSectorsPerAU = ((abySect0[0x10]>>4)&0x0f)+1;
-			m_nHeads = (abySect0[0x10]&0x0f)+1;
-			m_bBufferedStep = ((abySect0[0x11] & 0x80)==0x80);
-			m_nWritePrecomp = abySect0[0x11] & 0x7f;
-			m_tCreation = new Time(abySect0, 0x12);
-			m_nAUEmulate = Utilities.getInt16(abySect0, 0x1a);		
-			
-			m_nReservedAUs = ((abySect0[0x0d] & 0xff) << 6);
-			if (m_nReservedAUs == 0) {
-				System.err.println(TIImageTool.langstr("VolumeNoReservedAU"));
-				m_nReservedAUs = 2048;
-			}	
-			
-			// TODO: Check with information from image
-			int nTotalAU = Utilities.getInt16(abySect0, 0x0a);
-			m_nTotalSectors = nTotalAU * m_nSectorsPerAU;
-			
-			// Create allocation map
-			m_allocMap = new AllocationMap(nTotalAU, m_nSectorsPerAU, false);
-			// Sectors 1-31 constitute the AM
-			for (int i=1; i <= 1 + nTotalAU/2048; i++) {
-				byte[] abySect = readSector(i).getBytes();
-				m_allocMap.setMapFromBitfield(abySect, 0, (i-1)*2048);
-			}			
+			dirRoot = new Directory(this, sector0, null);
 		}
-		m_nSectorsPerTrack = abySect0[0x0c] & 0xff;
 		
-		m_sVolumeName = Utilities.getString10(abySect0, 0);
-		
-		if (m_nType==FLOPPY || m_nType==CF7)
-			m_dirRoot = new Directory(this, sector0);  // used for floppy
-		else 
-			m_dirRoot = new Directory(this, sector0, null);
+		m_FileSystem.setRootDirectory(dirRoot);
 	}
 	
-	public Volume(String sFile, GenCounter gen) throws FileNotFoundException, IOException, ImageException {
-		this(sFile, true, gen);
+	/** Create a new empty volume. */
+	public Volume(TFileSystem fs, FormatParameters param, int number) throws IOException, ImageException {
+		m_FileSystem = fs;
+		if (m_FileSystem.isWriteCached()) {
+			m_cache = new SectorCache();
+			m_cache.setCommitted(false);
+		}
+		else m_cache = null;
+		
+		Directory dirRoot = new Directory(this);
+		m_FileSystem.setRootDirectory(dirRoot);
+		
+		m_nUnnamedIndex = number;
+		
+		Sector[] initsec = fs.initialize(param);
+		try {
+			for (Sector s : initsec) {
+				writeSector(s);
+			}
+		}
+		catch (ProtectedException px) {
+			System.err.println("Internal error: Volume is write-protected");
+		}	
 	}
 	
+	public Volume(String sFile) throws FileNotFoundException, IOException, ImageException {
+		this(sFile, true);
+	}
+	
+	public void setFillPattern(byte[] empty) {
+		m_abyEmpty = empty;
+	}
+	
+	/** Reads a sector.
+		@throws ImageException if the sector cannot be found.
+	*/
 	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		return m_Image.readSector(nSectorNumber);
+		Sector sect = m_cache.read(nSectorNumber);
+		if (sect == null) {
+			if (m_Image != null) {
+				// We have an image file
+				sect = m_Image.readSector(nSectorNumber);
+			}
+			else {
+				// Create a new blank sector
+				sect = new Sector(nSectorNumber, m_abyEmpty);
+			}
+		}
+		return sect;
 	}
-	
+		
 	// Called from Directory, TFile, this
 	void writeSector(Sector sect) throws ProtectedException, IOException, ImageException {
 		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
-//		long time = m_Image.getLastModifiedTime();
+
+		if (m_cache != null) {
+			m_cache.write(sect);
+		}
+		else {
+			m_Image.writeSector(sect.getNumber(), sect.getBytes());
+		}
+		
+		//		long time = m_Image.getLastModifiedTime();
 		// System.out.println("time = " + time + ", last mod = " + m_nLastMod);
 //		if (m_nLastMod < time) throw new ProtectedException("Volume has changed on disk; cannot write. Image will be closed.");
-		m_Image.writeSector(sect);
 //		m_nLastMod = m_Image.getLastModifiedTime();
 	}
-	
-	public void setGeometry(int total, int tracks, int heads, int sectors, int density) {
-		m_nTotalSectors = total;
-		m_nTracksPerSide = tracks;
-		m_nHeads = heads;
-		m_nSectorsPerTrack = sectors;
-		m_nDensity = density;
+
+	boolean isDirty() {
+		return m_cache.hasEntries();
 	}
 	
-	public boolean hasCf7Inconsistency() {
-		return m_cf7Inconsistency;
+	void commitAll() {
+		if (m_FileSystem.isWriteCached()) {
+			// First check whether this image has already been saved to disk
+			// Otherwise we cannot read the tracks
+			if (!m_Image.formatCommitted()) {
+				System.err.println("FIXME: formatCommitted");
+			}
+			
+			try {
+				Integer[] list = m_cache.getSectorSequence();
+				for (int sect : list) {
+					Sector s = m_cache.read(sect);
+					if (s == null) {
+						System.err.println("Internal error: Sector " + sect + " not found");
+					}
+					else {
+						m_Image.writeSector(sect, s.getBytes());
+					}
+				}		
+			}
+			catch (IOException iox) {
+				iox.printStackTrace();
+			}
+			catch (ImageException ix) {
+				ix.printStackTrace();
+			}
+		}
 	}
 	
+	public void fixCF7Geometry() {
+		((FloppyFileSystem)m_FileSystem).setGeometry(1600, 40, 2, 20, 2);
+	}
+			
 	public void reopenForWrite() throws IOException {
-		m_Image.reopenForWrite();
+		if (m_cache == null)
+			m_Image.reopenForWrite();
 	}
 	
 	public void reopenForRead() throws IOException {
-		m_Image.reopenForRead();
+		if (m_cache == null)
+			m_Image.reopenForRead();
 	}
 
 	public void close() throws IOException {
-		m_Image.close();
+		// If there is no image file, changes may be lost
+		if (m_Image != null) m_Image.close();
 	}
 	
 	public boolean equals(Object other) {
@@ -233,7 +260,10 @@ public class Volume {
 	}
 	
 	public String getShortImageName() {
-		return m_sImageFileName.substring(m_sImageFileName.lastIndexOf(java.io.File.separator)+java.io.File.separator.length());
+		if (m_Image != null)
+			return m_sImageFileName.substring(m_sImageFileName.lastIndexOf(java.io.File.separator)+java.io.File.separator.length());
+		else
+			return TIImageTool.langstr("Unnamed") + m_nUnnamedIndex;
 	}
 		
 	public String getModShortImageName() {
@@ -249,79 +279,72 @@ public class Volume {
 	}	
 
 	public int getAUSize() {
-		return m_nSectorsPerAU;
+		return m_FileSystem.getSectorsPerAU();
 	}
 
 	public int getReservedAUs() {
-		return m_nReservedAUs;
+		return m_FileSystem.getReservedAUs();
 	}
 		
 	public int getTotalAUs() {
-		return m_nTotalSectors / m_nSectorsPerAU;
+		return m_FileSystem.getTotalSectors() / m_FileSystem.getSectorsPerAU();
 	}
 	
 	public boolean isProtected() {
-		return m_bProtection;
+		return m_FileSystem.isProtected(); 
 	}
 	
 	public int toAU(int nSectorNumber) {
-		return nSectorNumber / m_nSectorsPerAU;
+		return m_FileSystem.toAU(nSectorNumber);
 	}
 
 	public void saveAllocationMap() throws IOException, ImageException, ProtectedException {
-		if (m_nType==FLOPPY || m_nType==CF7) {
-			// read sector 0 and paste map into locations
-			byte[] abySect0 = readSector(0).getBytes();
-			byte[] bitmap = m_allocMap.toBitField();
-			System.arraycopy(bitmap, 0, abySect0, 0x38, bitmap.length);
-			writeSector(new Sector(0, abySect0));
+		Sector[] alloc = m_FileSystem.getAllocationMapSectors();
+		
+		// For floppy file systems, this rewrites the VIB
+		for (Sector sect : alloc) {
+			writeSector(sect);
 		}
-		else {
-			// create new contents for sectors 1-31
-			int nTotalAU = m_nTotalSectors / m_nSectorsPerAU;
-			byte[] bitmap = m_allocMap.toBitField();
-			byte[] sector = new byte[SECTOR_LENGTH];
-			for (int i=1; i <= 1 + nTotalAU/2048; i++) {
-				int nLength = SECTOR_LENGTH;
-				if ((i-1)*256 + nLength > bitmap.length) {
-					nLength = bitmap.length - (i-1)*256;
-				}
-				System.arraycopy(bitmap, (i-1)*256, sector, 0, nLength);
-				writeSector(new Sector(i, sector));
-			}
-		}
+	}
+	
+	public boolean isHarddiskImage() {
+		return (m_FileSystem instanceof HarddiskFileSystem); 
 	}
 	
 	public boolean isFloppyImage() {
-		return m_nType == FLOPPY;
+		if (!(m_FileSystem instanceof FloppyFileSystem)) return false;	
+		return !((FloppyFileSystem)m_FileSystem).isCF7();
 	}
 	
 	public boolean isSCSIImage() {
-		return m_nType == SCSI;
+		if (!(m_FileSystem instanceof HarddiskFileSystem)) return false;	
+		return ((HarddiskFileSystem)m_FileSystem).isSCSI();
 	}
 	
 	public boolean isHFDCImage() {
-		return m_nType == HFDC;
+		if (!(m_FileSystem instanceof HarddiskFileSystem)) return false;	
+		return !((HarddiskFileSystem)m_FileSystem).isSCSI();
 	}
 	
 	public boolean isCF7Volume() {
-		return m_nType == CF7;
+		if (!(m_FileSystem instanceof FloppyFileSystem)) return false;	
+		return ((FloppyFileSystem)m_FileSystem).isCF7();
 	}
 
 	public String getName() {
-		return m_sVolumeName;
+		return m_FileSystem.getName();
 	}
 	
 	public String getDeviceName() {
-		if (isFloppyImage() || isCF7Volume()) return "DSK1";
+		if (m_FileSystem instanceof FloppyFileSystem) return "DSK1";
 		else {
-			if (isSCSIImage()) return "SCS1";
+			if (((HarddiskFileSystem)m_FileSystem).isSCSI()) return "SCS1";
 			else return "HDS1";
 		}
 	}
 	
 	public Directory getRootDirectory() {
-		return m_dirRoot;
+		return m_FileSystem.getRootDirectory();
 	}
 
 	public TFile getFileByPath(String sArgument) throws FileNotFoundException {
@@ -359,316 +382,83 @@ public class Volume {
 	/** Returns a sequence of intervals of AUs which can hold a file of that
 		size. */
 	public Interval[] findFreeSpace(int nSectors, int nStarting) {
-		List<Interval> intList = new LinkedList<Interval>();
-		AllocationMap allocMap = (AllocationMap)m_allocMap.clone();
-		Interval intnew;
-		
-		int nStartSector = 0;
-//		System.out.println("find free space for " + nSectors + " sectors, starting from sector " + nStarting);
-
-		if (getAUSize()>1) {
-			if ((nSectors % getAUSize())!=0) nSectors = ((nSectors/getAUSize())+1)*getAUSize();
-		}
-				
-		// Two-Pass search: 
-		// 1. Search a gap that holds as many sectors of the file
-		// as possible
-		// 2. Go greedy, allocate the rest
-		
-		int nAUSize = allocMap.getAUSize();
-		int nRequiredAU = nSectors / nAUSize;
-		
-		int nSize = 0;
-		int nEndAU = 0;
-		// leave some space for the FDIRs
-		int nStartAU = nStarting / nAUSize; 
-		int nMaxSize = 0;
-		int nMaxStart = 0;
-		boolean bFirst = true;
-		
-		// First pass
-		// If we hit the end of the medium, the first pass fails, and we 
-		// use the second pass to try from the beginning
-		while (nStartAU < allocMap.getMaxAU()) {
-			// System.out.println("nStartAU = " + nStartAU);
-			nStartAU = allocMap.getNextFreeAUAfter(nStartAU); 
-			if (nStartAU == AllocationMap.NOTFOUND) {
-				break;
-			}
-			
-			nEndAU = allocMap.getNextAllocatedAUAfter(nStartAU, nRequiredAU);
-			if (nEndAU == AllocationMap.EVENLONGER) nEndAU = nStartAU + nRequiredAU;
-			// System.out.println("open="+nStartAU + ", up to (excluding) =" + nEndAU);
-
-			nSize = nEndAU - nStartAU;
-
-			if (nSize >= nRequiredAU) {
-				nStartSector = nStartAU * nAUSize;
-				 // System.out.println("Allocated area large enough; interval (sectors) = [" +nStartSector + ", " + (nStartSector + nSectors-1) + "]" );
-				intList.add(new Interval(nStartSector, nStartSector + nSectors-1)); 
-				// we are done; we do not need a second pass
-				return intList.toArray(new Interval[1]);
-			}
-			// else this space does not suffice, continue search
-			
-			// better than last time?
-			if (nSize > nMaxSize) {
-				nMaxSize = nSize;
-				nMaxStart = nStartAU;
-			}
-			nStartAU = nEndAU;
-		}
-		
-		// System.out.println("Allocated area not large enough; required=" + nRequiredAU + ", found=" + nMaxSize);
-		
-		// If we are here, the largest gap was not large enough. OTOH this 
-		// also means that the gap of AUs that we found can be completely 
-		// filled.
-		
-		// Put largest chunk into list (nMaxStart, nLastMaxAUSize)
-		// If nMaxStart is 0, we reached the end of the medium. Do not add anything to the list.
-		if (nMaxStart != 0) {
-			nStartSector = nMaxStart * nAUSize;
-			// System.out.println("Allocated first part; interval (sectors) = [" +nStartSector + ", " + (nStartSector + (nMaxSize * nAUSize) - 1) + "]" );
-			intnew = new Interval(nStartSector, nStartSector + (nMaxSize * nAUSize) - 1);
-			intList.add(intnew); 
-			allocMap.allocate(intnew);
-			nRequiredAU -= nMaxSize;
-			nSectors -= nMaxSize*nAUSize;
-		}
-		
-		// Second pass
-		nStartAU = 1;
-		while (nStartAU < allocMap.getMaxAU()) {
-			nStartAU = allocMap.getNextFreeAUAfter(nStartAU);
-			if (nStartAU==-1) {
-				// System.out.println("No free AU available; failed to find free space.");
-				return null;
-			}
-			// System.out.println("next free = " + nStartAU);
-			
-			if (nStartAU == nMaxStart) {
-				// System.out.println("no, " + nStartAU + " is already chosen");
-				// Skip the largest chunk
-				nStartAU += nMaxSize;
-				// System.out.println("new start = " + nStartAU);
-				continue;
-			}
-			nEndAU = allocMap.getNextAllocatedAUAfter(nStartAU, nRequiredAU);
-			// System.out.println("nStartAU = " + nStartAU + ", nEndAU = " + nEndAU);
-			if (nEndAU==AllocationMap.EVENLONGER) nEndAU = nStartAU + nRequiredAU;
-			
-			nSize = nEndAU - nStartAU;
-			// System.out.println("nSize = " + nSize);
-			nRequiredAU -= nSize;
-			if (nRequiredAU < 0) {
-				// System.err.println("nRequiredAU = " + nRequiredAU);
-				nEndAU = nEndAU + nRequiredAU;
-				nSize = nEndAU - nStartAU;
-				nRequiredAU = 0;
-			}
-			// System.out.println("Allocated another part; interval (sectors) =  [" +nStartAU*nAUSize + ", " +  ((nStartAU+nSize)*nAUSize-1) + "]" );
-			intnew = new Interval(nStartAU * nAUSize, (nStartAU+nSize)*nAUSize-1);
-			intList.add(intnew); 
-			// System.out.println("Still needed: " + nRequiredAU);
-			nStartAU = nEndAU;
-			if (nRequiredAU <= 0) {
-				// we are done
-				return intList.toArray(new Interval[intList.size()]);
-			}
-		}
-		// If we are here, we failed in the second pass.
-		return null;
+		return m_FileSystem.findFreeSpace(nSectors, nStarting);
 	}
 
+	// From CommandShell
 	public int getSystemAllocatedSectors() {
 		if (isFloppyImage()) return 2;
 		else return 0;
 	}
 	
-	public int getAllRequiredSectors(int nAUSize) {
-		// Sector 0 is already used for the root directory
-		// Allocation map is included in sector 0 for floppies
-		if (isFloppyImage() || isCF7Volume()) return 0;
-		
-		int nAllocMapSectors = ((m_allocMap.getMaxAU()/8)-1) / SECTOR_LENGTH + 1; 
-		
-		// Round up to AU size
-		// Starts with sector 1, so we must ignore the first AU
-		// sector 1 .. ausize-1
-		
-		nAllocMapSectors = nAllocMapSectors - (nAUSize-1);
-		
-		int nAllocMapAU = ((nAllocMapSectors-1) / nAUSize) + 1;
-		return nAllocMapAU;
-	}
-
+	// From CommandShell and DirectoryPanel
 	public int getAllocatedSectorCount() {
-		return m_allocMap.countAllocated() * getAUSize();
+		return m_FileSystem.getAllocatedSectorCount();
 	}
 	
+	// Called from CheckFS
 	public AllocationMap getAllocationMap() {
-		return m_allocMap;
+		return m_FileSystem.getAllocationMap();
 	}	 
 	
+	// Called from Directory and CheckFS	
 	void allocate(Interval intv) {
-		m_allocMap.allocate(intv);
+		m_FileSystem.allocate(intv);
 	}
 	
 	void deallocate(Interval intv) {
-		m_allocMap.deallocate(intv);
+		m_FileSystem.deallocate(intv);
 	}
 	
 	/** Also called by TIImageTool.
 	*/
 	public int getTotalSectors() {
-		return m_nTotalSectors;
+		return m_FileSystem.getTotalSectors();
 	}
 	
+	public int getHeads() {
+		return m_FileSystem.getHeads();
+	}
+	
+	// From CommandShell and DirectoryPanel
 	public int getTracksPerSide() {
-		return m_nTracksPerSide;
+		return ((FloppyFileSystem)m_FileSystem).getTracksPerSide();
 	}
 	
+	// From TFile
 	public int getAUEmulateSector() {
-		return m_nAUEmulate * m_nSectorsPerAU;
+		return ((HarddiskFileSystem)m_FileSystem).getAUEmulateSector();
 	}
 	
+	// From ToggleEmulateAction
 	public void toggleEmulateFlag(int nSector) throws IOException, ImageException, ProtectedException {
-		if (getAUEmulateSector()==nSector) m_nAUEmulate = 0;
-		else m_nAUEmulate = nSector / m_nSectorsPerAU;
+		((HarddiskFileSystem)m_FileSystem).toggleEmulateFlag(nSector);
 		updateVIB();
 	}
 	
+	// From convert action
 	public boolean isCHDImage() {
 		return m_Image instanceof MameCHDFormat;
 	}
 	
 	public String dumpFormat() {
-		return m_Image.getDumpFormatName();
+		if (m_Image != null)
+			return m_Image.getDumpFormatName();
+		else
+			return "-";
 	}
 	
-	public String getFloppyFormat() {
-		StringBuilder sb = new StringBuilder();
-		sb.append((m_nHeads==2)? "DS" : "SS");
-		switch (m_nDensity) {
-		case 0:
-		case 1:
-			sb.append("S"); break;
-		case 2: 
-			sb.append("D"); break;
-		case 3:
-			sb.append("H"); break;
-		case 4:
-			sb.append("U"); break;
-		default:
-			return TIImageTool.langstr("Invalid");
-		}		
-		sb.append("D");
-		return sb.toString();
-	}
-	
-	public void convert(int sectors, int speed, int current, int heads, boolean buff, int precomp) {
-		// This is really sectors per track, which means that on hard disks with
-		// 32 sectors per track and 16 sectors per AU, we have two AUs per track.
-		// Max values: 1984 tracks, 16 heads, 2 AU per track -> 63488 AUs
-		m_nSectorsPerTrack = sectors;
-		m_nStepSpeed = speed;
-		m_nReducedWriteCurrent = current;
-		m_nHeads = heads;
-		m_bBufferedStep = buff;
-		m_nWritePrecomp = precomp;
-	}
-	
-	public void setType(int nType) {
-		m_nType = nType;
+	public String getFloppyFormatName() {
+		return ((FloppyFileSystem)m_FileSystem).getFloppyFormatName();
 	}
 	
 	public void renameVolume(String newName) throws IOException, ImageException, ProtectedException, InvalidNameException {
-		if (newName == null || newName.length()==0 || newName.length()>10) throw new InvalidNameException(TIImageTool.langstr("VolumeNameConstr"));
-		if (newName.indexOf(".")!=-1) throw new InvalidNameException(TIImageTool.langstr("VolumeNamePeriod"));
-	
-		m_sVolumeName = newName;
-		reopenForWrite();
+		m_FileSystem.setName(newName);
 		updateVIB();
-		reopenForRead();
 	}
 	
 	public byte[] createVIB() throws IOException, ImageException, ProtectedException {
-		// Create a new VIB
-		byte[] abyNewVIB = new byte[256];
-
-		Utilities.setString(abyNewVIB, 0, getName(), 10);
-		
-		if (m_nType==FLOPPY || m_nType==CF7) {
-			Utilities.setInt16(abyNewVIB, 0x0a, m_nTotalSectors);
-			abyNewVIB[0x0c] = (byte)(m_nSectorsPerTrack & 0xff);
-			Utilities.setString(abyNewVIB, 0x0d, "DSK", 3);
-			abyNewVIB[0x10] = m_bProtection? (byte)'P' : (byte)' ';
-			abyNewVIB[0x11] = (byte)(m_nTracksPerSide & 0xff);
-			abyNewVIB[0x12] = (byte)(m_nHeads & 0xff);
-			abyNewVIB[0x13] = (byte)(m_nDensity & 0xff);
-
-			if (m_nType==FLOPPY) {
-				Directory[] dirs = m_dirRoot.getDirectories();
-				for (int i=0; i < 3; i++) {
-					if (i < dirs.length) {
-						Directory sub = dirs[i];
-						Utilities.setString(abyNewVIB, 0x14 + i*12, sub.getName(), 10);
-						Utilities.setInt16(abyNewVIB, 0x1e + i*12, sub.getFileIndexSector()); 					
-					}
-					else {
-						for (int j=0; j < 12; j++) abyNewVIB[0x14 + j + i*12] = (byte)0;
-					}
-				}
-			}
-			else {
-				// Clear the DIR area for CF7
-				for (int i=0x14; i<0x38; i++) abyNewVIB[i] = (byte)0x00;
-			}
-			byte[] map = m_allocMap.toBitField();
-			for (int j=0; j < map.length; j++) {
-				abyNewVIB[j+0x38] = map[j];
-			}
-			// Fill the rest with ff (required by TIFDC and BWG)
-			for (int j=map.length; j < (256-0x38); j++) {
-				abyNewVIB[j+0x38] = (byte)0xff;
-			}
-		}
-		else {
-			Utilities.setInt16(abyNewVIB, 0x0a, m_nTotalSectors/m_nSectorsPerAU);
-			abyNewVIB[0x0d] = (byte)((m_nReservedAUs>>6) & 0xff);
-			Utilities.setTime(abyNewVIB, 0x12, m_tCreation);
-			abyNewVIB[0x16] = (byte)(m_dirRoot.getFiles().length & 0xff);
-			abyNewVIB[0x17] = (byte)(m_dirRoot.getDirectories().length & 0xff);
-			Utilities.setInt16(abyNewVIB, 0x18, toAU(m_dirRoot.getFileIndexSector()));
-			
-			if (m_nType==HFDC) {
-				abyNewVIB[0x0c] = (byte)m_nSectorsPerTrack;
-				abyNewVIB[0x0e] = (byte)m_nStepSpeed;
-				abyNewVIB[0x0f] = (byte)m_nReducedWriteCurrent;
-				abyNewVIB[0x10] = (byte)((((m_nSectorsPerAU-1)<<4)|(m_nHeads-1)) & 0xff);
-				abyNewVIB[0x11] = (byte)(((m_bBufferedStep? 0x80 : 0x00) | m_nWritePrecomp) & 0xff);
-				Utilities.setInt16(abyNewVIB, 0x1a, m_nAUEmulate);
-			}
-			else {
-				abyNewVIB[0x0c] = (byte)0;
-				abyNewVIB[0x0e] = (byte)0;
-				abyNewVIB[0x0f] = (byte)0;
-				abyNewVIB[0x10] = (byte)(((m_nSectorsPerAU-1)<<4) & 0xff);
-				abyNewVIB[0x11] = (byte)0;
-				abyNewVIB[0x1a] = (byte)0;
-				abyNewVIB[0x1b] = (byte)0;
-			}
-			
-			int j=0x1c;
-			Directory[] dirs = m_dirRoot.getDirectories();
-			for (int i=0x1c; i < 0x100; i++) abyNewVIB[i] = (byte)0;
-			for (int i=0; i < dirs.length; i++) {
-				Utilities.setInt16(abyNewVIB, j, dirs[i].getDDRSector() / m_nSectorsPerAU);
-				j=j+2;
-			}			
-		}
-		return abyNewVIB;
+		return m_FileSystem.createVIB();
 	}
 	
 	public void updateVIB() throws IOException, ImageException, ProtectedException {
@@ -678,22 +468,66 @@ public class Volume {
 	
 	public void updateAlloc() throws IOException, ImageException, ProtectedException {
 		// Write the allocation map
-		if (m_nType!=FLOPPY && m_nType!=CF7) {
-			saveAllocationMap();
-		}		
+		saveAllocationMap();
 	}
 	
-	public void saveImage() {
-		m_Image.writeBack();
+	public void saveImage() throws IOException, ImageException {
+		for (int i=0; i < m_FileSystem.getTotalSectors(); i++) {
+			Sector sect = m_cache.read(i);
+			if (sect != null) {
+				m_Image.writeBack(sect);
+				// System.out.println(sect.getNumber());
+			}
+		}
+		m_cache.setCommitted(true);
+		m_cache.wipe();
 	}
 	
 	public boolean isModified() {
-		return m_Image.isDirty();
+		return isDirty();
 	}
 	
-	/** Delegate to ImageFormat. */
-	public void nextGeneration() {
-		m_Image.nextGeneration();
+	public String getProposedName() {
+		if (m_sImageFileName != null) return m_sImageFileName;
+		return m_FileSystem.getName().toLowerCase();
+	}
+	
+	public int getImageType() {
+		if (m_Image == null) return ImageFormat.NOTYPE;
+		return m_Image.getImageType();
+	}
+	
+	public void saveNewImage(String sFileName, int type, byte[] fill) throws FileNotFoundException, IOException, ImageException {
+		if (m_Image == null) {
+			// The volume is new, not yet backed by an image file
+			// { } ---> A
+			m_sImageFileName = sFileName;
+			m_Image = ImageFormat.getImageFormat(sFileName, type, m_FileSystem);
+			m_Image.setFillPattern(fill);
+			m_cache.setFillPattern(fill);
+			saveImage();
+		}
+		else {
+			// The image already exists; we are creating a new image
+			// A ---> B
+			m_sImageFileName = sFileName;
+			// We need to keep this image because it will deliver the sectors that are unchanged
+			ImageFormat newImage = ImageFormat.getImageFormat(sFileName, type, m_FileSystem);
+			newImage.setFillPattern(fill);
+			
+			for (int i=0; i < m_FileSystem.getTotalSectors(); i++) {
+				Sector sect = readSector(i);
+				System.out.println(sect.getNumber());
+				newImage.writeBack(sect);
+			}
+			m_cache.setCommitted(true);
+			m_cache.wipe();
+			m_Image = newImage;
+			
+			// Problem: 
+			// ARC file written to image, then saved: not recognized as an ARC anymore
+			// works after reopen
+		}
 	}
 	
 /*************************** Low-level routines *****************************/
@@ -715,12 +549,9 @@ public class Volume {
 		// Need to know
 		//	 Sectors per track
 		//	 Number of heads
-		convert(sectors, speed, current, heads, buff!=0, precomp);
-		setType(HFDC);
-		reopenForWrite();
-		byte[] abyVIB = createVIB();
-		writeSector(new Sector(0, abyVIB));
-		reopenForRead();
+		((HarddiskFileSystem)m_FileSystem).setParams(sectors, speed, current, heads, buff!=0, precomp);
+		((HarddiskFileSystem)m_FileSystem).setSCSI(false);
+		updateVIB();
 	}
 	
 	public void hfdc2scsi() throws IOException, ImageException, ProtectedException {
@@ -728,11 +559,8 @@ public class Volume {
 		// Need to know
 		//	 Sectors per track
 		//	 Number of heads
-		convert(0, 0, 0, 1, false, 0);
-		setType(SCSI);
-		reopenForWrite();
-		byte[] abyVIB = createVIB();
-		writeSector(new Sector(0, abyVIB));
-		reopenForRead();
+		((HarddiskFileSystem)m_FileSystem).setParams(0, 0, 0, 1, false, 0);
+		((HarddiskFileSystem)m_FileSystem).setSCSI(true);
+		updateVIB();
 	}
 }

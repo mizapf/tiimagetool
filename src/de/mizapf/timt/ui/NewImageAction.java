@@ -116,14 +116,13 @@ public class NewImageAction extends Activity {
 									newimagedia.getSides(), 
 									newimagedia.getDensity(),
 									newimagedia.getTrackCount(),
-									newimagedia.formatImage(),
-									imagetool.getGenerationCounter());
+									newimagedia.formatImage());
 				
 				}
 				// Open it when it is initialized
 				if (file != null) {
 					if (newimagedia.formatImage()) {
-						newVolume = new Volume(file.getAbsolutePath(), imagetool.getGenerationCounter());
+						newVolume = new Volume(file.getAbsolutePath());
 						Directory root = newVolume.getRootDirectory();					
 						imagetool.addDirectoryView(root);
 					}

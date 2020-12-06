@@ -184,7 +184,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 
 		if (vol.isFloppyImage()) {
 			sb.append(", ");
-			sb.append(String.format(TIImageTool.langstr("PanelFloppyParams"), vol.getFloppyFormat(), vol.getTracksPerSide()));
+			sb.append(String.format(TIImageTool.langstr("PanelFloppyParams"), vol.getFloppyFormatName(), vol.getTracksPerSide()));
 		}
 		sb.append(", ");
 		sb.append(String.format(TIImageTool.langstr("PanelParams"), vol.getTotalSectors()));
@@ -196,8 +196,11 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 			sb.append(" ");
 			sb.append(TIImageTool.langstr("PanelProt"));
 		}
-		sb.append(", ");
-		sb.append(vol.dumpFormat());
+		
+		if (vol.dumpFormat().length()>2) {
+			sb.append(", ");
+			sb.append(vol.dumpFormat());
+		}
 
 		comp.add(createHeadline(sb.toString()));
 		comp.add(Box.createVerticalStrut(2));

@@ -23,4 +23,5 @@ dndc=general:b:Zeige Optionen bei Drag-and-Drop
 verbose=output:b:Ausführliche Fehlerausgaben auf Konsole
 fontsize=output:s:Zeichensatzgröße
 uifont=output:s:Zeichensatz für Oberfläche
-asmtool=tools:s:Assembler-Befehlszeile
+asmtool=misc:s:Assembler-Befehlszeile
+fillpat=misc:s:Füllung für leere Diskettensektoren

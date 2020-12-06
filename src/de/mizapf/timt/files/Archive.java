@@ -301,9 +301,10 @@ public class Archive extends Directory {
 
 		// For archives, we now have to rebuild the byte array
 		m_abyOldContent = m_abyContent;
-		Directory dirParent = getContainingDirectory();
+		// Directory dirParent = getContainingDirectory();
 		m_abyContent = rebuild();
 
+		// fileNew.checkArchiveFormat();
 		// System.out.println(Utilities.hexdump(0, 0, m_abyContent, m_abyContent.length, false));
 		
 /*		// This is done in commit
@@ -369,6 +370,7 @@ public class Archive extends Directory {
 			
 			// Add the file to this archive; gets sorted automatically
 			addToList(afNew);			
+			fileNew.checkArchiveFormat();
 		}
 		
 		// For archives, we now have to rebuild the byte array

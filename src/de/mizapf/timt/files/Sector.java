@@ -36,10 +36,12 @@ public class Sector implements Cloneable {
 	int m_generation;
 	
 	public Sector(int nNumber, byte[] abySector) {
-		this(nNumber, abySector, -1, 0xffff, 0xfb);
+		m_abySector = abySector;
+		m_nNumber = nNumber;
+		setTrackPosition(-1, 0xffff, 0xfb);
 	}
 	
-	public Sector(int nNumber, byte[] abySector, int cellOffset, int initcrc, int mark) {
+/*	public Sector(int nNumber, byte[] abySector, int cellOffset, int initcrc, int mark) {
 		m_nNumber = nNumber;
 		m_cellOffset = 0;
 		m_crcinit = initcrc;
@@ -49,16 +51,24 @@ public class Sector implements Cloneable {
 		clean();
 		m_generation = 0;
 	}
-	
+*/
 	public Object clone() {
 		byte[] content = new byte[m_abySector.length];
 		System.arraycopy(m_abySector, 0, content, 0, m_abySector.length);
-		return new Sector(m_nNumber, content, m_cellOffset, m_crc, m_mark);
+		Sector sect = new Sector(m_nNumber, content);
+		sect.setTrackPosition(m_cellOffset, m_crc, m_mark);
+		return sect;
+	}
+	
+	public void setTrackPosition(int celloffset, int initcrc, int mark) {
+		m_crcinit = initcrc;		
+		m_cellOffset = celloffset;
+		m_mark = mark;
+		m_crc = Utilities.crc16_get(m_abySector, 0, m_abySector.length, m_crcinit);
 	}
 	
 	public void setData(byte[] bData) {
 		m_abySector = bData;
-		m_crc = Utilities.crc16_get(bData, 0, bData.length, m_crcinit);
 		m_changed = true;
 	}
 	

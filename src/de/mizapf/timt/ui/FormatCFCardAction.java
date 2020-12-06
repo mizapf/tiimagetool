@@ -210,7 +210,7 @@ public class FormatCFCardAction extends Activity {
 		int sides = 2;
 		int tracks = 40;
 		int nsectors = sides * tracks * sectorsPerTrack;
-		int density = ImageFormat.DOUBLE_DENSITY;
+		int density = FloppyFileSystem.DOUBLE_DENSITY;
 		
 		image[0x14] = (byte)(nsectors >> 8);
 		image[0x16] = (byte)(nsectors % 256);

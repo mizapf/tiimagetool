@@ -21,30 +21,54 @@
 package de.mizapf.timt.ui;
 
 import javax.swing.*;
+import java.io.*;
+import java.awt.Dimension;
 import java.awt.event.KeyEvent;
+
+import de.mizapf.timt.files.*;
 import de.mizapf.timt.TIImageTool;
 
-public class QuitAction extends Activity {
+public class NewFloppyImageAction extends Activity {
 
 	public int getKeyCode() {
-		return KeyEvent.VK_Q;
+		return KeyEvent.VK_N;
 	}
 	
 	public String getMenuName() {
-		return TIImageTool.langstr("Exit");
+		return TIImageTool.langstr("FloppyImage") + "...";
 	}
 	
 	public String getActionName() {
-		return "QUIT";
+		return "NEWFIMAGE";
 	}
 	
 	public void go() {
-		if (imagetool.hasUnsavedChanges()) {
-			int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("UnsavedChanges") + ". " + TIImageTool.langstr("ReallyQuit"), TIImageTool.langstr("Leaving"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-			if (nRet == JOptionPane.NO_OPTION) return;
+		NewFloppyImageDialog newimage = new NewFloppyImageDialog(m_parent);
+
+		try {
+			newimage.createGui(imagetool.boldFont);
 		}
-		m_parent.dispose();
-		imagetool.terminate();
-		imagetool.saveProperties();
+		catch (Exception e) {
+			e.printStackTrace();
+			return;
+		}
+		newimage.setVisible(true);
+
+		Volume newVolume = null;
+		
+		if (newimage.confirmed()) {
+			FloppyFileSystem ffs = new FloppyFileSystem();
+			try {
+				newVolume = new Volume(ffs, newimage.getParameters(), imagetool.nextUnnamedIndex());
+				Directory root = newVolume.getRootDirectory();					
+				imagetool.addDirectoryView(root);
+			}
+			catch (IOException iox) {
+				iox.printStackTrace();
+			}
+			catch (ImageException ix) {
+				ix.printStackTrace();
+			}			
+		}
 	}
 }

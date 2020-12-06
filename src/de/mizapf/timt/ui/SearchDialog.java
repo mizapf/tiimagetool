@@ -71,8 +71,8 @@ class SearchDialog extends ToolDialog {
 				+-------+           +-----------+
 */	
 		prepareGui();
-		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("SearchColumn"));
+	//	FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
+		int nColumnWidth = getColumnWidth(30);
 		
 		m_tfSearchString = putTextField(this, TIImageTool.langstr("SearchText"), "", nColumnWidth, 0); 
 
@@ -90,60 +90,18 @@ class SearchDialog extends ToolDialog {
 		m_chbArchives = putCheckBox(this, TIImageTool.langstr("SearchArchives"), false, nColumnWidth);		
 
 		//
-		ImageIcon diskicon = null;
-		java.net.URL iconurl = ToolDialog.class.getResource(DISKSICON);
-		if (iconurl != null) {
-			diskicon = new ImageIcon(iconurl);
-			m_btnFileChooser = new JButton(diskicon);
-		} 
-		else {
-			System.err.println(TIImageTool.langstr("NoImage") + " " + iconurl);
-			m_btnFileChooser = new JButton(TIImageTool.langstr("ImagePlaceholder"));
-		}
+		JComponent[] comp = new JComponent[2];
+		Box pathSelect = createPathSelectBox(comp, TIImageTool.langstr("SearchPath"), 
+										TIImageTool.langstr("ClickToSelect"),
+										nColumnWidth); 
 
+		m_btnFileChooser = (JButton)comp[0];
+		m_tfPath = (JTextField)comp[1];
 		m_btnFileChooser.addActionListener(this);
-		
-		Box box = new Box(BoxLayout.X_AXIS);
-		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
-		JLabel jl = new JLabel(TIImageTool.langstr("SearchPath"), SwingConstants.LEFT); 
-		jl.setFont(TIImageTool.dialogFont);
-		String lastPath = TIImageTool.langstr("ClickToSelect");
-		add(Box.createVerticalStrut(20));
-
-		// Path setup
-		// Prompt
-		jl.setMinimumSize(new Dimension(nColumnWidth, 25));
-		if (nColumnWidth!=0) {
-			jl.setPreferredSize(new Dimension(nColumnWidth, 25));
-			jl.setMaximumSize(new Dimension(nColumnWidth, 25));
-		}
-		box.add(jl);
-		box.add(Box.createHorizontalStrut(10));
-		
-		// Button
-		m_btnFileChooser.setMinimumSize(new Dimension(35, 32));
-		m_btnFileChooser.setPreferredSize(new Dimension(35, 32));
-		m_btnFileChooser.setMaximumSize(new Dimension(35, 32));
-		box.add(m_btnFileChooser);
-		box.add(Box.createHorizontalStrut(10));
-		
-		// Selected path
-		int nPathWidth = fm.stringWidth(lastPath);
-		m_tfPath = new JTextField(lastPath);
-		m_tfPath.setEditable(false);
-		m_tfPath.setFont(TIImageTool.dialogFont);
-		m_tfPath.setMinimumSize(new Dimension(nPathWidth, 20));
-		m_tfPath.setMaximumSize(new Dimension(1000, 20));
-
-		box.add(m_tfPath);
-		box.add(Box.createHorizontalStrut(10));
-		add(box);
-		// Path setup end
-		
+		add(pathSelect);
+			
 		m_tfValidExtensions = putTextField(this, TIImageTool.langstr("SearchLimit"), ".dsk,.dtk,.hfe,.hd", nColumnWidth, 0); 
 		m_chbSubdir = putCheckBox(this, TIImageTool.langstr("SearchSubdir"), false, nColumnWidth);
-
-		box.add(Box.createHorizontalStrut(10));
 		m_tfMaxHits = putTextField(this, TIImageTool.langstr("SearchMax"), "1000", nColumnWidth, 0); 
 		
 		add(Box.createVerticalGlue());

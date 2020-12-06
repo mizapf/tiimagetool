@@ -28,40 +28,45 @@ import java.io.FileNotFoundException;
 import java.io.File;
 import java.util.Arrays;
 import de.mizapf.timt.util.Utilities;
-import de.mizapf.timt.util.GenCounter;
 import de.mizapf.timt.TIImageTool;
 
 public abstract class ImageFormat  {
 
-	RandomAccessFile m_FileSystem;
+	RandomAccessFile m_ImageFile;
 	
-	/** Cached sectors of this image. */
-	SectorCache m_cache;
+	TFileSystem m_fs;
 	
 	/** Cached sectors of the current track. */
 	Sector[] m_sector;
+	
+	byte[] m_abyEmpty;
+	
 	int[] m_trackpos;
 	int[] m_tracklen;
 	int m_positionInTrack;
 
 	int m_encoding;
-	
+	int m_cells;
+
 	String m_sImageName;
 	static final int NONE = -1;
 	
 	protected final static int FM = 0;
 	protected final static int MFM = 1;
 	
+	public final static int NOTYPE = -1;
 	public final static int SECTORDUMP = 0;
 	public final static int TRACKDUMP = 1;
 	public final static int HFE = 2;
 	public final static int CF7VOLUME = 3;
 	
-	public final static int SINGLE_DENSITY = 0;
-	public final static int DOUBLE_DENSITY = 1;
-	public final static int HIGH_DENSITY = 2;
-	public final static int ULTRA_DENSITY = 3;
+	public final static String[] suffix = { "dsk", "dtk", "hfe" };
 	
+	// Types
+	public final static int FLOPPY_FORMAT = 0;
+	public final static int HD_FORMAT = 1;
+	public final static int SET_FORMAT = 2;
+
 	public final static int SECTOR_LENGTH = 256;
 	
 	protected int m_nCylinders;
@@ -79,7 +84,6 @@ public abstract class ImageFormat  {
 	protected int m_nTotalSectors;
 	
 	protected boolean m_bWriteThrough;
-	protected boolean m_bDirty;
 	
 	protected static final int TRACK = 0;
 	protected static final int SECTOR = 1;
@@ -94,28 +98,41 @@ public abstract class ImageFormat  {
 	protected int m_nSectorsByFormat;
 	protected int m_codeRate = 1;
 
+	protected boolean m_bFormatCommitted;
 
-	protected ImageFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
-		m_FileSystem = filesystem;
+	protected ImageFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		m_ImageFile = filesystem;
 		m_sImageName = sImageName;
 		m_nSectorLength = Volume.SECTOR_LENGTH;
 		setGeometry(false /*Utilities.isRawDevice(sImageName)*/);
 		m_nCurrentTrack = NOTRACK;
 		m_abyTrack = new byte[m_nTrackLength];
-		m_cache = new SectorCache(gen);
 		m_bWriteThrough = false;
-		m_bDirty = false;
+		m_bFormatCommitted = true;
+	}
+	
+	/** Newly created; no image file yet. */
+	protected ImageFormat(RandomAccessFile rafile, String sImageName, TFileSystem fs) throws IOException, ImageException {
+		m_fs = fs;
+		m_ImageFile = rafile;
+		m_sImageName = sImageName;
+		m_nSectorLength = Volume.SECTOR_LENGTH;
+		setGeometry(fs);
+		m_nCurrentTrack = NOTRACK;
+		m_abyTrack = new byte[m_nTrackLength];
+		m_bWriteThrough = false;
+		m_bFormatCommitted = false;
 	}
 	
 	// Called from Volume.createFloppyImage (needed by subclass contructors)
 	protected ImageFormat() {
 		m_bWriteThrough = false;
-		m_bDirty = false;
+		m_bFormatCommitted = false;
 	}
 	
 	protected ImageFormat(File newfile) throws FileNotFoundException {
-		m_FileSystem = new RandomAccessFile(newfile, "rw");
-		m_bDirty = false;
+		m_ImageFile = new RandomAccessFile(newfile, "rw");
+		m_bFormatCommitted = false;
 	}
 	
 	protected void writeThrough(boolean bWriteTh) {
@@ -145,36 +162,43 @@ public abstract class ImageFormat  {
 	/** Reads a sector.
 		@throws ImageException if the sector cannot be found.
 	*/
-	public final Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+/*	public final Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
 		Sector sect = m_cache.read(nSectorNumber);
 		if (sect == null) sect = readSectorFromImage(nSectorNumber);
 		return sect;
 	}
-	
+	*/
 	/** Reads a sector from the medium. */
-	public abstract Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException;
+	public abstract Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException;
 	
 	/** Write a sector. Is public for SectorEditFrame. */
-	public final void writeSector(Sector sect) throws IOException, ImageException {
+/*	public final void writeSector(Sector sect) throws IOException, ImageException {
 		if (m_bWriteThrough) {
 			writeSectorToImage(sect.getNumber(), sect.getBytes());
 		}
 		else {
-			m_bDirty = true;
 			m_cache.write(sect);
 		}
 	}
+*/
 
 	/** Write a sector to the medium. */
-	public abstract void writeSectorToImage(int nNumber, byte[] abySector) throws IOException, ImageException;
+	public abstract void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException;
 	
 	int getDensity() {
 		return m_nDensity;
 	}
 	
+	/** Returns the type of the format. */
+	abstract int getFormatType();
+	
+	int getImageType() {
+		return NOTYPE;
+	}
+	
 	void close() throws IOException {
 		flush();
-		m_FileSystem.close();
+		m_ImageFile.close();
 	}
 	
 	long getLastModifiedTime() {
@@ -182,76 +206,74 @@ public abstract class ImageFormat  {
 		return file.lastModified();
 	}
 	
-	void writeBack() {
+	/** Indicates whether the formatting has been saved to disk already.
+	    Only applicable for non-write-through media.
+	*/
+	boolean formatCommitted() {
+		return m_bFormatCommitted;
 	}
 	
-	boolean isDirty() {
-		return m_bDirty;
-	}
-	
-	// Also called from SectorEditFrame
-	public void nextGeneration() {
-		m_cache.nextGeneration();
-	}
-	
-	void sameGeneration() {
-		m_cache.sameGeneration();
-	}
-	
-	public int getGeneration() {
-		return m_cache.getGeneration();
-	}
-
-	public void setGeneration(int gen) {
-		m_cache.setGeneration(gen);
-	}
-	
-	public static ImageFormat getImageFormat(String sFile, GenCounter gen) throws FileNotFoundException, IOException, ImageException {
-		RandomAccessFile fileSystem = new RandomAccessFile(sFile, "r");
+	public static ImageFormat getImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
+		RandomAccessFile raFile = new RandomAccessFile(sFile, "r");
 		
 /*		if (Utilities.isRawDevice(sFile)) {
-			return new RawHDFormat(fileSystem, sFile, nSectorLength);
+			return new RawHDFormat(raFile, sFile, nSectorLength);
 		} */
 		
-		if (fileSystem.length()==0) throw new ImageException(TIImageTool.langstr("ImageEmpty"));
+		if (raFile.length()==0) throw new ImageException(TIImageTool.langstr("ImageEmpty"));
 		
-		if (CF7VolumeFormat.vote(fileSystem) > 50) {
-			return new CF7VolumeFormat(fileSystem, sFile, gen);
+		if (CF7VolumeFormat.vote(raFile) > 50) {
+			return new CF7VolumeFormat(raFile, sFile);
 		}
-		if (CF7ImageFormat.vote(fileSystem) > 50) {
-			return new CF7ImageFormat(fileSystem, sFile, gen);
+		if (CF7ImageFormat.vote(raFile) > 50) {
+			return new CF7ImageFormat(raFile, sFile);
 		}
-		if (SectorDumpFormat.vote(fileSystem) > 50) {
-			return new SectorDumpFormat(fileSystem, sFile, gen);
-		}
-		
-		if (TrackDumpFormat.vote(fileSystem) > 50) {
-			return new TrackDumpFormat(fileSystem, sFile, gen);
+		if (SectorDumpFormat.vote(raFile) > 50) {
+			return new SectorDumpFormat(raFile, sFile);
 		}
 		
-		if (RawHDFormat.vote(fileSystem) > 50) {
-			return new RawHDFormat(fileSystem, sFile, gen);
+		if (TrackDumpFormat.vote(raFile) > 50) {
+			return new TrackDumpFormat(raFile, sFile);
+		}
+		
+		if (RawHDFormat.vote(raFile) > 50) {
+			return new RawHDFormat(raFile, sFile);
 		}
 
-		if (MameCHDFormat.vote(fileSystem) > 50) {
-			return new MameCHDFormat(fileSystem, sFile, gen);
+		if (MameCHDFormat.vote(raFile) > 50) {
+			return new MameCHDFormat(raFile, sFile);
 		}
 
-		if (HFEFormat.vote(fileSystem) > 50) {
-			return new HFEFormat(fileSystem, sFile, gen);
+		if (HFEFormat.vote(raFile) > 50) {
+			return new HFEFormat(raFile, sFile);
 		}
 				
 		throw new ImageException(sFile + ": " + TIImageTool.langstr("ImageUnknown"));
 	}
 
+	/** Used for new images. */
+	public static ImageFormat getImageFormat(String sFile, int type, TFileSystem fs) throws FileNotFoundException, IOException, ImageException {
+		RandomAccessFile raFile = new RandomAccessFile(sFile, "rw");
+		
+		switch (type) {
+		case SECTORDUMP:
+			return new SectorDumpFormat(raFile, sFile, fs);
+		case TRACKDUMP:
+			return new TrackDumpFormat(raFile, sFile, fs);
+		case HFE:
+			return new HFEFormat(raFile, sFile);
+		}
+		return null;
+	}		
+	
 	public void reopenForWrite() throws IOException {
-		if (m_FileSystem != null) m_FileSystem.close();
-		m_FileSystem = new RandomAccessFile(m_sImageName, "rw");		
+		if (m_ImageFile != null) m_ImageFile.close();
+		m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
 	}
 	
 	public void reopenForRead() throws IOException {
-		if (m_FileSystem != null) m_FileSystem.close();
-		m_FileSystem = new RandomAccessFile(m_sImageName, "r");		
+		if (m_ImageFile != null) m_ImageFile.close();
+		m_ImageFile = new RandomAccessFile(m_sImageName, "r");		
 	}
 
 	/** Set some parameters for this image, according to the format and the
@@ -267,16 +289,15 @@ public abstract class ImageFormat  {
 	    @param bSpecial image is a special file (raw device content).
 	*/
 	abstract void setGeometry(boolean bSpecial) throws IOException, ImageException;
-			
+
+	abstract void setGeometry(TFileSystem fs);
+
+	
 	/** Delivers the position on the image file by track and sector.
 		Result is returned as a Location instance.
 		Called by the floppy image types only.
 	*/
-	Location getLocation(int nSectorNumber) throws IOException, ImageException {
-		if (m_nSectorsByFormat == NONE) {
-			// We do not know the number of sectors yet. Read track 0.
-			readTrack(0);
-		}
+	Location LBAToCHS(int nSectorNumber) throws ImageException {
 		// Now we should know the sector count, so we can calculate the track and
 		// sector. The track number is counted from head 0, cylinder 0 ... max,
 		// then head 1, cylinder max ... 0.
@@ -292,6 +313,8 @@ public abstract class ImageFormat  {
 		int cylinder = track;
 		int head = 0;
 		
+		// track is linearly counted over both sides, cylinder is one side only
+		// track is the logical count (TI file system), cylinder is physical count
 		if (track >= m_nCylinders) {
 			// Next head
 			cylinder = 2 * m_nCylinders - 1 - track;
@@ -312,7 +335,71 @@ public abstract class ImageFormat  {
 		@param nSectorNumber LBA number of the sector.
 		@return Index of the desired sector within its track.
 	*/
-	abstract int readTrack(int nSectorNumber) throws IOException, ImageException;
+	abstract int loadTrack(Location loc) throws IOException, ImageException;
+
+	/** If the image file does not yet exist. */
+	abstract void createTrack();
+	
+	/** Common part of the readTrack method. */
+	int readTrack(int nSectorNumber) throws ImageException, IOException {
+		Location loc = null;
+		// System.out.println("Read track of sector " + nSectorNumber);
+		if (nSectorNumber != 0) {
+			
+			if (m_nSectorsByFormat == NONE) {
+				// We do not know the number of sectors yet. Read track 0.
+				System.out.println("Need to read track 0 first");
+				readTrack(0);
+			}
+		
+			loc = LBAToCHS(nSectorNumber);
+		}
+		else {
+			loc = new Location(0, 0, 0, 0);
+		}
+		
+		// Do we have that track already?
+		if (m_currentCylinder == loc.cylinder && m_currentHead == loc.head) {
+			for (int i=0; i < m_sector.length; i++) {
+				if (m_sector[i].getNumber()==nSectorNumber) return i;
+			}
+			return NONE;
+		}
+		else {
+			// Write back the last track
+			flush();
+		}
+		
+		m_currentCylinder = loc.cylinder;
+		m_currentHead = loc.head;
+		m_currentTrack = loc.track;
+		
+		// System.out.println("cyl = " + m_currentCylinder + ", head = " + m_currentHead);
+
+		m_abyTrack = new byte[m_tracklen[loc.track]];
+		if (m_bFormatCommitted) {
+			System.out.println("Read track " + loc.track);
+			readFromImage(m_trackpos[loc.track]);
+		}
+		else {
+			createTrack();
+		}
+		
+		m_cells = m_abyTrack.length * 4;  // All bits for either head
+				
+		// Reset to start
+		m_positionInTrack = 0;
+		
+		int secindex = -1;
+		secindex = loadTrack(loc);
+		return secindex;		
+	}
+	
+	/** Overridden by CF7Format. */
+	void readFromImage(int offset) throws IOException {
+		m_ImageFile.seek(offset);
+		m_ImageFile.readFully(m_abyTrack);
+	}
 	
 	abstract void formatTrack(int cylinder, int head, int sectors, int density, int[] gap);
 	
@@ -326,8 +413,10 @@ public abstract class ImageFormat  {
 		return NONE;
 	}
 	
+	void writeBack(Sector sect) throws IOException, ImageException {
+	}
 		
-	public static void createFloppyImage(File newImageFile, String volumeName, int type, int sides, int density, int tracks, boolean format, GenCounter gen) throws IOException, ImageException {
+	public static void createFloppyImage(File newImageFile, String volumeName, int type, int sides, int density, int tracks, boolean format) throws IOException, ImageException {
 
 		ImageFormat image = null;
 		
@@ -351,47 +440,10 @@ public abstract class ImageFormat  {
 		
 		image.createEmptyImage(newImageFile, sides, density, tracks, sectorsPerTrack, format);		
 		
-		if (format) {
-			
-			// Load it and write sectors 0 and 1
-			image = ImageFormat.getImageFormat(newImageFile.getAbsolutePath(), gen);
-			
-			// Sector 0
-			byte[] sector0 = new byte[SECTOR_LENGTH];
-			
-			Arrays.fill(sector0, 0, 10, (byte)' ');
-			System.arraycopy(volumeName.getBytes(), 0, sector0, 0, volumeName.getBytes().length);
-			
-			int nsectors = sides * tracks * sectorsPerTrack;
-			sector0[10] = (byte)(nsectors >> 8);
-			sector0[11] = (byte)(nsectors % 256);
-			sector0[12] = (byte)sectorsPerTrack;
-			sector0[13] = 'D';
-			sector0[14] = 'S';
-			sector0[15] = 'K';
-			sector0[16] = (byte)0x20;
-			sector0[17] = (byte)tracks;
-			sector0[18] = (byte)sides;
-			sector0[19] = (byte)(density+1);
-			for (int i=0x14; i < 0x38; i++) sector0[i] = (byte)0;
-			for (int i=0x38; i < 0x100; i++) sector0[i] = (byte)0xff;
-			
-			// Allocation bitmap
-			AllocationMap am = new AllocationMap(nsectors);
-			am.allocate(0);
-			if (am.getAUSize()==1) am.allocate(1);
-			
-			byte[] abyMap = am.toBitField();
-			System.arraycopy(abyMap, 0, sector0, 0x38, abyMap.length);
-			
-			// Sector 1
-			byte[] sector1 = new byte[SECTOR_LENGTH];
-			Arrays.fill(sector1, 0, SECTOR_LENGTH, (byte)0x00);
-			
-			image.writeSector(new Sector(0, sector0));
-			image.writeSector(new Sector(1, sector1));
-			image.close();
-		}
+		// Save image
 	}
 	
+	void setFillPattern(byte[] pattern) {
+		m_abyEmpty = pattern;
+	}
 }

@@ -22,7 +22,7 @@
 package de.mizapf.timt.files;
 
 public class FormatParameters {
-	public String name;
+	public  String name;
 	public 	int cylinders;
 	public 	int heads;
 	public 	int sectorsPerTrack;
@@ -37,6 +37,8 @@ public class FormatParameters {
 	public 	boolean format;
 	public	boolean forHfdc;
 	public  int chdVersion;
+	public  int density;
+	public  boolean protect;
 	
 	public FormatParameters(int nCylinders, int nHeads, int nSectors, int nSectorLength, int nFormat) {
 		cylinders = nCylinders;
@@ -66,5 +68,13 @@ public class FormatParameters {
 		format = bFormat;
 		forHfdc = bHfdc;
 		chdVersion = nCHDVersion; 
+	}
+	
+	public FormatParameters(String sName, int nSides, int nDensity, int nTracks, int nSectTrack) {
+		name = sName;
+		cylinders = nTracks;
+		heads = nSides;
+		density = nDensity;
+		sectorsPerTrack = nSectTrack;
 	}
 }

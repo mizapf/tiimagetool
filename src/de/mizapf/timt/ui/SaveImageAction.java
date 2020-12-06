@@ -20,9 +20,12 @@
 ****************************************************************************/
 package de.mizapf.timt.ui;
 
+import java.io.IOException;
 import javax.swing.*;
 import java.awt.event.KeyEvent;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.files.Volume;
+import de.mizapf.timt.files.ImageException;
 
 public class SaveImageAction extends Activity {
 
@@ -40,6 +43,25 @@ public class SaveImageAction extends Activity {
 	
 	public void go() {
 		System.out.println("Save");
+		DirectoryView dvCurrent = imagetool.getSelectedView();
+		Volume vol = dvCurrent.getVolume();
+		// If the image is still unnamed, treat as Save As
+		if (vol.getImageName()==null) {
+			SaveAsImageAction saia = new SaveAsImageAction();
+			saia.saveAs(vol);
+		}
+		else {
+			try {
+				vol.saveImage();
+				imagetool.refreshAllViews();			
+			}
+			catch (IOException iox) {
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);				
+			}
+			catch (ImageException ix) {
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);				
+			}
+		}
 	}
 }
 

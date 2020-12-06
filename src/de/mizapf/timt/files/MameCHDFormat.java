@@ -164,7 +164,6 @@ import java.util.Arrays;
 
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
-import de.mizapf.timt.util.GenCounter;
 
 public class MameCHDFormat extends ImageFormat {
 
@@ -271,8 +270,8 @@ public class MameCHDFormat extends ImageFormat {
 		return 100;
 	}
 
-	public MameCHDFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
-		super(filesystem, sImageName, gen);
+	public MameCHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		m_nDensity = 0;
 		writeThrough(true);
 	}
@@ -292,8 +291,8 @@ public class MameCHDFormat extends ImageFormat {
 	
 	void setGeometry(boolean bSpecial) throws ImageException, IOException {
 		byte[] abyStart = new byte[1024];
-		m_FileSystem.seek(0);
-		m_FileSystem.readFully(abyStart);
+		m_ImageFile.seek(0);
+		m_ImageFile.readFully(abyStart);
 
 		m_nHeaderLength = Utilities.getInt32be(abyStart, 8);
 		m_nVersion = Utilities.getInt32be(abyStart, 12);
@@ -322,7 +321,7 @@ public class MameCHDFormat extends ImageFormat {
 			m_nMapOffset    = Utilities.getInt64be(abyStart, 40);
 			m_nLogicalBytes = Utilities.getInt64be(abyStart, 32);
 			m_nMetaOffset   = Utilities.getInt64be(abyStart, 48);
-			m_nTrackLength  = Utilities.getInt32be(abyStart, 56);
+			m_nTrackLength  = Utilities.getInt32be(abyStart, 56);   // actually, hunk length
 			
 			m_abyTrack = new byte[m_nTrackLength];
 			m_nCurrentTrack = NOTRACK;
@@ -337,14 +336,14 @@ public class MameCHDFormat extends ImageFormat {
 		byte[] abyMeta = new byte[METALENGTH];
 		
 		while (!bFound && nOffset!=0) {
-			m_FileSystem.seek(nOffset);
-			m_FileSystem.readFully(abyMeta);
+			m_ImageFile.seek(nOffset);
+			m_ImageFile.readFully(abyMeta);
 			int nMetaTag = Utilities.getInt32be(abyMeta, 0);
 			nMetaLength = Utilities.getInt32be(abyMeta, 4);
 			nMetaFlags = nMetaLength>>24;
 			nMetaLength = nMetaLength & 0x00ffffff;
 			
-			// See MESS, file chd.h
+			// See MAME, file chd.h
 			if (nMetaTag == 0x47444444) {
 				bFound = true;
 			}
@@ -355,9 +354,9 @@ public class MameCHDFormat extends ImageFormat {
 		if (!bFound) throw new ImageException(TIImageTool.langstr("MameCHDNoMetadata"));
 
 		// Read the metadata
-		m_FileSystem.seek(nOffset + METALENGTH);
+		m_ImageFile.seek(nOffset + METALENGTH);
 		byte[] abyMetadata = new byte[nMetaLength];
-		m_FileSystem.readFully(abyMetadata);
+		m_ImageFile.readFully(abyMetadata);
 		m_nCylinders = parseValue(abyMetadata, "CYLS", nMetaLength);
 		m_nHeads = parseValue(abyMetadata, "HEADS", nMetaLength);
 		m_nSectorsPerTrack = parseValue(abyMetadata, "SECS", nMetaLength);
@@ -377,8 +376,8 @@ public class MameCHDFormat extends ImageFormat {
 		
 		while (nextOffset != 0 && nextOffset < m_nLogicalBytes) {
 //			System.out.println(Utilities.toHex((int)nextOffset, 8));
-			m_FileSystem.seek(nextOffset);
-			m_FileSystem.readFully(metadata);
+			m_ImageFile.seek(nextOffset);
+			m_ImageFile.readFully(metadata);
 			
 			// Round up to the next hunk boundary
 			m_nAppendOffset = ((nextOffset + (m_nTrackLength - 1)) / m_nTrackLength) * m_nTrackLength;
@@ -388,6 +387,20 @@ public class MameCHDFormat extends ImageFormat {
 		// TODO: Check with format in VIB?
 	}
 	
+	/** Newly created. */
+	@Override	
+	void setGeometry(TFileSystem fs) {
+	}
+	
+	@Override
+	void createTrack() {
+	}
+	
+	@Override
+	int loadTrack(Location loc) {
+		return 0;
+	}
+
 	private int parseValue(byte[] aby, String sToken, int nEnd) {
 		String sTok = sToken + ":";
 		byte[] abyToken = sTok.getBytes();
@@ -413,26 +426,26 @@ public class MameCHDFormat extends ImageFormat {
 	
 	private void readHunk(int nHunk) throws IOException, ImageException {
 		if (m_nVersion == 4) {
-			m_FileSystem.seek(m_nHeaderLength + nHunk * MAPENTRYSIZEv4);
+			m_ImageFile.seek(m_nHeaderLength + nHunk * MAPENTRYSIZEv4);
 			byte[] abyMap = new byte[16];
-			m_FileSystem.readFully(abyMap);
+			m_ImageFile.readFully(abyMap);
 			m_nHunkOffset = Utilities.getInt64be(abyMap, 0);
 			
 			int crci = Utilities.getInt32be(abyMap, 8);
 			int nLengthHunk = Utilities.getInt16(abyMap, 12) + (abyMap[14]<<16);
 			if (nLengthHunk != m_nTrackLength) throw new ImageException(String.format(TIImageTool.langstr("MameCHDVary"), nLengthHunk, m_nTrackLength));
 			m_byHunkFlags = abyMap[15];
-			m_FileSystem.seek(m_nHunkOffset);
-			m_FileSystem.readFully(m_abyTrack);
+			m_ImageFile.seek(m_nHunkOffset);
+			m_ImageFile.readFully(m_abyTrack);
 			CRC32 crcc = new CRC32();
 			crcc.update(m_abyTrack);
 			int crca = (int)(crcc.getValue() & 0xffffffff);
 			if (crca != crci) throw new ImageException(String.format(TIImageTool.langstr("MameCHDBadCRC"), Utilities.toHex(crca,8), Utilities.toHex(crci,8)));
 		}
 		if (m_nVersion == 5) {
-			m_FileSystem.seek(m_nMapOffset + nHunk * 4);
+			m_ImageFile.seek(m_nMapOffset + nHunk * 4);
 			byte[] abyMap = new byte[4];
-			m_FileSystem.readFully(abyMap);
+			m_ImageFile.readFully(abyMap);
 			m_nHunkOffset = Utilities.getInt32be(abyMap, 0) * m_nTrackLength;
 			if (m_nHunkOffset == 0) {
 				// System.out.println("Hunk " + nHunk + " is empty");
@@ -440,8 +453,8 @@ public class MameCHDFormat extends ImageFormat {
 			}
 			else {
 				int nLengthHunk = m_nTrackLength;
-				m_FileSystem.seek(m_nHunkOffset);
-				m_FileSystem.readFully(m_abyTrack);
+				m_ImageFile.seek(m_nHunkOffset);
+				m_ImageFile.readFully(m_abyTrack);
 			}
 		}		
 		m_nCurrentTrack = nHunk;
@@ -453,7 +466,7 @@ public class MameCHDFormat extends ImageFormat {
 		return m_abyTrack;
 	}
 
-	/** Used for converting CHD versions. */
+	/** Used for converting CHD versions and for initializing the file system. */
 	public void writeHunkContents(byte[] abyTrack, int nHunkNumber) throws IOException {
 		m_nCurrentTrack = nHunkNumber;
 		System.arraycopy(abyTrack, 0, m_abyTrack, 0, m_abyTrack.length);
@@ -461,7 +474,7 @@ public class MameCHDFormat extends ImageFormat {
 	}
 	
 	@Override
-	public Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException {
+	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
 		byte[] abySector = new byte[m_nSectorLength];
 		// Get sector offset in track
 		//			System.out.println("Read sector " + nSectorNumber);
@@ -473,7 +486,7 @@ public class MameCHDFormat extends ImageFormat {
 	}
 	
 	@Override
-	public void writeSectorToImage(int nNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
 		try {
 			int secoff = getSectorOffset(nNumber);
 			System.arraycopy(abySector, 0, m_abyTrack, secoff, Volume.SECTOR_LENGTH);
@@ -491,9 +504,9 @@ public class MameCHDFormat extends ImageFormat {
 			crcc.update(m_abyTrack);
 			int crca = (int)(crcc.getValue() & 0xffffffff);
 
-			m_FileSystem.seek(m_nHeaderLength + m_nCurrentTrack * MAPENTRYSIZEv4);
+			m_ImageFile.seek(m_nHeaderLength + m_nCurrentTrack * MAPENTRYSIZEv4);
 			byte[] abyMap = new byte[16];
-			m_FileSystem.readFully(abyMap);
+			m_ImageFile.readFully(abyMap);
 			m_nHunkOffset = Utilities.getInt64be(abyMap, 0);
 			
 			long nHunkOff = m_nHunkOffset;
@@ -513,15 +526,15 @@ public class MameCHDFormat extends ImageFormat {
 		
 			if (bNeedReopen) reopenForWrite();
 //			System.out.println("seek to " + Utilities.toHex(m_nHeaderLength + m_nCurrentTrack * MAPENTRYSIZEv4, 8));
-			m_FileSystem.seek(m_nHeaderLength + m_nCurrentTrack * MAPENTRYSIZEv4);
-			m_FileSystem.write(abyMap);
+			m_ImageFile.seek(m_nHeaderLength + m_nCurrentTrack * MAPENTRYSIZEv4);
+			m_ImageFile.write(abyMap);
 		}
 		else
 		{
 			long nMapPos = m_nMapOffset + m_nCurrentTrack * 4;
-			m_FileSystem.seek(nMapPos);
+			m_ImageFile.seek(nMapPos);
 			byte[] abyMap = new byte[4];
-			m_FileSystem.readFully(abyMap);	
+			m_ImageFile.readFully(abyMap);	
 			int nHunkNumber = Utilities.getInt32be(abyMap, 0);
 			
 			m_nHunkOffset = nHunkNumber * m_nTrackLength;
@@ -537,7 +550,7 @@ public class MameCHDFormat extends ImageFormat {
 					return;
 				}
 				// System.out.println("Hunk " + m_nCurrentTrack + " was empty before, have to append after end of CHD image");
-				m_nHunkOffset = m_FileSystem.length();
+				m_nHunkOffset = m_ImageFile.length();
 				
 				// If the file is shorter than the next hunk offset, use that offset
 				if (m_nHunkOffset < m_nAppendOffset) m_nHunkOffset = m_nAppendOffset;
@@ -552,14 +565,14 @@ public class MameCHDFormat extends ImageFormat {
 				abyMap[3] = (byte)(nHunkNumber & 0xff);
 				
 				if (bNeedReopen) reopenForWrite();
-				m_FileSystem.seek(nMapPos);
-				m_FileSystem.write(abyMap);
+				m_ImageFile.seek(nMapPos);
+				m_ImageFile.write(abyMap);
 			}
 		}
 		
 //		System.out.println("seek to " + Utilities.toHex((int)m_nHunkOffset, 8));
-		m_FileSystem.seek(m_nHunkOffset);
-		m_FileSystem.write(m_abyTrack);
+		m_ImageFile.seek(m_nHunkOffset);
+		m_ImageFile.write(m_abyTrack);
 		if (bNeedReopen) reopenForRead();
 	}
 	
@@ -719,13 +732,25 @@ public class MameCHDFormat extends ImageFormat {
 		return baos.toByteArray();
 	}
 	
-	/** Prepares the first 5 hunks. */
-	public static byte[] getPreparedHunks(FormatParameters parm, int nHunkBytes) throws IOException {
+	@Override
+	int getFormatType() {
+		return HD_FORMAT; 
+	}
+	
+	/** Prepares the file system. This contains sectors 0-31, with 32-63 as a 
+		backup, and 16 sectors filled with zeros.
+		
+		TODO: Do the same with a sequence of Sector
+	*/
+	public void initializeFileSystem(FormatParameters parm) throws IOException {
+
+		int nHunkBytes = 0x1000;
+		
 		// Do it in memory first
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dos = new DataOutputStream(baos);
 		
-		// Do it twice
+		// Do it twice (sectors 0-31, with a backup in 32-63)
 		for (int k=0; k < 2; k++) {
 			// Create the VIB
 			// === name
@@ -811,7 +836,18 @@ public class MameCHDFormat extends ImageFormat {
 
 		// We should now have 5 hunks in the byte array.
 		// 2*32 sectors + 1 hunk 
-		return baos.toByteArray();
+		byte[] formbytes = baos.toByteArray();
+		
+		// Space for one hunk
+		byte[] abyPart = new byte[nHunkBytes];
+		
+		// Write the file system initialization hunk-by-hunk
+		reopenForWrite();
+		for (int i=0; i < formbytes.length / nHunkBytes; i++) {
+			System.arraycopy(formbytes, i*nHunkBytes, abyPart, 0, nHunkBytes);
+			writeHunkContents(abyPart, i);
+		}
+		reopenForRead();
 	}
 	
 	public void flush() {

@@ -50,6 +50,7 @@ abstract public class Activity {
 		return InputEvent.CTRL_DOWN_MASK;
 	}
 	
+	/** Called from PasteAction. */
 	protected String getAlternativeName(boolean bFile, String sName, JFrame frame) {
 		NewNameDialog namedialog = new NewNameDialog(frame, bFile, sName);
 		namedialog.createGui();

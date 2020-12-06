@@ -32,7 +32,6 @@ import java.util.ArrayList;
 
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
-import de.mizapf.timt.util.GenCounter;
 
 /** The HFEFormat class implements the HFE format that is used for the Lotharek
 	floppy emulator.
@@ -244,7 +243,7 @@ public class HFEFormat extends ImageFormat {
 			newheader[8] = (byte)0;
 			newheader[9] = (byte)tracks;
 			newheader[10] = (byte)sides;
-			newheader[11] = (byte)((density==SINGLE_DENSITY)? ISOIBM_FM_ENCODING : ISOIBM_MFM_ENCODING); 
+			newheader[11] = (byte)((density == FloppyFileSystem.SINGLE_DENSITY)? ISOIBM_FM_ENCODING : ISOIBM_MFM_ENCODING); 
 			newheader[12] = (byte)0xfa;
 			newheader[13] = (byte)0x00;
 			newheader[14] = (byte)0x00;
@@ -274,19 +273,18 @@ public class HFEFormat extends ImageFormat {
 	byte m_currentGroup;
 	int m_cellpos;
 	
-	byte[] m_bCellTrack;
+//	byte[] m_bCellTrack;
 	
 	int m_shiftRegister;
 	int m_value;
 	int m_lastDataBit;
-	int m_cells;
 		
 	boolean m_first = true;
 	
 	static final int ENDOFTRACK = -1;
 	
-	HFEFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
-		super(filesystem, sImageName, gen);
+	HFEFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		writeThrough(true);
 	}
 	
@@ -307,6 +305,16 @@ public class HFEFormat extends ImageFormat {
 		return TIImageTool.langstr("HFEImage");
 	}
 	
+	@Override
+	int getFormatType() {
+		return FLOPPY_FORMAT; 
+	}
+
+	@Override
+	int getImageType() {
+		return HFE; 
+	}
+
 	static int vote(RandomAccessFile fileSystem) throws IOException {
 		int nVote = 0;
 		fileSystem.seek(0);
@@ -319,20 +327,23 @@ public class HFEFormat extends ImageFormat {
 		
 	@Override	
 	void setGeometry(boolean bSpecial) throws IOException, ImageException {
-		m_FileSystem.seek(0);
+		m_ImageFile.seek(0);
 		byte[] bheader = new byte[512];
-		m_FileSystem.readFully(bheader);
+		m_ImageFile.readFully(bheader);
 		m_header = new HFEHeader(bheader);
 		// System.out.println(m_header);
 		
 		byte[] btracklut = new byte[m_header.number_of_track * 4];
-		m_FileSystem.seek(m_header.track_list_offset*512);
-		m_FileSystem.readFully(btracklut);
-		m_trackpos = new int[m_header.number_of_track];
-		m_tracklen = new int[m_header.number_of_track];
+		m_ImageFile.seek(m_header.track_list_offset*512);
+		m_ImageFile.readFully(btracklut);
+		m_trackpos = new int[m_header.number_of_track*2];
+		m_tracklen = new int[m_header.number_of_track*2];
 		for (int i=0; i < m_header.number_of_track; i++) {
+			int opposite = 2*m_header.number_of_track - i - 1;
 			m_trackpos[i] = Utilities.getInt16rev(btracklut, i*4) * 512;
+			m_trackpos[opposite] = m_trackpos[i]; 
 			m_tracklen[i] = Utilities.getInt16rev(btracklut, i*4+2);
+			m_tracklen[opposite] = m_tracklen[i];
 			
 //			System.out.println("Track " + i + " at pos " + m_trackpos[i] + ", len " +  m_tracklen[i]);
 		}
@@ -348,48 +359,24 @@ public class HFEFormat extends ImageFormat {
 		if (m_header.track_encoding==HFEHeader.ISOIBM_FM_ENCODING) m_codeRate <<=1; 
 		m_nDensity = (m_header.track_encoding==HFEHeader.ISOIBM_FM_ENCODING)? 1:2;
 	}
-		
+
+	/** Newly created. */
+	@Override	
+	void setGeometry(TFileSystem fs) {
+		System.err.println("FIXME: Must be implemented");
+	}
+	
+	void createTrack() {
+	}
+	
 	/** Scan a track. Different to the other formats, this method
 	    must be called to find the DAMs. It also reads all sectors of this track.
 	    @param nSectorNumber Sector that is about to be read.
 	    @return Index of the sector in the sector cache (or NONE)
 	*/
 	@Override
-	int readTrack(int nSectorNumber) throws IOException, ImageException {
-			
-		Location loc = null;
-		if (nSectorNumber != 0) {
-			loc = getLocation(nSectorNumber);
-		}
-		else {
-			loc = new Location(0, 0, 0, 0);
-		}
-		
-		// Do we have that track already?
-		if (m_currentCylinder == loc.cylinder && m_currentHead == loc.head) {
-			for (int i=0; i < m_sector.length; i++) {
-				if (m_sector[i].getNumber()==nSectorNumber) return i;
-			}
-			return NONE;
-		}
-		else {
-			// Write back the last track
-			flush();
-		}
-		
+	int loadTrack(Location loc) throws IOException, ImageException {
 
-		m_currentCylinder = loc.cylinder;
-		m_currentHead = loc.head;
-
-		m_bCellTrack = new byte[m_tracklen[loc.cylinder]];
-		m_FileSystem.seek(m_trackpos[loc.cylinder]);
-		m_FileSystem.readFully(m_bCellTrack);
-		
-		m_cells = m_bCellTrack.length * 4;  // All bits for either head
-				
-		// Reset to start
-		m_positionInTrack = 0;
-				
 		ArrayList<Sector> sectors = new ArrayList<Sector>();
 		m_first = true;
 		int secindex = NONE;
@@ -444,7 +431,8 @@ public class HFEFormat extends ImageFormat {
 						bSector[i] = (byte)readBits(8);
 					}
 					int crcd = readBits(16);
-					Sector sect = new Sector(loc.track * m_nSectorsByFormat + bHeader[2], bSector, pos, initcrc, mark); 
+					Sector sect = new Sector(loc.track * m_nSectorsByFormat + bHeader[2], bSector);
+					sect.setTrackPosition(pos, initcrc, mark);
 					sectors.add(sect);
 					// System.out.println("Sector " + sect.getNumber()  + ": Data CRC = " + Utilities.toHex(sect.getCrc(),4) + " (expected " +  Utilities.toHex(crcd, 4) + ")");
 					if (crcd != sect.getCrc()) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), sect.getNumber(), Utilities.toHex(sect.getCrc(),4), Utilities.toHex(crcd, 4)));
@@ -471,11 +459,11 @@ public class HFEFormat extends ImageFormat {
 		m_currentCylinder = loc.cylinder;
 		m_currentHead = loc.head;
 
-		m_bCellTrack = new byte[m_tracklen[loc.cylinder]];
-		m_FileSystem.seek(m_trackpos[loc.cylinder]);
-		m_FileSystem.readFully(m_bCellTrack);
+		m_abyTrack = new byte[m_tracklen[loc.track]];
+		m_ImageFile.seek(m_trackpos[loc.track]);
+		m_ImageFile.readFully(m_abyTrack);
 		
-		m_cells = m_bCellTrack.length * 4;  // All bits for either head
+		m_cells = m_abyTrack.length * 4;  // All bits for either head
 			
 		// Reset to start
 		m_positionInTrack = 0;
@@ -492,7 +480,7 @@ public class HFEFormat extends ImageFormat {
 	    the cached sector.
 	*/
 	@Override
-	public Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException {
+	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
 		if (nSectorNumber > 10000) throw new ImageException(String.format(TIImageTool.langstr("BadSectorNumber"), nSectorNumber)); 
 		int secindex = readTrack(nSectorNumber);
 		if (secindex != NONE) {
@@ -502,7 +490,7 @@ public class HFEFormat extends ImageFormat {
 	}
 	
 	@Override
-	public void writeSectorToImage(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSector(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
 		int secindex = readTrack(nSectorNumber);
 		if (secindex == NONE) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 		// Write the new data
@@ -535,10 +523,10 @@ public class HFEFormat extends ImageFormat {
 		}
 		if (trackchanged) {
 			// Write back the whole track (both sides; leave something to optimize)
-			m_FileSystem = new RandomAccessFile(m_sImageName, "rw");		
-			m_FileSystem.seek(m_trackpos[m_currentCylinder]);
-			m_FileSystem.write(m_bCellTrack);
-			m_FileSystem = new RandomAccessFile(m_sImageName, "r");		
+			m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
+			m_ImageFile.seek(m_trackpos[m_currentCylinder]);
+			m_ImageFile.write(m_abyTrack);
+			m_ImageFile = new RandomAccessFile(m_sImageName, "r");		
 		}
 	}
 	
@@ -642,12 +630,12 @@ public class HFEFormat extends ImageFormat {
 			int block = position / 256;
 			int offset = position % 256;		
 			int actPosition = block*512 + m_currentHead * 256 + offset;
-			if (actPosition >= m_bCellTrack.length) {
+			if (actPosition >= m_abyTrack.length) {
 				m_positionInTrack = m_cells;
 				m_currentGroup = 0;
 			}
 			else {
-				m_currentGroup = (byte)((m_bCellTrack[actPosition])&0xff);
+				m_currentGroup = (byte)((m_abyTrack[actPosition])&0xff);
 			}
 		}
 		int value = m_currentGroup & 1;
@@ -668,7 +656,7 @@ public class HFEFormat extends ImageFormat {
 		int block = position / 256;
 		int offset = position % 256;		
 		int actPosition = block*512 + m_currentHead * 256 + offset;
-		m_currentGroup = (byte)((m_bCellTrack[actPosition] >> (m_positionInTrack % 8))&0xff);
+		m_currentGroup = (byte)((m_abyTrack[actPosition] >> (m_positionInTrack % 8))&0xff);
 		m_positionInTrack = pos;
 	}
 
@@ -695,7 +683,7 @@ public class HFEFormat extends ImageFormat {
 	
 	private void writeNextCell(boolean set) {
 		int position = m_positionInTrack / 8; 
-		if (position >= m_bCellTrack.length) position =  m_bCellTrack.length - 1;
+		if (position >= m_abyTrack.length) position =  m_abyTrack.length - 1;
 		
 		int block = position / 256;
 		int offset = position % 256;		
@@ -703,8 +691,8 @@ public class HFEFormat extends ImageFormat {
 		
 		int bit = 1 << (m_positionInTrack % 8);
 		
-		if (set) m_bCellTrack[actPosition] |= bit;
-		else m_bCellTrack[actPosition] &= ~bit;
+		if (set) m_abyTrack[actPosition] |= bit;
+		else m_abyTrack[actPosition] &= ~bit;
 		m_positionInTrack++;
 	}
 	
@@ -831,7 +819,7 @@ Including padding: (length = 0c40) GAP4+=16
 		
 		byte[] bHeader = new byte[4];
 		
-		if (density==SINGLE_DENSITY) {
+		if (density == FloppyFileSystem.SINGLE_DENSITY) {
 			if (m_codeRate==4) writeNextCell(false); // Write a first empty cell		
 			writePattern(0xf77a); // write IXAM
 			gapval = 0xff;
@@ -849,7 +837,7 @@ Including padding: (length = 0c40) GAP4+=16
 			// Sync gap
 			for (int k=0; k < gap[1]; k++) writeBits(0x00,8);
 
-			if (density == SINGLE_DENSITY) {			
+			if (density == FloppyFileSystem.SINGLE_DENSITY) {			
 				// IDAM
 				writePattern(0xf57e);
 				initcrc = 0xef21;
@@ -874,7 +862,7 @@ Including padding: (length = 0c40) GAP4+=16
 			for (int k=0; k < gap[1]; k++) writeBits(0x00,8);
 			
 			// DAM
-			if (density==SINGLE_DENSITY) {
+			if (density == FloppyFileSystem.SINGLE_DENSITY) {
 				writePattern(0xf56f); 
 			}
 			else {
@@ -887,13 +875,13 @@ Including padding: (length = 0c40) GAP4+=16
 			// Sector content
 			for (int k=0; k < 256; k++) writeBits(0xe5,8);
 			// CRC
-			writeBits((density==SINGLE_DENSITY)? 0xa40c : 0x7827, 16);
+			writeBits((density == FloppyFileSystem.SINGLE_DENSITY)? 0xa40c : 0x7827, 16);
 
 			// GAP3
 			for (int k=0; k < gap[3]; k++) writeBits(gapval,8);
 
 			// Next sector
-			if (density==SINGLE_DENSITY)
+			if (density == FloppyFileSystem.SINGLE_DENSITY)
 				sector = (sector + 7) % 9;
 			else
 				sector = (sector + 11) % 18;
@@ -918,7 +906,7 @@ Including padding: (length = 0c40) GAP4+=16
 		for (int i=0; i < tracklut.length; i++) tracklut[i] = (byte)0xff;
 		int trackpos = 0x0400;
 		
-		int tracklen = (density==SINGLE_DENSITY)? 0x61b0 : 0x61c0;
+		int tracklen = (density == FloppyFileSystem.SINGLE_DENSITY)? 0x61b0 : 0x61c0;
 		
 		byte[] bHeader = new byte[4];
 		int initcrc = 0;
@@ -926,10 +914,10 @@ Including padding: (length = 0c40) GAP4+=16
 		int[] gapsd = { 16, 6, 11, 45, 103+9 };  // with padding
 		int[] gapdd = { 32, 12, 22, 24, 68+16 };
 		
-		m_bCellTrack = new byte[(tracklen+0x200) & 0xfe00];
+		m_abyTrack = new byte[(tracklen+0x200) & 0xfe00];
 
 		// Allocate bytes in memory. We will write the array to the file at the end.
-		byte[] image = new byte[0x0400 + m_bCellTrack.length * tracks];
+		byte[] image = new byte[0x0400 + m_abyTrack.length * tracks];
 
 		if (format) {
 			for (int cyl = 0; cyl < tracks; cyl++) {
@@ -941,12 +929,12 @@ Including padding: (length = 0c40) GAP4+=16
 				
 				for (int head=0; head < 2; head++) {
 					m_currentHead = head;
-					formatTrack(cyl, head, sectors, density, (density==SINGLE_DENSITY)? gapsd : gapdd);
+					formatTrack(cyl, head, sectors, density, (density == FloppyFileSystem.SINGLE_DENSITY)? gapsd : gapdd);
 				}
 				
 				// Copy the track into the image
-				System.arraycopy(m_bCellTrack, 0, image, trackpos, m_bCellTrack.length);
-				trackpos += m_bCellTrack.length;
+				System.arraycopy(m_abyTrack, 0, image, trackpos, m_abyTrack.length);
+				trackpos += m_abyTrack.length;
 			}
 			
 			// Copy the header into the image

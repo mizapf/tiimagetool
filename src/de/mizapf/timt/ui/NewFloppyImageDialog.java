@@ -25,76 +25,73 @@ import java.awt.*;
 import java.awt.event.*;
 
 import de.mizapf.timt.files.ImageFormat;
-import de.mizapf.timt.files.FloppyFileSystem;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.files.FormatParameters;
+import de.mizapf.timt.files.FloppyFileSystem;
 
-class NewImageDialog extends ToolDialog {
+class NewFloppyImageDialog extends ToolDialog {
 	
 	JTextField 		m_tfName;
-	JComboBox<String> 		m_jcType;
-	JRadioButton 	m_jrFormatted;
-	JRadioButton 	m_jrBlank;
+	JTextField		m_tfFill;
+
 	JRadioButton 	m_jrSingle;
 	JRadioButton 	m_jrDouble;
-	JComboBox<String> 		m_jcDensity;
+
+	JComboBox<String> m_jcDensity;
+
 	JRadioButton	m_jrTrack40;
 	JRadioButton 	m_jrTrack80;
-	
-	public final static String[] suffix = { ".dsk", ".dtk", ".hfe" };
-	
-	NewImageDialog(JFrame owner) {
+		
+	NewFloppyImageDialog(JFrame owner) {
 		super(owner, TIImageTool.langstr("NewImageFloppy"));
 	}
 	
-/*
+/*		
 	| 	Create new floppy image										|
 
-		Disk name			EMPTY________
-		Image type			|v Sector Dump|
-		Disk will be		* formatted			o blank
-		Sides				o Single			* Double
-		Density				|v Double|
-		Tracks				* 40				o 80
+		Volume name			    EMPTY________
+		Sides				    o Single			* Double
+		Density				    |v Double|
+		Tracks				    * 40				o 80
 		
 				+-------+			+-----------+
 				|	OK	|			|	Cancel	|
 				+-------+           +-----------+
+
 */	
 	public void createGui(Font font) {
 		prepareGui();
-		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.dialogFont);
-		
-		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("NewImageColumn"));
-
-		m_tfName = putTextField(this,  TIImageTool.langstr("VolumeName"), "EMPTY", nColumnWidth, 0); 
-		
-		String[] asFormat = { TIImageTool.langstr("SectorDump"), TIImageTool.langstr("TrackDump"), TIImageTool.langstr("HFEImage") };
-		m_jcType = putComboBox(this, TIImageTool.langstr("ImageType"), asFormat, 0, nColumnWidth);
-		
+	
+		int nColumnWidth = determineFieldWidth(TIImageTool.langstr("NewImageFill"));
 		int rbutwidth = determineFieldWidth(TIImageTool.langstr("NewImageRadioColumn"));
-		
 		int[] anFormat = new int[2];
 		anFormat[0] = rbutwidth;
 		anFormat[1] = rbutwidth;
-		
-		String[] asDoFormat = { TIImageTool.langstr("Formatted"), TIImageTool.langstr("Blank") };
-		JRadioButton[] arb2 = putRadioButtons(this, TIImageTool.langstr("NewImageWillBe"), nColumnWidth, asDoFormat, anFormat, 0);
-		m_jrFormatted = arb2[0];
-		m_jrBlank = arb2[1];
 
+		// Volume name [ ... ]
+		m_tfName = putTextField(this,  TIImageTool.langstr("VolumeName"), "EMPTY", nColumnWidth, 0); 
+
+		// Sides
 		String[] asSides = { TIImageTool.langstr("SingleSided"), TIImageTool.langstr("DoubleSided") };
 		JRadioButton[] arb3 = putRadioButtons(this, TIImageTool.langstr("NewImageSides"), nColumnWidth, asSides, anFormat, 1);
 		m_jrSingle = arb3[0];
 		m_jrDouble = arb3[1];
 
-		String[] asOptions = { TIImageTool.langstr("SingleDensity"), TIImageTool.langstr("DoubleDensity"), TIImageTool.langstr("HighDensity"), TIImageTool.langstr("UltraDensity") };
+		// Density
+		String[] asOptions = { 	TIImageTool.langstr("SingleDensity"), 
+								TIImageTool.langstr("DoubleDensity"), 
+								TIImageTool.langstr("HighDensity"), 
+								TIImageTool.langstr("UltraDensity"),
+								TIImageTool.langstr("DoubleDensity16")
+		};
 		m_jcDensity = putComboBox(this, TIImageTool.langstr("NewImageDensity"), asOptions, 1, nColumnWidth);
-		
+
+		// Tracks
 		String[] asTracks = { "40", "80" };
 		JRadioButton[] arb4 = putRadioButtons(this, TIImageTool.langstr("NewImageTracks"), nColumnWidth, asTracks, anFormat, 0);
 		m_jrTrack40 = arb4[0];
 		m_jrTrack80 = arb4[1];
-
+		
 		add(Box.createVerticalGlue());
 
 		addButtons();
@@ -110,6 +107,7 @@ class NewImageDialog extends ToolDialog {
 			case 1: return FloppyFileSystem.DOUBLE_DENSITY;
 			case 2: return FloppyFileSystem.HIGH_DENSITY;
 			case 3: return FloppyFileSystem.ULTRA_DENSITY;
+			case 4: return FloppyFileSystem.DOUBLE_DENSITY_16;
 		}				
 		return -1;
 	}
@@ -118,25 +116,15 @@ class NewImageDialog extends ToolDialog {
 		return m_jrSingle.isSelected()? 1:2;
 	}
 	
-	boolean formatImage() {
-		return m_jrFormatted.isSelected();
-	}
-	
 	String getDiskName() {
 		return m_tfName.getText();
 	}
 	
-	int getImageType() {
-		switch (m_jcType.getSelectedIndex()) {
-			case 0: return ImageFormat.SECTORDUMP;
-			case 1: return ImageFormat.TRACKDUMP;
-			case 2: return ImageFormat.HFE;
-		}
-		return -1;
-	}
-	
-	String getImageTypeSuffix() {
-		return suffix[m_jcType.getSelectedIndex()];
+	FormatParameters getParameters() {
+		return new FormatParameters(getDiskName(), 
+									getSides(), 
+									getDensity(), 
+									getTrackCount(),
+									FloppyFileSystem.sectorsPerTrack[getDensity()]);
 	}
 }
-

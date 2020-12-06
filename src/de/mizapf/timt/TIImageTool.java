@@ -35,6 +35,7 @@
 	[ ] Show embedded machine language in BASIC (or indicate at least)
 	[ ] Add access to xdt99
 	[ ] Allow for more DIS/VAR formats to be viewed
+	[ ] IDE harddisk init
 */
 
 package de.mizapf.timt;
@@ -149,6 +150,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String VERBOSE = "verbose";
 	public final static String FONTSIZE = "fontsize";
 	public final static String UIFONT = "uifont";
+	public final static String FILLSECT = "fillpat";
 	
 	Properties m_propNames;
 	
@@ -166,8 +168,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenu     m_mOpenRecent;
 	JMenuItem m_iClose;
 	JMenuItem m_iCloseAll;
-	JMenuItem m_iSaveImage;
-	JMenuItem m_iSaveAllImage;
+	JMenuItem m_iSave;
+	JMenuItem m_iSaveAs;
+	// JMenuItem m_iSaveAll;
 
 	JMenuItem m_iExport;
 	JMenuItem m_iPreferences;
@@ -201,7 +204,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	LinkedList<DirectoryView> m_Views;	
 
 	/** Count for unnamed files (see export) */
-	int m_nUnnamedCount;
+	private int m_nUnnamedFileCount;
+	
+	/** Count for unnamed volumes (for newly created volumes) */
+	private int m_nUnnamedVolumeCount;
 	
 	/** Thread for background activity. */
 	Thread m_thrBackground;
@@ -278,10 +284,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	boolean m_utilsfound;
 	
 	public long m_maxMemory;
-	
-	/** Generation counter. */
-	public GenCounter m_gencount;	
-	
+		
 	// ===============================================
 	// Clipboard for cut-copy-paste
 	
@@ -374,13 +377,32 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			UIManager.put("FileChooser.listFont", boldDialogFont);
 			
 			// -------------------------------------------
+			/* Main window
+			
+			File
+			----
+			New > Floppy image...
+			Hard disk image...
+			Single CF7 volume...
+			Complete CF7 image...
+			Open...
+			Open recent file > ...
+			Save
+			Save as
+			Save all
+			Close
+			Close all
+			Export image  -> to Utility
+			Preferences...
+			Exit */
+			
 			m_mFile = new JMenu(langstr("File"));
 			m_mbar.add(m_mFile);
 			
 			m_mNew = new JMenu(langstr("New"));
 			m_mFile.add(m_mNew);
 			
-			m_iNewFloppy = createMenuItem(new NewImageAction());
+			m_iNewFloppy = createMenuItem(new NewFloppyImageAction());
 			m_iNewHD = createMenuItem(new NewHDImageAction());
 			m_iNewCF7Vol = createMenuItem(new NewCF7VolumeAction());
 			m_iNewCF7Img = createMenuItem(new NewCF7ImageAction());
@@ -405,12 +427,17 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				}
 			}
 			m_mOpenRecent.setEnabled(i > 0);
-						
-			m_iSaveImage = createMenuItem(new SaveImageAction());
-			m_mFile.add(m_iSaveImage);
-
-			m_iSaveAllImage = createMenuItem(new SaveAllImageAction());
-			m_mFile.add(m_iSaveAllImage);
+			m_mFile.addSeparator();
+			
+			m_iSave = createMenuItem(new SaveImageAction());
+			m_mFile.add(m_iSave);
+			m_iSaveAs = createMenuItem(new SaveAsImageAction());
+			m_mFile.add(m_iSaveAs);
+			// m_iSaveAll = createMenuItem(new SaveAllImageAction());
+			// m_mFile.add(m_iSaveAll);
+			setSaveOptions();
+			
+			m_mFile.addSeparator();
 
 			m_iClose = createMenuItem(new CloseAction());
 			m_mFile.add(m_iClose);
@@ -584,6 +611,24 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		
 		public void run() {
+			boolean bOKToClose = true;
+			if (m_dv.getVolume().isModified()) {
+				bOKToClose = false;
+				// Check whether there is another view of that volume 
+				for (DirectoryView dv : m_Views) {
+					if (dv != m_dv) {
+						if (dv.getVolume() == m_dv.getVolume()) {
+							bOKToClose = true;
+						}
+					}
+				}
+			}
+
+			if (!bOKToClose) {
+				int nRet = JOptionPane.showConfirmDialog(m_frmMain, TIImageTool.langstr("UnsavedChanges") + ". " + TIImageTool.langstr("ReallyClose"), TIImageTool.langstr("Leaving"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+				if (nRet == JOptionPane.NO_OPTION) return;
+			}
+			
 			m_dv.close();
 			m_Views.remove(m_dv);
 			m_jtViews.remove(m_dv.getPanel());
@@ -606,6 +651,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			DirectoryView dv = new DirectoryView(m_dirdv, m_bAttachdv, TIImageTool.this);
 			m_Views.add(dv);
 			activateMenuItems();
+			setSaveOptions();
 		}
 	}
 	
@@ -613,6 +659,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		Volume volume;
 		boolean backtoroot;	
 		
+		/* vol is used as a filter. When null, all views are selected. */
 		ViewRefresher(Volume vol) {
 			volume = vol;
 			backtoroot = false;
@@ -759,7 +806,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
 		}
 		
-		public void setName(String sName) {
+		public void setTabName(String sName) {
 			m_TabLabel.setText(sName);
 		}
 		
@@ -768,7 +815,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 	}
 
-	private class CloseTabButton extends JButton implements ActionListener, MouseListener {
+	private class CloseTabButton extends JButton implements MouseListener {
 		private DirectoryView m_dv;
 		
 		public CloseTabButton(DirectoryView dv) {
@@ -783,13 +830,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			setBorderPainted(false);
 			addMouseListener(this);
 			setRolloverEnabled(true);
-			addActionListener(this);
 		}
-		
-		public void actionPerformed(ActionEvent e) {
-			SwingUtilities.invokeLater(new CloseView(m_dv));
-		}
-		
+				
 		// paint the cross
 		protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
@@ -1046,7 +1088,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_bRunning = true;	
 		m_first = true;
 		
-		m_nUnnamedCount = 0;
+		m_nUnnamedFileCount = 0;
+		m_nUnnamedVolumeCount = 0;
 		
 		// Set the look and feel
 		String lafclass = getPropertyString(LOOKANDFEEL, "javax.swing.plaf.metal.MetalLookAndFeel");
@@ -1148,16 +1191,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		findPathsForCF();
 		m_maxMemory = Runtime.getRuntime().freeMemory();
 
-		m_gencount = new GenCounter();
+		SectorCache.setGen(0);
 		
 		new CreateGui().run();
 		//SwingUtilities.invokeLater(new CreateGui());
 	}
 	
-	public GenCounter getGenerationCounter() {
-		return m_gencount;
-	}	
-
 	public void updateMemoryInfo() {
 		long freeMem = Runtime.getRuntime().freeMemory();
 		int nPercent = (int)(freeMem*100/m_maxMemory);
@@ -1383,6 +1422,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		getPropertyString(FONTSIZE, "12");
 		getPropertyString(CONTFONT, "Monospaced");
 		getPropertyString(UIFONT, "SansSerif");
+		getPropertyString(FILLSECT, "E5");
 	}
 
 	public List<String> getPreferences(String category) {
@@ -1609,6 +1649,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	public void selectView(DirectoryView dv) {
 		m_dvSelected = dv;
+		setSaveOptions();
 //		System.out.println("selected view of " + dv.getDirectory().getVolume().getImageName());
 	}
 	
@@ -1696,8 +1737,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			}
 		}
 		if (sbNewFile.length()==0) {
-			m_nUnnamedCount++;
-			sbNewFile.append(langstr("Unnamed")).append(m_nUnnamedCount);
+			m_nUnnamedFileCount++;
+			sbNewFile.append(langstr("Unnamed")).append(m_nUnnamedFileCount);
 		}
 		return sbNewFile.toString();
 	}
@@ -1892,6 +1933,11 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public void componentShown(ComponentEvent ce) { 	}
 
 	public void windowClosing(WindowEvent we) { 
+		if (hasUnsavedChanges()) {
+			int nRet = JOptionPane.showConfirmDialog(m_frmMain, TIImageTool.langstr("UnsavedChanges") + ". " + TIImageTool.langstr("ReallyQuit"), TIImageTool.langstr("Leaving"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+			if (nRet == JOptionPane.NO_OPTION) return;
+		}
+		
 		m_frmMain.dispose();
 		for (DirectoryView dv : m_Views) {
 			dv.close();
@@ -1949,12 +1995,14 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	****************************************************/
 			
 	public void setSourceDirectory(java.io.File dir, String sWhich) {
-		m_flSourceDirectory = dir;
-		try {
-			m_Settings.put(sWhich + SOURCEDIR, m_flSourceDirectory.getCanonicalPath());
-		}
-		catch (IOException iox) {
-			iox.printStackTrace();
+		if (!dir.getName().equals(".")) { // sets the property only for non-UNC paths
+			m_flSourceDirectory = dir;
+			try {
+				m_Settings.put(sWhich + SOURCEDIR, m_flSourceDirectory.getCanonicalPath());
+			}
+			catch (IOException iox) {
+				iox.printStackTrace();
+			}
 		}
 	}
 	
@@ -1976,13 +2024,29 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_bRunning = false;
 	}
 	
+	public void setSaveOptions() {
+		boolean bMod = false;
+		DirectoryView dv = getSelectedView();
+		if (dv != null) {
+			bMod = dv.getVolume().isModified();
+		}
+		m_iSave.setEnabled(bMod);
+		m_iSaveAs.setEnabled(m_Views.size()>0);  // Always enable to allow for format change
+		
+		for (DirectoryView dva : m_Views) {
+			if (dva.getVolume().isModified()) bMod = true;
+		}
+		// m_iSaveAll.setEnabled(bMod);
+	}
+	
 	// ================= View handling ========================================
 		
 	/** Return the reference to the opened volume. This is to ensure consistency 
 		with multiple views of the same volume. */
 	public Volume getAlreadyOpenedVolume(String sImageName) {
 		for (DirectoryView dv : m_Views) {
-			if (dv.getImageName().equals(sImageName)) return dv.getVolume();
+			String sName = dv.getVolume().getImageName();
+			if (sName != null && sName.equals(sImageName)) return dv.getVolume();
 		}
 		return null;
 	}
@@ -2004,7 +2068,11 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		m_first = false;
 		SwingUtilities.invokeLater(new NewDirectoryView(dir, bAttach));
-		addRecent(dir.getVolume().getImageName());
+		
+		// If the image is not saved yet, do not add to the recent list
+		String sImageName = dir.getVolume().getImageName();
+		if (sImageName != null) 
+			addRecent(dir.getVolume().getImageName());
 	}
 	
 	public void refreshPanel(Volume vol) {
@@ -2012,7 +2080,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 
 	public void reloadVolume(Volume vol) throws FileNotFoundException, IOException, ImageException {
-		Volume volNew = new Volume(vol.getImageName(), m_gencount);
+		Volume volNew = new Volume(vol.getImageName());
 		SwingUtilities.invokeLater(new ViewRefresher(vol, true));
 	}
 	
@@ -2100,7 +2168,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 	}
 	
-	void addRecent(String recentFile) {
+	public void addRecent(String recentFile) {
 		int i=0;
 		boolean found = false;
 		
@@ -2246,4 +2314,45 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public EditMenu getEditMenu() {
 		return m_mEdit;
 	}
+	
+	public boolean hasUnsavedChanges() {
+		for (DirectoryView dv : m_Views) {
+			if (dv.getVolume().isModified()) return true;
+		}
+		return false;
+	}
+	
+	public int nextUnnamedIndex() {
+		return ++m_nUnnamedVolumeCount;
+	}
+	
+	/** Returns a complete sector content filled with the fill pattern.
+		@throws NumberFormatException if the provided String cannot be parsed  
+	*/
+	public byte[] getFillSequence() throws NumberFormatException {
+		String sPattern = getPropertyString(FILLSECT);
+		if ((sPattern.length() != 2) && (sPattern.length() != 4) && (sPattern.length() != 8))
+			throw new NumberFormatException("Invalid fill pattern: " + sPattern);
+		
+		byte[] abyPattern = new byte[4];
+		
+		if (sPattern.length()==2) {
+			sPattern = sPattern + sPattern;  // make it xxxx
+		}
+		
+		if (sPattern.length()==4) {
+			sPattern = sPattern + sPattern;  // make it xxxxxxxx
+		}
+		
+		for (int i=0; i < 4; i++) {
+			abyPattern[i] = (byte)Integer.parseInt(sPattern.substring(i*2, (i+1)*2), 16);
+		}
+		
+		byte[] abySector = new byte[256];
+		for (int pos = 0; pos < 256; pos +=4 ) 
+			System.arraycopy(abyPattern, 0, abySector, pos, 4);
+		
+		return abySector;
+	}
+	
 }

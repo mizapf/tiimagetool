@@ -83,7 +83,7 @@ public class ImportEmulateAction extends Activity {
 					Volume vol = null;
 					try {
 						vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
-						if (vol==null) vol = new Volume(sAbsFile, imagetool.getGenerationCounter());
+						if (vol==null) vol = new Volume(sAbsFile);
 					}
 					catch (MissingHeaderException mx) {
 						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImportEmulateNoSig"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);

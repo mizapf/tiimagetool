@@ -83,7 +83,7 @@ public class CheckFSAction extends Activity {
 					
 					if (nRet == JOptionPane.YES_OPTION) {
 						bChangedSector0 = true;
-						vol.setGeometry(1600, 40, 2, 20, 2); 
+						vol.fixCF7Geometry(); 
 					}
 					else {
 						if (nRet == JOptionPane.CANCEL_OPTION) {

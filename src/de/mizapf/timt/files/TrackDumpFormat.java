@@ -31,7 +31,6 @@ import java.io.File;
 
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
-import de.mizapf.timt.util.GenCounter;
 
 class TrackDumpFormat extends ImageFormat {
 
@@ -55,20 +54,43 @@ class TrackDumpFormat extends ImageFormat {
 		return 0;		
 	}
 	
-	TrackDumpFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
-		super(filesystem, sImageName, gen);
-		writeThrough(true);
+	int[] gapsd = { 16, 6, 11, 6, 45, 231 };  
+	int[] gapdd = { 40, 10, 22, 12, 24, 712 };
+	
+	TrackDumpFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
+		writeThrough(false);
 	}
 	
 	TrackDumpFormat() {
-		writeThrough(true);
+		writeThrough(false);
+	}
+
+	TrackDumpFormat(RandomAccessFile filesystem, String sImageName, TFileSystem fs) throws IOException, ImageException {
+		super(filesystem, sImageName, fs);
+		m_nSectorsByFormat = NONE;
+		m_currentCylinder = NONE;
+		m_currentTrack = NONE;
+		m_currentHead = NONE;
+		m_positionInTrack = 0;
+		writeThrough(false);
+	}
+		
+	@Override
+	int getFormatType() {
+		return FLOPPY_FORMAT; 
+	}
+
+	@Override
+	int getImageType() {
+		return TRACKDUMP; 
 	}
 
 	@Override	
 	void setGeometry(boolean bSpecial) throws IOException, ImageException {
-		m_FileSystem.seek(0);
+		m_ImageFile.seek(0);
 		byte[] bheader = new byte[60];
-		m_FileSystem.readFully(bheader);
+		m_ImageFile.readFully(bheader);
 		
 		// Determine the positions and lengths of the tracks (see HFEFormat)
 		
@@ -96,37 +118,64 @@ class TrackDumpFormat extends ImageFormat {
 		m_nHeads = 2;
 		if (tracklen==0) throw new ImageException(TIImageTool.langstr("ImageUnknown"));
 		
-		int cylinders = (int)((m_FileSystem.length()/tracklen)/2);
-		if (cylinders < 30) {
+		m_nCylinders = (int)((m_ImageFile.length()/tracklen)/m_nHeads);
+		 
+		if (m_nCylinders < 30) {
+			// Warn that this is not compatible
 			System.err.println(TIImageTool.langstr("TrackDump1Sided"));
 			m_nHeads = 1;
-			cylinders = cylinders*2;
+			m_nCylinders = (int)(m_ImageFile.length()/tracklen);
 		}
 		
-		m_trackpos = new int[cylinders*2];
-		m_tracklen = new int[cylinders*2];
+		m_nDensity = (m_encoding == FM)? FloppyFileSystem.SINGLE_DENSITY : FloppyFileSystem.DOUBLE_DENSITY;
 		
+		setupBuffers(tracklen);
+	}
+
+	/** Newly created. */
+	@Override	
+	void setGeometry(TFileSystem fs) {
+		// Calculate length
+		FloppyFileSystem ffs = (FloppyFileSystem)fs;
+		m_nHeads = ffs.getHeads();
+		m_nCylinders = ffs.getTracksPerSide();
+		
+		int nSectPerTrack = ffs.getTotalSectors() / (m_nHeads * ffs.getTracksPerSide());
+		m_nDensity = ffs.getDensity();
+		
+		m_encoding = (nSectPerTrack < 16)? FM : MFM;
+		
+		setupBuffers((m_encoding==FM)? 3253 : 6872);
+	}
+
+	void setupBuffers(int tracklen) {
 		int pos = 0;
 		
-		for (int j=0; j < cylinders; j++) {
-			m_trackpos[j] = pos;
-			m_tracklen[j] = tracklen;
-			pos += tracklen;
-		}
-		for (int j=2*cylinders-1; j >= cylinders; j--) {
-			m_trackpos[j] = pos;
-			m_tracklen[j] = tracklen;
-			pos += tracklen;
+		if (m_nHeads == 1) {
+			// Warn that this is not compatible
+			System.err.println(TIImageTool.langstr("TrackDump1Sided"));
 		}
 		
-		m_nCylinders = cylinders;
+		m_trackpos = new int[m_nCylinders*2];
+		m_tracklen = new int[m_nCylinders*2];
+
+		for (int j=0; j < m_nCylinders; j++) {
+			m_trackpos[j] = pos;
+			m_tracklen[j] = tracklen;
+			pos += tracklen;
+		}
+		for (int j=2*m_nCylinders-1; j >= m_nCylinders; j--) {
+			m_trackpos[j] = pos;
+			m_tracklen[j] = tracklen;
+			pos += tracklen;
+		}
 		m_nSectorsByFormat = NONE;
 		m_currentCylinder = NONE;
 		m_currentTrack = NONE;
 		m_currentHead = NONE;
 		m_positionInTrack = 0;	
 	}
-
+	
 	public String getDumpFormatName() {
 		return TIImageTool.langstr("TrackDump");
 	}
@@ -134,7 +183,7 @@ class TrackDumpFormat extends ImageFormat {
 	/** We return the cached sector.
 	*/
 	@Override
-	public Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException {
+	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
 		if (nSectorNumber > 10000) throw new ImageException(String.format(TIImageTool.langstr("BadSectorNumber"), nSectorNumber)); 
 		int secindex = readTrack(nSectorNumber);
 		if (secindex != NONE) {
@@ -146,7 +195,7 @@ class TrackDumpFormat extends ImageFormat {
 	}
 
 	@Override
-	public void writeSectorToImage(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSector(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
 		int secindex = readTrack(nSectorNumber);
 		if (secindex == NONE) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 		// Write the new data
@@ -158,52 +207,34 @@ class TrackDumpFormat extends ImageFormat {
 		// System.out.println(m_sector[secindex]);
 		// System.out.println("CRC = " + Utilities.toHex(m_sector[secindex].getCrc(),4));
 	}
+
+	/** Create a new track in m_abyTrack when the image has not yet been written. 
+		Current cylinder and head are stored in the member variables.
+	*/
+	@Override
+	void createTrack() {
+		System.out.println("Create new track " + m_currentTrack);
+		FloppyFileSystem ffs = (FloppyFileSystem)m_fs;
+//		int cylinder, int head, int seccount, int density, int[] gap
+		formatTrack(m_currentCylinder, m_currentHead, ffs.getSectorsPerTrack(),
+			ffs.getDensity(),
+			(m_encoding==FM)? gapsd : gapdd );
+	}
 	
+
 	/** Scan a track. 
 	    @param nSectorNumber Sector that is about to be read.
 	    @return Index of the sector in the sector cache (or NONE)
 	*/
 	@Override
-	int readTrack(int nSectorNumber) throws IOException, ImageException {
-		int secindex = -1;
-		
-		Location loc = null;
-		if (nSectorNumber != 0) {
-			loc = getLocation(nSectorNumber);
-		}
-		else {
-			loc = new Location(0, 0, 0, 0);
-		}
-		
-		// Do we have that track already?
-		if (m_currentCylinder == loc.cylinder && m_currentHead == loc.head) {
-			for (int i=0; i < m_sector.length; i++) {
-				if (m_sector[i].getNumber()==nSectorNumber) return i;
-			}
-			return NONE;
-		}
-		else {
-			// Write back the last track
-			flush();
-		}
-		
-		m_currentTrack = loc.track;
-		m_currentCylinder = loc.cylinder;
-		m_currentHead = loc.head;
-
-		m_abyTrack = new byte[m_tracklen[loc.track]];
-		
-		m_FileSystem.seek(m_trackpos[loc.track]);
-		m_FileSystem.readFully(m_abyTrack);
-		
-		// Reset to start
-		m_positionInTrack = 0;
+	int loadTrack(Location loc) throws IOException, ImageException {
 		
 		ArrayList<Sector> sectors = new ArrayList<Sector>();
 
 		int count=0;
 		byte[] bSector = null;
 		byte[] bHeader = new byte[4];
+		int secindex = -1;
 		
 		while (m_positionInTrack < m_tracklen[loc.track]) {
 			if (nextIDAMFound()) {
@@ -223,7 +254,8 @@ class TrackDumpFormat extends ImageFormat {
 					bSector = new byte[256];
 					readBits(bSector);
 					int crcd = readBits(16);
-					Sector sect = new Sector(loc.track*m_nSectorsByFormat + bHeader[2], bSector, pos, 0xffff, mark); 
+					Sector sect = new Sector(loc.track*m_nSectorsByFormat + bHeader[2], bSector);
+					sect.setTrackPosition(pos, 0xffff, mark); 
 					sectors.add(sect);
 					//System.out.println("Sector " + sect.getNumber()  + ": Data CRC = " + Utilities.toHex(sect.getCrc(),4) + " (expected " +  Utilities.toHex(crcd, 4) + ")");
 					if (crcd != 0xf7f7) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), sect.getNumber(), Utilities.toHex(0xf7f7,4), Utilities.toHex(crcd, 4)));
@@ -239,16 +271,6 @@ class TrackDumpFormat extends ImageFormat {
 		
 		if (count == 0) throw new ImageException(TIImageTool.langstr("NoSectorsFound"));
 		
-		// Determine density
-		if (m_nDensity==0) {
-			if (m_encoding==FM) m_nDensity = 1;
-			else {
-				if (count <= 18) m_nDensity = 2;
-				else if (count <= 36) m_nDensity = 3;
-				else m_nDensity = 4;
-			}
-		}
-
 		// Now we know the last sector	
 		if (m_nTotalSectors == 0) m_nTotalSectors = m_nSectorsByFormat * m_nCylinders * m_nHeads;
 
@@ -368,12 +390,17 @@ class TrackDumpFormat extends ImageFormat {
 		}
 		if (trackchanged) {
 			// Write back the whole track (both sides; leave something to optimize)
-			m_FileSystem = new RandomAccessFile(m_sImageName, "rw");		
+			m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
 			// System.out.println("writing track " + m_currentTrack + " at position " + m_trackpos[m_currentTrack]);
-			m_FileSystem.seek(m_trackpos[m_currentTrack]);
-			m_FileSystem.write(m_abyTrack);
-			m_FileSystem = new RandomAccessFile(m_sImageName, "r");		
+			m_ImageFile.seek(m_trackpos[m_currentTrack]);
+			m_ImageFile.write(m_abyTrack);
+			m_ImageFile = new RandomAccessFile(m_sImageName, "r");		
 		}
+	}
+
+	@Override
+	void writeBack(Sector sect) throws IOException, ImageException {
+		writeSector(sect.getNumber(), sect.getBytes());
 	}
 
 	@Override
@@ -399,7 +426,7 @@ class TrackDumpFormat extends ImageFormat {
 		
 		byte[] bHeader = new byte[4];
 		
-		if (density==SINGLE_DENSITY) {
+		if (density == FloppyFileSystem.SINGLE_DENSITY) {
 			gapval0 = 0x00;
 			gapval1 = 0xff;
 			sector = (cylinder * 6) % 9;
@@ -416,7 +443,7 @@ class TrackDumpFormat extends ImageFormat {
 			// Sync gap
 			for (int k=0; k < gap[1]; k++) writeBits(0x00,8);
 
-			if (density != SINGLE_DENSITY) {			
+			if (density != FloppyFileSystem.SINGLE_DENSITY) {			
 				writeBits(0xa1,8);
 				writeBits(0xa1,8);
 				writeBits(0xa1,8);
@@ -436,15 +463,15 @@ class TrackDumpFormat extends ImageFormat {
 			for (int k=0; k < gap[3]; k++) writeBits(0x00,8);
 			
 			// DAM
-			if (density!=SINGLE_DENSITY) {
+			if (density != FloppyFileSystem.SINGLE_DENSITY) {
 				writeBits(0xa1,8);
 				writeBits(0xa1,8);
 				writeBits(0xa1,8);
 			}
 			writeBits(0xfb, 8);
 
-			// Sector content
-			for (int k=0; k < 256; k++) writeBits(0xe5,8);
+			// Sector content (Empty)
+			writeBits(m_abyEmpty, 256*8);
 			
 			// CRC
 			writeBits(0xf7f7, 16);
@@ -453,7 +480,7 @@ class TrackDumpFormat extends ImageFormat {
 			for (int k=0; k < gap[4]; k++) writeBits(gapval1,8);
 
 			// Next sector
-			if (density==SINGLE_DENSITY)
+			if (density == FloppyFileSystem.SINGLE_DENSITY)
 				sector = (sector + 7) % 9;
 			else
 				sector = (sector + 11) % 18;
@@ -468,13 +495,13 @@ class TrackDumpFormat extends ImageFormat {
 	
 	public void createEmptyImage(File newfile, int sides, int density, int cylinders, int sectors, boolean format) throws ImageException, FileNotFoundException, IOException {
 		
-		if (density != SINGLE_DENSITY && density != DOUBLE_DENSITY) 
+		if (density != FloppyFileSystem.SINGLE_DENSITY && density != FloppyFileSystem.DOUBLE_DENSITY) 
 			throw new ImageException(String.format(TIImageTool.langstr("TrackDumpInvalidDensity"), density));
 		
 		if (sides != 2)
 			throw new ImageException(TIImageTool.langstr("TrackDump1Sided"));
 		
-		int tracklen = (density==SINGLE_DENSITY)? 3253 : 6872;
+		int tracklen = (density == FloppyFileSystem.SINGLE_DENSITY)? 3253 : 6872;
 		int pos = 0;
 
 		m_trackpos = new int[cylinders*2];
@@ -490,10 +517,7 @@ class TrackDumpFormat extends ImageFormat {
 			m_tracklen[j] = tracklen;
 			pos += tracklen;
 		}
-		
-		int[] gapsd = { 16, 6, 11, 6, 45, 231 };  
-		int[] gapdd = { 40, 10, 22, 12, 24, 712 };
-		
+
 		m_abyTrack = new byte[tracklen];
 
 		// Allocate bytes in memory. We will write the array to the file at the end.
@@ -505,7 +529,7 @@ class TrackDumpFormat extends ImageFormat {
 			
 				for (int head=0; head < 2; head++) {
 					m_positionInTrack = 0;
-					formatTrack(cyl, head, sectors, density, (density==SINGLE_DENSITY)? gapsd : gapdd);
+					formatTrack(cyl, head, sectors, density, (density == FloppyFileSystem.SINGLE_DENSITY)? gapsd : gapdd);
 				
 					// Copy the track into the image
 					int track = (head==0)? cyl : 2*cylinders-1-cyl; 
@@ -529,11 +553,11 @@ class TrackDumpFormat extends ImageFormat {
 		int count=0;
 	
 		if (fix) {
-			m_FileSystem.close();
-			m_FileSystem = new RandomAccessFile(m_sImageName, "rw");
+			m_ImageFile.close();
+			m_ImageFile = new RandomAccessFile(m_sImageName, "rw");
 			// Flush the last track
-			m_FileSystem.seek(m_trackpos[m_currentTrack]);
-			m_FileSystem.write(m_abyTrack);
+			m_ImageFile.seek(m_trackpos[m_currentTrack]);
+			m_ImageFile.write(m_abyTrack);
 		}
 		
 		for (int cylinder=0; cylinder < m_nCylinders; cylinder++) {
@@ -546,8 +570,8 @@ class TrackDumpFormat extends ImageFormat {
 
 				m_abyTrack = new byte[m_tracklen[track]];
 		
-				m_FileSystem.seek(m_trackpos[track]);
-				m_FileSystem.readFully(m_abyTrack);
+				m_ImageFile.seek(m_trackpos[track]);
+				m_ImageFile.readFully(m_abyTrack);
 				
 				// Reset to start
 				m_positionInTrack = 0;
@@ -603,14 +627,14 @@ class TrackDumpFormat extends ImageFormat {
 				}
 				// System.out.println("writing track " + m_currentTrack + " at position " + m_trackpos[m_currentTrack]);
 				if (changed) {
-					m_FileSystem.seek(m_trackpos[m_currentTrack]);
-					m_FileSystem.write(m_abyTrack);
+					m_ImageFile.seek(m_trackpos[m_currentTrack]);
+					m_ImageFile.write(m_abyTrack);
 				}
 			}
 		}
 		if (fix) {
-			m_FileSystem.close();
-			m_FileSystem = new RandomAccessFile(m_sImageName, "r");
+			m_ImageFile.close();
+			m_ImageFile = new RandomAccessFile(m_sImageName, "r");
 		}
 		return count;
 	}	

@@ -62,9 +62,12 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	JMenu			m_mFile;
 	EditMenu		m_mEdit;
 	
-	JMenuItem		m_iClose;
-	
 	JLabel			m_TabLabel;
+	
+	// File menu
+	JMenuItem		m_iSave;
+	JMenuItem		m_iSaveAs;
+	JMenuItem		m_iClose;
 	
 	// Context menu	
 	JMenuItem m_iNewFile;
@@ -112,6 +115,9 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	final static String DNDMOVE = "dndmove";
 	final static String DNDCOPY = "dndcopy";
 	final static String DNDCANCEL = "dndcancel";
+	
+	final static String SAVE = "save";
+	final static String SAVEAS = "saveas";
 	
 	public DirectoryView(Directory dir, boolean bAttached, TIImageTool app) {
 		m_dirCurrent = dir;
@@ -169,6 +175,17 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 //		int nWidth = m_panel.getWidth();
 //		int nHeight = m_panel.getHeight();
 		// Create top-level window
+		
+		/* Detached window
+		
+		File      Edit
+		----------------
+		Save      <EditMenu>
+		Save As
+		Attach
+		
+		*/
+		
 		m_frmOwn = new JFrame(m_dirCurrent.getVolume().getModShortImageName());
 		m_frmOwn.setIconImage(m_app.m_frameicon.getImage());
 		m_frmOwn.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -179,6 +196,22 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 
 		m_mbar = new JMenuBar();
 		m_mFile = new JMenu(m_app.langstr("File"));
+		
+		// Save
+	/*	m_iSave = new JMenuItem(m_app.langstr("Save"));
+		m_iSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
+		m_iSave.addActionListener(this);
+		m_iSave.setActionCommand(SAVE);
+		m_iSaveAs = new JMenuItem(m_app.langstr("SaveAs"));
+		m_iSaveAs.addActionListener(this);
+		m_iSaveAs.setActionCommand(SAVEAS); */
+		m_iSave = m_app.createMenuItem(new SaveImageAction());
+		m_iSaveAs = m_app.createMenuItem(new SaveAsImageAction());
+		
+		m_mFile.add(m_iSave);
+		m_mFile.add(m_iSaveAs);
+		m_iSave.setEnabled(m_dirCurrent.getVolume().isModified());
+		m_iSaveAs.setEnabled(m_dirCurrent.getVolume().isModified());
 		
 		m_iClose = new JMenuItem(m_app.langstr("Attach"));
 		m_iClose.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
@@ -198,6 +231,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		Point loc = m_app.getMainFrame().getLocationOnScreen();		
 		m_frmOwn.setLocation(loc.x+20, loc.y+20);
 		m_frmOwn.setVisible(true);
+		m_bAttached = false;
 	}
 		
 	JFrame getFrame() {
@@ -219,10 +253,11 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_frmOwn.dispose();
 		// Re-attach
 		Volume vol = m_dirCurrent.getVolume();
-		System.out.println("isModified: " + vol.isModified());
+		// System.out.println("isModified: " + vol.isModified());
 		m_app.attachView(vol.getModShortImageName(), this, false);
 		m_frmOwn = null;
 		m_mEdit = m_app.getEditMenu();	// Use the edit menu of the main application
+		m_bAttached = true;
 	}
 
 	public void setPasteEnabled(boolean state) {
@@ -279,9 +314,12 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	public void refreshView() {
 		m_panel.updateView();
 		activateEditMenu();
-		
+				
 		Volume vol = getVolume();
+		
 		if (vol != null) {
+			System.out.println("refresh");
+			setSaveOptions(vol.isModified());
 			if (m_frmOwn != null) {
 				m_frmOwn.setTitle(vol.getModShortImageName());
 			}
@@ -385,6 +423,14 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		return m_app;
 	}
 	
+	void setSaveOptions(boolean bMod) {
+		if (!isAttached()) {
+			m_iSave.setEnabled(bMod);
+			m_iSaveAs.setEnabled(bMod);
+		}
+		m_app.setSaveOptions();
+	}
+	
 	// ================================================================
 	//   ActionListener
 	// ================================================================
@@ -417,9 +463,20 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				if (ae.getActionCommand() == DNDCANCEL) {
 					// System.out.println(DNDCANCEL);
 				}
-				else
-					// Attach the stand-alone frame
-					reattach();
+				else {
+					if (ae.getActionCommand() == SAVE) {
+						System.out.println("*** Save");
+					}
+					else {
+						if (ae.getActionCommand() == SAVEAS) {
+							System.out.println("*** SaveAs");
+						}
+						else {
+							// Attach the stand-alone frame
+							reattach();
+						}
+					}
+				}
 			}
 		}
 	}

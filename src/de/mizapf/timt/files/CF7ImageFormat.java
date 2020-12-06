@@ -29,14 +29,11 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.io.File;
 import de.mizapf.timt.TIImageTool;
-import de.mizapf.timt.util.GenCounter;
 
 public class CF7ImageFormat extends ImageFormat {
 
 	String[] m_volume;
 	int m_maxVolumes = 0;
-	
-	GenCounter m_gen;
 	
 	static int vote(RandomAccessFile fileSystem) throws IOException {
 		if (fileSystem.length() < 409600*2) return 0;  // maximum size?
@@ -51,9 +48,8 @@ public class CF7ImageFormat extends ImageFormat {
 		else return 0;
 	}
 	
-	public CF7ImageFormat(RandomAccessFile filesystem, String sImageName, GenCounter gen) throws IOException, ImageException {
-		super(filesystem, sImageName, gen);
-		m_gen = gen;
+	public CF7ImageFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
+		super(filesystem, sImageName);
 		writeThrough(true);
 		
 		// Find volumes
@@ -87,6 +83,11 @@ public class CF7ImageFormat extends ImageFormat {
 		volumeList.toArray(m_volume);
 	}
 
+	@Override
+	int getFormatType() {
+		return SET_FORMAT; 
+	}
+	
 	public String getDumpFormatName() {
 		return TIImageTool.langstr("CF7ImageType");
 	}
@@ -96,15 +97,24 @@ public class CF7ImageFormat extends ImageFormat {
 	}
 	
 	CF7VolumeFormat getSubvolume(int number) throws IOException, ImageException {
-		return new CF7VolumeFormat(m_FileSystem, m_sImageName, number, m_gen);
+		return new CF7VolumeFormat(m_ImageFile, m_sImageName, number);
 	}
 	
 	@Override	
 	void setGeometry(boolean bSpecial) throws IOException, ImageException {	
 	}
 	
+	/** Newly created. */
+	@Override	
+	void setGeometry(TFileSystem fs) {
+	}
+	
 	@Override
-	int readTrack(int nSectorNumber) throws IOException, ImageException {
+	void createTrack() {
+	}
+	
+	@Override
+	int loadTrack(Location loc) throws IOException, ImageException {
 		return 0;
 	}
 
@@ -129,12 +139,12 @@ public class CF7ImageFormat extends ImageFormat {
 	}
 
 	@Override
-	public Sector readSectorFromImage(int nSectorNumber) throws EOFException, IOException, ImageException {
+	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
 		return null;
 	}
 	
 	@Override
-	public void writeSectorToImage(int nNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
 	}
 }
 

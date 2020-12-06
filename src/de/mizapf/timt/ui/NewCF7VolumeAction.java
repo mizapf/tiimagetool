@@ -96,15 +96,14 @@ public class NewCF7VolumeAction extends Activity {
 									newimagedia.getDiskName(),
 									ImageFormat.CF7VOLUME,
 									2, 
-									ImageFormat.DOUBLE_DENSITY,
+									FloppyFileSystem.DOUBLE_DENSITY,
 									40,
-									true,
-									imagetool.getGenerationCounter());
+									true);
 				
 				}
 				// Open it when it is initialized
 				if (file != null) {
-					newVolume = new Volume(file.getAbsolutePath(), imagetool.getGenerationCounter());
+					newVolume = new Volume(file.getAbsolutePath());
 					Directory root = newVolume.getRootDirectory();					
 					imagetool.addDirectoryView(root);
 				}

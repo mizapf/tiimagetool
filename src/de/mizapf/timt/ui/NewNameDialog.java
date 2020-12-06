@@ -70,6 +70,7 @@ class NewNameDialog extends ToolDialog {
 		
 		m_tfFileName = new JTextField();
 		m_tfFileName.setFont(TIImageTool.dialogFont);
+		m_tfFileName.addActionListener(this);
 		
 		String newName = m_sName;
 		if (newName.length()==10) {
@@ -129,7 +130,7 @@ class NewNameDialog extends ToolDialog {
 	}
 	
 	public void actionPerformed(ActionEvent ae) {
-		if (ae.getSource()==m_btnOK) {
+		if (ae.getSource()==m_btnOK || ae.getSource() == m_tfFileName) {
 			m_nState = OK;
 			dispose();
 		}

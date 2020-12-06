@@ -105,7 +105,7 @@ public class Directory extends Element {
 			subdirs.add(new Directory(vol, ddr, this));
 		}
 		int nMaxAU = Utilities.getInt16(vibddr.getBytes(), 0x0a);
-		m_bBadAUCount = (nMaxAU > Volume.MAXAU);
+		m_bBadAUCount = (nMaxAU > TFileSystem.MAXAU);
 		
 		m_Subdirs = new Directory[subdirs.size()];
 		subdirs.toArray(m_Subdirs);
@@ -168,6 +168,22 @@ public class Directory extends Element {
 		files.toArray(m_Files);		
 	}
 
+	
+	/** Builds a new empty floppy root directory. Called from Volume.const.
+		@param vol Volume where this directory is located
+	*/
+	Directory(Volume vol) {
+		m_Volume = vol;
+		m_dirParent = null;
+		setContainingDirectory(null);
+		
+		// Floppy root directory
+		m_nFileIndexSector = 1;
+		
+		m_Subdirs = new Directory[0];
+		m_Files = new TFile[0];
+	}
+	
 	
 	/** Builds a new floppy subdirectory. Called from Directory.const.
 		@param vol Volume which contains this directory
@@ -506,6 +522,8 @@ public class Directory extends Element {
 		// Add the file to this directory; gets sorted automatically
 		addToList(fileNew);
 
+		fileNew.checkArchiveFormat();
+		
 		/*
 		// Write the new file index record (new file entry)
 		writeFDIR();
@@ -643,10 +661,12 @@ public class Directory extends Element {
 		// Update file index
 		writeFDIR();
 
-		m_Volume.updateVIB();
+		if (m_Volume.isHarddiskImage()) {
+			m_Volume.updateVIB();
+		}
 		m_Volume.updateAlloc();
 		if (bReopen) m_Volume.reopenForRead();
-		m_Volume.nextGeneration();
+		SectorCache.nextGen();
 		System.out.println("Commit done");
 	}
 	
@@ -704,8 +724,15 @@ public class Directory extends Element {
 		else {
 			// Create new DDR
 			dirNew.writeDDR();
+
 			// Rewrite this directory's DDR (new dir entry)
-			writeDDR();
+			if (isRootDirectory()) {
+				// The VIB is the DDR of the root directory
+				m_Volume.updateVIB();
+			}
+			else {
+				writeDDR();
+			}
 			// Update the allocation map
 			m_Volume.updateAlloc();
 		}
