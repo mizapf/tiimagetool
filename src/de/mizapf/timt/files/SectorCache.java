@@ -69,6 +69,7 @@ public class SectorCache {
 	}
 	
 	public void wipe() {
+		System.out.println("Wipe write cache");
 		m_cache = new TreeMap<Integer,LinkedList<Sector>>();
 		m_bCommitted = true;		
 	}
@@ -77,22 +78,30 @@ public class SectorCache {
 		m_bCommitted = comm;
 	}
 	
+	Sector read(int number) {
+		return read(number, false);
+	}
+	
+	byte[] getFillPattern() {
+		return m_abyFill;
+	}
+	
 	/** Get the contents of a given sector.
 	    @param number Sector number
 		@return Sector, or null if the sector was never written to after start
 		or after a write back, or a sector filled with a fill pattern when the
 		volume has just been created
 	*/
-	Sector read(int number) {
+	Sector read(int number, boolean retFilled) {
 		LinkedList<Sector> secversions = m_cache.get(number);
 		if (secversions==null) {
-			if (m_bCommitted) return null;
+			if (m_bCommitted && !retFilled) return null;
 			else {
 				return new Sector(number, m_abyFill);
 			}
 		}
-		// System.out.println("Sector " + number + " from cache");
-		return secversions.getLast();
+		System.out.println("Sector " + number + " from cache");
+		return secversions.getLast();	
 	}
 	
 	/** Store the contents of the sector at the current generation. Does not

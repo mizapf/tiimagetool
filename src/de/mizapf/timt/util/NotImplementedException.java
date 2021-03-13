@@ -14,45 +14,15 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2016 Michael Zapf
+    Copyright 2011 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
+package de.mizapf.timt.util;
 
-package de.mizapf.timt.files;
-import de.mizapf.timt.TIImageTool;
-
-class Location {
-	int cylinder;
-	int head;
-	int track;
-	int sector;
+public class NotImplementedException extends RuntimeException {
 	
-	Location(int cyl, int hd, int sec, int tr) {
-		cylinder = cyl;
-		head = hd;
-		sector = sec;
-		track = tr;
-	}
-	
-	Location(byte[] abyHeader) {
-		cylinder = (int)abyHeader[0];
-		head = (int)abyHeader[1];
-		sector = (int)abyHeader[2];
-		track = -1;
-	}
-
-	public boolean equals(Object obj) {
-		if (obj instanceof Location) {
-			Location other = (Location)obj;
-			return ((cylinder == other.cylinder) &&
-					(head == other.head) &&
-					(sector == other.sector));
-		}
-		return false;
-	}
-	
-	public String toString() {
-		return String.format(TIImageTool.langstr("LocationString"), track, cylinder, head, sector);
+	public NotImplementedException(String sName) {
+		super(sName);
 	}
 }

@@ -29,7 +29,10 @@ import java.util.Arrays;
 public class FloppyFileSystem extends TFileSystem {
 
 	// Floppy-specific
-	int 		m_nTracksPerSide = 0;
+	
+	/** Sector count according to the sectors found on a track. */
+	private int			m_nCountedSectors;  
+	
 	int 		m_nDensity = 0;
 	boolean		m_bProtection = false;
 	boolean		m_bCF7 = false;
@@ -47,8 +50,13 @@ public class FloppyFileSystem extends TFileSystem {
 	public FloppyFileSystem() {
 		m_bCF7 = false;
 		m_bWriteCached = true;
+		m_nCountedSectors = NONE;
 	}
 
+	FloppyFileSystem(int cylinders, int heads, int secpertrack, int density) {
+		setGeometry(cylinders*heads*secpertrack, cylinders, heads, secpertrack, density);
+	}
+	
 	public void setCF7(boolean isCF7) {
 		m_bCF7 = isCF7;
 	}
@@ -66,7 +74,7 @@ public class FloppyFileSystem extends TFileSystem {
 		m_nSectorsPerTrack = abySect0[0x0c] & 0xff;
 		
 		m_nHeads = abySect0[0x12] & 0xff;
-		m_nTracksPerSide = abySect0[0x11] & 0xff;
+		m_nCylinders = abySect0[0x11] & 0xff;
 		int nDensity = getDensityFromCode(abySect0[0x13] & 0xff, m_nSectorsPerTrack);		
 		m_nDensity = getDensityFromSectors(m_nSectorsPerTrack);
 		if (m_nDensity != nDensity) {
@@ -86,7 +94,7 @@ public class FloppyFileSystem extends TFileSystem {
 	
 	void setGeometry(int total, int tracks, int heads, int sectors, int density) {
 		m_nTotalSectors = total;
-		m_nTracksPerSide = tracks;
+		m_nCylinders = tracks;
 		m_nHeads = heads;
 		m_nSectorsPerTrack = sectors;
 		m_nDensity = density;
@@ -125,9 +133,78 @@ public class FloppyFileSystem extends TFileSystem {
 	}
 	
 	int getTracksPerSide() {
-		return m_nTracksPerSide;
+		return m_nCylinders;
 	}
 	
+	void setCountedSectors(int sectors) {
+		m_nCountedSectors = sectors;
+	}
+
+	int getCountedSectors() {
+		return m_nCountedSectors;
+	}
+	
+	/** Delivers the position on the image file by track and sector.
+		Result is returned as a Location instance.
+		Called by the floppy image types only.
+	*/
+	@Override
+	Location lbaToChs(int nSectorNumber) throws ImageException {
+		// Now we should know the sector count, so we can calculate the track and
+		// sector. The track number is counted from head 0, cylinder 0 ... max,
+		// then head 1, cylinder max ... 0.
+		
+		// The sector offset is redefined here as the sector number in the track
+		
+		if (m_nTotalSectors != 0 && nSectorNumber >= m_nTotalSectors) 
+			throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), m_nTotalSectors));
+		
+		int sector = 0;
+		int track = 0;
+		int cylinder = track;
+		int head = 0;
+		
+		// For sector 0 we do not need the geometry.
+		if (nSectorNumber == 0) {
+			return new Location(0, 0, 0, 0);
+		}
+		else {
+			sector = nSectorNumber % m_nSectorsPerTrack;
+			track = nSectorNumber / m_nSectorsPerTrack;
+		}
+		
+		// track is linearly counted over both sides, cylinder is one side only
+		// track is the logical count (TI file system), cylinder is physical count
+		if (track >= m_nCylinders) {
+			// Next head
+			cylinder = 2 * m_nCylinders - 1 - track;
+			head++;
+		}
+		
+/*		if ((m_nSectorsPerTrack < 1) || (getCountedSectors() < 1)) {
+			Thread.currentThread().dumpStack();
+			throw new ImageException("BUG: m_nSectorsPerTrack = " + m_nSectorsPerTrack + ", sectorsByFormat = " + getCountedSectors());
+		} */
+		// System.out.println("total=" + m_nTotalSectors + ", sec=" + nSectorNumber + ", secbyform=" + getCountedSectors() + ", track=" + track + ", m_nCylinders=" + m_nCylinders + ", cylinder=" + cylinder);
+		
+		if (cylinder < 0) throw new ImageException(TIImageTool.langstr("ImageInvalidHeads"));
+
+		Location loc = new Location(cylinder, head, sector, track);
+		
+		// System.out.println("sector " + nSectorNumber + " in " + loc);
+		return loc;
+
+		// System.out.println("Sector " + nSectorNumber + " is in track " + loc.track + ", cyl=" + loc.cylinder + ", head=" + loc.head);
+		//System.out.println("m_header.number_of_track = " + m_header.number_of_track + ", nSectorNumber = " + nSectorNumber);
+	}
+	
+	@Override
+	int chsToLba(int cylinder, int head, int sector) {
+		int seclba = 0;
+		if (head==0) return cylinder*getSectors() + sector;
+		else return (2*m_nCylinders - 1 - cylinder) * getSectors() + sector;
+	}
+		
 	// Sector 0, bytes 0x38 - 0xff
 	// Max 1600 sectors
 	@Override
@@ -158,7 +235,7 @@ public class FloppyFileSystem extends TFileSystem {
 		abyNewVIB[0x0c] = (byte)(m_nSectorsPerTrack & 0xff);
 		Utilities.setString(abyNewVIB, 0x0d, "DSK", 3);
 		abyNewVIB[0x10] = m_bProtection? (byte)'P' : (byte)' ';
-		abyNewVIB[0x11] = (byte)(m_nTracksPerSide & 0xff);
+		abyNewVIB[0x11] = (byte)(m_nCylinders & 0xff);
 		abyNewVIB[0x12] = (byte)(m_nHeads & 0xff);
 		abyNewVIB[0x13] = (byte)(getDensityCode() & 0xff);
 		
@@ -227,7 +304,7 @@ public class FloppyFileSystem extends TFileSystem {
 		m_sName = param.name;
 		m_nTotalSectors = param.heads * param.cylinders * param.sectorsPerTrack;
 		m_bProtection = param.protect;
-		m_nTracksPerSide = param.cylinders;
+		m_nCylinders = param.cylinders;
 		m_nHeads = param.heads;
 		m_nSectorsPerAU = m_nTotalSectors/1600 + 1;
 		m_nSectorsPerTrack = param.sectorsPerTrack;
@@ -250,7 +327,7 @@ public class FloppyFileSystem extends TFileSystem {
 	}
 		
 	public int getSectorsPerTrack() {
-		return m_nTotalSectors / (m_nTracksPerSide * m_nHeads);
+		return m_nTotalSectors / (m_nCylinders * m_nHeads);
 	}
 		
 /*		// Sector 0

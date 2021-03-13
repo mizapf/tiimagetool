@@ -36,6 +36,7 @@
 	[ ] Add access to xdt99
 	[ ] Allow for more DIS/VAR formats to be viewed
 	[ ] IDE harddisk init
+	[ ] Paste error: If last entry is dir, object will be pasted there
 */
 
 package de.mizapf.timt;
@@ -107,8 +108,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JFrame m_frmMain;
 
 	public final static String VERSION = "2.5.0";
-	public final static String MONTH = "June";
-	public final static String YEAR = "2019";
+	public final static String MONTH = "January";
+	public final static String YEAR = "2021";
 	
 	private static final String TITLE = "TIImageTool";
 
@@ -330,6 +331,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	/** Used for invokeLater. */
 	class CreateGui implements Runnable {
 		public void run() {		
+			System.err.println("Create GUI");
 			//		m_fm = m_frmMain.getFontMetrics(Font.decode(FONT));
 			//		System.out.println("width = " + m_fm.stringWidth("FILENAME") + ", height = " + m_fm.getHeight());
 			
@@ -676,7 +678,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					dv.refreshView();
 				}
 				else {
-					if (dv.getVolume().equals(volume))
+					if (volume.equals(dv.getVolume()))
 						dv.refreshView();
 					if (backtoroot) dv.gotoRootDirectory();
 				}
@@ -1193,14 +1195,15 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 
 		SectorCache.setGen(0);
 		
-		new CreateGui().run();
-		//SwingUtilities.invokeLater(new CreateGui());
+		// new CreateGui().run();
+		SwingUtilities.invokeLater(new CreateGui());
 	}
 	
 	public void updateMemoryInfo() {
 		long freeMem = Runtime.getRuntime().freeMemory();
 		int nPercent = (int)(freeMem*100/m_maxMemory);
 //		System.out.println("Free memory = " + (freeMem / 1024) + "KiB = " + nPercent + "%");
+		if (m_jtViews == null) return;
 		int nIndex = m_jtViews.getSelectedIndex();
 		if (nIndex != -1) {
 			DirectoryPanel dp = (DirectoryPanel)m_jtViews.getComponentAt(nIndex);

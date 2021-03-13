@@ -529,7 +529,7 @@ public class TFile extends Element {
 		int nRead = 0;
 		int nSector = 0;
 		Interval current = null;
-		
+		System.out.println("File " + getName() + ", used: " + getUsedSectors());
 		if (m_aCluster.length==0) {
 			throw new ImageException(String.format(TIImageTool.langstr("TFileNoContent"), getPathname()));
 		}

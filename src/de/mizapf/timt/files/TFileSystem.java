@@ -29,10 +29,13 @@ public abstract class TFileSystem {
 	// General information from the VIB
 	String m_sName;
 	int	m_nTotalSectors = 0;
+	
+	/** Sector count according to the header. */
 	int	m_nSectorsPerTrack = 0;
 	int m_nHeads = 0;
 	int m_nSectorsPerAU;
 	int m_nReservedAUs;
+	int m_nCylinders;
 
 	Directory m_dirRoot;
 	
@@ -40,6 +43,7 @@ public abstract class TFileSystem {
 	
 	public final static int SECTOR_LENGTH=0x100;   
 	public final static int MAXAU = 0xf800;  // from Directory and RawHDFormat
+	static final int NONE = -1;
 
 	// Sector allocation map
 	AllocationMap m_allocMap;
@@ -68,6 +72,18 @@ public abstract class TFileSystem {
 		m_sName = newName;
 	}
 	
+	public int getCylinders() {
+		return m_nCylinders;
+	}
+	
+	public int getSectors() {
+		return m_nSectorsPerTrack;
+	}
+	
+	public int getSectorLength() {
+		return SECTOR_LENGTH;
+	}
+	
 	public int getSectorsPerAU() {
 		return m_nSectorsPerAU;
 	}
@@ -91,6 +107,9 @@ public abstract class TFileSystem {
 	public boolean isWriteCached() {	
 		return m_bWriteCached;
 	}
+	
+	abstract Location lbaToChs(int nSectorNumber) throws ImageException;
+	abstract int chsToLba(int cylinder, int head, int sector);
 	
 	static boolean hasFloppyVib(byte[] abySect) {
 		return (abySect[13]=='D' && abySect[14]=='S' && abySect[15]=='K');	

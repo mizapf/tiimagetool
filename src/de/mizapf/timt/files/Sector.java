@@ -34,6 +34,7 @@ public class Sector implements Cloneable {
 	int m_mark;
 	
 	int m_generation;
+	Location m_loc;
 	
 	public Sector(int nNumber, byte[] abySector) {
 		m_abySector = abySector;
@@ -52,6 +53,10 @@ public class Sector implements Cloneable {
 		m_generation = 0;
 	}
 */
+	Location getLocation() {
+		return m_loc;
+	}
+
 	public Object clone() {
 		byte[] content = new byte[m_abySector.length];
 		System.arraycopy(m_abySector, 0, content, 0, m_abySector.length);
@@ -69,7 +74,10 @@ public class Sector implements Cloneable {
 	
 	public void setData(byte[] bData) {
 		m_abySector = bData;
-		m_changed = true;
+		int oldcrc = m_crc;
+		m_crc = Utilities.crc16_get(m_abySector, 0, m_abySector.length, m_crcinit);
+		m_changed = (oldcrc != m_crc);
+		System.out.println("crc = " + Utilities.toHex(m_crc, 4));
 	}
 	
 	public void dirty() {
@@ -78,6 +86,14 @@ public class Sector implements Cloneable {
 	
 	public int getMark() {
 		return m_mark;
+	}
+
+	public void setMark(int mark) {
+		m_mark = mark;
+	}
+	
+	public void setPosition(int pos) {
+		m_cellOffset = pos;
 	}
 
 	public boolean changed() {

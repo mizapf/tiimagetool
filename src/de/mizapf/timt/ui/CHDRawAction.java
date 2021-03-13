@@ -58,11 +58,12 @@ public class CHDRawAction extends Activity {
 			else {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				MameCHDFormat source = expdialog.getCHD();
+				TFileSystem fsource = source.getFileSystem();
 				File fileTarget = expdialog.getTargetFile();	
 				
 				try {
 					DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileTarget));
-					int nBytes = source.getCylinders() * source.getHeads() * source.getSectorsPerTrack() * source.getSectorLength();
+					int nBytes = fsource.getCylinders() * fsource.getHeads() * fsource.getSectors() * fsource.getSectorLength();
 					int nLength = 0;
 					// System.out.println("Hunks = " + source.getHunkCount());
 					for (int i=0; i < source.getHunkCount(); i++) {

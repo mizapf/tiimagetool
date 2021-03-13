@@ -48,6 +48,7 @@ public class SaveImageAction extends Activity {
 		// If the image is still unnamed, treat as Save As
 		if (vol.getImageName()==null) {
 			SaveAsImageAction saia = new SaveAsImageAction();
+			saia.setLinks(imagetool, m_parent); 
 			saia.saveAs(vol);
 		}
 		else {

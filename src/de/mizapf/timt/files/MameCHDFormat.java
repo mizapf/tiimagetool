@@ -277,7 +277,7 @@ public class MameCHDFormat extends ImageFormat {
 	}
 
 	@Override
-	protected int readTrack(int nSectorNumber) throws IOException {
+	protected int locateInBuffer(int nSectorNumber) throws IOException {
 		return 0;
 	}	
 	
@@ -289,7 +289,7 @@ public class MameCHDFormat extends ImageFormat {
 		return m_nTotalHunks;
 	}
 	
-	void setGeometry(boolean bSpecial) throws ImageException, IOException {
+	void setGeometryAndCodec(boolean bSpecial) throws ImageException, IOException {
 		byte[] abyStart = new byte[1024];
 		m_ImageFile.seek(0);
 		m_ImageFile.readFully(abyStart);
@@ -310,7 +310,7 @@ public class MameCHDFormat extends ImageFormat {
 			m_nMetaOffset   = Utilities.getInt64be(abyStart, 36);
 			m_nTrackLength  = Utilities.getInt32be(abyStart, 44);
 			
-			m_abyTrack = new byte[m_nTrackLength];
+			m_abyBuffer = new byte[m_nTrackLength];
 			m_nCurrentTrack = NOTRACK;
 		}
 		if (m_nVersion == 5) {	
@@ -323,7 +323,7 @@ public class MameCHDFormat extends ImageFormat {
 			m_nMetaOffset   = Utilities.getInt64be(abyStart, 48);
 			m_nTrackLength  = Utilities.getInt32be(abyStart, 56);   // actually, hunk length
 			
-			m_abyTrack = new byte[m_nTrackLength];
+			m_abyBuffer = new byte[m_nTrackLength];
 			m_nCurrentTrack = NOTRACK;
 			m_nTotalHunks = (int)m_nLogicalBytes / m_nTrackLength;
 		}
@@ -389,15 +389,15 @@ public class MameCHDFormat extends ImageFormat {
 	
 	/** Newly created. */
 	@Override	
-	void setGeometry(TFileSystem fs) {
+	void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial) {
 	}
 	
 	@Override
-	void createTrack() {
+	void createBuffer(int cylinder, int head, int track) {
 	}
 	
 	@Override
-	int loadTrack(Location loc) {
+	int loadBuffer(Location loc) {
 		return 0;
 	}
 
@@ -436,9 +436,9 @@ public class MameCHDFormat extends ImageFormat {
 			if (nLengthHunk != m_nTrackLength) throw new ImageException(String.format(TIImageTool.langstr("MameCHDVary"), nLengthHunk, m_nTrackLength));
 			m_byHunkFlags = abyMap[15];
 			m_ImageFile.seek(m_nHunkOffset);
-			m_ImageFile.readFully(m_abyTrack);
+			m_ImageFile.readFully(m_abyBuffer);
 			CRC32 crcc = new CRC32();
-			crcc.update(m_abyTrack);
+			crcc.update(m_abyBuffer);
 			int crca = (int)(crcc.getValue() & 0xffffffff);
 			if (crca != crci) throw new ImageException(String.format(TIImageTool.langstr("MameCHDBadCRC"), Utilities.toHex(crca,8), Utilities.toHex(crci,8)));
 		}
@@ -449,12 +449,12 @@ public class MameCHDFormat extends ImageFormat {
 			m_nHunkOffset = Utilities.getInt32be(abyMap, 0) * m_nTrackLength;
 			if (m_nHunkOffset == 0) {
 				// System.out.println("Hunk " + nHunk + " is empty");
-				Arrays.fill(m_abyTrack, (byte)0);
+				Arrays.fill(m_abyBuffer, (byte)0);
 			}
 			else {
 				int nLengthHunk = m_nTrackLength;
 				m_ImageFile.seek(m_nHunkOffset);
-				m_ImageFile.readFully(m_abyTrack);
+				m_ImageFile.readFully(m_abyBuffer);
 			}
 		}		
 		m_nCurrentTrack = nHunk;
@@ -463,13 +463,13 @@ public class MameCHDFormat extends ImageFormat {
 	/** Used for converting CHD versions. */
 	public byte[] getHunkContents(int nHunk) throws IOException, ImageException {
 		readHunk(nHunk);
-		return m_abyTrack;
+		return m_abyBuffer;
 	}
 
 	/** Used for converting CHD versions and for initializing the file system. */
 	public void writeHunkContents(byte[] abyTrack, int nHunkNumber) throws IOException {
 		m_nCurrentTrack = nHunkNumber;
-		System.arraycopy(abyTrack, 0, m_abyTrack, 0, m_abyTrack.length);
+		System.arraycopy(abyTrack, 0, m_abyBuffer, 0, m_abyBuffer.length);
 		writeCurrentHunk(false);
 	}
 	
@@ -481,27 +481,27 @@ public class MameCHDFormat extends ImageFormat {
 
 		if (nSectorNumber >= m_nTotalSectors) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), m_nTotalSectors));
 		int secoff = getSectorOffset(nSectorNumber);
-		System.arraycopy(m_abyTrack, secoff, abySector, 0, m_nSectorLength);
+		System.arraycopy(m_abyBuffer, secoff, abySector, 0, m_nSectorLength);
 		return new Sector(nSectorNumber, abySector);
 	}
 	
 	@Override
-	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSector(Sector sect) throws IOException, ImageException {
 		try {
-			int secoff = getSectorOffset(nNumber);
-			System.arraycopy(abySector, 0, m_abyTrack, secoff, Volume.SECTOR_LENGTH);
+			int secoff = getSectorOffset(sect.getNumber());
+			System.arraycopy(sect.getBytes(), 0, m_abyBuffer, secoff, Volume.SECTOR_LENGTH);
 			writeCurrentHunk(false);
 		}
 		catch (EOFException eofx) {
 			eofx.printStackTrace();
-			throw new EOFException(String.format(TIImageTool.langstr("ImageBeyond"), nNumber));
+			throw new EOFException(String.format(TIImageTool.langstr("ImageBeyond"), sect.getNumber()));
 		}
 	}
 	
 	void writeCurrentHunk(boolean bNeedReopen) throws IOException {
 		if (m_nVersion == 4) {
 			CRC32 crcc = new CRC32();
-			crcc.update(m_abyTrack);
+			crcc.update(m_abyBuffer);
 			int crca = (int)(crcc.getValue() & 0xffffffff);
 
 			m_ImageFile.seek(m_nHeaderLength + m_nCurrentTrack * MAPENTRYSIZEv4);
@@ -541,8 +541,8 @@ public class MameCHDFormat extends ImageFormat {
 			if (nHunkNumber == 0) {
 				boolean bNull = true;
 				// Check if the hunk is full of 0. In that case do not allocate a new hunk.
-				for (int j=0; (j < m_abyTrack.length) && bNull; j++) {
-					if (m_abyTrack[j] != (byte)0x00) bNull = false;
+				for (int j=0; (j < m_abyBuffer.length) && bNull; j++) {
+					if (m_abyBuffer[j] != (byte)0x00) bNull = false;
 				}
 				// Do not change anything
 				if (bNull) {
@@ -572,7 +572,7 @@ public class MameCHDFormat extends ImageFormat {
 		
 //		System.out.println("seek to " + Utilities.toHex((int)m_nHunkOffset, 8));
 		m_ImageFile.seek(m_nHunkOffset);
-		m_ImageFile.write(m_abyTrack);
+		m_ImageFile.write(m_abyBuffer);
 		if (bNeedReopen) reopenForRead();
 	}
 	
@@ -860,6 +860,19 @@ public class MameCHDFormat extends ImageFormat {
 	
 	// Not needed
 	void formatTrack(int cylinder, int head, int seccount, int density, int[] gap) { }
+	
+	
+	/** Write a header. */
+	@Override
+	void prepareImageFile() {
+		System.out.println("FIXME: prepareImageFile in MAMECHDFormat");
+	}
+	
+	// FIXME
+	@Override
+	int getBufferIndex(Location loc) {
+		return NONE;
+	}
 }
 
 

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.io.File;
 
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.NotImplementedException;
 
 class SectorDumpFormat extends ImageFormat {
 
@@ -64,33 +65,78 @@ class SectorDumpFormat extends ImageFormat {
 		return 0;		
 	}
 
-	SectorDumpFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
-		super(filesystem, sImageName);
-		m_nSectorsByFormat = NONE;
-		m_currentCylinder = NONE;
-		m_currentTrack = NONE;
-		m_currentHead = NONE;
-		m_positionInTrack = 0;
+	class SectorDumpCodec extends FormatCodec {
+		SectorDumpCodec(String sFile, boolean bInitial) {
+			super(sFile, bInitial);
+		}	
+		
+		SectorDumpCodec(boolean bInitial) {
+			super("unnamed", bInitial);
+		}
+		
+		void writeBits(byte[] seq) {
+			throw new NotImplementedException("writeBits");
+		}
+		
+		void createEmptyBuffer(int buffernum) {
+			System.out.println("createEmptyBuffer " + buffernum);
+			Thread.currentThread().dumpStack();
+			m_abyBuffer = new byte[m_bufferlen[buffernum]];
+			for (int i=0; i < m_nSectorsPerTrack; i++) {
+				System.arraycopy(m_abyFill, 0, m_abyBuffer, i * 256, 256);
+			}
+		}
+		
+		int decodeBuffer() {
+			System.out.println("decodeBuffer");
+			m_buffsector.clear();
+			int count =  m_fs.getSectors();
+			if (count==0) {
+				// We do not know how many sectors we'll get
+				count = m_abyBuffer.length / 256;
+			}
+			byte[] content = new byte[256];
+			for (int i = 0; i < count; i++) {
+				Location loc = new Location(m_locCurrent.cylinder, m_locCurrent.head, i, m_locCurrent.track);
+				System.arraycopy(m_abyBuffer, i * 256, content, 0, 256);
+				m_buffsector.add(new ImageSector(loc, content, (byte)0xfb, count>10, i*256));
+			}
+			return count;	
+		}
+
+		void encodeBuffer() {
+			System.out.println("encodeBuffer");
+			Thread.currentThread().dumpStack();
+			for (ImageSector isect : m_buffsector) {
+				System.arraycopy(isect.getData(), 0, m_abyBuffer, isect.getLocation().sector * 256, 256);
+			}
+		}
+	}
+
+	/** Loaded image. Called from getImageFormat. */
+	SectorDumpFormat(RandomAccessFile imagefile, String sImageName) throws IOException, ImageException {
+		super(imagefile, sImageName);
 		writeThrough(false);
 	}
 
-	SectorDumpFormat(RandomAccessFile filesystem, String sImageName, TFileSystem fs) throws IOException, ImageException {
-		super(filesystem, sImageName, fs);
-		m_nSectorsByFormat = NONE;
-		m_currentCylinder = NONE;
-		m_currentTrack = NONE;
-		m_currentHead = NONE;
-		m_positionInTrack = 0;
+	/** Newly created image. */
+	SectorDumpFormat(RandomAccessFile rafile, String sImageName, TFileSystem fs) throws IOException, ImageException {
+		super(rafile, sImageName, fs);
 		writeThrough(false);
 	}
 	
-	// Called from Volume.createFloppyImage
+	// Called from ImageFormat.createFloppyImage
 	SectorDumpFormat() {
 		writeThrough(false);
 	}
 
 	public String getDumpFormatName() {
 		return TIImageTool.langstr("SectorDump");
+	}
+
+	/** Write a header. Nothing to do here. */
+	@Override
+	void prepareImageFile() {
 	}
 	
 	@Override
@@ -104,7 +150,7 @@ class SectorDumpFormat extends ImageFormat {
 	}
 	
 	@Override	
-	void setGeometry(boolean bSpecial) throws IOException, ImageException {
+	void setGeometryAndCodec(boolean bSpecial) throws IOException, ImageException {
 		long nLength = m_ImageFile.length();
 		if (((nLength / 256) % 10)==3) nLength -= 768;
 		
@@ -118,58 +164,43 @@ class SectorDumpFormat extends ImageFormat {
 		}
 		if (format==-1) throw new ImageException(TIImageTool.langstr("SectorDumpInvLength") + ": " + m_ImageFile.length());
 			
-		m_nHeads = sdfgeometry[format][1];
-		m_nCylinders = sdfgeometry[format][2];
-		m_nDensity = FloppyFileSystem.UNKNOWN_DENSITY;
-		
-		int nSectPerTrack = sdfgeometry[format][3];
-		int tracklen = Volume.SECTOR_LENGTH * nSectPerTrack;		
-		setupBuffers(tracklen);
-		m_encoding = (nSectPerTrack < 16)? FM : MFM; 
-		System.out.println("nSect " + nSectPerTrack);
+		FloppyFileSystem ffs = new FloppyFileSystem(
+			sdfgeometry[format][2],  // cyl
+			sdfgeometry[format][1],  // head
+			sdfgeometry[format][3],  // sect
+			FloppyFileSystem.UNKNOWN_DENSITY);  // dens
+		setGeometryAndCodec("unnamed", ffs, false);
 	}
 	
 	/** Newly created. */
 	@Override	
-	void setGeometry(TFileSystem fs) {
-		// Calculate length
-		FloppyFileSystem ffs = (FloppyFileSystem)fs;
-		
-		m_nHeads = ffs.getHeads();
-		m_nCylinders = ffs.getTracksPerSide();
-		
-		int nSectPerTrack = ffs.getTotalSectors() / (m_nHeads * ffs.getTracksPerSide());
-		m_nDensity = ffs.getDensity();
-		
-		int tracklen = Volume.SECTOR_LENGTH * nSectPerTrack;		
-		setupBuffers(tracklen);
-		m_encoding = (nSectPerTrack < 16)? FM : MFM; 
-	}
-	
-	void setupBuffers(int tracklen) {
-		m_trackpos = new int[m_nCylinders*2];
-		m_tracklen = new int[m_nCylinders*2];
-		
-		int pos = 0;
-		for (int j=0; j < m_nCylinders*2; j++) {
-			m_trackpos[j] = pos;
-			m_tracklen[j] = tracklen;
-			pos += tracklen;
-		}
-		m_maxSector = 11520;
-	}
-	
-	/** Overridden by CF7Format. */	
-	void writeOnImage() throws IOException {
-		// Write back the whole track
-		m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
-		m_ImageFile.seek(m_trackpos[m_currentTrack]);
-		m_ImageFile.write(m_abyTrack);
-		m_ImageFile = new RandomAccessFile(m_sImageName, "r");		
+	void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial) {
+		setBasicParams((FloppyFileSystem)fs);
+		setupBuffers(sImageName, bInitial);
 	}
 	
 	@Override
-	int loadTrack(Location loc) throws IOException, ImageException {
+	void setupBuffers(String sImageName, boolean bInitial) {
+		// Calculate length	
+		System.out.println("setupBuffers; m_nCylinders = " + m_nCylinders);
+		int tracklen = SECTOR_LENGTH * m_nSectorsPerTrack;
+		int[] bufferpos = new int[m_nCylinders*2];
+		int[] bufferlen = new int[m_nCylinders*2];
+		
+		int pos = 0;
+		for (int j=0; j < m_nCylinders*2; j++) {
+			bufferpos[j] = pos;
+			bufferlen[j] = tracklen;
+			pos += tracklen;
+		}
+		m_maxSector = 11520;
+		
+		m_codec = new SectorDumpCodec(sImageName, bInitial);
+		m_codec.setBufferParams(bufferpos, bufferlen);
+	}
+		
+	@Override
+	int loadBuffer(Location loc) throws IOException, ImageException {
 		
 		ArrayList<Sector> sectors = new ArrayList<Sector>();
 
@@ -180,19 +211,22 @@ class SectorDumpFormat extends ImageFormat {
 		int sector = 0;
 		int secindex = -1;
 	
-		// System.out.println("Track length = " + m_tracklen[loc.track] + ", track " + loc.track);
+		// System.out.println("Track length = " + m_bufferlen1[loc.track] + ", track " + loc.track);
+		FloppyFileSystem ffs = (FloppyFileSystem)m_fs;
 		
-		while (m_positionInTrack < m_tracklen[loc.track]) {
-			// System.out.println("Position in track = " + m_positionInTrack +", tracklen = " + m_tracklen[loc.track]);
+		if (ffs == null) System.err.println("File system is still null!");
+		
+		while (m_positionInBuffer < m_bufferlen1[loc.track]) {
+			// System.out.println("Position in track = " + m_positionInBuffer +", tracklen = " + m_bufferlen1[loc.track]);
 			if (nextIDAMFound()) {
 				if (sector == loc.sector) secindex = count;
 				if (nextDAMFound()) {
-					int pos = m_positionInTrack;
+					int pos = m_positionInBuffer;
 					bSector = new byte[Volume.SECTOR_LENGTH];
-					System.arraycopy(m_abyTrack, m_positionInTrack, bSector, 0, Volume.SECTOR_LENGTH);
-					m_positionInTrack += Volume.SECTOR_LENGTH;
+					System.arraycopy(m_abyBuffer, m_positionInBuffer, bSector, 0, Volume.SECTOR_LENGTH);
+					m_positionInBuffer += Volume.SECTOR_LENGTH;
 					
-					Sector sect = new Sector(loc.track*m_nSectorsByFormat + sector, bSector);
+					Sector sect = new Sector(loc.track*ffs.getCountedSectors() + sector, bSector);
 					sect.setTrackPosition(pos, 0xffff, 0xfb); 
 					sectors.add(sect);
 					// System.out.println("loaded sector " + sect.getNumber() + " at track " + loc.track);
@@ -203,11 +237,11 @@ class SectorDumpFormat extends ImageFormat {
 			}	
 		}
 //		System.out.println("Found " + count + " sectors");
-		m_sector = sectors.toArray(new Sector[count]);
-		m_nSectorsByFormat = count;	
+		m_buffsector = sectors.toArray(new Sector[count]);
+		ffs.setCountedSectors(count);	
 		
 		// TODO: Does not make too much sense for sector dump, but we should still
-		// try to unify the readTrack method of the floppy formats 
+		// try to unify the readBuffer method of the floppy formats 
 		if (count == 0) throw new ImageException(TIImageTool.langstr("NoSectorsFound"));
 		
 		// Determine density
@@ -226,18 +260,19 @@ class SectorDumpFormat extends ImageFormat {
 		System.out.println("Determined density: " + m_nDensity + ", count " + count + ", enc " + m_encoding);
 		
 		// Now we know the last sector (also to fix the problem of missing metadata)
-		if (m_nTotalSectors == 0) m_nTotalSectors = m_nSectorsByFormat * m_nCylinders * m_nHeads;
+		if (m_nTotalSectors == 0) m_nTotalSectors = ffs.getCountedSectors() * m_nCylinders * m_nHeads;
 
 		return secindex;
 	}	
 	
-	/** Create a new track in m_abyTrack when the image has not yet been written. 
+	/** Create a new track in m_abyBuffer when the image has not yet been written. 
 		Current cylinder and head are stored in the member variables.
 	*/
 	@Override
-	void createTrack() {
+	void createBuffer(int cylinder, int head, int track) {
 		// Sector content
-		System.out.println("Create new track " + m_currentTrack);
+		System.out.println("Create new track " + track);
+		m_abyBuffer = new byte[getFullTrackLength(m_bufferlen1[track])];
 		FloppyFileSystem ffs = (FloppyFileSystem)m_fs;
 		for (int secno = 0; secno < ffs.getSectorsPerTrack(); secno++) {
 			writeBits(m_abyEmpty, 256*8);
@@ -247,52 +282,46 @@ class SectorDumpFormat extends ImageFormat {
 	/** The sector dump format only contains the sector content, so we always
 		find the next IDAM until the end. */
 	private boolean nextIDAMFound() {
-		return (m_positionInTrack <= m_tracklen[m_currentTrack]-Volume.SECTOR_LENGTH);
+		return (m_positionInBuffer <= m_bufferlen1[m_currentTrack]-Volume.SECTOR_LENGTH);
 	}
 	
 	private boolean nextDAMFound() {
-		return (m_positionInTrack <= m_tracklen[m_currentTrack]-Volume.SECTOR_LENGTH);
+		return (m_positionInBuffer <= m_bufferlen1[m_currentTrack]-Volume.SECTOR_LENGTH);
 	}
 
 	/** We return the cached sector.
 	*/
-	@Override
+/*	@Override
 	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
 		if (nSectorNumber >= m_maxSector) throw new ImageException(String.format(TIImageTool.langstr("BadSectorNumber"), nSectorNumber)); 
-		int secindex = readTrack(nSectorNumber);
+		int secindex = locateInBuffer(nSectorNumber);
 		if (secindex != NONE) {
-			return m_sector[secindex];
+			return m_buffsector[secindex];
 		}
 		else throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
-	}
+	} */
 
-	@Override
-	public void writeSector(int nSectorNumber, byte[] abySector) throws IOException, ImageException {
-		int secindex = readTrack(nSectorNumber);
-		if (secindex == NONE) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
-		// Write the new data
-		// Don't forget to clone the bytes!
-		byte[] bNewcontent = new byte[256];
-		System.arraycopy(abySector, 0, bNewcontent, 0, 256);
-		m_sector[secindex].setData(bNewcontent);
-	}
-	
 	private void writeBits(byte[] bytes, int number) {
 		int actnumber = number/8;
-		if (m_positionInTrack + actnumber > m_abyTrack.length) 
-			actnumber = m_abyTrack.length - m_positionInTrack;
-		System.arraycopy(bytes, 0, m_abyTrack, m_positionInTrack, actnumber);
-		m_positionInTrack += actnumber;
+		if (m_positionInBuffer + actnumber > m_abyBuffer.length) 
+			actnumber = m_abyBuffer.length - m_positionInBuffer;
+		System.arraycopy(bytes, 0, m_abyBuffer, m_positionInBuffer, actnumber);
+		m_positionInBuffer += actnumber;
 	}
 
 	public void flush() throws IOException {
+		System.out.println("LEGACY function");
 		boolean trackchanged = false;
-		if (m_currentTrack == NONE) return;
-		for (int i=0; i < m_sector.length; i++) {
-			if (m_sector[i].changed()) {
+		if (m_currentTrack == NONE) {
+			System.out.println("No track loaded yet");
+			return;
+		}
+		for (int i=0; i < m_buffsector.length; i++) {
+			if (m_buffsector[i].changed()) {
 				trackchanged = true;
-				m_positionInTrack = m_sector[i].getPosition();
-				writeBits(m_sector[i].getBytes(), Volume.SECTOR_LENGTH * 8);
+				byte[] bSectorContent = m_buffsector[i].getBytes();
+				m_positionInBuffer = m_buffsector[i].getPosition();
+				writeBits(bSectorContent, Volume.SECTOR_LENGTH * 8);
 			}
 		}
 		if (trackchanged) {
@@ -301,9 +330,18 @@ class SectorDumpFormat extends ImageFormat {
 		}
 	}
 
+	/** Overridden by CF7Format. */	
+	void writeOnImage() throws IOException {
+		// Write back the whole track
+		m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
+		m_ImageFile.seek(m_bufferpos[m_currentTrack]);
+		m_ImageFile.write(m_abyBuffer);
+		m_ImageFile = new RandomAccessFile(m_sImageName, "r");		
+	}
+	
 	@Override
-	void writeBack(Sector sect) throws IOException, ImageException {
-		writeSector(sect.getNumber(), sect.getBytes());
+	void writeToBuffer(Sector sect) throws IOException, ImageException {
+		writeSector(sect);
 	}
 	
 	@Override
@@ -331,32 +369,33 @@ class SectorDumpFormat extends ImageFormat {
 	
 	public void createEmptyImage(File newfile, int sides, int density, int cylinders, int sectors, boolean format) throws FileNotFoundException, IOException {
 		
+		System.out.println("FIXME: Legacy function createEmptyImage");
 		int tracklen = sectors * 256;
 		int pos = 0;
 
-		m_trackpos = new int[cylinders*sides];
-		m_tracklen = new int[cylinders*sides];
+		m_bufferpos = new int[cylinders*sides];
+		m_bufferlen1 = new int[cylinders*sides];
 		
 		for (int j=0; j < cylinders*sides; j++) {
-			m_trackpos[j] = pos;
-			m_tracklen[j] = tracklen;
+			m_bufferpos[j] = pos;
+			m_bufferlen1[j] = tracklen;
 			pos += tracklen;
 		}
 		
-		m_abyTrack = new byte[tracklen];
+		m_abyBuffer = new byte[tracklen];
 
 		// Allocate bytes in memory. We will write the array to the file at the end.
-		byte[] image = new byte[m_abyTrack.length * cylinders * sides];
+		byte[] image = new byte[m_abyBuffer.length * cylinders * sides];
 
 		if (format) {
 			for (int cyl = 0; cyl < cylinders; cyl++) {
 				for (int head=0; head < sides; head++) {
-					m_positionInTrack = 0;
+					m_positionInBuffer = 0;
 					formatTrack(cyl, head, sectors, density, null);
 				
 					// Copy the track into the image
 					int track = (head==0)? cyl : 2*cylinders-1-cyl; 
-					System.arraycopy(m_abyTrack, 0, image, m_trackpos[track], m_tracklen[track]);
+					System.arraycopy(m_abyBuffer, 0, image, m_bufferpos[track], m_bufferlen1[track]);
 				}
 			}
 		}
@@ -365,6 +404,12 @@ class SectorDumpFormat extends ImageFormat {
 		FileOutputStream fos = new FileOutputStream(newfile);
 		fos.write(image, 0, image.length);
 		fos.close();
+	}
+	
+	/** Return the track number as the buffer index. */
+	@Override
+	int getBufferIndex(Location loc) {
+		return loc.track;
 	}
 }
 

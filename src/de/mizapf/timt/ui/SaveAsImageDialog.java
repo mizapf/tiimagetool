@@ -63,13 +63,15 @@ public class SaveAsImageDialog  extends ToolDialog {
 		asFor[1] = TIImageTool.langstr("TrackDump");
 		asFor[2] = TIImageTool.langstr("HFEImage");
 		m_rbt = putRadioButtons(this, TIImageTool.langstr("ImageType"), nColumnWidth, asFor, null, 1);
-		
-		System.out.println("Proposed type: " + m_nProposedType);
-		
-		if (m_nProposedType != -1)
+			
+		if (m_nProposedType != -1) {
+			System.out.println("Proposed type: " + m_nProposedType);
 			m_rbt[m_nProposedType].setSelected(true);
-		else
-			m_rbt[0].setSelected(true);	
+		}
+		else {
+			System.out.println("New image, no proposed type");
+			m_rbt[0].setSelected(true);
+		}
 		
 		add(Box.createVerticalGlue());
 		addButtons();	

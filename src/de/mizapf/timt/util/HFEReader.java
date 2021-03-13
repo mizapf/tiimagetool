@@ -10,7 +10,7 @@ import de.mizapf.timt.files.*;
 public class HFEReader {
 
 	byte[] m_abyContent;
-	int[] m_tracklen;
+	int[] m_bufferlen;
 	int[] m_trackoffset;
 	int m_sectpertrack;
 	int m_tracks;
@@ -56,11 +56,13 @@ public class HFEReader {
 		System.out.println(m_format.getHeaderInformation());
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		for (int i=0; i < m_format.getCylinders(); i++) {
+		
+		FloppyFileSystem ffs = (FloppyFileSystem)m_format.getFileSystem();
+		for (int i=0; i < ffs.getCylinders(); i++) {
 			baos.write(m_format.getTrackBytes(i, 0));
 		}
-		if (m_format.getHeads()>1) {
-			for (int i=m_format.getCylinders()-1; i >=0; i--) {
+		if (ffs.getHeads()>1) {
+			for (int i=ffs.getCylinders()-1; i >=0; i--) {
 				baos.write(m_format.getTrackBytes(i, 1));
 			}
 		}

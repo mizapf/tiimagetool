@@ -96,25 +96,30 @@ public class CF7ImageFormat extends ImageFormat {
 		return m_volume;
 	}
 	
+	/** Write a header. Nothing to do here. */
+	@Override
+	void prepareImageFile() {
+	}
+	
 	CF7VolumeFormat getSubvolume(int number) throws IOException, ImageException {
 		return new CF7VolumeFormat(m_ImageFile, m_sImageName, number);
 	}
 	
 	@Override	
-	void setGeometry(boolean bSpecial) throws IOException, ImageException {	
+	void setGeometryAndCodec(boolean bSpecial) throws IOException, ImageException {	
 	}
 	
 	/** Newly created. */
 	@Override	
-	void setGeometry(TFileSystem fs) {
+	void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial) {
 	}
 	
 	@Override
-	void createTrack() {
+	void createBuffer(int cylinder, int head, int track) {
 	}
 	
 	@Override
-	int loadTrack(Location loc) throws IOException, ImageException {
+	int loadBuffer(Location loc) throws IOException, ImageException {
 		return 0;
 	}
 
@@ -144,7 +149,12 @@ public class CF7ImageFormat extends ImageFormat {
 	}
 	
 	@Override
-	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
+	public void writeSector(Sector sect) throws IOException, ImageException {
+	}
+	
+	@Override
+	int getBufferIndex(Location loc) {
+		return NONE;
 	}
 }
 

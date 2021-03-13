@@ -14,45 +14,57 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2016 Michael Zapf
+    Copyright 2020 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
 
 package de.mizapf.timt.files;
-import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.NotImplementedException;
 
-class Location {
-	int cylinder;
-	int head;
-	int track;
-	int sector;
+/** Represents a file system containing one or more subvolumes. Only used 
+    with CF7 images. 
+*/	
+public class SetFileSystem extends TFileSystem {
 	
-	Location(int cyl, int hd, int sec, int tr) {
-		cylinder = cyl;
-		head = hd;
-		sector = sec;
-		track = tr;
-	}
-	
-	Location(byte[] abyHeader) {
-		cylinder = (int)abyHeader[0];
-		head = (int)abyHeader[1];
-		sector = (int)abyHeader[2];
-		track = -1;
+	public SetFileSystem() {
 	}
 
-	public boolean equals(Object obj) {
-		if (obj instanceof Location) {
-			Location other = (Location)obj;
-			return ((cylinder == other.cylinder) &&
-					(head == other.head) &&
-					(sector == other.sector));
-		}
-		return false;
+	Sector[] initialize(FormatParameters param) {
+		return null;
+	}
+		
+	@Override
+	void setupFromFile(byte[] abySect0, byte[] abyAllocMap, boolean bCheck) throws MissingHeaderException, ImageException {
+	}
+
+	@Override
+	int getAllocMapStart() {
+		return 0;
+	}
+
+	@Override
+	int getAllocMapEnd() {
+		return 0; 		
+	}
+
+	@Override
+	Sector[] getAllocationMapSectors() {
+		return null;
+	}
+
+	@Override
+	byte[] createVIB() {
+		return null;
 	}
 	
-	public String toString() {
-		return String.format(TIImageTool.langstr("LocationString"), track, cylinder, head, sector);
+	@Override
+	Location lbaToChs(int nSectorNumber) throws ImageException {
+		throw new NotImplementedException("lbaToChs");
+	}
+	
+	@Override
+	int chsToLba(int cylinder, int head, int sector) {
+		throw new NotImplementedException("chsToLba");
 	}
 }

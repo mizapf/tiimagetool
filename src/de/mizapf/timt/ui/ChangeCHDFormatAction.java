@@ -123,7 +123,9 @@ public class ChangeCHDFormatAction extends Activity {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 		java.io.File fileTarget = null;
-		FormatParameters parm = new FormatParameters(source.getCylinders(), source.getHeads(), source.getSectorsPerTrack(), source.getSectorLength(), nNewFormat);
+		TFileSystem fsource = source.getFileSystem();
+		
+		FormatParameters parm = new FormatParameters(fsource.getCylinders(), fsource.getHeads(), fsource.getSectors(), fsource.getSectorLength(), nNewFormat);
 		try {
 			byte[] abyNewImage = MameCHDFormat.createEmptyCHDImage(parm);
 			

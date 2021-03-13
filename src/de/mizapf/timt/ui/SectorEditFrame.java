@@ -691,18 +691,19 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 				Sector sect = m_sectormap.get(i);
 				if (sect.changed()) {
 					// System.out.println("Write back sector " + i);
-					m_image.writeSector(i, sect.getBytes());  // directly written through
+					System.out.println("FIXME: SectorEditFrame.writeBackAll");
+					// m_image.writeSector(i, sect.getBytes());  // directly written through
 				}
 			}
 			m_image.flush();
 			m_image.reopenForRead();
 			SectorCache.nextGen();
 		}
-		catch (ImageException ix) {
+		/* catch (ImageException ix) {
 			// Sector not found
 			ix.printStackTrace();
 			JOptionPane.showMessageDialog(this, ix.getMessage(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
-		}
+		} */
 		catch (IOException iox) {
 			// More low-level
 			iox.printStackTrace();

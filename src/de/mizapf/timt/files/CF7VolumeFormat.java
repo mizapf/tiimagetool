@@ -82,10 +82,10 @@ class CF7VolumeFormat extends SectorDumpFormat {
 		return FLOPPY_FORMAT; 
 	}
 	
-	void readFromImage(byte[] content, int offset) throws IOException {
+	void readBufferFromImage(byte[] content, int offset) throws IOException {
 		if (m_separate) {
 			m_ImageFile.seek(offset);
-			m_ImageFile.readFully(m_abyTrack);
+			m_ImageFile.readFully(m_abyBuffer);
 		}
 		else {
 			int pos = offset*2;
@@ -102,41 +102,43 @@ class CF7VolumeFormat extends SectorDumpFormat {
 		if (m_separate) {		
 			// Write back the whole track
 			m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
-			m_ImageFile.seek(m_trackpos[m_currentTrack]);
-			m_ImageFile.write(m_abyTrack);
+			m_ImageFile.seek(m_bufferpos[m_currentTrack]);
+			m_ImageFile.write(m_abyBuffer);
 			m_ImageFile = new RandomAccessFile(m_sImageName, "r");		
 		}
 		else {
 			// Write into the cache
-			int pos = m_trackpos[m_currentTrack] * 2;
-			for (int i=0; i < m_abyTrack.length; i++) {
-				m_rawVolume[pos + i*2] = m_abyTrack[i];
+			int pos = m_bufferpos[m_currentTrack] * 2;
+			for (int i=0; i < m_abyBuffer.length; i++) {
+				m_rawVolume[pos + i*2] = m_abyBuffer[i];
 			}
 			// Write through (only the track) 
 			m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
 			m_ImageFile.seek(m_volumeNumber * (1600*256*2) + pos);
-			m_ImageFile.write(m_rawVolume, pos, m_abyTrack.length * 2);
+			m_ImageFile.write(m_rawVolume, pos, m_abyBuffer.length * 2);
 		}
 	}
 
 	@Override	
-	void setGeometry(boolean bSpecial) throws IOException, ImageException {	
+	void setGeometryAndCodec(boolean bSpecial) throws IOException, ImageException {	
 		m_nHeads = 2;
 		m_nCylinders = 40;
 		m_nSectorsPerTrack = 20;
-		m_nSectorsByFormat = 20;
+
+		FloppyFileSystem ffs = (FloppyFileSystem)m_fs;
+		ffs.setCountedSectors(20);
 		m_nSectorLength = 256;
 		m_encoding = FloppyFileSystem.DOUBLE_DENSITY;
 
 		int tracklen = Volume.SECTOR_LENGTH * m_nSectorsPerTrack;
 
-		m_trackpos = new int[m_nCylinders*2];
-		m_tracklen = new int[m_nCylinders*2];
+		m_bufferpos = new int[m_nCylinders*2];
+		m_bufferlen1 = new int[m_nCylinders*2];
 		
 		int pos = 0;
 		for (int j=0; j < m_nCylinders*2; j++) {
-			m_trackpos[j] = pos;
-			m_tracklen[j] = tracklen;
+			m_bufferpos[j] = pos;
+			m_bufferlen1[j] = tracklen;
 			pos += tracklen;
 		}		
 		

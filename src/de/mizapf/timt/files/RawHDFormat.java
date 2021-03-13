@@ -73,14 +73,14 @@ class RawHDFormat extends ImageFormat {
 	}
 	
 	@Override
-	int readTrack(int nSectorNumber) throws IOException {
+	int locateInBuffer(int nSectorNumber) throws IOException {
 		// TODO: NPX for SCSI
 		int nTrackNumber = (nSectorNumber / m_nSectorsPerTrack);			
 		int nTrackOffset = nTrackNumber * m_nTrackLength; 
 
 		if (nTrackNumber != m_nCurrentTrack) {
 			m_ImageFile.seek(nTrackOffset);
-			m_ImageFile.readFully(m_abyTrack);
+			m_ImageFile.readFully(m_abyBuffer);
 			m_nCurrentTrack = nTrackNumber;
 		}
 		return nTrackOffset;
@@ -92,13 +92,13 @@ class RawHDFormat extends ImageFormat {
 		
 		if (nSectorNumber >= m_nTotalSectors) throw new EOFException(String.format(TIImageTool.langstr("ImageBeyond"), nSectorNumber));
 		
-		offset[TRACK] = readTrack(nSectorNumber);
+		offset[TRACK] = locateInBuffer(nSectorNumber);
 
 		nSectorNumber = nSectorNumber % m_nSectorsPerTrack;
 		offset[SECTOR] = nSectorNumber * Volume.SECTOR_LENGTH;
 	}
 	
-	void setGeometry(boolean bSpecial) throws ImageException, IOException {
+	void setGeometryAndCodec(boolean bSpecial) throws ImageException, IOException {
 		// We have to read the values from the image itself. 
 		// This is not really safe, but there is no other way.
 
@@ -130,15 +130,15 @@ class RawHDFormat extends ImageFormat {
 	
 	/** Newly created. */
 	@Override	
-	void setGeometry(TFileSystem fs) {
+	void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial) {
 	}
 
 	@Override
-	void createTrack() {
+	void createBuffer(int cylinder, int head, int track) {
 	}
 	
 	@Override
-	int loadTrack(Location loc) {
+	int loadBuffer(Location loc) {
 		return 0;
 	}
 	
@@ -149,20 +149,20 @@ class RawHDFormat extends ImageFormat {
 		// System.out.println("Read sector " + nSectorNumber);
 		int[] offset = new int[2];
 		getOffset(nSectorNumber, offset);
-		System.arraycopy(m_abyTrack, offset[SECTOR], abySector, 0, m_nSectorLength);
+		System.arraycopy(m_abyBuffer, offset[SECTOR], abySector, 0, m_nSectorLength);
 		return new Sector(nSectorNumber, abySector);
 	}
 
 	/** For Windows systems and access to the physical device we must
 		adjust to block boundaries. */
 	@Override
-	public void writeSector(int nNumber, byte[] abySector) throws IOException, ImageException {
-		// System.out.println("Writing sector " + nNumber);
+	public void writeSector(Sector sect) throws IOException, ImageException {
+		// System.out.println("Writing sector " + sect.getNumber());
 		try {
 			int[] offset = new int[2];
 			
 			// Find the start sector of this track
-			int nStartSector = (nNumber / m_nSectorsPerTrack) * m_nSectorsPerTrack;
+			int nStartSector = (sect.getNumber() / m_nSectorsPerTrack) * m_nSectorsPerTrack;
 			getOffset(nStartSector, offset);
 			
 			if (offset[SECTOR] != 0) {
@@ -171,13 +171,13 @@ class RawHDFormat extends ImageFormat {
 
 			// Copy the new sector into the track image first
 			// We will then write the complete block containing this sector
-			int nSectOff = nNumber - nStartSector;
+			int nSectOff = sect.getNumber() - nStartSector;
 			int nSectorsPerBlock = BLOCKSIZE / Volume.SECTOR_LENGTH;
 			int nBlockOff = (nSectOff / nSectorsPerBlock)*BLOCKSIZE;
 			byte[] abyNewBlock = new byte[BLOCKSIZE];
-			int nPos = (nNumber / nSectorsPerBlock)*BLOCKSIZE;
+			int nPos = (sect.getNumber() / nSectorsPerBlock)*BLOCKSIZE;
 /*
-			System.out.println("Writing sector " + nNumber);
+			System.out.println("Writing sector " + sect.getNumber());
 			System.out.println("Sectors per track: " + m_nSectorsPerTrack);
 			System.out.println("Start sector of this track is " +nStartSector);
 			System.out.println("Sector offset is " + nSectOff);
@@ -187,16 +187,16 @@ class RawHDFormat extends ImageFormat {
 			System.out.println("Block location: " + nPos);
 */
 			// Copy the new sector contents into the track
-			System.arraycopy(abySector, 0, m_abyTrack, nSectOff * Volume.SECTOR_LENGTH, Volume.SECTOR_LENGTH);
+			System.arraycopy(sect.getBytes(), 0, m_abyBuffer, nSectOff * Volume.SECTOR_LENGTH, Volume.SECTOR_LENGTH);
 
 			// Copy the block in the track into the buffer to be written
-			System.arraycopy(m_abyTrack, nBlockOff, abyNewBlock, 0, BLOCKSIZE);
+			System.arraycopy(m_abyBuffer, nBlockOff, abyNewBlock, 0, BLOCKSIZE);
 			
 			m_ImageFile.seek(nPos);
 			m_ImageFile.write(abyNewBlock);
 		}
 		catch (EOFException eofx) {
-			throw new EOFException(String.format(TIImageTool.langstr("ImageBeyond"), nNumber));
+			throw new EOFException(String.format(TIImageTool.langstr("ImageBeyond"), sect.getNumber()));
 		}
 	}
 	
@@ -210,6 +210,18 @@ class RawHDFormat extends ImageFormat {
 	
 	// Not needed
 	void formatTrack(int cylinder, int head, int seccount, int density, int[] gap) {
+	}
+	
+	/** Write a header. */
+	@Override
+	void prepareImageFile() {
+		System.out.println("FIXME: prepareImageFile in RawHDFormat");
+	}
+		
+	// FIXME
+	@Override
+	int getBufferIndex(Location loc) {
+		return NONE;
 	}
 }
 

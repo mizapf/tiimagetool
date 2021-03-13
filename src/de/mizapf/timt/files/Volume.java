@@ -46,10 +46,7 @@ public class Volume {
 	
 	// Used for displaying still unnamed volumes
 	private int m_nUnnamedIndex;
-	
-	// Fill pattern of empty sectors
-	private byte[] m_abyEmpty;
-	
+		
 	/** Create the volume from the given file name. 
 		@param sFile File name of the image file.
 		@param bCheck if true, check for the DSK signature in the floppy image
@@ -89,13 +86,17 @@ public class Volume {
 			m_cache = new SectorCache();
 			m_cache.setCommitted(true);
 		}
-
 		else m_cache = null;
+
+		m_Image.setFileSystem(m_FileSystem);
+		m_Image.setSectorCache(m_cache);
 		
 		// m_nLastMod = m_Image.getLastModifiedTime();
 		m_sImageFileName = sFile;
 		
 		// Read sector 0 
+		// Note that we have not yet set up the file system; sector 0
+		// should be readable without
 		Sector sector0 = readSector(0);
 		byte[] abySect0 = sector0.getBytes();
 
@@ -115,6 +116,7 @@ public class Volume {
 		
 		Directory dirRoot = null;
 		if (m_FileSystem instanceof FloppyFileSystem) {
+			m_Image.setBasicParams((FloppyFileSystem)m_FileSystem);
 			int fsDensity = ((FloppyFileSystem)m_FileSystem).getDensity();
 			if (fsDensity != m_Image.getDensity()) {
 				System.err.println(String.format(TIImageTool.langstr("VolumeDensityMismatch"), fsDensity, m_Image.getDensity())); 
@@ -139,7 +141,7 @@ public class Volume {
 		
 		Directory dirRoot = new Directory(this);
 		m_FileSystem.setRootDirectory(dirRoot);
-		
+
 		m_nUnnamedIndex = number;
 		
 		Sector[] initsec = fs.initialize(param);
@@ -153,28 +155,21 @@ public class Volume {
 		}	
 	}
 	
+	/** Called when opening an image file. */
 	public Volume(String sFile) throws FileNotFoundException, IOException, ImageException {
 		this(sFile, true);
-	}
-	
-	public void setFillPattern(byte[] empty) {
-		m_abyEmpty = empty;
 	}
 	
 	/** Reads a sector.
 		@throws ImageException if the sector cannot be found.
 	*/
 	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		Sector sect = m_cache.read(nSectorNumber);
+		boolean getBlankFromCache = (m_Image == null);
+		Sector sect = m_cache.read(nSectorNumber, getBlankFromCache);
+
 		if (sect == null) {
-			if (m_Image != null) {
-				// We have an image file
-				sect = m_Image.readSector(nSectorNumber);
-			}
-			else {
-				// Create a new blank sector
-				sect = new Sector(nSectorNumber, m_abyEmpty);
-			}
+			// We have an image file; we will find all requested sectors
+			sect = m_Image.readSector(nSectorNumber);
 		}
 		return sect;
 	}
@@ -187,7 +182,8 @@ public class Volume {
 			m_cache.write(sect);
 		}
 		else {
-			m_Image.writeSector(sect.getNumber(), sect.getBytes());
+			System.out.println("FIXME: Volume.writeSector for write-thru");
+			// m_Image.writeSector(sect.getNumber(), sect.getBytes());
 		}
 		
 		//		long time = m_Image.getLastModifiedTime();
@@ -200,7 +196,7 @@ public class Volume {
 		return m_cache.hasEntries();
 	}
 	
-	void commitAll() {
+/*	void commitAll() {
 		if (m_FileSystem.isWriteCached()) {
 			// First check whether this image has already been saved to disk
 			// Otherwise we cannot read the tracks
@@ -228,7 +224,7 @@ public class Volume {
 			}
 		}
 	}
-	
+*/	
 	public void fixCF7Geometry() {
 		((FloppyFileSystem)m_FileSystem).setGeometry(1600, 40, 2, 20, 2);
 	}
@@ -249,10 +245,19 @@ public class Volume {
 	}
 	
 	public boolean equals(Object other) {
-		if (other instanceof Volume) {
-			return getImageName().equals(((Volume)other).getImageName());
+		boolean res = false;
+		if (other==this) res = true;
+		else {
+			if (other!=null) { 
+				if (other instanceof Volume) {
+					String imageName = getImageName();
+					if (imageName!=null) {
+						res = imageName.equals(((Volume)other).getImageName());
+					}
+				}
+			}
 		}
-		return false;
+		return res;
 	}
 	
 	public String getImageName() {
@@ -427,6 +432,7 @@ public class Volume {
 	
 	// From TFile
 	public int getAUEmulateSector() {
+		if (m_FileSystem instanceof FloppyFileSystem) return 0;
 		return ((HarddiskFileSystem)m_FileSystem).getAUEmulateSector();
 	}
 	
@@ -471,16 +477,14 @@ public class Volume {
 		saveAllocationMap();
 	}
 	
+	// Called from here and from SaveImageAction
+	/** Save all modified sectors to the image. A sector is modified 
+		when the cache has an entry of it, or when the cache has never been
+		committed. That means that on the first invocation, all sectors
+		are written.
+	*/
 	public void saveImage() throws IOException, ImageException {
-		for (int i=0; i < m_FileSystem.getTotalSectors(); i++) {
-			Sector sect = m_cache.read(i);
-			if (sect != null) {
-				m_Image.writeBack(sect);
-				// System.out.println(sect.getNumber());
-			}
-		}
-		m_cache.setCommitted(true);
-		m_cache.wipe();
+		m_Image.saveImage();
 	}
 	
 	public boolean isModified() {
@@ -501,31 +505,28 @@ public class Volume {
 		if (m_Image == null) {
 			// The volume is new, not yet backed by an image file
 			// { } ---> A
+			System.out.println("Create completely new image");
 			m_sImageFileName = sFileName;
 			m_Image = ImageFormat.getImageFormat(sFileName, type, m_FileSystem);
-			m_Image.setFillPattern(fill);
 			m_cache.setFillPattern(fill);
-			saveImage();
+			m_Image.setSectorCache(m_cache);
+			m_Image.saveImage();
 		}
 		else {
 			// The image already exists; we are creating a new image
 			// A ---> B
+			System.out.println("Create new image from existing image");
 			m_sImageFileName = sFileName;
 			// We need to keep this image because it will deliver the sectors that are unchanged
 			ImageFormat newImage = ImageFormat.getImageFormat(sFileName, type, m_FileSystem);
-			newImage.setFillPattern(fill);
+			newImage.setSectorCache(m_cache);
 			
-			for (int i=0; i < m_FileSystem.getTotalSectors(); i++) {
-				Sector sect = readSector(i);
-				System.out.println(sect.getNumber());
-				newImage.writeBack(sect);
-			}
-			m_cache.setCommitted(true);
-			m_cache.wipe();
+			// Write all sectors
+			newImage.saveImage();
 			m_Image = newImage;
 			
 			// Problem: 
-			// ARC file written to image, then saved: not recognized as an ARC anymore
+			// FIXME: ARC file written to image, then saved: not recognized as an ARC anymore
 			// works after reopen
 		}
 	}

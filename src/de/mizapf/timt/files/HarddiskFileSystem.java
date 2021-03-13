@@ -22,6 +22,7 @@
 package de.mizapf.timt.files;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.NotImplementedException;
 
 /** Represents a TI harddisk file system. */	
 public class HarddiskFileSystem extends TFileSystem {
@@ -72,7 +73,17 @@ public class HarddiskFileSystem extends TFileSystem {
 		if (getAUEmulateSector()==nSector) m_nAUEmulate = 0;
 		else m_nAUEmulate = nSector / m_nSectorsPerAU;
 	}
-	
+
+	@Override
+	Location lbaToChs(int nSectorNumber) throws ImageException {
+		throw new NotImplementedException("lbaToChs");
+	}
+		
+	@Override
+	int chsToLba(int cylinder, int head, int sector) {
+		throw new NotImplementedException("chsToLba");
+	}
+
 	@Override
 	void setupFromFile(byte[] abySect0, byte[] abyAllocMap, boolean bCheck) throws MissingHeaderException, ImageException {	
 
