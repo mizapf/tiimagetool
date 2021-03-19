@@ -80,7 +80,7 @@ public class FloppyFileSystem extends TFileSystem {
 		if (m_nDensity != nDensity) {
 			System.err.println("Wrong density value " + (abySect0[0x13] & 0xff) + " for sector count " + m_nSectorsPerTrack); 
 		}
-		System.out.println("Density: " + m_nDensity);
+		//System.out.println("Density: " + m_nDensity);
 		
 		m_nSectorsPerAU = (int)(m_nTotalSectors/1601) + 1;
 		m_bProtection = (abySect0[0x10]=='P');

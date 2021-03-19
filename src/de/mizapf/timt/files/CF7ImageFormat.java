@@ -105,13 +105,9 @@ public class CF7ImageFormat extends ImageFormat {
 		return new CF7VolumeFormat(m_ImageFile, m_sImageName, number);
 	}
 	
-	@Override	
-	void setGeometryAndCodec(boolean bSpecial) throws IOException, ImageException {	
-	}
-	
-	/** Newly created. */
-	@Override	
-	void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial) {
+	@Override
+	TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException {
+		return null;
 	}
 	
 	@Override

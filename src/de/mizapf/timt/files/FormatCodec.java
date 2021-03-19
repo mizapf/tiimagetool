@@ -122,11 +122,19 @@ abstract class FormatCodec {
 	}
 	
 	FormatCodec(String sFile, boolean bInitial) {
+		this(null, sFile, bInitial);
+	}
+
+	FormatCodec(RandomAccessFile rafile, String sFile, boolean bInitial) {
+	//	Thread.currentThread().dumpStack();
+		m_ImageFile = rafile; 
+		System.out.println("sFile = " + sFile);
 		m_sImageName = sFile;
 		m_nCurrentIndex = NONE;
 		m_buffsector = new LinkedList<ImageSector>();
 		m_bInitial = bInitial;
 	}
+
 	
 	void setInitial(boolean init) {
 		m_bInitial = init;
@@ -158,11 +166,12 @@ abstract class FormatCodec {
 	*/
 	void loadBuffer(int nNumber) throws IOException {
 		if (nNumber == m_nCurrentIndex) {
-			System.out.println("Buffer already loaded");
+			// System.out.println("Buffer already loaded");
 			return;
 		}
 		// New buffer
 		flush();
+		System.out.println("Load buffer " + nNumber);
 		
 //		System.out.println("Buffer length = " + m_bufferlen[nNumber]);
 		m_abyBuffer = new byte[m_bufferlen[nNumber]];
@@ -247,7 +256,7 @@ abstract class FormatCodec {
 	    them on the image. */
 	void flush() throws FileNotFoundException, IOException {
 		if (m_nCurrentIndex == NONE) {
-			System.out.println("flush: Undefined buffer index");
+			// System.out.println("flush: Undefined buffer index");
 			return;
 		}
 		if (m_bBufferChanged) {

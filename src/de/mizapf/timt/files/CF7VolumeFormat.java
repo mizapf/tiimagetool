@@ -119,7 +119,7 @@ class CF7VolumeFormat extends SectorDumpFormat {
 		}
 	}
 
-	@Override	
+/*	@Override	
 	void setGeometryAndCodec(boolean bSpecial) throws IOException, ImageException {	
 		m_nHeads = 2;
 		m_nCylinders = 40;
@@ -144,5 +144,6 @@ class CF7VolumeFormat extends SectorDumpFormat {
 		
 		m_maxSector = 1600;
 	}
+	*/
 }
 

@@ -116,7 +116,7 @@ public class Volume {
 		
 		Directory dirRoot = null;
 		if (m_FileSystem instanceof FloppyFileSystem) {
-			m_Image.setBasicParams((FloppyFileSystem)m_FileSystem);
+			m_Image.setGeometry((FloppyFileSystem)m_FileSystem);
 			int fsDensity = ((FloppyFileSystem)m_FileSystem).getDensity();
 			if (fsDensity != m_Image.getDensity()) {
 				System.err.println(String.format(TIImageTool.langstr("VolumeDensityMismatch"), fsDensity, m_Image.getDensity())); 

@@ -70,8 +70,8 @@ class SectorDumpFormat extends ImageFormat {
 			super(sFile, bInitial);
 		}	
 		
-		SectorDumpCodec(boolean bInitial) {
-			super("unnamed", bInitial);
+		SectorDumpCodec(RandomAccessFile rafile, String sFile, boolean bInitial) {
+			super(rafile, sFile, bInitial);
 		}
 		
 		void writeBits(byte[] seq) {
@@ -80,7 +80,7 @@ class SectorDumpFormat extends ImageFormat {
 		
 		void createEmptyBuffer(int buffernum) {
 			System.out.println("createEmptyBuffer " + buffernum);
-			Thread.currentThread().dumpStack();
+			// Thread.currentThread().dumpStack();
 			m_abyBuffer = new byte[m_bufferlen[buffernum]];
 			for (int i=0; i < m_nSectorsPerTrack; i++) {
 				System.arraycopy(m_abyFill, 0, m_abyBuffer, i * 256, 256);
@@ -106,7 +106,7 @@ class SectorDumpFormat extends ImageFormat {
 
 		void encodeBuffer() {
 			System.out.println("encodeBuffer");
-			Thread.currentThread().dumpStack();
+			// Thread.currentThread().dumpStack();
 			for (ImageSector isect : m_buffsector) {
 				System.arraycopy(isect.getData(), 0, m_abyBuffer, isect.getLocation().sector * 256, 256);
 			}
@@ -114,14 +114,18 @@ class SectorDumpFormat extends ImageFormat {
 	}
 
 	/** Loaded image. Called from getImageFormat. */
-	SectorDumpFormat(RandomAccessFile imagefile, String sImageName) throws IOException, ImageException {
-		super(imagefile, sImageName);
+	SectorDumpFormat(RandomAccessFile rafile, String sImageName) throws IOException, ImageException {
+		super(rafile, sImageName);
+		m_codec = new SectorDumpCodec(rafile, sImageName, false);
+		setupBuffers(sImageName, false);
 		writeThrough(false);
 	}
 
 	/** Newly created image. */
 	SectorDumpFormat(RandomAccessFile rafile, String sImageName, TFileSystem fs) throws IOException, ImageException {
 		super(rafile, sImageName, fs);
+		m_codec = new SectorDumpCodec(rafile, sImageName, true);
+		setupBuffers(sImageName, true);
 		writeThrough(false);
 	}
 	
@@ -149,9 +153,9 @@ class SectorDumpFormat extends ImageFormat {
 		return SECTORDUMP; 
 	}
 	
-	@Override	
-	void setGeometryAndCodec(boolean bSpecial) throws IOException, ImageException {
-		long nLength = m_ImageFile.length();
+	@Override
+	TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException {
+		long nLength = rafile.length();
 		if (((nLength / 256) % 10)==3) nLength -= 768;
 		
 		int format = NONE;
@@ -169,20 +173,12 @@ class SectorDumpFormat extends ImageFormat {
 			sdfgeometry[format][1],  // head
 			sdfgeometry[format][3],  // sect
 			FloppyFileSystem.UNKNOWN_DENSITY);  // dens
-		setGeometryAndCodec("unnamed", ffs, false);
+		return ffs;
 	}
-	
-	/** Newly created. */
-	@Override	
-	void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial) {
-		setBasicParams((FloppyFileSystem)fs);
-		setupBuffers(sImageName, bInitial);
-	}
-	
+			
 	@Override
 	void setupBuffers(String sImageName, boolean bInitial) {
 		// Calculate length	
-		System.out.println("setupBuffers; m_nCylinders = " + m_nCylinders);
 		int tracklen = SECTOR_LENGTH * m_nSectorsPerTrack;
 		int[] bufferpos = new int[m_nCylinders*2];
 		int[] bufferlen = new int[m_nCylinders*2];
@@ -195,7 +191,6 @@ class SectorDumpFormat extends ImageFormat {
 		}
 		m_maxSector = 11520;
 		
-		m_codec = new SectorDumpCodec(sImageName, bInitial);
 		m_codec.setBufferParams(bufferpos, bufferlen);
 	}
 		

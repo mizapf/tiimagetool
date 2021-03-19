@@ -128,11 +128,6 @@ class RawHDFormat extends ImageFormat {
 			m_nTotalSectors = TFileSystem.MAXAU * nSectorsPerAU;
 	}
 	
-	/** Newly created. */
-	@Override	
-	void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial) {
-	}
-
 	@Override
 	void createBuffer(int cylinder, int head, int track) {
 	}
@@ -140,6 +135,11 @@ class RawHDFormat extends ImageFormat {
 	@Override
 	int loadBuffer(Location loc) {
 		return 0;
+	}
+	
+	@Override
+	TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException {
+		return null;
 	}
 	
 	@Override

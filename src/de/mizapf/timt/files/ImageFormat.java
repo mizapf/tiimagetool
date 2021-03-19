@@ -110,29 +110,25 @@ public abstract class ImageFormat  {
 	protected FormatCodec m_codec;
 
 	protected ImageFormat(RandomAccessFile rafile, String sImageName) throws IOException, ImageException {
-		m_ImageFile = rafile;
-		m_sImageName = sImageName;
-		m_nSectorLength = Volume.SECTOR_LENGTH;
-		setGeometryAndCodec(false /*Utilities.isRawDevice(sImageName)*/);
-		m_codec.setFile(rafile);
-		m_nCurrentTrack = NOTRACK;
-		m_bWriteThrough = false;
+		TFileSystem fs = determineFileSystem(rafile);
+		init(rafile, sImageName, fs);
 		m_bFromFile = true;
 	}
 	
 	/** Newly created; no image file yet. */
 	protected ImageFormat(RandomAccessFile rafile, String sImageName, TFileSystem fs) throws IOException, ImageException {
-		m_fs = fs;
+		init(rafile, sImageName, fs);
+		m_bFromFile = false;
+	}
+	
+	final void init(RandomAccessFile rafile, String sImageName, TFileSystem fs) {
 		m_ImageFile = rafile;
 		m_sImageName = sImageName;
 		m_nSectorLength = Volume.SECTOR_LENGTH;
-		setGeometryAndCodec(sImageName, fs, true);
-		m_codec.setFile(rafile);
 		m_nCurrentTrack = NOTRACK;
-		// System.out.println("Track length = " + m_nTrackLength + ", class = " + this.getClass().getName());
-		// m_abyBuffer = new byte[m_nTrackLength];
 		m_bWriteThrough = false;
-		m_bFromFile = false;
+		setGeometry((FloppyFileSystem)fs);
+		m_fs = fs;
 	}
 	
 	// Called from Volume.createFloppyImage (needed by subclass contructors)
@@ -303,29 +299,17 @@ public abstract class ImageFormat  {
 		m_ImageFile = new RandomAccessFile(m_sImageName, "r");		
 	}
 
-	/** Set some parameters for this image, according to the format and the
-	    give file. Any kinds of members may be initialized here; at least, the
-	    following members must be set:
-	    - m_nSectorsByFormat
-	    - m_nCylinders
-	    - m_nHeads
-	    - m_nSectorLength
-	    - m_nTrackLength
-	    - m_nDensity
-	    - m_nTotalSectors
-	    @param bSpecial image is a special file (raw device content).
-	*/
-	abstract void setGeometryAndCodec(boolean bSpecial) throws IOException, ImageException;
+	abstract TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException;
 
-	abstract void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial);
-
-	final void setBasicParams(FloppyFileSystem ffs) {
+	final void setGeometry(FloppyFileSystem ffs) {
 		// Calculate length
 		m_nHeads = ffs.getHeads();
 		m_nCylinders = ffs.getTracksPerSide();
 		m_nSectorsPerTrack = ffs.getTotalSectors() / (m_nHeads * ffs.getTracksPerSide());
 		m_nDensity = ffs.getDensity();
 		m_encoding = (m_nSectorsPerTrack < 16)? FM : MFM;
+		System.out.println("Cylinders = " + m_nCylinders + ", heads = " + m_nHeads + ", sectors = " +  m_nSectorsPerTrack
+			+ ", density = " +  m_nDensity + ", encoding = " + ((m_encoding==0)? "FM" : "MFM"));
 	}
 	
 	void setupBuffers(String sImageName, boolean bInitial) {

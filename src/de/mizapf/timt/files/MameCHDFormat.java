@@ -386,12 +386,7 @@ public class MameCHDFormat extends ImageFormat {
 //		System.out.println("append offset = " + Utilities.toHex((int)m_nAppendOffset, 8));					
 		// TODO: Check with format in VIB?
 	}
-	
-	/** Newly created. */
-	@Override	
-	void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial) {
-	}
-	
+		
 	@Override
 	void createBuffer(int cylinder, int head, int track) {
 	}
@@ -872,6 +867,11 @@ public class MameCHDFormat extends ImageFormat {
 	@Override
 	int getBufferIndex(Location loc) {
 		return NONE;
+	}
+	
+	@Override
+	TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException {
+		return null;
 	}
 }
 

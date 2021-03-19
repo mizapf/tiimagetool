@@ -740,7 +740,12 @@ public class HFEFormat extends ImageFormat {
 		return nVote;
 	}
 		
-	// Called when opening a file
+	@Override
+	TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException {
+		return null;
+	}
+	
+/*	// Called when opening a file
 	@Override	
 	void setGeometryAndCodec(boolean bSpecial) throws IOException, ImageException {
 		m_ImageFile.seek(0);
@@ -758,7 +763,7 @@ public class HFEFormat extends ImageFormat {
 		// setupBuffers();
 	}
 
-	/** Newly created. */
+	// Newly created.
 	@Override	
 	void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial) {
 		setBasicParams((FloppyFileSystem)fs);
@@ -770,6 +775,7 @@ public class HFEFormat extends ImageFormat {
 
 		setupBuffers(sImageName, bInitial);
 	}
+	*/
 	
 	void createBuffer(int cylinder, int head, int track) {
 		System.out.println("Create track, cyl = " + cylinder + ", head = " + head);

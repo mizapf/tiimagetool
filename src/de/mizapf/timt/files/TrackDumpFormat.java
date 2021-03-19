@@ -93,6 +93,7 @@ class TrackDumpFormat extends ImageFormat {
 		return TRACKDUMP; 
 	}
 
+/*
 	@Override	
 	void setGeometryAndCodec(boolean bSpecial) throws IOException, ImageException {
 		m_ImageFile.seek(0);
@@ -138,12 +139,11 @@ class TrackDumpFormat extends ImageFormat {
 		
 		setupBuffers("unnamed", false);
 	}
+*/
 
-	/** Newly created. */
-	@Override	
-	void setGeometryAndCodec(String sImageName, TFileSystem fs, boolean bInitial) {
-		setBasicParams((FloppyFileSystem)fs);	
-		setupBuffers(sImageName, bInitial);
+	@Override
+	TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException {
+		return null;
 	}
 
 	@Override
