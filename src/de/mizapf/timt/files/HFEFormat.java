@@ -865,7 +865,6 @@ public class HFEFormat extends ImageFormat {
 	    @param nSectorNumber Sector that is about to be read.
 	    @return Index of the sector in the sector cache (or NONE)
 	*/
-	@Override
 	int loadBuffer(Location loc) throws IOException, ImageException {
 		m_first = true;  // First bit ever loaded of this cylinder?
 		ArrayList<Sector> sectors = new ArrayList<Sector>();
@@ -1007,11 +1006,13 @@ public class HFEFormat extends ImageFormat {
 		else throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 	}
 */	
-	/** Write a single sector to the buffer. Load the buffer if required. */
-	@Override
+
+/*
+	// Write a single sector to the buffer. Load the buffer if required.
 	public void writeToBuffer(Sector sect) throws IOException, ImageException {
 		// Write the sector into m_buffsector. This may lead to flushing the
 		// current buffer and loading the buffer containing this sector
+		
 		writeSector(sect);
 		
 		// Write the sector into the buffer
@@ -1029,7 +1030,8 @@ public class HFEFormat extends ImageFormat {
 		writeBits(sect.getCrc(), 16);
 		sect.clean();
 	}
-		
+	*/
+	
 	/** Save all sectors to the image file. Unlike the other 
 		formats, HFEFormat must write all sectors of the same cylinder
 		(tracks of both heads) before changing to a new cylinder.
@@ -1396,7 +1398,6 @@ Including padding: (length = 0c40) GAP4+=16
 =================
 
 */
-	@Override
 	void formatTrack(int cylinder, int head, int seccount, int density, int[] gap) {
 		System.out.println("Creating new track on cylinder " + cylinder + ", head " + head);
 		m_lastDataBit = 0;

@@ -268,5 +268,8 @@ abstract class FormatCodec {
 	/** Creates an empty buffer (cylinder, track, hunk). */
 	abstract void createEmptyBuffer(int buffernum);
 	
-	abstract void writeBits(byte[] seq);
+	void writeBits(byte[] seq) {
+		System.out.println("FIXME: Implement writeBits");
+		Thread.currentThread().dumpStack();
+	}
 }	

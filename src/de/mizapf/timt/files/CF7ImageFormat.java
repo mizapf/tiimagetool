@@ -111,27 +111,6 @@ public class CF7ImageFormat extends ImageFormat {
 	}
 	
 	@Override
-	void createBuffer(int cylinder, int head, int track) {
-	}
-	
-	@Override
-	int loadBuffer(Location loc) throws IOException, ImageException {
-		return 0;
-	}
-
-	@Override
-	void formatTrack(int cylinder, int head, int sectors, int density, int[] gap) {
-	}	
-	
-	@Override
-	public void flush() throws IOException {
-	}
-	
-	@Override
-	void createEmptyImage(File newfile, int sides, int density, int tracks, int sectors, boolean format) throws ImageException, FileNotFoundException, IOException {
-	}
-	
-	@Override
 	public void reopenForWrite() throws IOException {
 	}
 	
@@ -142,10 +121,6 @@ public class CF7ImageFormat extends ImageFormat {
 	@Override
 	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
 		return null;
-	}
-	
-	@Override
-	public void writeSector(Sector sect) throws IOException, ImageException {
 	}
 	
 	@Override

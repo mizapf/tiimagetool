@@ -181,24 +181,9 @@ class TrackDumpFormat extends ImageFormat {
 		return TIImageTool.langstr("TrackDump");
 	}
 	
-	/** We return the cached sector.
-	*/
-	@Override
-	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		if (nSectorNumber > 10000) throw new ImageException(String.format(TIImageTool.langstr("BadSectorNumber"), nSectorNumber)); 
-		int secindex = locateInBuffer(nSectorNumber);
-		if (secindex != NONE) {
-			// System.out.println("sector " + nSectorNumber);
-			// System.out.println(m_buffsector[secindex]);
-			return m_buffsector[secindex];
-		}
-		else throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
-	}
-
 	/** Create a new track in m_abyBuffer when the image has not yet been written. 
 		Current cylinder and head are stored in the member variables.
 	*/
-	@Override
 	void createBuffer(int cylinder, int head, int track) {
 		System.out.println("Create new track " + track);
 		FloppyFileSystem ffs = (FloppyFileSystem)m_fs;
@@ -212,7 +197,6 @@ class TrackDumpFormat extends ImageFormat {
 	    @param nSectorNumber Sector that is about to be read.
 	    @return Index of the sector in the sector cache (or NONE)
 	*/
-	@Override
 	int loadBuffer(Location loc) throws IOException, ImageException {
 		
 		ArrayList<Sector> sectors = new ArrayList<Sector>();
@@ -385,12 +369,7 @@ class TrackDumpFormat extends ImageFormat {
 			m_ImageFile = new RandomAccessFile(m_sImageName, "r");		
 		}
 	}
-
-	@Override
-	void writeToBuffer(Sector sect) throws IOException, ImageException {
-		writeSector(sect);
-	}
-
+	
 	@Override
 	public void reopenForWrite() throws IOException {
 		// Don't do anything here
@@ -403,7 +382,6 @@ class TrackDumpFormat extends ImageFormat {
 	// ===========================================================
 	// Formatting
 	// ===========================================================
-	@Override
 	void formatTrack(int cylinder, int head, int seccount, int density, int[] gap) {
 		int gapval0 = 0x4e;
 		int gapval1 = 0x4e;

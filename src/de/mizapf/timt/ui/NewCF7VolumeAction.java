@@ -27,6 +27,7 @@ import java.awt.event.KeyEvent;
 
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.NotImplementedException;
 
 public class NewCF7VolumeAction extends Activity {
 
@@ -92,14 +93,15 @@ public class NewCF7VolumeAction extends Activity {
 					
 					imagetool.setSourceDirectory(file.getParentFile(), "image");
 					
-					ImageFormat.createFloppyImage(file, 
+					throw new NotImplementedException("create CF7 volume");
+/*					ImageFormat.createFloppyImage(file, 
 									newimagedia.getDiskName(),
 									ImageFormat.CF7VOLUME,
 									2, 
 									FloppyFileSystem.DOUBLE_DENSITY,
 									40,
 									true);
-				
+*/				
 				}
 				// Open it when it is initialized
 				if (file != null) {

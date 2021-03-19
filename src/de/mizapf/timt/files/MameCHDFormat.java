@@ -275,11 +275,6 @@ public class MameCHDFormat extends ImageFormat {
 		m_nDensity = 0;
 		writeThrough(true);
 	}
-
-	@Override
-	protected int locateInBuffer(int nSectorNumber) throws IOException {
-		return 0;
-	}	
 	
 	public int getVersion() {
 		return m_nVersion;
@@ -387,15 +382,6 @@ public class MameCHDFormat extends ImageFormat {
 		// TODO: Check with format in VIB?
 	}
 		
-	@Override
-	void createBuffer(int cylinder, int head, int track) {
-	}
-	
-	@Override
-	int loadBuffer(Location loc) {
-		return 0;
-	}
-
 	private int parseValue(byte[] aby, String sToken, int nEnd) {
 		String sTok = sToken + ":";
 		byte[] abyToken = sTok.getBytes();
@@ -480,7 +466,6 @@ public class MameCHDFormat extends ImageFormat {
 		return new Sector(nSectorNumber, abySector);
 	}
 	
-	@Override
 	public void writeSector(Sector sect) throws IOException, ImageException {
 		try {
 			int secoff = getSectorOffset(sect.getNumber());

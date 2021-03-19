@@ -27,6 +27,7 @@ import java.awt.event.KeyEvent;
 
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.NotImplementedException;
 
 public class NewImageAction extends Activity {
 
@@ -110,13 +111,14 @@ public class NewImageAction extends Activity {
 					
 					imagetool.setSourceDirectory(file.getParentFile(), "image");
 					
-					ImageFormat.createFloppyImage(file, 
+					throw new NotImplementedException("Legacy floppy creation");
+					/*ImageFormat.createFloppyImage(file, 
 									newimagedia.getDiskName(),
 									newimagedia.getImageType(),
 									newimagedia.getSides(), 
 									newimagedia.getDensity(),
 									newimagedia.getTrackCount(),
-									newimagedia.formatImage());
+									newimagedia.formatImage()); */
 				
 				}
 				// Open it when it is initialized

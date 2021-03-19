@@ -172,40 +172,6 @@ public abstract class ImageFormat  {
 		return sect;
 	}
 
-	/** Reads a sector from the medium. */
-	// public abstract Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException;
-	
-	/** Write a sector. Is public for SectorEditFrame. */
-/*	public final void writeSector(Sector sect) throws IOException, ImageException {
-		if (m_bWriteThrough) {
-			writeSectorToImage(sect.getNumber(), sect.getBytes());
-		}
-		else {
-			m_cache.write(sect);
-		}
-	}
-*/
-
-	/** Write a sector to the buffer. Also sets the mark and position in the
-		argument sector. */
-	public void writeSector(Sector sect) throws IOException, ImageException {
-		int secindex = locateInBuffer(sect.getNumber());
-		if (secindex == NONE) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), sect.getNumber()));
-		// Write the new data
-		// Don't forget to clone the bytes!
-		byte[] abyNewcontent = new byte[256];
-		System.arraycopy(sect.getBytes(), 0, abyNewcontent, 0, 256);
-		
-		// Write the sector contents into the read cache
-		// so that the track image can be created on flush
-		System.out.println("Writing sector " + sect.getNumber());
-		m_buffsector[secindex].setData(abyNewcontent);
-		sect.setMark(m_buffsector[secindex].getMark());
-		sect.setPosition(m_buffsector[secindex].getPosition());
-		// System.out.println(m_buffsector[secindex]);
-		// System.out.println("CRC = " + Utilities.toHex(m_buffsector[secindex].getCrc(),4));
-	}
-	
 	int getDensity() {
 		return m_nDensity;
 	}
@@ -316,91 +282,6 @@ public abstract class ImageFormat  {
 		System.out.println("FIXME: Implement setupBuffers");
 	}
 	
-	/** Read a track, given the number of a sector within that track.
-		@param nSectorNumber LBA number of the sector.
-		@return Index of the desired sector within its track.
-	*/
-	abstract int loadBuffer(Location loc) throws IOException, ImageException;
-
-	/** If the image file does not yet exist. */
-	abstract void createBuffer(int cylinder, int head, int track);
-	
-	/** Common part of the readBuffer method. Read the block into the buffer
-		that contains the specified sector. For a newly created file system, 
-		create the buffer.
-	*/
-	int locateInBuffer(int nSectorNumber) throws ImageException, IOException {
-		System.out.println("readBuffer (for sector " + nSectorNumber + ")");
-		Location loc = null;
-		FloppyFileSystem ffs = (FloppyFileSystem)m_fs;
-		// System.out.println("Read track of sector " + nSectorNumber);
-		if (nSectorNumber != 0) {
-			
-			if (ffs.getCountedSectors() == NONE) {
-				// We do not know the number of sectors yet. Read track 0.
-				System.out.println("Need to read track 0 first");
-				locateInBuffer(0);
-			}
-		
-			loc = ffs.lbaToChs(nSectorNumber);
-		}
-		else {
-			loc = new Location(0, 0, 0, 0);
-		}
-		
-		// Do we have that buffer already?
-		if (bufferLoaded(loc.cylinder, loc.head)) {
-			// Iterate over the sectors and return its index in the list.
-			for (int i=0; i < m_buffsector.length; i++) {
-				if (m_buffsector[i].getNumber()==nSectorNumber) return i;
-			}
-			return NONE;
-		}
-		
-		// So the buffer is not the right one
-		if (!m_bFromFile) {
-			System.out.println("Need to create track " + loc.track);
-		}
-		else {
-			System.out.println("Need to load cylinder " + loc.cylinder + ", head " + loc.head);
-		}
-		prepareImageFile();
-		
-		// Write back the last buffer
-		if (bufferNeedsFlush(loc.cylinder, loc.track))
-			flush();
-
-		// We need the track - either from disk or newly created. 
-
-		m_currentTrack = loc.track; // Required for readBufferFromImage
-
-		if (m_bFromFile) {
-			// We need to read the whole cylinder.
-			System.out.println("Read track " + loc.track + " from position " + m_bufferpos[loc.track]);
-			readBufferFromImage(m_bufferpos[loc.track]);
-		}
-		else {
-			// CreateBuffer needs the old cylinder number
-			createBuffer(loc.cylinder, loc.head, loc.track);
-		}
-
-		m_currentCylinder = loc.cylinder;
-		m_currentHead = loc.head;
-		
-		// Only interesting for HFEFormat
-		m_cells = m_abyBuffer.length * 4;  // All bits for either head
-				
-		// Reset to start
-		m_positionInBuffer = 0;
-		
-		// Now load the track
-		int secindex = -1;
-		secindex = loadBuffer(loc);
-
-		// Return the position of the desired sector in this track
-		return secindex;		
-	}
-	
 	boolean bufferNeedsFlush(int cyl, int head) {
 		return m_currentCylinder != cyl && m_currentHead != head;
 	}
@@ -451,16 +332,10 @@ public abstract class ImageFormat  {
 	
 	abstract int getBufferIndex(Location loc);
 	
-	abstract void formatTrack(int cylinder, int head, int sectors, int density, int[] gap);
-	
 	abstract String getDumpFormatName();
-	
-	public abstract void flush() throws IOException;
-	
+		
 	abstract void prepareImageFile() throws FileNotFoundException, IOException;
-	
-	abstract void createEmptyImage(File newfile, int sides, int density, int tracks, int sectors, boolean format) throws ImageException, FileNotFoundException, IOException;
-	
+		
 	int checkCRC(boolean fix, boolean reset) throws IOException {	
 		return NONE;
 	}
@@ -472,31 +347,6 @@ public abstract class ImageFormat  {
 	
 	void setCommitted(boolean bCommit) {
 		m_bFromFile = bCommit;
-	}
-	
-	public static void createFloppyImage(File newImageFile, String volumeName, int type, int sides, int density, int tracks, boolean format) throws IOException, ImageException {
-		System.out.println("FIXME: Called legacy function ImageFormat.createFloppyImage");
-		ImageFormat image = null;
-		
-		int sectorsPerTrack = 9 << density;
-
-		switch (type) {
-		case SECTORDUMP:
-			image = new SectorDumpFormat();
-			break;
-		case TRACKDUMP:
-			image = new TrackDumpFormat();
-			break;
-		case HFE:
-			image = new HFEFormat();
-			break;
-		case CF7VOLUME:
-			image = new CF7VolumeFormat();
-			sectorsPerTrack = 20;
-			break;
-		}
-		
-		image.createEmptyImage(newImageFile, sides, density, tracks, sectorsPerTrack, format);
 	}
 	
 	/** Needed for formatting a track. */

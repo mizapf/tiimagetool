@@ -72,7 +72,6 @@ class RawHDFormat extends ImageFormat {
 		writeThrough(true);
 	}
 	
-	@Override
 	int locateInBuffer(int nSectorNumber) throws IOException {
 		// TODO: NPX for SCSI
 		int nTrackNumber = (nSectorNumber / m_nSectorsPerTrack);			
@@ -129,15 +128,6 @@ class RawHDFormat extends ImageFormat {
 	}
 	
 	@Override
-	void createBuffer(int cylinder, int head, int track) {
-	}
-	
-	@Override
-	int loadBuffer(Location loc) {
-		return 0;
-	}
-	
-	@Override
 	TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException {
 		return null;
 	}
@@ -155,7 +145,6 @@ class RawHDFormat extends ImageFormat {
 
 	/** For Windows systems and access to the physical device we must
 		adjust to block boundaries. */
-	@Override
 	public void writeSector(Sector sect) throws IOException, ImageException {
 		// System.out.println("Writing sector " + sect.getNumber());
 		try {

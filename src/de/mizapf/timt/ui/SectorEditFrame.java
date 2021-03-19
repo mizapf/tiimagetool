@@ -695,7 +695,9 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 					// m_image.writeSector(i, sect.getBytes());  // directly written through
 				}
 			}
-			m_image.flush();
+			Thread.currentThread().dumpStack();
+			// m_image.flush();
+			
 			m_image.reopenForRead();
 			SectorCache.nextGen();
 		}
