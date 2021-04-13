@@ -48,12 +48,6 @@ public abstract class ImageFormat  {
 	
 	byte[] m_abyEmpty;
 	
-	int[] m_bufferpos;
-	int[] m_bufferlen1;
-	int m_positionInBuffer;
-
-	boolean m_bBufferChanged;
-	
 	int m_encoding;
 	int m_cells;
 
@@ -164,7 +158,7 @@ public abstract class ImageFormat  {
 		FloppyFileSystem ffs = (FloppyFileSystem)m_fs;
 		m_locCurrent = ffs.lbaToChs(nSectorNumber);
 		int index = getBufferIndex(m_locCurrent);
-		System.out.println("Sector " + nSectorNumber + ": index=" + index);
+		// System.out.println("Sector " + nSectorNumber + ": index=" + index);
 		m_codec.loadBuffer(index);
 		Sector sect = m_codec.readSector(m_locCurrent, nSectorNumber);
 		if (sect == null)
@@ -286,19 +280,14 @@ public abstract class ImageFormat  {
 		return m_currentCylinder != cyl && m_currentHead != head;
 	}
 
-	/** Overridden by CF7Format. */
-	void readBufferFromImage(int offset) throws IOException {
-		m_abyBuffer = new byte[getFullTrackLength(m_bufferlen1[m_currentTrack])];
-		m_ImageFile.seek(offset);
-		m_ImageFile.readFully(m_abyBuffer);
-	}
-	
 	/** Saves all modified sectors to the image file. This may be overridden
 		by subclasses, e.g. HFEFormat.
+		@param bDoSave Save also when there are no changes. Needed when saving to
+		a new image.
 	*/
-	void saveImage() throws IOException, ImageException {
+	void saveImage(boolean bDoSave) throws IOException, ImageException {
 		for (int i=0; i < m_fs.getTotalSectors(); i++) {
-			System.out.println("Writing sector " + i);
+			// System.out.println("Writing sector " + i);
 			// Read the sector from the cache and get null on miss
 			Sector sect = m_cache.read(i, false);
 			
@@ -307,8 +296,9 @@ public abstract class ImageFormat  {
 			// Determine if the sector is already in the codec; if not, flush
 			// the codec and load the appropriate buffer
 			int index = getBufferIndex(m_locCurrent);
-			System.out.println("Sector " + i + ": index=" + index);
+			// System.out.println("Sector " + i + ": index=" + index);
 			m_codec.loadBuffer(index);
+			if (bDoSave) m_codec.touch();
 			if (sect != null) m_codec.writeSector(m_locCurrent, sect.getBytes());
 			// writeToBuffer(sect);
 		}

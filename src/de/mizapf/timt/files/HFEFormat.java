@@ -276,7 +276,10 @@ public class HFEFormat extends ImageFormat {
 	}
 	
 	HFEHeader m_header;	
-
+	int m_positionInBuffer;
+	int[] m_bufferpos;
+	int[] m_bufferlen1;
+	
 	/** Codec for reading / writing HFE */
 	class HFECodec extends FormatCodec {
 		
@@ -297,19 +300,9 @@ public class HFEFormat extends ImageFormat {
 			// FIXME: mfm, coderate?
 			super(sFile, false);
 		}
-		
-		/** From the sequence of ImageSectors, produce a buffer content. */
-		void encodeBuffer() {
-			m_lastDataBit = 0;
-			m_currentHead = 0;
-			// We already have the track in the buffer; just need to write
-			// the sector contents into them
-			for (ImageSector sect : m_buffsector) {
-				m_nPositionInBuffer = sect.getImagePosition();
-				m_currentHead = sect.getLocation().head;
-				writeBits(sect.getData());
-				writeBits(sect.getCRCBytes());
-			}
+
+		protected void writeCRC(byte[] crc) {
+			writeBits(crc);
 		}
 		
 		/** Produces a list of ImageSectors. Delivers the sectors per track. */
@@ -401,20 +394,14 @@ public class HFEFormat extends ImageFormat {
 			formatTrack(cylinder, 1, ffs.getSectorsPerTrack(), density, gaps);
 		}
 		
-		void writeBits(int value, int number) {
+		protected void writeBits(int value, int number) {
 			int mask = 1 << (number-1);
 			for (int i=0; i < number; i++) {
 				writeNextBit((value & mask)!=0);
 				mask >>= 1;
 			}
 		}
-		
-		void writeBits(byte[] seq) {
-			for (int i=0; i < seq.length; i++) {
-				writeBits(seq[i], 8);
-			}
-		}
-		
+			
 		private void writeNextBit(boolean databit) {
 			boolean clock = !m_mfm || (m_lastDataBit==0 && databit==false);
 			
@@ -653,11 +640,14 @@ public class HFEFormat extends ImageFormat {
 //	byte[] m_bCellTrack;
 	
 	byte[] m_abyBufferLUT;
-
+	
+	int m_lastDataBit1;
+	
 	int m_shiftRegister;
 	int m_value;
-	int m_lastDataBit;
 		
+	boolean m_bBufferChanged;
+
 	boolean m_first = true;
 	boolean m_bHeaderWritten = false;
 	
@@ -1036,7 +1026,6 @@ public class HFEFormat extends ImageFormat {
 		formats, HFEFormat must write all sectors of the same cylinder
 		(tracks of both heads) before changing to a new cylinder.
 	*/
-	@Override
 	void saveImage() throws IOException, ImageException {
 		FloppyFileSystem ffs = (FloppyFileSystem)m_fs;
 		System.out.println("HFEImage.saveImage");
@@ -1257,18 +1246,18 @@ public class HFEFormat extends ImageFormat {
 			writeNextCell(cell);
 			if (m_codeRate == 4) writeNextCell(false);  // ignore the next cell
 			value <<= 1;
-			if ((i & 1)==1) m_lastDataBit = cell? 1 : 0;
+			if ((i & 1)==1) m_lastDataBit1 = cell? 1 : 0;
 		}
 	}
 		
 	private void writeNextBit(boolean databit) {
 		boolean clock = (m_header.track_encoding==HFEHeader.ISOIBM_FM_ENCODING) ||
-				(m_lastDataBit==0 && databit==false);
+				(m_lastDataBit1==0 && databit==false);
 
 		writeNextCell(clock);
 		if (m_codeRate == 4) writeNextCell(false);  // ignore the next cell
 		writeNextCell(databit);   // Data bit
-		m_lastDataBit = databit? 1 : 0;
+		m_lastDataBit1 = databit? 1 : 0;
 		if (m_codeRate == 4) writeNextCell(false);  // ignore the next cell
 	}
 	
@@ -1400,7 +1389,7 @@ Including padding: (length = 0c40) GAP4+=16
 */
 	void formatTrack(int cylinder, int head, int seccount, int density, int[] gap) {
 		System.out.println("Creating new track on cylinder " + cylinder + ", head " + head);
-		m_lastDataBit = 0;
+		m_lastDataBit1 = 0;
 		int gapval = 0x4e;
 		m_positionInBuffer = 0;
 		

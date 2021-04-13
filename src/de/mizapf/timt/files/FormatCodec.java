@@ -69,6 +69,8 @@ abstract class FormatCodec {
 	/** Reference to the image file. */
 	private RandomAccessFile m_ImageFile; 
 		
+	protected int m_lastDataBit;
+	
 	class ImageSector {
 		byte[] m_content;
 		byte[] m_crc;
@@ -206,8 +208,48 @@ abstract class FormatCodec {
 	}
 	
 	/** Produce the byte sequence from the sectors. */
-	abstract void encodeBuffer();
+	void encodeBuffer() {
+		m_lastDataBit = 0;
+		// m_currentHead = 0;
+		// We already have the track in the buffer; just need to write
+		// the sector contents into them
+		for (ImageSector sect : m_buffsector) {
+			m_nPositionInBuffer = sect.getImagePosition();
+			// m_currentHead = sect.getLocation().head;
+			writeBits(sect.getData());
+			writeCRC(sect.getCRCBytes());
+		}
+	}
 
+	/** Creates an empty buffer (cylinder, track, hunk). */
+	abstract void createEmptyBuffer(int buffernum);
+	
+	protected void writeCRC(byte[] crc) {
+		// Do nothing by default
+	}
+	
+	protected void writeBits(byte[] seq) {
+		for (int i=0; i < seq.length; i++) {
+			writeBits(seq[i], 8);
+		}
+	}
+	
+	/** Default implementation. */
+	protected void writeBits(int value, int number) {
+		int val1 = value;
+		if (number==16) val1 = (value >> 8);
+				
+		if (m_nPositionInBuffer < m_bufferlen[m_nCurrentIndex]) {
+			m_abyBuffer[m_nPositionInBuffer++] = (byte)(val1 & 0xff);
+		}
+		
+		if (number==16) {
+			if (m_nPositionInBuffer < m_bufferlen[m_nCurrentIndex]) {
+				m_abyBuffer[m_nPositionInBuffer++] = (byte)(value & 0xff);
+			}
+		}
+	}
+	
 	/** Find the sectors and their positions in the buffered bytes. */
 	abstract int decodeBuffer();
 	
@@ -232,6 +274,10 @@ abstract class FormatCodec {
 	void setBufferParams(int[] pos, int[] len) {
 		m_bufferpos = pos;
 		m_bufferlen = len;
+	}
+	
+	void touch() {
+		m_bBufferChanged = true;
 	}
 	
 	/*
@@ -263,13 +309,5 @@ abstract class FormatCodec {
 			writeBuffer(m_nCurrentIndex);
 		}
 		else System.out.println("No changes for buffer " + m_nCurrentIndex);		
-	}
-	
-	/** Creates an empty buffer (cylinder, track, hunk). */
-	abstract void createEmptyBuffer(int buffernum);
-	
-	void writeBits(byte[] seq) {
-		System.out.println("FIXME: Implement writeBits");
-		Thread.currentThread().dumpStack();
 	}
 }	

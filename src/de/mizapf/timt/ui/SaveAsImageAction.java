@@ -100,28 +100,31 @@ public class SaveAsImageAction extends Activity {
 				selectedFile = null;
 			}
 			
-			// Overwrite?
-			if (selectedFile.exists()) {		
-				int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ExistsOverwrite"), TIImageTool.langstr("NewImageTitle"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-				if (nRet == JOptionPane.NO_OPTION) return;
-			}
-			
-			// Ready to save
-			System.out.println("Save as " + selectedFile.getAbsolutePath());
-			
-			try {
-				vol.saveNewImage(selectedFile.getAbsolutePath(), sd.getImageType(), imagetool.getFillSequence());
-				imagetool.addRecent(selectedFile.getAbsolutePath());
-				imagetool.refreshAllViews();
+			if (selectedFile != null) {
 				
-				java.io.File filePar = selectedFile.getParentFile();
-				imagetool.setSourceDirectory(filePar, "image");
-			}
-			catch (Exception e) {
-				e.printStackTrace();
+				// Overwrite?
+				if (selectedFile.exists()) {		
+					int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ExistsOverwrite"), TIImageTool.langstr("NewImageTitle"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+					if (nRet == JOptionPane.NO_OPTION) return;
+				}
+				
+				// Ready to save
+				System.out.println("Save as " + selectedFile.getAbsolutePath());
+				
+				try {
+					vol.saveNewImage(selectedFile.getAbsolutePath(), sd.getImageType(), imagetool.getFillSequence());
+					imagetool.addRecent(selectedFile.getAbsolutePath());
+					imagetool.refreshAllViews();
+					
+					java.io.File filePar = selectedFile.getParentFile();
+					imagetool.setSourceDirectory(filePar, "image");
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 		}
-		// else we cancelled the save after the type selection
+		// else we cancelled the save after the type selection		
 	}
 	
 	String getSuffixedName(String sName, int nType) {

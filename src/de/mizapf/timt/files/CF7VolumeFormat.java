@@ -43,7 +43,10 @@ class CF7VolumeFormat extends SectorDumpFormat {
 	
 	/** Required for volumes inside the CF7 image. */
 	byte[] m_rawVolume;
-	
+
+	int[] m_bufferpos;
+	int[] m_bufferlen1;
+
 	static int vote(RandomAccessFile fileSystem) throws IOException {
 		long nLength = fileSystem.length();
 		return (nLength == 409600)? 100 : 0;

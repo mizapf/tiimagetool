@@ -99,14 +99,6 @@ class SectorDumpFormat extends ImageFormat {
 			}
 			return count;	
 		}
-
-		void encodeBuffer() {
-			// System.out.println("encodeBuffer");
-			// Thread.currentThread().dumpStack();
-			for (ImageSector isect : m_buffsector) {
-				System.arraycopy(isect.getData(), 0, m_abyBuffer, isect.getLocation().sector * 256, 256);
-			}
-		}
 	}
 
 	/** Loaded image. Called from getImageFormat. */

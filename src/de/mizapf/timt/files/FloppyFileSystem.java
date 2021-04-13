@@ -144,6 +144,18 @@ public class FloppyFileSystem extends TFileSystem {
 		return m_nCountedSectors;
 	}
 	
+	static int cylToTrack(int totalcyl, int cyl, int head) {
+		return (head == 0)? cyl : (2*totalcyl - 1 - cyl);
+	}
+	
+	static int trackToCyl(int totalcyl, int track) {
+		return (track < totalcyl)? track : (2*totalcyl - 1 - track);
+	}
+
+	static int trackToHead(int totalcyl, int track) {
+		return (track < totalcyl)? 0 : 1;
+	}
+
 	/** Delivers the position on the image file by track and sector.
 		Result is returned as a Location instance.
 		Called by the floppy image types only.
@@ -175,12 +187,9 @@ public class FloppyFileSystem extends TFileSystem {
 		
 		// track is linearly counted over both sides, cylinder is one side only
 		// track is the logical count (TI file system), cylinder is physical count
-		if (track >= m_nCylinders) {
-			// Next head
-			cylinder = 2 * m_nCylinders - 1 - track;
-			head++;
-		}
-		
+		cylinder = trackToCyl(m_nCylinders, track);
+		head = trackToHead(m_nCylinders, track);
+				
 /*		if ((m_nSectorsPerTrack < 1) || (getCountedSectors() < 1)) {
 			Thread.currentThread().dumpStack();
 			throw new ImageException("BUG: m_nSectorsPerTrack = " + m_nSectorsPerTrack + ", sectorsByFormat = " + getCountedSectors());

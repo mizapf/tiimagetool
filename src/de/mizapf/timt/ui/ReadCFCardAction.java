@@ -122,7 +122,9 @@ public class ReadCFCardAction extends Activity {
 					WaitForCF7Dialog wd = new WaitForCF7Dialog(m_parent, imagetool, true);
 					wd.createGui(imagetool.boldFont);
 					wd.setVisible(true);
+					System.out.println("Starting CF operation");
 					p.waitFor();
+					System.out.println("CF operation completed");
 					wd.dispose();
 					long endTime = System.currentTimeMillis();
 					int exit = p.exitValue();

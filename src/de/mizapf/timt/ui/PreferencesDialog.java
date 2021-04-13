@@ -96,7 +96,9 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 		String value = null;
 		JPanel tabPanel = new JPanel();
 		tabPanel.setLayout(new BoxLayout(tabPanel, BoxLayout.Y_AXIS));
-		boolean isWindows = System.getProperty("os.name").startsWith("Windows");
+		String os = System.getProperty("os.name").toLowerCase();
+		boolean isWindows = os.contains("windows");
+		boolean isMac = os.contains("mac");
 		
 		tabPanel.add(Box.createVerticalStrut(10));	
 
@@ -139,8 +141,8 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 				jc = putTextField(tabPanel, name, value, m_nColumnWidth, m_fieldWidth);
 				m_entries.put(s, jc);
 				break;
-			case 'u':
-				if (!isWindows) {
+			case 'u': // only for Linux
+				if (!isWindows && !isMac) {
 					value = m_app.getPropertyString(s);
 					jc = putTextField(tabPanel, name, value, m_nColumnWidth, m_fieldWidth);
 					m_entries.put(s, jc);

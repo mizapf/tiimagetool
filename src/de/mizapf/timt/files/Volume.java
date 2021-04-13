@@ -51,9 +51,9 @@ public class Volume {
 		@param sFile File name of the image file.
 		@param bCheck if true, check for the DSK signature in the floppy image
 	*/
-	public Volume(String sFile, boolean bCheck) throws FileNotFoundException, IOException, ImageException {
+	public Volume(String sFile, boolean bCheck, ImageFormat image) throws FileNotFoundException, IOException, ImageException {
 
-		m_Image = null;
+		m_Image = image;
 		
 		// Check whether we have a number at the end of the name
 		// This would be a subvolume of a CF7 image file
@@ -62,7 +62,10 @@ public class Volume {
 			try {
 				sFile = sFile.substring(0, volnumpos);
 				int number = Integer.parseInt(sFile.substring(volnumpos+1));
-				ImageFormat format = ImageFormat.getImageFormat(sFile);
+				ImageFormat format = image;
+				if (format == null) {
+					format = ImageFormat.getImageFormat(sFile);
+				}
 				m_Image = ((CF7ImageFormat)format).getSubvolume(number);
 				// We continue with a CF7VolumeFormat
 			}
@@ -128,6 +131,14 @@ public class Volume {
 		}
 		
 		m_FileSystem.setRootDirectory(dirRoot);
+	}
+
+	public Volume(String sFile, boolean bCheck) throws FileNotFoundException, IOException, ImageException {
+		this(sFile, bCheck, null);
+	}
+	
+	public Volume(String sFile, ImageFormat image) throws FileNotFoundException, IOException, ImageException {
+		this(sFile, true, image);
 	}
 	
 	/** Create a new empty volume. */
@@ -477,14 +488,14 @@ public class Volume {
 		saveAllocationMap();
 	}
 	
-	// Called from here and from SaveImageAction
+	// Called from SaveImageAction
 	/** Save all modified sectors to the image. A sector is modified 
 		when the cache has an entry of it, or when the cache has never been
 		committed. That means that on the first invocation, all sectors
 		are written.
 	*/
 	public void saveImage() throws IOException, ImageException {
-		m_Image.saveImage();
+		m_Image.saveImage(false);
 	}
 	
 	public boolean isModified() {
@@ -501,6 +512,10 @@ public class Volume {
 		return m_Image.getImageType();
 	}
 	
+	public void setFillPattern(byte[] fill) {
+		m_cache.setFillPattern(fill);
+	}
+	
 	public void saveNewImage(String sFileName, int type, byte[] fill) throws FileNotFoundException, IOException, ImageException {
 		if (m_Image == null) {
 			// The volume is new, not yet backed by an image file
@@ -510,7 +525,7 @@ public class Volume {
 			m_Image = ImageFormat.getImageFormat(sFileName, type, m_FileSystem);
 			m_cache.setFillPattern(fill);
 			m_Image.setSectorCache(m_cache);
-			m_Image.saveImage();
+	//		m_Image.saveImage();
 		}
 		else {
 			// The image already exists; we are creating a new image
@@ -521,13 +536,18 @@ public class Volume {
 			ImageFormat newImage = ImageFormat.getImageFormat(sFileName, type, m_FileSystem);
 			newImage.setSectorCache(m_cache);
 			
-			// Write all sectors
-			newImage.saveImage();
+			// Write all sectors (also when unchanged)
+		//	newImage.saveFromImage(m_Image);
 			m_Image = newImage;
 			
 			// Problem: 
 			// FIXME: ARC file written to image, then saved: not recognized as an ARC anymore
 			// works after reopen
+			
+			// FIXME: Does not write to the target image, since nothing has "changed".
+			// FIXME: Cannot work this way. The new image has no backing file
+			// yet; it will write empty sectors for each unchanged sector.
+			// The new image needs access to the old image.
 		}
 	}
 	

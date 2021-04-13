@@ -102,7 +102,8 @@ public class OpenImageAction extends Activity {
 
 				try {
 					vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
-					if (vol==null) vol = new Volume(sAbsFile);
+					if (vol==null) vol = new Volume(sAbsFile, image);
+					vol.setFillPattern(imagetool.getFillSequence());
 					int[] geom = new int[5];
 					if (vol.isCF7Volume() && ImageCheck.checkCF7Inconsistency(vol, geom)==true) {
 						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageInconsistent"), TIImageTool.langstr("Error"), JOptionPane.WARNING_MESSAGE);
