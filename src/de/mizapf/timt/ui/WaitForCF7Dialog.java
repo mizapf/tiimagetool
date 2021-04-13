@@ -57,5 +57,6 @@ class WaitForCF7Dialog extends ToolDialog {
 		add(Box.createVerticalStrut(10));
 		add(Box.createVerticalGlue());
 		addButtons(NONE);
+		setModal(false);
 	}
 }
