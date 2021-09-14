@@ -24,7 +24,7 @@
 	-------------
     
 	New for 2.4.4
-	[ ] Add default hard disk format selection ("Seagate ST-225 | ... | user-defined")
+	[ ] Add default hard disk format selection ("Seagate ST-225 | ... | maxAU8 | maxAU16 | user-defined")
 	[ ] Add check for CF card read (check for newly created image file)
 	[x] Change MacOS defaults (see below in this file)
 	[ ] Search for CF7 card and for dd / chown automatically.
@@ -35,8 +35,13 @@
 	[ ] Show embedded machine language in BASIC (or indicate at least)
 	[ ] Add access to xdt99
 	[ ] Allow for more DIS/VAR formats to be viewed
-	[ ] IDE harddisk init
+	[ ] SCSI/IDE harddisk (512 bytes/sector)
+	[ ] IDE harddisk support (incl. partitions)
 	[ ] Paste error: If last entry is dir, object will be pasted there
+	[ ] Safe area for right-click outside of file
+	[ ] Fix font size:
+	    - Disassembler hints text area
+	    - Search dialog (Datein...)
 */
 
 package de.mizapf.timt;

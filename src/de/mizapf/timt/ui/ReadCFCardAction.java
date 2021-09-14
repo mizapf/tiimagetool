@@ -32,6 +32,13 @@ import de.mizapf.timt.TIImageTool;
 import java.util.StringTokenizer;
 import java.util.ArrayList;
 
+/* Problem: Debian/Ubuntu removed the gksu command without replacement.
+   Workaround could be a xterm -e sudo dd ...; chown ...
+
+   ProcessBuilder pb = new ProcessBuilder("xterm", "-e", "sudo sh -c \"touch testfile; chown michael testfile\"");
+
+*/
+
 public class ReadCFCardAction extends Activity {
 	
 	public String getMenuName() {
