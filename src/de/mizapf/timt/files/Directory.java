@@ -70,10 +70,10 @@ public class Directory extends Element {
 		TreeSet<TFile> files = new TreeSet<TFile>();
 		TreeSet<Directory> subdirs = new TreeSet<Directory>();
 
-		if (dirParent != null) m_sName = Utilities.getString10(vibddr.getBytes(), 0);
-		m_nFileIndexSector = Utilities.getInt16(vibddr.getBytes(), 0x18) * vol.getAUSize();
+		if (dirParent != null) m_sName = Utilities.getString10(vibddr.getData(), 0);
+		m_nFileIndexSector = Utilities.getInt16(vibddr.getData(), 0x18) * vol.getAUSize();
 		m_nDDRSector = vibddr.getNumber();
-		m_tCreation = new Time(vibddr.getBytes(), 0x12);
+		m_tCreation = new Time(vibddr.getData(), 0x12);
 		m_dirParent = dirParent;
 		setContainingDirectory(dirParent);
 		// Create files
@@ -104,7 +104,7 @@ public class Directory extends Element {
 			// Recurse
 			subdirs.add(new Directory(vol, ddr, this));
 		}
-		int nMaxAU = Utilities.getInt16(vibddr.getBytes(), 0x0a);
+		int nMaxAU = Utilities.getInt16(vibddr.getData(), 0x0a);
 		m_bBadAUCount = (nMaxAU > TFileSystem.MAXAU);
 		
 		m_Subdirs = new Directory[subdirs.size()];
@@ -139,7 +139,7 @@ public class Directory extends Element {
 		m_nFileIndexSector = 1;
 		
 		for (int nDir = 0; nDir < 3; nDir++) {
-			if (Utilities.getInt16(sect.getBytes(), nDir*0x0c + 0x1e)!=0) {
+			if (Utilities.getInt16(sect.getData(), nDir*0x0c + 0x1e)!=0) {
 				subdirs.add(new Directory(vol, sect, this, nDir));
 			}
 		}
@@ -196,8 +196,8 @@ public class Directory extends Element {
 		TreeSet<TFile> files = new TreeSet<TFile>();
 
 		m_tCreation = new Time();
-		m_nFileIndexSector = Utilities.getInt16(sect.getBytes(), nDirIndex*0x0c + 0x1e);
-		m_sName = Utilities.getString10(sect.getBytes(), nDirIndex*0x0c + 0x14);
+		m_nFileIndexSector = Utilities.getInt16(sect.getData(), nDirIndex*0x0c + 0x1e);
+		m_sName = Utilities.getString10(sect.getData(), nDirIndex*0x0c + 0x14);
 		m_dirParent = dirParent;
 		m_nDDRSector = 0;
 		setContainingDirectory(dirParent);
@@ -302,7 +302,7 @@ public class Directory extends Element {
 		int[] an = new int[127];
 		int i = 0;
 		for (i=0; i < an.length; i++) {
-			an[i] = Utilities.getInt16(fdir.getBytes(), 2*i) * nAUSize;
+			an[i] = Utilities.getInt16(fdir.getData(), 2*i) * nAUSize;
 			if (an[i] == 0) break;
 		}
 		int[] anRet = new int[i];
@@ -315,7 +315,7 @@ public class Directory extends Element {
 		int[] an = new int[114];
 		int i = 0;
 		for (i=0; i < an.length; i++) {
-			an[i] = Utilities.getInt16(sect.getBytes(), 0x1c + 2*i) * nAUSize;
+			an[i] = Utilities.getInt16(sect.getData(), 0x1c + 2*i) * nAUSize;
 			if (an[i] == 0) break;
 		}
 		int[] anRet = new int[i];
@@ -429,7 +429,7 @@ public class Directory extends Element {
 		}
 		
 		// System.out.println("File is " + abyTif.length + " bytes long (with TIFILES header)");
-		nSectors = (abyTif.length - 128)/Volume.SECTOR_LENGTH;
+		nSectors = (abyTif.length - 128)/TFileSystem.SECTOR_LENGTH;
 		// System.out.println("Needs " + nSectors + " sectors (without FIB)");
 		
 		// New file name
@@ -549,29 +549,29 @@ public class Directory extends Element {
 		int offset = 0;
 		
 		int nNetLength = abyFile.length - 128;
-		int nSectors = nNetLength / Volume.SECTOR_LENGTH;
+		int nSectors = nNetLength / TFileSystem.SECTOR_LENGTH;
 
-		if (nSectors * Volume.SECTOR_LENGTH < nNetLength) {
+		if (nSectors * TFileSystem.SECTOR_LENGTH < nNetLength) {
 			nSectors = nSectors+1;
 		}
 
-		byte[] contents = new byte[Volume.SECTOR_LENGTH * nSectors];
+		byte[] contents = new byte[TFileSystem.SECTOR_LENGTH * nSectors];
 		System.arraycopy(abyFile, 128, contents, 0, abyFile.length-128);
 		
-		byte[] aby = new byte[Volume.SECTOR_LENGTH];
+		byte[] aby = new byte[TFileSystem.SECTOR_LENGTH];
 		
 		for (Interval intv : aCluster) {
 			// System.out.println(intv);
 			for (int nSect = intv.start; nSect <= intv.end; nSect++) {
-				if (offset > contents.length - Volume.SECTOR_LENGTH) break;
+				if (offset > contents.length - TFileSystem.SECTOR_LENGTH) break;
 				try {
-					System.arraycopy(contents, offset, aby, 0, Volume.SECTOR_LENGTH);
+					System.arraycopy(contents, offset, aby, 0, TFileSystem.SECTOR_LENGTH);
 				}
 				catch (IndexOutOfBoundsException e) {
 					System.out.println(String.format(TIImageTool.langstr("DirectoryWritingFailed"), getName(), intv.toString(), nSect, contents.length, offset));
 				}
 				vol.writeSector(new Sector(nSect, aby));
-				offset += Volume.SECTOR_LENGTH;
+				offset += TFileSystem.SECTOR_LENGTH;
 			}
 		}
 		if (offset < contents.length) throw new ImageException(String.format(TIImageTool.langstr("DirectoryNoSpaceBug"), offset, contents.length));
@@ -652,21 +652,16 @@ public class Directory extends Element {
 		dir.setContainingDirectory(this);
 	}
 	
+	// Called by Actions
 	public void commit(boolean bReopen) throws IOException, ImageException, ProtectedException {
 		// Update directory descriptor record
-		if (bReopen) m_Volume.reopenForWrite();
-
 		writeDDR();
-		
-		// Update file index
 		writeFDIR();
-
 		if (m_Volume.isHarddiskImage()) {
 			m_Volume.updateVIB();
 		}
 		m_Volume.updateAlloc();
-		if (bReopen) m_Volume.reopenForRead();
-		SectorCache.nextGen();
+		m_Volume.nextGeneration();
 		System.out.println("Commit done");
 	}
 	
@@ -930,7 +925,8 @@ public class Directory extends Element {
 	/** The FDIR is the list of sectors of the FIBs of the files in this directory.
 		It is sector 1 on floppy disks for the root directory.
 	*/
-	protected void writeFDIR() throws IOException, ImageException, ProtectedException {
+	// TODO: Move to Volume, then to FileSystem
+	private void writeFDIR() throws IOException, ImageException, ProtectedException {
 		byte[] abyNew = new byte[256];
 		Arrays.fill(abyNew, 0, 0x100, (byte)0x00);
 
@@ -950,7 +946,8 @@ public class Directory extends Element {
 	}
 	
 	/** Writes a new directory descriptor record. */
-	protected void writeDDR() throws IOException, ImageException, ProtectedException {
+	// TODO: Move to Volume, then to FileSystem
+	private void writeDDR() throws IOException, ImageException, ProtectedException {
 		byte[] aDDRNew = null;
 		int nSector = 0;
 		

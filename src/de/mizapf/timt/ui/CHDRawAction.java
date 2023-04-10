@@ -58,7 +58,7 @@ public class CHDRawAction extends Activity {
 			else {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				MameCHDFormat source = expdialog.getCHD();
-				TFileSystem fsource = source.getFileSystem();
+				HarddiskFileSystem fsource = (HarddiskFileSystem)source.getFileSystem();
 				File fileTarget = expdialog.getTargetFile();	
 				
 				try {
@@ -68,7 +68,7 @@ public class CHDRawAction extends Activity {
 					// System.out.println("Hunks = " + source.getHunkCount());
 					for (int i=0; i < source.getHunkCount(); i++) {
 						// System.out.println("copy hunk " + i);
-						byte[] abyHunk = source.getHunkContents(i);
+						byte[] abyHunk = source.readHunk(i);
 						nLength = (nBytes > abyHunk.length)? abyHunk.length : nBytes;
 						dos.write(abyHunk, 0, nLength);
 						nBytes = nBytes - abyHunk.length;

@@ -72,7 +72,7 @@ public class TIFiles {
 		Note: Some variants do not pad the last sector with zeros. 
 	*/
 	public static byte[] normalizeLength(byte[] aby) {
-		int expectedSize = getTotalNumberOfSectors(aby) * Volume.SECTOR_LENGTH;
+		int expectedSize = getTotalNumberOfSectors(aby) * TFileSystem.SECTOR_LENGTH;
 		if (aby.length == expectedSize + 128) return aby;
 
 		byte[] newcont = new byte[expectedSize + 128];

@@ -68,6 +68,12 @@ public class ImportBinaryAction extends Activity {
 			try {
 				volTarget.reopenForWrite();
 			}
+			catch (ProtectedException px) {
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
+				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				return;
+			}
+
 			catch (IOException iox) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

@@ -72,7 +72,7 @@ public class ChangeCHDFormatAction extends Activity {
 		ImageFormat ifsource = null;
 		MameCHDFormat source = null;
 		try {
-			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath());
+			ifsource = ImageFormat.determineImageFormat(selectedfile.getAbsolutePath());
 			if (!(ifsource instanceof MameCHDFormat)) {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
 				return;
@@ -123,11 +123,11 @@ public class ChangeCHDFormatAction extends Activity {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 		java.io.File fileTarget = null;
-		TFileSystem fsource = source.getFileSystem();
+		HarddiskFileSystem fsource = (HarddiskFileSystem)source.getFileSystem();
 		
-		FormatParameters parm = new FormatParameters(fsource.getCylinders(), fsource.getHeads(), fsource.getSectors(), fsource.getSectorLength(), nNewFormat);
+		// FormatParameters parm = new FormatParameters(fsource.getCylinders(), fsource.getHeads(), fsource.getSectors(), fsource.getSectorLength(), nNewFormat);
 		try {
-			byte[] abyNewImage = MameCHDFormat.createEmptyCHDImage(parm);
+			byte[] abyNewImage = null; // MameCHDFormat.createEmptyCHDImage(parm);
 			
 			JFileChooser jfc1 = new JFileChooser();
 			Dimension dim1 = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
@@ -155,11 +155,11 @@ public class ChangeCHDFormatAction extends Activity {
 				fos.close();
 			}
 		}
-		catch (IllegalOperationException iox) {	
+	/*	catch (IllegalOperationException iox) {   // from createEmptyCHDImage	
 			JOptionPane.showMessageDialog(m_parent, iox.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			return;
-		}
+		} */
 		catch (IOException iox) {
 			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + " " + TIImageTool.langstr("WhileNewImage") + ": " + iox.getClass().getName(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE);		
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -170,13 +170,12 @@ public class ChangeCHDFormatAction extends Activity {
 		// and for each hunk read in the source, write the hunk into the target
 		boolean bOK = false;
 		try {
-			MameCHDFormat target = (MameCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath());
-			target.reopenForWrite();
+			MameCHDFormat target = (MameCHDFormat)ImageFormat.determineImageFormat(fileTarget.getAbsolutePath());
 			// System.out.println("Hunks = " + source.getHunkCount());
 			for (int i=0; i < source.getHunkCount(); i++) {
 				// System.out.println("copy hunk " + i);
-				byte[] abyHunk = source.getHunkContents(i);
-				target.writeHunkContents(abyHunk, i);
+				byte[] abyHunk = source.readHunk(i);
+				target.writeHunk(abyHunk, i);
 			}
 			bOK = true;			
 		}

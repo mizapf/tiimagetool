@@ -30,6 +30,9 @@ public class EditMenu extends JMenu {
 	JFrame m_frmMain;
 	TIImageTool m_app;
 	
+	JMenuItem m_iUndo;
+	JMenuItem m_iRedo;
+	
 	JMenuItem m_iCutm;
 	JMenuItem m_iCopym;
 	JMenuItem m_iPastem;
@@ -49,6 +52,12 @@ public class EditMenu extends JMenu {
 		super(TIImageTool.langstr("Edit"));
 		m_frmMain = frm;
 		m_app = app;
+		
+		m_iUndo = createMenuItem(new UndoAction());
+		add(m_iUndo);
+		m_iRedo = createMenuItem(new RedoAction());
+		add(m_iRedo);
+		addSeparator();
 		
 		m_iCutm = createMenuItem(new CutAction());
 		add(m_iCutm);
@@ -118,6 +127,9 @@ public class EditMenu extends JMenu {
 		m_iInsertEmulate.setEnabled(bOpenImage && bHFDC);
 		m_iCreateDirectory.setEnabled(bOpenImage && bDirPossible);
 		m_iCreateArchive.setEnabled(bOpenImage);
+		
+		// m_iUndo.setEnabled(false);
+		// m_iRedo.setEnabled(false);
 	}	
 	
 	private JMenuItem createMenuItem(Activity act) {

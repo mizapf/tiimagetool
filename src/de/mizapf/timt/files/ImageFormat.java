@@ -21,326 +21,360 @@
 
 package de.mizapf.timt.files;
 
-import java.io.RandomAccessFile;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.Arrays;
+import java.lang.reflect.*;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
 
-public abstract class ImageFormat  {
+/** ImageFormat handles everything concerning the physical image. It delivers or
+    takes sector contents, but does not care about their meaning.
+    
+    An image format is assumed to consist of metadata and format units (FU). The 
+    metadata may determine the position of the format units in the image.
+    
+    Format            Format unit
+    -----------------------------
+    Sector dump       Track
+    Track dump        Track
+    CF7 image         Track
+    HFE               Cylinder
+    MAME CHD          Hunk
+    Raw HD            Track
 
-	RandomAccessFile m_ImageFile;
+    CF7 volumes are special sector dumps
+    
+    Partitions are numbered from 1 to n (0 = no partitions); 
+    the partition number must be provided with the sector number and delivers a
+    FU number. Since both CF7 images and CHD images may be partitioned, there is
+    no reason to define CF7 differently.
+    
+    ImageFormat translates (secnum, part) to a format unit number
+    
+    FormatCodec: encodes FUs (format units) from sectors or decodes them to sectors
+    512-byte sector handling is hidden inside the FormatCodec
+    ImageFormat is responsible for the proper position of the format unit in the
+    image.
+
+    FileSystems deal with structures on top of the sector level, i.e. allocation
+    or deallocaton of sectors for files/directories, files, directories,
+    management of the metadata of the file system (VIB)
+    
+    Structures:
+    Cylinders / tracks: ImageFormat
+    Heads: ImageFormat
+    Sectors: ImageFormat 
+        c/h/s may need to be taken from the FloppyFileSystem because the file
+        length may imply several geometries (e.g. DSSD vs. SSDD or 40/80 tracks)
+        
+    Sector dump       File system
+    Track dump        Image format
+    CF7 image         Image format
+    HFE               Image format
+    CHD               Image format
+    Raw HD            File system    
+    
+    Conflicts between image and volume information on opening an image
+      
+    Sector Dump: Same sizes may have different geometries
+           Image size -> assume #cyl, #head, #sect
+           VIB -> override #cyl, #head, #sect if plausible, else error (also if no VIB is present)
+           
+    Track Dump: Single-sided images are unformatted on the other side; no 
+           difference in size
+           Image size -> #cyl, #sect, assume #head=2
+           VIB -> #head, error for different #cyl, #sect
+
+    HFE image: 
+           Image header -> #cyl, #sides, encoding, "HXCPICFE"
+           VIB -> #sect, error for different #cyl, #sides
+           
+    CF7 image:
+           Image size -> #part; #head=2, #cyl=40, #sect=20
+           VIB in part -> warning for different #head, #sect, #cyl, suggest to fix
+           
+    Raw HD image:
+           Image size -> must be larger than a sector dump for floppy disk
+           VIB -> #cyl, #head, #sect (error if not present)
+           
+    MAME CHD image:
+           Image header -> #totalsect, "MComprHD"
+           Detect partitions, default #part=0
+           VIB (part) -> #cyl, #head, #sect (error if not plausible)
+           
+    Newly created images take a MemoryImageFormat; it is always 
+    consistent with the VIB (which is immediately created).
+        
+    Unformatted images (with invalid VIB) cannot be opened in TIMT.
+*/
+public abstract class ImageFormat  {
 	
+	FormatCodec m_codec; 
+	SectorCache m_writeCache;
 	TFileSystem m_fs;
 	
-	/** Cached sectors of the current track (Read cache). */
-	Sector[] m_buffsector;
-	protected byte[] m_abyBuffer;
-	
-	/** Write cache. */
-	SectorCache m_cache;
-	
-	/** Current location */
-	Location m_locCurrent;
-	
-	byte[] m_abyEmpty;
-	
-	int m_encoding;
-	int m_cells;
-
-	String m_sImageName;
-	static final int NONE = -1;
-	
-	protected final static int FM = 0;
-	protected final static int MFM = 1;
-	
+	// Used by the type selection dialog
 	public final static int NOTYPE = -1;
-	public final static int SECTORDUMP = 0;
-	public final static int TRACKDUMP = 1;
-	public final static int HFE = 2;
-	public final static int CF7VOLUME = 3;
+	public final static int MEMORY = 0;
+	public final static int SECTORDUMP = 1;
+	public final static int TRACKDUMP = 2;
+	public final static int HFE = 3;
+	public final static int CHD = 4;
+	public final static int RAWHD = 5;
 	
-	public final static String[] suffix = { "dsk", "dtk", "hfe" };
-	
-	// Types
-	public final static int FLOPPY_FORMAT = 0;
-	public final static int HD_FORMAT = 1;
-	public final static int SET_FORMAT = 2;
+	public final static int NONE = -1;
 
-	public final static int SECTOR_LENGTH = 256;
-	
-	protected int m_nCylinders;
-	protected int m_nHeads;
-	protected int m_nSectorsPerTrack;
-	protected int m_nSectorLength;
+	public final static String[] suffix = { "", "dsk", "dtk", "hfe", "hd", "raw" };
 
-	protected int m_nTrackLength;
+	// Independent of the file system, a physical property
+	int m_nTotalSectors;
 	
-	protected int m_nDensity; // specific for floppies
-	
-	protected int m_nCurrentTrack; // CHD and RawHD
+	// Indicates whether the current format unit has been changed 
+	boolean m_bDirty;
 
-	protected int m_nTotalSectors;
+	protected static String formatline;
 	
-	protected boolean m_bWriteThrough;
+	protected static Class[] m_formatClass;
 	
-	protected static final int TRACK = 0;
-	protected static final int SECTOR = 1;
-	protected static final int HEAD = 2;
-	protected static final int CYLINDER = 3;
+	// Called from TIImageTool during startup
+	public static void setFormats(String formstr) {
+		formatline = formstr;
+		String[] formats = formatline.split(",\\s*");
+		m_formatClass = new Class[6];
+		for (int i=0; i < formats.length; i++) {
+			Object[] ao = new Object[0];
+			try {
+				Class<?> fmt = Class.forName("de.mizapf.timt.files." + formats[i]);
+				System.out.print(formats[i] + ": ");
+				Method type = fmt.getDeclaredMethod("getImageTypeStatic");
+				Integer typeval = (Integer)type.invoke(null, ao);
+				int index = typeval.intValue();
+				System.out.println(index);
+				if (m_formatClass[index] == null) {
+					m_formatClass[index] = fmt;
+				}
+				else {
+					System.err.println("Ignoring class " + formats[i] + ": Duplicate type number");
+				}
+			}
+			catch (ArrayIndexOutOfBoundsException abx) {
+				System.err.println("Ignoring class " + formats[i] + ": Invalid type number");
+			}
+			catch (ClassNotFoundException cnfx) {
+				System.err.println("Ignoring class " + formats[i] + ": Not found");
+			}
+			catch (NoSuchMethodException nmx) {
+				System.err.println("Ignoring class " + formats[i] + ": Does not implement type method");
+			}
+			catch (IllegalAccessException iax) {
+				System.err.println("Ignoring class " + formats[i] + ": No access to vote method");
+			}
+			catch (InvocationTargetException itx) {
+				System.err.println("Ignoring class " + formats[i] + ": Invocation target exception");
+				itx.printStackTrace();
+			}
+		}
+	}	
+	
+	/** Determine the image format. */
+	public static ImageFormat determineImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
+		for (Class<?> cls : m_formatClass) {
+			try {
+				if (cls != null) {
+					Method vote = cls.getDeclaredMethod("vote", String.class);
+					if (((Integer)vote.invoke(null, sFile)).intValue() > 50) { 
+						Constructor<?> cons = cls.getConstructor(String.class);
+						return (ImageFormat)cons.newInstance(sFile);
+					}
+				}
+			}
+			catch (NoSuchMethodException nmx) {
+				System.err.println("Ignoring class " + cls.getName() + ": Does not implement vote method");
+			}
+			catch (IllegalAccessException iax) {
+				System.err.println("Ignoring class " + cls.getName() + ": No access to vote method");
+			}
+			catch (InvocationTargetException itx) {
+				if (itx.getCause() instanceof FileNotFoundException) 
+					throw (FileNotFoundException)itx.getCause();
+				else {
+					if (itx.getCause() instanceof IOException) 
+						throw (IOException)itx.getCause();
+					else
+						itx.printStackTrace();
+				}
+			}
+			catch (InstantiationException iax) {
+				System.err.println("Ignoring class " + cls.getName() + ": Cannot instantiate class");
+			}
+		}
+		throw new ImageException(sFile + ": " + TIImageTool.langstr("ImageUnknown"));
+	}
+		
+	static Class<?> getClassForFormat(int nFormat) {
+		return m_formatClass[nFormat];
+	}
+	
+	static ImageFormat getImageFormatInstance(String sFileName, int nFormat, FormatParameters param) {
+		ImageFormat ifmt = null;
+		Class<?> cls = null;
+		try {
+			cls = getClassForFormat(nFormat);
+			Constructor<?> cons = cls.getConstructor(String.class, FormatParameters.class);
+			ifmt = (ImageFormat)cons.newInstance(sFileName, param);
+		}
+		catch (InstantiationException iax) {
+			System.err.println("Ignoring class " + cls.getName() + ": Cannot instantiate class");
+		}
+		catch (NoSuchMethodException nmx) {
+			System.err.println("Ignoring class " + cls.getName() + ": Does not implement specific constructor");
+		}
+		catch (IllegalAccessException iax) {
+			System.err.println("Ignoring class " + cls.getName() + ": No access to constructor");
+		}
+		catch (InvocationTargetException itx) {
+			System.err.println("Ignoring class " + cls.getName() + ": Invocation target exception");
+			itx.printStackTrace();
+		}
 
-	protected final static int NOTRACK = -1;
+		return ifmt;
+	}
+		
+/*		String[] formats = formatline.split(",\\s*");		                 
+		
+		for (int i=0; i < formats.length; i++) {
+			try {
+				Class<?> fmt = Class.forName("de.mizapf.timt.files." + formats[i]);
+				Method vote = fmt.getDeclaredMethod("vote", String.class);
+				Constructor<?> cons = fmt.getConstructor(String.class);
+				if (((Integer)vote.invoke(null, sFile)).intValue() > 50) { 
+					return (ImageFormat)cons.newInstance(sFile);
+				}
+			}
+			catch (ClassNotFoundException cnfx) {
+				cnfx.printStackTrace();
+			}
+			catch (NoSuchMethodException nsmx) {
+				System.err.println("Ignoring class " + formats[i] + ", no such method");
+				nsmx.printStackTrace();
+			}
+			catch (IllegalAccessException iax) {
+				System.err.println("Ignoring class " + formats[i] + ", illegal access");
+			}
+			catch (InvocationTargetException itx) {
+				System.err.println("Ignoring class " + formats[i] + ", invocation exception");
+				itx.printStackTrace();
+			}
+			catch (InstantiationException ix) {
+				System.err.println("Ignoring class " + formats[i] + ", instantiation exception");
+			}
+		}
+					
+		throw new ImageException(sFile + ": " + TIImageTool.langstr("ImageUnknown"));
+	
+	}
+		*/
+	
+	// Static methods cannot be overridden
+	abstract int getImageType();
+	
+/*	static String getClassNameForFormat(int nFormat) {
+		String[] formats = formatline.split(",\\s*");		
+		for (int i=0; i < formats.length; i++) {
+			Object[] ao = new Object[0];
+			try {
+				String sFullClass = "de.mizapf.timt.files." + formats[i];
+				Class<?> fmt = Class.forName(sFullClass);
+				Method type = fmt.getDeclaredMethod("getImageType");
+				
+				if (((Integer)type.invoke(null, ao)).intValue() == nFormat) { 
+					return sFullClass;
+				}
+			}
+			catch (ClassNotFoundException cnfx) {
+				cnfx.printStackTrace();
+			}
+			catch (NoSuchMethodException nsmx) {
+				System.err.println("Ignoring class " + formats[i] + ", no such method");
+				nsmx.printStackTrace();
+			}
+			catch (IllegalAccessException iax) {
+				System.err.println("Ignoring class " + formats[i] + ", illegal access");
+			}
+			catch (InvocationTargetException itx) {
+				System.err.println("Ignoring class " + formats[i] + ", invocation exception");
+				itx.printStackTrace();
+			}
+			catch (InstantiationException ix) {
+				System.err.println("Ignoring class " + formats[i] + ", instantiation exception");
+			}
+		}
+		return null;
+	}*/
 
-	protected int m_currentCylinder = 0;
-	protected int m_currentTrack = 0;
-	protected int m_currentHead = 0;
-	protected int m_codeRate = 1;
-
-	protected boolean m_bFromFile;
-	
-	protected FormatCodec m_codec;
-
-	protected ImageFormat(RandomAccessFile rafile, String sImageName) throws IOException, ImageException {
-		TFileSystem fs = determineFileSystem(rafile);
-		init(rafile, sImageName, fs);
-		m_bFromFile = true;
-	}
-	
-	/** Newly created; no image file yet. */
-	protected ImageFormat(RandomAccessFile rafile, String sImageName, TFileSystem fs) throws IOException, ImageException {
-		init(rafile, sImageName, fs);
-		m_bFromFile = false;
-	}
-	
-	final void init(RandomAccessFile rafile, String sImageName, TFileSystem fs) {
-		m_ImageFile = rafile;
-		m_sImageName = sImageName;
-		m_nSectorLength = Volume.SECTOR_LENGTH;
-		m_nCurrentTrack = NOTRACK;
-		m_bWriteThrough = false;
-		setGeometry((FloppyFileSystem)fs);
-		m_fs = fs;
-	}
-	
-	// Called from Volume.createFloppyImage (needed by subclass contructors)
-	protected ImageFormat() {
-		m_bWriteThrough = false;
-		m_bFromFile = false;
-	}
-	
-	protected ImageFormat(File newfile) throws FileNotFoundException {
-		m_ImageFile = new RandomAccessFile(newfile, "rw");
-		m_bFromFile = false;
-	}
-	
-	void setSectorCache(SectorCache cache) {
-		m_cache = cache;
-		m_codec.setFillPattern(cache.getFillPattern());
-	}
-	
-	protected void writeThrough(boolean bWriteTh) {
-		m_bWriteThrough = bWriteTh;
-	}
-	
-	/** Needed from SectorEditFrame. */
-	public int getTotalSectors() {
-		return m_nTotalSectors;
-	}
-	
-	/** Reads a sector.
-		@throws ImageException if the sector cannot be found.
-	*/
-	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		if (nSectorNumber > 10000) throw new ImageException(String.format(TIImageTool.langstr("BadSectorNumber"), nSectorNumber)); 
-		FloppyFileSystem ffs = (FloppyFileSystem)m_fs;
-		m_locCurrent = ffs.lbaToChs(nSectorNumber);
-		int index = getBufferIndex(m_locCurrent);
-		// System.out.println("Sector " + nSectorNumber + ": index=" + index);
-		m_codec.loadBuffer(index);
-		Sector sect = m_codec.readSector(m_locCurrent, nSectorNumber);
-		if (sect == null)
-			throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));			
-		return sect;
-	}
-
-	int getDensity() {
-		return m_nDensity;
-	}
-	
-	/** Returns the type of the format. */
-	abstract int getFormatType();
-	
-	int getImageType() {
-		return NOTYPE;
-	}
-	
-	void close() throws IOException {
-	//	prepareImageFile();
-	//	flush();
-		m_ImageFile.close();
-	}
-	
-	void setFileSystem(TFileSystem fs) {
-		m_fs = fs;
+	protected ImageFormat() throws FileNotFoundException {
+		m_writeCache = new SectorCache();
 	}
 	
 	public TFileSystem getFileSystem() {
 		return m_fs;
 	}
-	
-	long getLastModifiedTime() {
-		java.io.File file = new java.io.File(m_sImageName);
-		return file.lastModified();
-	}
 		
-	public static ImageFormat getImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
-		RandomAccessFile raFile = new RandomAccessFile(sFile, "r");
-		
-/*		if (Utilities.isRawDevice(sFile)) {
-			return new RawHDFormat(raFile, sFile, nSectorLength);
-		} */
-		
-		if (raFile.length()==0) throw new ImageException(TIImageTool.langstr("ImageEmpty"));
-		
-		if (CF7VolumeFormat.vote(raFile) > 50) {
-			return new CF7VolumeFormat(raFile, sFile);
-		}
-		if (CF7ImageFormat.vote(raFile) > 50) {
-			return new CF7ImageFormat(raFile, sFile);
-		}
-		if (SectorDumpFormat.vote(raFile) > 50) {
-			return new SectorDumpFormat(raFile, sFile);
-		}
-		
-		if (TrackDumpFormat.vote(raFile) > 50) {
-			return new TrackDumpFormat(raFile, sFile);
-		}
-		
-		if (RawHDFormat.vote(raFile) > 50) {
-			return new RawHDFormat(raFile, sFile);
-		}
-
-		if (MameCHDFormat.vote(raFile) > 50) {
-			return new MameCHDFormat(raFile, sFile);
-		}
-
-		if (HFEFormat.vote(raFile) > 50) {
-			return new HFEFormat(raFile, sFile);
-		}
-				
-		throw new ImageException(sFile + ": " + TIImageTool.langstr("ImageUnknown"));
-	}
-
-	/** Used for new images. Creates the image file.  */
-	public static ImageFormat getImageFormat(String sFile, int type, TFileSystem fs) throws FileNotFoundException, IOException, ImageException {
-		RandomAccessFile raFile = new RandomAccessFile(sFile, "rw");
-		
-		switch (type) {
-		case SECTORDUMP:
-			return new SectorDumpFormat(raFile, sFile, fs);
-		case TRACKDUMP:
-			return new TrackDumpFormat(raFile, sFile, fs);
-		case HFE:
-			return new HFEFormat(raFile, sFile, fs);
-		}
-		return null;
-	}		
-	
-	public void reopenForWrite() throws IOException {
-		if (m_ImageFile != null) m_ImageFile.close();
-		m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
+	public void setFileSystem(TFileSystem fs) {
+		m_fs = fs;
 	}
 	
-	public void reopenForRead() throws IOException {
-		if (m_ImageFile != null) m_ImageFile.close();
-		m_ImageFile = new RandomAccessFile(m_sImageName, "r");		
-	}
-
-	abstract TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException;
-
-	final void setGeometry(FloppyFileSystem ffs) {
-		// Calculate length
-		m_nHeads = ffs.getHeads();
-		m_nCylinders = ffs.getTracksPerSide();
-		m_nSectorsPerTrack = ffs.getTotalSectors() / (m_nHeads * ffs.getTracksPerSide());
-		m_nDensity = ffs.getDensity();
-		m_encoding = (m_nSectorsPerTrack < 16)? FM : MFM;
-		System.out.println("Cylinders = " + m_nCylinders + ", heads = " + m_nHeads + ", sectors = " +  m_nSectorsPerTrack
-			+ ", density = " +  m_nDensity + ", encoding = " + ((m_encoding==0)? "FM" : "MFM"));
+	public abstract Sector readSector(int nSectorNumber) throws ImageException, IOException;
+	
+	public abstract void writeSector(Sector sect) throws ImageException, IOException, ProtectedException;
+	
+	void close() throws IOException {
+		// TODO
+		// Write back all sectors
 	}
 	
-	void setupBuffers(String sImageName, boolean bInitial) {
-		System.out.println("FIXME: Implement setupBuffers");
+	boolean cacheHasUnsavedEntries() {
+		if (m_writeCache == null) return false;
+		return m_writeCache.hasUnsavedEntries();
 	}
 	
-	boolean bufferNeedsFlush(int cyl, int head) {
-		return m_currentCylinder != cyl && m_currentHead != head;
-	}
-
-	/** Saves all modified sectors to the image file. This may be overridden
-		by subclasses, e.g. HFEFormat.
-		@param bDoSave Save also when there are no changes. Needed when saving to
-		a new image.
-	*/
-	void saveImage(boolean bDoSave) throws IOException, ImageException {
-		for (int i=0; i < m_fs.getTotalSectors(); i++) {
-			// System.out.println("Writing sector " + i);
-			// Read the sector from the cache and get null on miss
-			Sector sect = m_cache.read(i, false);
-			
-			m_locCurrent = m_fs.lbaToChs(i);
-			
-			// Determine if the sector is already in the codec; if not, flush
-			// the codec and load the appropriate buffer
-			int index = getBufferIndex(m_locCurrent);
-			// System.out.println("Sector " + i + ": index=" + index);
-			m_codec.loadBuffer(index);
-			if (bDoSave) m_codec.touch();
-			if (sect != null) m_codec.writeSector(m_locCurrent, sect.getBytes());
-			// writeToBuffer(sect);
-		}
-		m_codec.flush();
-		m_codec.setInitial(false);
-		m_cache.setCommitted(true);
-		// setCommitted(true);
-		m_cache.wipe();
+	void setStartGeneration() {
+		m_writeCache.setCheckpoint();
 	}
 	
-	/** Overridden by subclasses if required. */
-	int getFullTrackLength(int nTrackLength) {
-		return nTrackLength;
+	// Called from Volume and SectorEditFrame
+	public void nextGeneration() {
+		m_writeCache.nextGeneration();
 	}
 	
-	/** Overridden by subclasses if required. Normally, cylinder and head
-	    must match. */
-	boolean bufferLoaded(int cyl, int head) {
-		return (m_currentCylinder == cyl && m_currentHead == head);
+	public void previousGeneration() {
+		m_writeCache.previousGeneration();
 	}
 	
-	abstract int getBufferIndex(Location loc);
-	
-	abstract String getDumpFormatName();
-		
-	abstract void prepareImageFile() throws FileNotFoundException, IOException;
-		
-	int checkCRC(boolean fix, boolean reset) throws IOException {	
-		return NONE;
+	public int getTotalSectors() {
+		return m_nTotalSectors;
 	}
 	
-	/** Write a single sector to the buffer. Load the buffer if required. */
-	void writeToBuffer(Sector sect) throws IOException, ImageException {
-		System.out.println("FIXME: Implement writeToBuffer");
+	public void setCheckpoint() {
+		m_writeCache.setCheckpoint();
 	}
 	
-	void setCommitted(boolean bCommit) {
-		m_bFromFile = bCommit;
+	public String getModShortImageName() {
+		return cacheHasUnsavedEntries()? ("*" + getShortImageName()) : getShortImageName(); 
 	}
 	
-	/** Needed for formatting a track. */
-	byte[] getFillPattern() {
-		return m_cache.getFillPattern();
-	}
+	abstract String getImageName();
+	abstract String getShortImageName();
+	
+	/* To be specified by the subclasses. */
+	
+	abstract String getFormatName();
+	
+	public abstract void reopenForWrite() throws IOException, ProtectedException;
+	
+	public abstract void reopenForRead() throws IOException;
 }

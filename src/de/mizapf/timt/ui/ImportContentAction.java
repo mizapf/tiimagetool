@@ -253,6 +253,7 @@ public class ImportContentAction extends Activity {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), eox.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (IOException iox) {
+				iox.printStackTrace();
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}			
 			catch (ImageFullException ix) {

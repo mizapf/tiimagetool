@@ -29,6 +29,7 @@ import java.awt.Cursor;
 
 import de.mizapf.timt.util.ImageCheck;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.NotImplementedException;
 
 public class OpenImageAction extends Activity {
 
@@ -57,122 +58,73 @@ public class OpenImageAction extends Activity {
 		
 		for (java.io.File imagefile : selectedfiles) {
 			String sAbsFile = null;
-			try {
-				sAbsFile = imagefile.getAbsolutePath();
-				Volume vol = null;
-
-				// ============== Open the image
+			sAbsFile = imagefile.getAbsolutePath();
+			Volume vol = null;
+			// Do we already have that image?
+			if (imagetool.hasAlreadyOpenedVolume(sAbsFile)) {
+				vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
+				imagetool.addDirectoryView(vol.getRootDirectory());
+			}
+			else {
 				
-				// Do we have a CF7 image?
-				ImageFormat image = ImageFormat.getImageFormat(sAbsFile);
-				if (image instanceof CF7ImageFormat) {
-					// Find out how many volumes we have
+				try {
 					
-					CF7ImageFormat cf7format = (CF7ImageFormat)image;
-					String[] volumes = cf7format.getVolumes();
-
-					// Ask the user which volume to open
-					CF7VolumeSelection select = new CF7VolumeSelection(m_parent);
-					select.setContent(volumes);
-					select.createGui();
-					select.setVisible(true);
-
-					if (select.confirmed()) {
-						int number = 0;
-						try {
-							number = select.getNumber();
-							// We're doing some tricks with the name so that
-							// the existing infrastructure gets along with it
-							sAbsFile = sAbsFile + "#" + number;
-						}
-						catch (NumberFormatException nx) {
-							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageInvalidNumber"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-							continue;
-						}
-						if (number < 0) {
-							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageNegativeNumber"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-							continue;
-						}
+					// ============== Open the image			
+					ImageFormat image = ImageFormat.determineImageFormat(sAbsFile); // throws ImageExc if unknown
+										
+					// Do we have a partitioned image?
+					if (image instanceof PartitionedStorage) {
+						if (((PartitionedStorage)image).partitionCount()>0)
+							throw new NotImplementedException("PartitionedStorage");
+						// Check CF7 inconsistency
 					}
-					else {
-						// System.out.println("not confirmed");
+					
+					try {
+						vol = new Volume(image);					
+					}
+					catch (MissingHeaderException mx) {
+						// No DSK signature
+						int doCheck1 = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageNoDSK"), TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
+						if (doCheck1 == JOptionPane.YES_OPTION) {
+							vol = new Volume(image);
+						}
+						// Be graceful, do as much as possible
+						else continue;
+					}
+					catch (ImageException ix) {
+						JOptionPane.showMessageDialog(m_parent, ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 						continue;
 					}
-				}
-
-				try {
-					vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
-					if (vol==null) vol = new Volume(sAbsFile, image);
-					vol.setFillPattern(imagetool.getFillSequence());
-					int[] geom = new int[5];
-					if (vol.isCF7Volume() && ImageCheck.checkCF7Inconsistency(vol, geom)==true) {
-						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageInconsistent"), TIImageTool.langstr("Error"), JOptionPane.WARNING_MESSAGE);
+					
+					if (vol.isReadOnly()) {
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("Warning"), JOptionPane.WARNING_MESSAGE);
 					}
-				}
-				catch (MissingHeaderException mx) {
-					int doCheck1 = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageNoDSK"), TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
-					if (doCheck1 == JOptionPane.YES_OPTION) {
-						vol = new Volume(sAbsFile, false);
-					}
-					// Be graceful, do as much as possible
-					else continue;
+					
+					Directory root = vol.getRootDirectory();	
+					// ============== 
+					
+					// Check for MaxAU bug in SCSI image and set the available menu options
+					
+					// Add a tab and show the root directory.
+					imagetool.addDirectoryView(root);
+					image.setCheckpoint();
+					vol.nextGeneration();
 				}
 				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(m_parent, ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-					continue;
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 				}
-
-				Directory root = vol.getRootDirectory();	
-				// ============== 
-				
-				// Check for MaxAU bug and set the available menu options
-				if (vol.isSCSIImage()) {
-//					imagetool.setHDConvEnabled(true, false);
-					int nChecked = Directory.checkDIB(root, false);
-					if (nChecked < 0) {
-						int doCheck = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageAUBug"), TIImageTool.langstr("Warning"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-						if (doCheck == JOptionPane.OK_OPTION) {
-							nChecked = Directory.checkDIB(root, true);
-							if (nChecked < 0)
-							{
-								JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("OpenImageFixed"), -nChecked), TIImageTool.langstr("OpenImageChecking"), JOptionPane.INFORMATION_MESSAGE);
-							}
-							else {
-								if (nChecked==0) 
-									JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageNoDir"), TIImageTool.langstr("OpenImageChecking"), JOptionPane.INFORMATION_MESSAGE);
-								else 
-									JOptionPane.showMessageDialog(m_parent,  String.format(TIImageTool.langstr("OpenImageAllOk"), nChecked), TIImageTool.langstr("OpenImageChecking"), JOptionPane.INFORMATION_MESSAGE);
-							}
-						}
-						else {
-							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageBefore"), TIImageTool.langstr("Warning"), JOptionPane.INFORMATION_MESSAGE);							
-//							imagetool.setHDConvEnabled(false, false);
-						}
-					}
+				catch (EOFException eofx) {
+					// TODO: Close open image
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageDefect") + ": " + eofx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 				}
-				
-				// Add a tab and show the root directory.
-				imagetool.addDirectoryView(root);
-				
+				catch (FileNotFoundException fnfx) {
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileNotFound") + ": "  + fnfx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
+				}
+				catch (IOException iox) {
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName() + " (" + iox.getMessage() + ")", TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+					iox.printStackTrace();
+				}				
 			}
-			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-			}
-			catch (EOFException eofx) {
-				// TODO: Close open image
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageDefect") + ": " + eofx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-			}
-			catch (FileNotFoundException fnfx) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileNotFound") + ": "  + fnfx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
-			}
-			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName() + " (" + iox.getMessage() + ")", TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-				iox.printStackTrace();
-			}
-			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
-			}
-
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}

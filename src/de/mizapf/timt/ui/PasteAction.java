@@ -217,7 +217,7 @@ public class PasteAction extends Activity {
 					// Commit after the loop
 					System.out.println("commit source");
 					dirSource.commit(false);
-					SectorCache.sameGen();
+					// SectorCache.sameGen();
 					System.out.println("commit target");
 					dirTarget.commit(false);
 					volTarget.reopenForRead();

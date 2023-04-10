@@ -157,7 +157,7 @@ public class Utilities {
 		return "\n";
 	}
 	
-	public static String sanitizeText(byte[] strbyte, String sEscape, boolean log) throws FormatException {
+	public static String sanitizeBytes(byte[] strbyte, String sEscape, boolean log) throws FormatException {
 		if (sEscape.length() < 1 || sEscape.length() > 2) {
 			throw new FormatException("", TIImageTool.langstr("UtilInvalidEsc"));
 		}
@@ -184,32 +184,6 @@ public class Utilities {
 				}
 			}				
 		}
-		return sb.toString();
-	}
-		
-	public static String sanitizeChar(byte strbyte, String sEscape) throws FormatException {
-		if (sEscape.length() < 1 || sEscape.length() > 2) {
-			throw new FormatException("", TIImageTool.langstr("UtilInvalidEsc"));
-		}
-
-		char chEscape = sEscape.charAt(0);
-		boolean bEscape = (sEscape.length() == 2);
-		boolean bUnprintable = false;
-		
-		if (bEscape && sEscape.charAt(1) != '%') {
-			throw new FormatException("", TIImageTool.langstr("UtilInvalidEsc"));
-		}
-
-		StringBuilder sb = new StringBuilder();
-		char c = (char)strbyte;
-		if (c == chEscape) sb.append(c).append(c);
-		else {
-			if (isPrintable(c)) sb.append(c);
-			else {
-				if (bEscape) sb.append(chEscape).append(Utilities.toHex(strbyte, 2));
-				else sb.append(chEscape);
-			}
-		}				
 		return sb.toString();
 	}
 	

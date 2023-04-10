@@ -23,10 +23,10 @@ package de.mizapf.timt.files;
 
 public class FormatParameters {
 	public  String name;
+	public  String formatclass; 		// hat keinen Sinn hier; das sind Angaben zum Dateisystem und nicht zum image
 	public 	int cylinders;
 	public 	int heads;
-	public 	int sectorsPerTrack;
-	public 	int sectorLength;
+	public 	int sectors;
 	public 	int reservedAUs;
 	public 	int stepRate;
 	public 	int reducedWriteCurrent;
@@ -35,46 +35,33 @@ public class FormatParameters {
 	public 	int writePrecompensation;
 	public 	Time time;
 	public 	boolean format;
-	public	boolean forHfdc;
-	public  int chdVersion;
-	public  int density;
-	public  boolean protect;
+	public  int type;
+	public  int chdVersion; 
 	
-	public FormatParameters(int nCylinders, int nHeads, int nSectors, int nSectorLength, int nFormat) {
-		cylinders = nCylinders;
-		heads = nHeads;
-		sectorsPerTrack = nSectors;
-		sectorLength = nSectorLength;
-		chdVersion = nFormat;
-		format = false;
+	public FormatParameters(String sVolumeName, String sFormatClass, boolean bFormat) {
+		name = sVolumeName;
+		formatclass = sFormatClass;
+		format = bFormat;
 	}
 	
-	public FormatParameters(String sName, int nCylinders, int nHeads, int nSectors, int nSectorLength,
-		int nReserved, int nStepRate, int nReducedWriteCurrent, int nAUSize,  boolean bBuffered, 
-		int nWritePrecompensation, Time tCreated, boolean bFormat, boolean bHfdc, int nCHDVersion) {
-	
-		name = sName;
+	public void setCHS(int nCylinders, int nHeads, int nSectorsPerTrack) {
 		cylinders = nCylinders;
 		heads = nHeads;
-		sectorsPerTrack = nSectors;
-		sectorLength = nSectorLength;
-		reservedAUs = nReserved;
+		sectors = nSectorsPerTrack;	
+	}
+	
+	public void setMFM(int nStepRate, int nReducedWriteCurrent, int nWritePrecompensation, boolean bBuffered) {
 		stepRate = nStepRate;
 		reducedWriteCurrent = nReducedWriteCurrent;
-		auSize = nAUSize;
-		bufferedStep = bBuffered;
 		writePrecompensation = nWritePrecompensation;
-		time = tCreated;
-		format = bFormat;
-		forHfdc = bHfdc;
-		chdVersion = nCHDVersion; 
+		bufferedStep = bBuffered;
 	}
 	
-	public FormatParameters(String sName, int nSides, int nDensity, int nTracks, int nSectTrack) {
-		name = sName;
-		cylinders = nTracks;
-		heads = nSides;
-		density = nDensity;
-		sectorsPerTrack = nSectTrack;
+	public void setHD(Time tCreated, int nAUSize, int nReserved, int nCHDFormat, int nType) {
+		time = tCreated;
+		auSize = nAUSize;
+		reservedAUs = nReserved;
+		chdVersion = nCHDFormat;
+		type = nType;
 	}
 }

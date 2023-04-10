@@ -233,7 +233,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		m_app.registerFrame(this);
 		m_image = image;
 		m_sectormap = new HashMap<Integer,Sector>();
-		// m_content = new byte[Volume.SECTOR_LENGTH];
+		// m_content = new byte[TFileSystem.SECTOR_LENGTH];
 	}
 
 	public void createGui(Font fontName) {	
@@ -411,12 +411,12 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 			m_sectormap.put(i, sect);
 		}
 		m_sector = sect;
-//		System.arraycopy(sect.getBytes(), 0, m_content, 0, Volume.SECTOR_LENGTH);
+//		System.arraycopy(sect.getBytes(), 0, m_content, 0, TFileSystem.SECTOR_LENGTH);
 	}
 	
 	void showContent() {
 		char ch = 0;
-		byte[] content = m_sector.getBytes();
+		byte[] content = m_sector.getData();
 		for (int i = 0; i < 256; i++) {
 			m_jlByteContent[i].setText(Utilities.toHex(content[i],2));
 			if (content[i] > 31 && content[i] < 127) ch = (char)content[i];
@@ -438,7 +438,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	}
 	
 	String createTextOutput() {
-		byte[] content = m_sector.getBytes();
+		byte[] content = m_sector.getData();
 		StringBuilder sb = new StringBuilder();
 		sb.append(TIImageTool.langstr("ImageFile")).append(" ").append(m_imageName).append(", ");
 		sb.append(TIImageTool.langstr("Sector")).append(" ").append(m_currentSector).append("\n");
@@ -475,14 +475,14 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	}
 	
 	void showValue(int offset) {
-		byte[] content = m_sector.getBytes();
+		byte[] content = m_sector.getData();
 		if (offset != -1) {
 			showValue(offset, content[offset]); 
 		}
 	}
 	
 	void showValue(int offset, byte val) {
-		byte[] content = m_sector.getBytes();
+		byte[] content = m_sector.getData();
 		if (offset != -1) {
 			m_jlAsciiContent[offset].setText((val > 31 && val < 127)? String.valueOf((char)val) : ".");
 			m_jlByteContent[offset].setText(Utilities.toHex(content[offset],2));
@@ -491,7 +491,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	
 	/** Clicked on a byte (left or right). */
 	void select(int offset, boolean ascii) {
-		byte[] content = m_sector.getBytes();
+		byte[] content = m_sector.getData();
 		if (offset != m_lastOffset || ascii != m_lastAscii) {
 			// If we clicked on another byte, clear the last selection
 			clearHighlight();
@@ -524,7 +524,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	}
 	
 	void returnPressed(boolean ascii) {
-		byte[] content = m_sector.getBytes();
+		byte[] content = m_sector.getData();
 		if (!ascii) {
 			content[m_lastOffset] = (byte)m_newValue;
 		}
@@ -540,12 +540,14 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	}
 	
 	void keyPressed(char key, boolean ascii) {
-		byte[] content = m_sector.getBytes();		
+		byte[] content = m_sector.getData();		
 		if (ascii) {
 			m_jlAsciiContent[m_lastOffset].setText(String.valueOf(key));
 			m_jlByteContent[m_lastOffset].setText(Utilities.toHex(key,2));
 			content[m_lastOffset] = (byte)key;
-			m_sector.dirty();
+
+			// m_sector.dirty();    Sector or ImageSector?
+			
 			m_thereAreChanges = true;
 			clearHighlight();
 			if (m_lastOffset < 255) {
@@ -567,7 +569,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 					m_newValue = (val << 4) | (m_newValue & 0xf);
 					String text = Utilities.toHex(m_newValue,2);
 					m_jlByteContent[m_lastOffset].setText(text.substring(0,1) + "_");
-					m_sector.dirty();
+					// m_sector.dirty();
 					m_thereAreChanges = true;
 				}
 				else {
@@ -575,7 +577,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 					String text = Utilities.toHex(m_newValue,2);
 					m_jlByteContent[m_lastOffset].setText(text);
 					content[m_lastOffset] = (byte)m_newValue;
-					m_sector.dirty();
+					// m_sector.dirty();
 					m_thereAreChanges = true;
 					clearHighlight();
 					if (m_lastOffset < 255) {
@@ -685,31 +687,30 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	}
 	
 	private void writeBackAll() {
-		try {
-			m_image.reopenForWrite();
+	//	try {
 			for (Integer i : m_sectormap.keySet()) {
 				Sector sect = m_sectormap.get(i);
-				if (sect.changed()) {
+				/* if (sect.changed()) {
 					// System.out.println("Write back sector " + i);
 					System.out.println("FIXME: SectorEditFrame.writeBackAll");
 					// m_image.writeSector(i, sect.getBytes());  // directly written through
-				}
+				} */
 			}
 			Thread.currentThread().dumpStack();
 			// m_image.flush();
 			
-			m_image.reopenForRead();
-			SectorCache.nextGen();
-		}
+			// m_image.reopenForRead();
+			m_image.nextGeneration();
+//		}
 		/* catch (ImageException ix) {
 			// Sector not found
 			ix.printStackTrace();
 			JOptionPane.showMessageDialog(this, ix.getMessage(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 		} */
-		catch (IOException iox) {
+	/*	catch (IOException iox) {
 			// More low-level
 			iox.printStackTrace();
 			JOptionPane.showMessageDialog(this, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
-		}
+		} */
 	}
 }

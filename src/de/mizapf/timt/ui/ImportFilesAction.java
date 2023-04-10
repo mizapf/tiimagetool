@@ -104,6 +104,12 @@ public class ImportFilesAction extends Activity {
 		try {
 			volTarget.reopenForWrite();
 		}
+		catch (ProtectedException px) {
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
+			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			return;
+		}
+
 		catch (IOException iox) {
 			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -126,19 +132,20 @@ public class ImportFilesAction extends Activity {
 						if (TIFiles.hasHeader(abyTif)) {
 							abyTif = TIFiles.normalizeLength(abyTif);
 //							if (!TIFiles.hasProperSize(abyTif)) {
-//								JOptionPane.showMessageDialog(dvCurrent.getFrame(), iofile.getName() + ": File is clipped; should be at least " + (nSectorsInTif* Volume.SECTOR_LENGTH + 128) + " bytes long.", "Import error", JOptionPane.ERROR_MESSAGE);
+//								JOptionPane.showMessageDialog(dvCurrent.getFrame(), iofile.getName() + ": File is clipped; should be at least " + (nSectorsInTif* TFileSystem.SECTOR_LENGTH + 128) + " bytes long.", "Import error", JOptionPane.ERROR_MESSAGE);
 //								continue;
 //							}
 //							else {
-								if ((abyTif.length - 128) != nSectorsInTif * Volume.SECTOR_LENGTH) {
+								if ((abyTif.length - 128) != nSectorsInTif * TFileSystem.SECTOR_LENGTH) {
 									// Clip the file
-									byte[] abyNew = new byte[nSectorsInTif * Volume.SECTOR_LENGTH + 128];
+									byte[] abyNew = new byte[nSectorsInTif * TFileSystem.SECTOR_LENGTH + 128];
 									System.arraycopy(abyTif, 0, abyNew, 0, abyNew.length);
 									abyTif = abyNew;									
 								}
 //							}
 						}
-						imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, iofile.getName());							
+						imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, iofile.getName());
+						dirCurrent.commit(false);
 					}
 					catch (FileExistsException fx) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 

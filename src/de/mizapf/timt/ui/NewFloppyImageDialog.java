@@ -70,13 +70,15 @@ class NewFloppyImageDialog extends ToolDialog {
 
 		// Volume name [ ... ]
 		m_tfName = putTextField(this,  TIImageTool.langstr("VolumeName"), "EMPTY", nColumnWidth, 0); 
-
+		add(vspace(80));		
+		
 		// Sides
 		String[] asSides = { TIImageTool.langstr("SingleSided"), TIImageTool.langstr("DoubleSided") };
 		JRadioButton[] arb3 = putRadioButtons(this, TIImageTool.langstr("NewImageSides"), nColumnWidth, asSides, anFormat, 1);
 		m_jrSingle = arb3[0];
 		m_jrDouble = arb3[1];
-
+		add(vspace(40));	
+		
 		// Density
 		String[] asOptions = { 	TIImageTool.langstr("SingleDensity"), 
 								TIImageTool.langstr("DoubleDensity"), 
@@ -85,6 +87,7 @@ class NewFloppyImageDialog extends ToolDialog {
 								TIImageTool.langstr("DoubleDensity16")
 		};
 		m_jcDensity = putComboBox(this, TIImageTool.langstr("NewImageDensity"), asOptions, 1, nColumnWidth);
+		add(vspace(40));	
 
 		// Tracks
 		String[] asTracks = { "40", "80" };
@@ -121,10 +124,9 @@ class NewFloppyImageDialog extends ToolDialog {
 	}
 	
 	FormatParameters getParameters() {
-		return new FormatParameters(getDiskName(), 
-									getSides(), 
-									getDensity(), 
-									getTrackCount(),
-									FloppyFileSystem.sectorsPerTrack[getDensity()]);
+		FormatParameters params = new FormatParameters(getDiskName(), "className", true);
+		// FIXME: must not be -1
+		params.setCHS(getTrackCount(), getSides(), FloppyFileSystem.getSectorsFromDensity(getDensity())); 
+		return params;
 	}
 }

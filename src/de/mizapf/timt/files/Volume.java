@@ -24,138 +24,97 @@ package de.mizapf.timt.files;
 import java.io.*;
 import java.util.*;
 import de.mizapf.timt.util.TIFiles;
-import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.util.*;
 import de.mizapf.timt.TIImageTool;
 
 public class Volume {
-
-	public final static int SECTOR_LENGTH=0x100;   
 
 	/** Image format */
 	ImageFormat m_Image;
 	
 	/** File system */
 	TFileSystem m_FileSystem;
-	
-	/** Cached sectors of this volume. */
-	SectorCache m_cache;
 
-	// long		m_nLastMod;
+	// long		m_nLastMod;		
+	// private String m_sImageFileName;
 			
-	private String m_sImageFileName;
+	/** Called when opening an image file. */
+/*	public Volume(String sFile) throws FileNotFoundException, IOException, ImageException {
+		this(sFile, null);
+	} */
+
+	// Indicates whether this is a read-only image
+	private boolean m_bReadOnly;
 	
-	// Used for displaying still unnamed volumes
-	private int m_nUnnamedIndex;
-		
-	/** Create the volume from the given file name. 
+	/** Create the volume from the given file name (existing file).
 		@param sFile File name of the image file.
-		@param bCheck if true, check for the DSK signature in the floppy image
 	*/
-	public Volume(String sFile, boolean bCheck, ImageFormat image) throws FileNotFoundException, IOException, ImageException {
+	public Volume(ImageFormat image) throws FileNotFoundException, IOException, MissingHeaderException, ImageException {
 
 		m_Image = image;
+		m_bReadOnly = false;
 		
-		// Check whether we have a number at the end of the name
-		// This would be a subvolume of a CF7 image file
-		int volnumpos = sFile.lastIndexOf("#");
-		if (volnumpos > 0 && volnumpos < sFile.length()-1) {
-			try {
-				sFile = sFile.substring(0, volnumpos);
-				int number = Integer.parseInt(sFile.substring(volnumpos+1));
-				ImageFormat format = image;
-				if (format == null) {
-					format = ImageFormat.getImageFormat(sFile);
-				}
-				m_Image = ((CF7ImageFormat)format).getSubvolume(number);
-				// We continue with a CF7VolumeFormat
-			}
-			catch (NumberFormatException nfx) {
-				// Did not work, so what. 
-			}
-		}
-				
 		// Determine the file system; throws an ImageException when unknown
-		if (m_Image == null) m_Image = ImageFormat.getImageFormat(sFile);
-		
-		// When we are here, the format could be determined
-		if (m_Image.getFormatType() == ImageFormat.FLOPPY_FORMAT) {
-			m_FileSystem = new FloppyFileSystem();
+		// if (image == null) m_Image = ImageFormat.determineImageFormat(sFile);
+
+/*		// When we are here, the format could be determined
+		if (m_Image instanceof FloppyImageFormat) {
+			m_FileSystem = new FloppyFileSystem(m_Image);
 		}
 		else {
-			m_FileSystem = new HarddiskFileSystem();
+			if (m_Image instanceof HarddiskImageFormat) {
+				// SCSI or HFDC image?
+				switch (((HarddiskImageFormat)m_Image).getHDType()) {
+				case HarddiskImageFormat.SCSI:
+					m_FileSystem = new SCSIFileSystem(m_Image);
+					break;
+				case HarddiskImageFormat.HFDC:
+					m_FileSystem = new HFDCFileSystem(m_Image);
+					break;
+				default:
+					throw new NotImplementedException("Unsupported image type: " + m_Image.getClass().getName() + ", type " + ((HarddiskImageFormat)m_Image).getHDType());
+				}
+			}						
+			else
+				throw new NotImplementedException("Unsupported image type: " + m_Image.getClass().getName());
 		}
+		*/
 		
-		if (m_FileSystem.isWriteCached()) {
-			m_cache = new SectorCache();
-			m_cache.setCommitted(true);
+		m_FileSystem = m_Image.getFileSystem();
+		if (m_FileSystem == null) {
+			System.out.println("** FileSystem is null");
 		}
-		else m_cache = null;
+		System.out.println(m_Image.getClass().getName());   // #%
+		System.out.println(m_FileSystem.getClass().getName());   // #%
 
-		m_Image.setFileSystem(m_FileSystem);
-		m_Image.setSectorCache(m_cache);
-		
-		// m_nLastMod = m_Image.getLastModifiedTime();
-		m_sImageFileName = sFile;
-		
-		// Read sector 0 
-		// Note that we have not yet set up the file system; sector 0
-		// should be readable without
 		Sector sector0 = readSector(0);
-		byte[] abySect0 = sector0.getBytes();
+		// System.out.println(Utilities.hexdump(sector0.getData()));
+		Directory dirRoot = new Directory(this, sector0);  // used for floppy
 
-		// Read the allocation map
-		// Sectors 1-31 constitute the AM for hard disks, sector 0 for floppies
-		ByteArrayOutputStream baosAlloc = new ByteArrayOutputStream();
-		int allocStart = m_FileSystem.getAllocMapStart();
-		int allocEnd = m_FileSystem.getAllocMapEnd();
-		
-		for (int sect = allocStart/SECTOR_LENGTH; sect <= allocEnd/SECTOR_LENGTH; sect++) {
-			baosAlloc.write(readSector(sect).getBytes());
-		}
-		byte[] abyAlloc = baosAlloc.toByteArray();	
-
-		// Set up the file system
-		m_FileSystem.setupFromFile(abySect0, abyAlloc, bCheck);
-		
-		Directory dirRoot = null;
-		if (m_FileSystem instanceof FloppyFileSystem) {
-			m_Image.setGeometry((FloppyFileSystem)m_FileSystem);
-			int fsDensity = ((FloppyFileSystem)m_FileSystem).getDensity();
-			if (fsDensity != m_Image.getDensity()) {
-				System.err.println(String.format(TIImageTool.langstr("VolumeDensityMismatch"), fsDensity, m_Image.getDensity())); 
-			}
-			dirRoot = new Directory(this, sector0);  // used for floppy
-		}
-		else {
-			dirRoot = new Directory(this, sector0, null);
-		}
-		
 		m_FileSystem.setRootDirectory(dirRoot);
-	}
-
-	public Volume(String sFile, boolean bCheck) throws FileNotFoundException, IOException, ImageException {
-		this(sFile, bCheck, null);
-	}
-	
-	public Volume(String sFile, ImageFormat image) throws FileNotFoundException, IOException, ImageException {
-		this(sFile, true, image);
-	}
-	
-	/** Create a new empty volume. */
-	public Volume(TFileSystem fs, FormatParameters param, int number) throws IOException, ImageException {
-		m_FileSystem = fs;
-		if (m_FileSystem.isWriteCached()) {
-			m_cache = new SectorCache();
-			m_cache.setCommitted(false);
+		
+		// Check whether the image is read-only
+		try {
+			reopenForWrite();
 		}
-		else m_cache = null;
+		catch (ProtectedException px) {
+			System.err.println("Volume is read-only");
+			m_bReadOnly = true;
+		}
+		reopenForRead();
+		m_Image.setStartGeneration();
+	}
+	
+	/** Newly created volume. */
+	public Volume(TFileSystem fs, int number) throws IOException, ImageException {
+		m_FileSystem = fs;
 		
 		Directory dirRoot = new Directory(this);
 		m_FileSystem.setRootDirectory(dirRoot);
 
-		m_nUnnamedIndex = number;
+		m_Image = new MemoryImageFormat("unsaved", number);
 		
-		Sector[] initsec = fs.initialize(param);
+		Sector[] initsec = fs.createInitSectors();
 		try {
 			for (Sector s : initsec) {
 				writeSector(s);
@@ -166,88 +125,30 @@ public class Volume {
 		}	
 	}
 	
-	/** Called when opening an image file. */
-	public Volume(String sFile) throws FileNotFoundException, IOException, ImageException {
-		this(sFile, true);
+	public boolean isReadOnly() {
+		return m_bReadOnly;
 	}
 	
 	/** Reads a sector.
 		@throws ImageException if the sector cannot be found.
+		@throws ProtectedException if the image is write-protected so that the write back fails
 	*/
 	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		boolean getBlankFromCache = (m_Image == null);
-		Sector sect = m_cache.read(nSectorNumber, getBlankFromCache);
-
-		if (sect == null) {
-			// We have an image file; we will find all requested sectors
-			sect = m_Image.readSector(nSectorNumber);
-		}
-		return sect;
+		return m_Image.readSector(nSectorNumber);
 	}
 		
 	// Called from Directory, TFile, this
 	void writeSector(Sector sect) throws ProtectedException, IOException, ImageException {
 		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
-
-		if (m_cache != null) {
-			m_cache.write(sect);
-		}
-		else {
-			System.out.println("FIXME: Volume.writeSector for write-thru");
-			// m_Image.writeSector(sect.getNumber(), sect.getBytes());
-		}
+		m_Image.writeSector(sect);
+	}
 		
-		//		long time = m_Image.getLastModifiedTime();
-		// System.out.println("time = " + time + ", last mod = " + m_nLastMod);
-//		if (m_nLastMod < time) throw new ProtectedException("Volume has changed on disk; cannot write. Image will be closed.");
-//		m_nLastMod = m_Image.getLastModifiedTime();
-	}
-
-	boolean isDirty() {
-		return m_cache.hasEntries();
-	}
-	
-/*	void commitAll() {
-		if (m_FileSystem.isWriteCached()) {
-			// First check whether this image has already been saved to disk
-			// Otherwise we cannot read the tracks
-			if (!m_Image.formatCommitted()) {
-				System.err.println("FIXME: formatCommitted");
-			}
-			
-			try {
-				Integer[] list = m_cache.getSectorSequence();
-				for (int sect : list) {
-					Sector s = m_cache.read(sect);
-					if (s == null) {
-						System.err.println("Internal error: Sector " + sect + " not found");
-					}
-					else {
-						m_Image.writeSector(sect, s.getBytes());
-					}
-				}		
-			}
-			catch (IOException iox) {
-				iox.printStackTrace();
-			}
-			catch (ImageException ix) {
-				ix.printStackTrace();
-			}
-		}
-	}
-*/	
-	public void fixCF7Geometry() {
-		((FloppyFileSystem)m_FileSystem).setGeometry(1600, 40, 2, 20, 2);
-	}
-			
-	public void reopenForWrite() throws IOException {
-		if (m_cache == null)
-			m_Image.reopenForWrite();
+	public void reopenForWrite() throws IOException, ProtectedException {
+		m_Image.reopenForWrite();
 	}
 	
 	public void reopenForRead() throws IOException {
-		if (m_cache == null)
-			m_Image.reopenForRead();
+		m_Image.reopenForRead();
 	}
 
 	public void close() throws IOException {
@@ -272,18 +173,25 @@ public class Volume {
 	}
 	
 	public String getImageName() {
-		return m_sImageFileName;
+		return m_Image.getImageName();
+	} 
+
+	public int getHeads() {
+		if (m_FileSystem instanceof HarddiskFileSystem)
+			return ((HarddiskFileSystem)m_FileSystem).getHeads();
+		if (m_FileSystem instanceof FloppyFileSystem)
+			return ((FloppyFileSystem)m_FileSystem).getSides();
+		return 0;
 	}
 	
-	public String getShortImageName() {
-		if (m_Image != null)
-			return m_sImageFileName.substring(m_sImageFileName.lastIndexOf(java.io.File.separator)+java.io.File.separator.length());
-		else
-			return TIImageTool.langstr("Unnamed") + m_nUnnamedIndex;
+	public int getImageType() {
+		if (m_Image == null) return ImageFormat.MEMORY;
+		System.out.println("git: " + m_Image.getClass().getName() + ", type = " + m_Image.getImageType());
+		return m_Image.getImageType();
 	}
 		
 	public String getModShortImageName() {
-		return isModified()? ("*" + getShortImageName()) : getShortImageName(); 
+		return m_Image.getModShortImageName();
 	}
 	
 	public static boolean hasFloppyVib(byte[] abySect) {
@@ -311,11 +219,11 @@ public class Volume {
 	}
 	
 	public int toAU(int nSectorNumber) {
-		return m_FileSystem.toAU(nSectorNumber);
+		return m_FileSystem.getAUNumber(nSectorNumber);
 	}
 
 	public void saveAllocationMap() throws IOException, ImageException, ProtectedException {
-		Sector[] alloc = m_FileSystem.getAllocationMapSectors();
+		Sector[] alloc = m_FileSystem.createAllocationMapSectors();
 		
 		// For floppy file systems, this rewrites the VIB
 		for (Sector sect : alloc) {
@@ -333,13 +241,11 @@ public class Volume {
 	}
 	
 	public boolean isSCSIImage() {
-		if (!(m_FileSystem instanceof HarddiskFileSystem)) return false;	
-		return ((HarddiskFileSystem)m_FileSystem).isSCSI();
+		return (m_FileSystem instanceof SCSIFileSystem);
 	}
 	
 	public boolean isHFDCImage() {
-		if (!(m_FileSystem instanceof HarddiskFileSystem)) return false;	
-		return !((HarddiskFileSystem)m_FileSystem).isSCSI();
+		return (m_FileSystem instanceof HFDCFileSystem);
 	}
 	
 	public boolean isCF7Volume() {
@@ -348,13 +254,14 @@ public class Volume {
 	}
 
 	public String getName() {
-		return m_FileSystem.getName();
+		return m_FileSystem.getVolumeName();
 	}
 	
 	public String getDeviceName() {
 		if (m_FileSystem instanceof FloppyFileSystem) return "DSK1";
 		else {
-			if (((HarddiskFileSystem)m_FileSystem).isSCSI()) return "SCS1";
+			if (m_FileSystem instanceof SCSIFileSystem) return "SCS1";
+			// TODO: IDE
 			else return "HDS1";
 		}
 	}
@@ -432,10 +339,6 @@ public class Volume {
 		return m_FileSystem.getTotalSectors();
 	}
 	
-	public int getHeads() {
-		return m_FileSystem.getHeads();
-	}
-	
 	// From CommandShell and DirectoryPanel
 	public int getTracksPerSide() {
 		return ((FloppyFileSystem)m_FileSystem).getTracksPerSide();
@@ -443,13 +346,15 @@ public class Volume {
 	
 	// From TFile
 	public int getAUEmulateSector() {
-		if (m_FileSystem instanceof FloppyFileSystem) return 0;
-		return ((HarddiskFileSystem)m_FileSystem).getAUEmulateSector();
+		if (m_FileSystem instanceof HFDCFileSystem)
+			return ((HFDCFileSystem)m_FileSystem).getAUEmulateSector();
+		else
+			return 0;
 	}
 	
 	// From ToggleEmulateAction
 	public void toggleEmulateFlag(int nSector) throws IOException, ImageException, ProtectedException {
-		((HarddiskFileSystem)m_FileSystem).toggleEmulateFlag(nSector);
+		((HFDCFileSystem)m_FileSystem).toggleEmulateFlag(nSector);
 		updateVIB();
 	}
 	
@@ -459,10 +364,7 @@ public class Volume {
 	}
 	
 	public String dumpFormat() {
-		if (m_Image != null)
-			return m_Image.getDumpFormatName();
-		else
-			return "-";
+		return m_Image.getFormatName();
 	}
 	
 	public String getFloppyFormatName() {
@@ -470,17 +372,13 @@ public class Volume {
 	}
 	
 	public void renameVolume(String newName) throws IOException, ImageException, ProtectedException, InvalidNameException {
-		m_FileSystem.setName(newName);
+		m_FileSystem.setVolumeName(newName);
 		updateVIB();
-	}
-	
-	public byte[] createVIB() throws IOException, ImageException, ProtectedException {
-		return m_FileSystem.createVIB();
 	}
 	
 	public void updateVIB() throws IOException, ImageException, ProtectedException {
 		// Write the VIB
-		writeSector(new Sector(0, createVIB()));
+		writeSector(new Sector(0, m_FileSystem.createVIBContents()));
 	}
 	
 	public void updateAlloc() throws IOException, ImageException, ProtectedException {
@@ -488,100 +386,89 @@ public class Volume {
 		saveAllocationMap();
 	}
 	
+	public void fixCF7Geometry() {
+		((FloppyFileSystem)m_FileSystem).setGeometry(40, 2, 20);
+	}
+	
+	// Called from Actions and Directory
+	public void nextGeneration() {
+		m_Image.nextGeneration();
+	}
+
 	// Called from SaveImageAction
 	/** Save all modified sectors to the image. A sector is modified 
 		when the cache has an entry of it, or when the cache has never been
 		committed. That means that on the first invocation, all sectors
 		are written.
 	*/
-	public void saveImage() throws IOException, ImageException {
-		m_Image.saveImage(false);
+
+	/** Write back the changed sectors. No image format change.
+	    Never called for MemoryImageFormat.
+	*/
+	public void saveImage() throws IOException, ImageException, ProtectedException {
+		((FileImageFormat)m_Image).saveImage();
+	}
+	
+	/** Write all sectors to the new image. */
+	public void saveNewImage(String sFileName, int nFormat) throws FileNotFoundException, IOException, ImageException {
+		// We have a memory image or an existing file-based image
+		
+		// We have to retrieve the format parameters here
+		// They are available via the FileSystem
+		
+		// Get the format (includes preparing the image) 
+		FileImageFormat newImage = (FileImageFormat)ImageFormat.getImageFormatInstance(sFileName, nFormat, m_FileSystem.getParams());
+		if (newImage == null) {
+			System.err.println("Unknown format");  
+		}
+		else {
+			newImage.setFileSystem(m_FileSystem);
+			newImage.saveImageFromOld(m_Image);
+		}
+		// imagetool.replaceImage(this, newImage);  to be done in the SaveAsImageAction
+		
+		m_Image = newImage;
+		System.out.println(newImage.getClass().getName());
+		
+		// The old (file-based) image remains unchanged since the last save operation
+		// Do we know the format (SS/DS, SD/DD, tracks)?
+		// Yes, from the source (m_FileSystem)
+		
+		/*
+			Save as new image:
+			- Nicht gecachte Sektoren werden vom alten Image gelesen
+			- Cache wird geleert
+			- Das bisherige Volume wird ausgetragen, das neue eingetragen
+			- Alle Tabs dieses Volumes zeigen den neuen Dateinamen an
+			- Alle weiteren Operationen finden auf dem neuen Dateinamen statt
+		
+			- Achtung: Wir wissen nicht, wo die Positionen der ImageSectors
+			  im Zielimage sind (Beispiel: SectorDump -> HFE). Deshalb muss 
+			  - erst das Zielimage erzeugt werden (leer)
+			  - dann für jedes i ein loadFormatUnit(i) des Zielimages mit 
+			    readSector-Umleitung auf das Quellimage ausgeführt werden
+			  - dabei werden die Sektoren aus dem Cache sowie die Sektoren aus
+			    der Quelle gelesen
+			  - dann wird ein writeCurrentFormatUnit auf dem Zielimage ausgeführt
+			  
+			  - Anschluss des alten Images im SectorCache (via read)?
+		*/	
+	}
+		
+	public boolean isMemoryImage() {
+		return m_Image instanceof MemoryImageFormat;
 	}
 	
 	public boolean isModified() {
-		return isDirty();
+		return m_Image.cacheHasUnsavedEntries();
 	}
 	
-	public String getProposedName() {
+	public void undoAction() {
+		m_Image.previousGeneration();
+	}
+	
+/*	public String getProposedName() {
 		if (m_sImageFileName != null) return m_sImageFileName;
-		return m_FileSystem.getName().toLowerCase();
-	}
-	
-	public int getImageType() {
-		if (m_Image == null) return ImageFormat.NOTYPE;
-		return m_Image.getImageType();
-	}
-	
-	public void setFillPattern(byte[] fill) {
-		m_cache.setFillPattern(fill);
-	}
-	
-	public void saveNewImage(String sFileName, int type, byte[] fill) throws FileNotFoundException, IOException, ImageException {
-		if (m_Image == null) {
-			// The volume is new, not yet backed by an image file
-			// { } ---> A
-			System.out.println("Create completely new image");
-			m_sImageFileName = sFileName;
-			m_Image = ImageFormat.getImageFormat(sFileName, type, m_FileSystem);
-			m_cache.setFillPattern(fill);
-			m_Image.setSectorCache(m_cache);
-	//		m_Image.saveImage();
-		}
-		else {
-			// The image already exists; we are creating a new image
-			// A ---> B
-			System.out.println("Create new image from existing image");
-			m_sImageFileName = sFileName;
-			// We need to keep this image because it will deliver the sectors that are unchanged
-			ImageFormat newImage = ImageFormat.getImageFormat(sFileName, type, m_FileSystem);
-			newImage.setSectorCache(m_cache);
-			
-			// Write all sectors (also when unchanged)
-		//	newImage.saveFromImage(m_Image);
-			m_Image = newImage;
-			
-			// Problem: 
-			// FIXME: ARC file written to image, then saved: not recognized as an ARC anymore
-			// works after reopen
-			
-			// FIXME: Does not write to the target image, since nothing has "changed".
-			// FIXME: Cannot work this way. The new image has no backing file
-			// yet; it will write empty sectors for each unchanged sector.
-			// The new image needs access to the old image.
-		}
-	}
-	
-/*************************** Low-level routines *****************************/
-		
-	/** Check CRC errors in Track Dump Format. */
-	public int checkCRC(boolean fix, boolean reset) throws IOException
-	{
-		return m_Image.checkCRC(fix, reset);
-	}
-	
-	public void scsi2hfdc(int sectors, int speed, int current, int heads, int buff, int precomp) throws IOException, ImageException, ProtectedException {
-//		Directory root = image.getRootDirectory();
-		// Correct invalid MaxAU entries
-//		int nChecked = checkDIB(root, true);
-//		if (nChecked < 0) nChecked = -nChecked;
-//		System.out.println("Checked " + nChecked + " directories");
-		
-		// Set disk parameters
-		// Need to know
-		//	 Sectors per track
-		//	 Number of heads
-		((HarddiskFileSystem)m_FileSystem).setParams(sectors, speed, current, heads, buff!=0, precomp);
-		((HarddiskFileSystem)m_FileSystem).setSCSI(false);
-		updateVIB();
-	}
-	
-	public void hfdc2scsi() throws IOException, ImageException, ProtectedException {
-		// Set disk parameters
-		// Need to know
-		//	 Sectors per track
-		//	 Number of heads
-		((HarddiskFileSystem)m_FileSystem).setParams(0, 0, 0, 1, false, 0);
-		((HarddiskFileSystem)m_FileSystem).setSCSI(true);
-		updateVIB();
-	}
+		return m_FileSystem.getVolumeName().toLowerCase();
+	} */
 }

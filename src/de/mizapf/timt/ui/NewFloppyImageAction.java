@@ -57,11 +57,12 @@ public class NewFloppyImageAction extends Activity {
 		Volume newVolume = null;
 		
 		if (newimage.confirmed()) {
-			FloppyFileSystem ffs = new FloppyFileSystem();
+			FloppyFileSystem ffs = new FloppyFileSystem(newimage.getParameters());
 			try {
-				newVolume = new Volume(ffs, newimage.getParameters(), imagetool.nextUnnamedIndex());
+				newVolume = new Volume(ffs, imagetool.nextUnnamedIndex());
 				Directory root = newVolume.getRootDirectory();					
 				imagetool.addDirectoryView(root);
+				newVolume.nextGeneration();
 			}
 			catch (IOException iox) {
 				iox.printStackTrace();

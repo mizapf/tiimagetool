@@ -286,7 +286,7 @@ public class NewHDImageAction extends Activity {
 		boolean bValid = false;
 		
 		while (!bValid) {
-			NewHDImageDialog newimagedialog = new NewHDImageDialog(m_parent);
+			NewHDImageDialog newimagedialog = new NewHDImageDialog(m_parent, HarddiskImageFormat.HFDC);
 			try {
 				newimagedialog.createGui(imagetool.boldFont);
 			}
@@ -315,15 +315,9 @@ public class NewHDImageAction extends Activity {
 					bError = true;
 				}
 
-				if (parm.sectorsPerTrack <= 8 || parm.sectorsPerTrack > 256) {
+				if (parm.sectors <= 8 || parm.sectors > 256) {
 					if (sb.length()>0) sb.append("\n");
 					sb.append(TIImageTool.langstr("NewHDInvalidSectorCount"));
-					bError = true;
-				}
-				
-				if (parm.sectorLength != 256 && parm.sectorLength != 512) {
-					if (sb.length()>0) sb.append("\n");
-					sb.append(TIImageTool.langstr("NewHDInvalidSectorLength"));
 					bError = true;
 				}
 		
@@ -334,9 +328,10 @@ public class NewHDImageAction extends Activity {
 				}
 				
 				// No error and user is certain about creating the image
+				int nSectorSize = (parm.type==HarddiskImageFormat.HFDC)? 256 : 512;
 				
-				int nSectors = parm.cylinders * parm.heads * parm.sectorsPerTrack;
-				int nCapacity = nSectors * parm.sectorLength;
+				int nSectors = parm.cylinders * parm.heads * parm.sectors;
+				int nCapacity = nSectors * nSectorSize;
 				parm.auSize = 1;
 				while ((parm.auSize < 16) && (nSectors / parm.auSize > 0xf800)) parm.auSize = parm.auSize*2;
 	
@@ -358,19 +353,10 @@ public class NewHDImageAction extends Activity {
 					sb.append("<ul>");
 					sb.append("<li>").append(String.format(TIImageTool.langstr("NewHDParams1"), parm.cylinders)).append("</li>");
 					sb.append("<li>").append(String.format(TIImageTool.langstr("NewHDParams2"), parm.heads)).append("</li>");
-					sb.append("<li>").append(String.format(TIImageTool.langstr("NewHDParams3"), parm.sectorsPerTrack)).append("</li>");
+					sb.append("<li>").append(String.format(TIImageTool.langstr("NewHDParams3"), parm.sectors)).append("</li>");
 					sb.append("</ul>");
 				}
 				else {
-					if (!parm.forHfdc) {
-						// Warn user that SCSI may be unsupported
-						sb.append("<p></p>");
-						sb.append("<p><b>").append(TIImageTool.langstr("Warning")).append("</b>: ");
-						sb.append(TIImageTool.langstr("NewHDSCSIWarn"));
-						sb.append("</p>");
-						sb.append("<p></p>");
-					}
-					
 					sb.append("<p>").append(TIImageTool.langstr("NewHDReady")).append("</p>");
 				}
 				
@@ -396,8 +382,8 @@ public class NewHDImageAction extends Activity {
 							
 							// Fix the oversized parameters
 							if (nSectors / parm.auSize > 0xf800) {
-								parm.cylinders = 0xf800 * parm.auSize / parm.heads / parm.sectorsPerTrack;
-								nSectors = parm.cylinders * parm.heads * parm.sectorsPerTrack;
+								parm.cylinders = 0xf800 * parm.auSize / parm.heads / parm.sectors;
+								nSectors = parm.cylinders * parm.heads * parm.sectors;
 								// System.out.println("cyl = " + parm.cylinders + ", sect = " + nSectors);
 							}
 							
@@ -456,7 +442,7 @@ public class NewHDImageAction extends Activity {
 									// Open it again 
 									ImageFormat ifsource = null;
 									try {
-										ifsource = ImageFormat.getImageFormat(file.getAbsolutePath());
+										ifsource = ImageFormat.determineImageFormat(file.getAbsolutePath());
 										if (!(ifsource instanceof MameCHDFormat)) {
 											JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);				
 											bValid = false;
@@ -481,10 +467,12 @@ public class NewHDImageAction extends Activity {
 									
 									// File opened; now initialize it
 									MameCHDFormat source = (MameCHDFormat)ifsource;
-									source.initializeFileSystem(parm);
+									// TODO
+									// source.initializeFileSystem(parm);
 																	
 									// Now open the newly created file system in a view
-									vol = new Volume(file.getAbsolutePath());
+									ImageFormat image = ImageFormat.determineImageFormat(file.getAbsolutePath());
+									vol = new Volume(image);
 									Directory root = vol.getRootDirectory();					
 									imagetool.addDirectoryView(root);
 								}

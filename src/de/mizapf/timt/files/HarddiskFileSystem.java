@@ -24,115 +24,99 @@ import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.NotImplementedException;
 
-/** Represents a TI harddisk file system. */	
-public class HarddiskFileSystem extends TFileSystem {
+/** Represents a TI harddisk file system.
+
+    IDE:
+    
+    00000200: 4944 4548 4152 4431 2020 b800 0064 0000  IDEHARD1  ...d..
+    00000210: 7000 0000 0000 0100 0008 0000 0000 0000  p...............
+    ...
+    000002f0: 0000 0000 0000 0000 0000 0000 0000 0000  ................
+    00000300: ffc0 0000 0000 0000 0000 0000 0000 0000  ................   
+    
+    00-09: Volume name
+    0a-0b: Total number of AUs                             B800
+    0c:    Reserved                                        00
+    0d:    Reserved AUs                                    64
+    0e-0f: Unused                                          0000
+    10-11: Sec/AU-1(4), 0(12)                              7000
+    12-15: Time/date of creation                           0000 0000
+    16:    #files                                          01
+	17:    #dirs                                           00
+	18-19: AU of FDIR                                      0008    
+    1a-1b: AU of DSK1 emulation file                       0000
+    1C-FF: subdirs
+    100..: Allocation table                                111111111100...  
+
+*/	
+public abstract class HarddiskFileSystem extends TFileSystem {
 
 	// HD-specific
-	int 		m_nReservedAUs = 0;
-	int 		m_nStepSpeed = 0;
-	int 		m_nReducedWriteCurrent = 0;
-	boolean 	m_bBufferedStep = false;
-	int 		m_nWritePrecomp;
-	int			m_nAUEmulate;
-	Time		m_tCreation;
-	
-	boolean		m_bSCSI = false;
+	int m_nSectorsPerAU = 0;	
+	Time m_tCreation;
+
+	// From the image
+	protected int m_nCylinders;
+	protected int m_nHeads;
+	protected int m_nSectorsPerTrack;
 	
 	public HarddiskFileSystem() {
+		m_nReservedAUs = 2048; // if new
 	}
-	
-	void setParams(int sectors, int speed, int current, int heads, boolean buff, int precomp) {
-		// This is really sectors per track, which means that on hard disks with
-		// 32 sectors per track and 16 sectors per AU, we have two AUs per track.
-		// Max values: 1984 tracks, 16 heads, 2 AU per track -> 63488 AUs
-		m_nSectorsPerTrack = sectors;
-		m_nStepSpeed = speed;
-		m_nReducedWriteCurrent = current;
-		m_nHeads = heads;
-		m_bBufferedStep = buff;
-		m_nWritePrecomp = precomp;
-	}
-		
-	Sector[] initialize(FormatParameters param) {
+
+	Sector[] getInitSectors(FormatParameters param) {
 		return null;
 	}
 	
-	boolean isSCSI() {
-		return m_bSCSI;
+	public int getCylinders() {
+		return m_nCylinders;
 	}
 	
-	void setSCSI(boolean bSCSI) {
-		m_bSCSI = bSCSI;
+	public int getHeads() {
+		return m_nHeads;
 	}
 	
-	int getAUEmulateSector() {
-		return m_nAUEmulate * m_nSectorsPerAU;
+	public int getSectors() {
+		return m_nSectorsPerTrack;
 	}
 	
-	void toggleEmulateFlag(int nSector) {
-		if (getAUEmulateSector()==nSector) m_nAUEmulate = 0;
-		else m_nAUEmulate = nSector / m_nSectorsPerAU;
+	public int getSectorLength() {
+		return SECTOR_LENGTH;
+	}
+
+	int getSectorsPerTrack() {
+		return m_nSectorsPerTrack;
 	}
 
 	@Override
-	Location lbaToChs(int nSectorNumber) throws ImageException {
-		throw new NotImplementedException("lbaToChs");
+	FormatParameters getParams() {
+		throw new NotImplementedException("getParams");
 	}
-		
-	@Override
-	int chsToLba(int cylinder, int head, int sector) {
-		throw new NotImplementedException("chsToLba");
-	}
-
-	@Override
-	void setupFromFile(byte[] abySect0, byte[] abyAllocMap, boolean bCheck) throws MissingHeaderException, ImageException {	
-
-		m_bSCSI = ((abySect0[0x10] & 0x0f)==0);
-		
-		if (hasFloppyVib(abySect0)) throw new ImageException(TIImageTool.langstr("VolumeUnexpFloppyVIB"));
-		
-		m_nStepSpeed = abySect0[0x0e] & 0xff;
-		m_nReducedWriteCurrent = abySect0[0x0f] & 0xff;
-		m_nSectorsPerAU = ((abySect0[0x10]>>4)&0x0f)+1;
-		m_nHeads = (abySect0[0x10]&0x0f)+1;
-		m_bBufferedStep = ((abySect0[0x11] & 0x80)==0x80);
-		m_nWritePrecomp = abySect0[0x11] & 0x7f;
-		m_tCreation = new Time(abySect0, 0x12);
-		m_nAUEmulate = Utilities.getInt16(abySect0, 0x1a);		
-		
-		m_nReservedAUs = ((abySect0[0x0d] & 0xff) << 6);
-		if (m_nReservedAUs == 0) {
-			System.err.println(TIImageTool.langstr("VolumeNoReservedAU"));
-			m_nReservedAUs = 2048;
-		}	
-		
-		// TODO: Check with information from image
-		int nTotalAU = Utilities.getInt16(abySect0, 0x0a);
-		m_nTotalSectors = nTotalAU * m_nSectorsPerAU;
-		m_nSectorsPerTrack = abySect0[0x0c] & 0xff;
 	
-		// Create allocation map
-		m_allocMap = new AllocationMap(nTotalAU, m_nSectorsPerAU, false);		
-		m_allocMap.setMapFromBitfield(abyAllocMap, getAllocMapStart() % SECTOR_LENGTH, 0);	
-		m_sName = Utilities.getString10(abySect0, 0);
+	@Override
+	int getSectorsPerAU() {
+		return m_nSectorsPerAU;
+	}
+	
+	@Override
+	boolean isProtected() {
+		return false;
 	}
 	
 	@Override
 	int getAllocMapStart() {
-		// Sector 0, bytes 0x38 - 0xff
-		// Max 1600 sectors
+		// Sector 1, bytes 0x00 - 0xff
 		return 1*SECTOR_LENGTH + 0;		
 	}
 	
 	@Override
 	int getAllocMapEnd() {
-		// Sector 0, bytes 0x38 - 0xff
-		// Max 1600 sectors
+		// Sector 31, bytes 0xff
 		return 32*SECTOR_LENGTH - 1; 		
 	}
-
+	
 	@Override
-	Sector[] getAllocationMapSectors() {
+	Sector[] createAllocationMapSectors() {
 		Sector[] list = new Sector[(getAllocMapEnd()+1-getAllocMapStart())/SECTOR_LENGTH];
 		byte[] bitmap = m_allocMap.toBitField();
 		byte[] sectorcont = new byte[SECTOR_LENGTH];
@@ -149,42 +133,31 @@ public class HarddiskFileSystem extends TFileSystem {
 	}
 	
 	@Override
-	byte[] createVIB() {
-		byte[] abyNewVIB = new byte[SECTOR_LENGTH];
-		Utilities.setString(abyNewVIB, 0, getName(), 10);
+	Sector[] createInitSectors() {
+		byte[] vib = createVIBContents();
+		Sector[] slist = new Sector[64];   // original data in 0-31, backup in 32-63
+		Sector[] allsec = createAllocationMapSectors();
 
-		Utilities.setInt16(abyNewVIB, 0x0a, m_nTotalSectors/m_nSectorsPerAU);
-		abyNewVIB[0x0d] = (byte)((m_nReservedAUs>>6) & 0xff);
-		Utilities.setTime(abyNewVIB, 0x12, m_tCreation);
-		abyNewVIB[0x16] = (byte)(m_dirRoot.getFiles().length & 0xff);
-		abyNewVIB[0x17] = (byte)(m_dirRoot.getDirectories().length & 0xff);
-		Utilities.setInt16(abyNewVIB, 0x18, toAU(m_dirRoot.getFileIndexSector()));
+		slist[0] = new Sector(0, createVIBContents());
 		
-		if (!m_bSCSI) {
-			abyNewVIB[0x0c] = (byte)m_nSectorsPerTrack;
-			abyNewVIB[0x0e] = (byte)m_nStepSpeed;
-			abyNewVIB[0x0f] = (byte)m_nReducedWriteCurrent;
-			abyNewVIB[0x10] = (byte)((((m_nSectorsPerAU-1)<<4)|(m_nHeads-1)) & 0xff);
-			abyNewVIB[0x11] = (byte)(((m_bBufferedStep? 0x80 : 0x00) | m_nWritePrecomp) & 0xff);
-			Utilities.setInt16(abyNewVIB, 0x1a, m_nAUEmulate);
-		}
-		else {
-			abyNewVIB[0x0c] = (byte)0;
-			abyNewVIB[0x0e] = (byte)0;
-			abyNewVIB[0x0f] = (byte)0;
-			abyNewVIB[0x10] = (byte)(((m_nSectorsPerAU-1)<<4) & 0xff);
-			abyNewVIB[0x11] = (byte)0;
-			abyNewVIB[0x1a] = (byte)0;
-			abyNewVIB[0x1b] = (byte)0;
+		for (int i=1; i < allsec.length; i++) {
+			slist[i] = (Sector)allsec[i].clone();
 		}
 		
-		int j=0x1c;
-		Directory[] dirs = m_dirRoot.getDirectories();
-		for (int i=0x1c; i < 0x100; i++) abyNewVIB[i] = (byte)0;
-		for (int i=0; i < dirs.length; i++) {
-			Utilities.setInt16(abyNewVIB, j, dirs[i].getDDRSector() / m_nSectorsPerAU);
-			j=j+2;
+		// Backup
+		for (int i=0; i < slist.length/2; i++) {
+			if (slist[i] != null) 
+				slist[i + slist.length/2] = (Sector)slist[i].clone();
 		}
-		return abyNewVIB;
+		
+		return slist;
+	}
+	
+	abstract byte[] createVIBContents();
+	
+	@Override
+	void setupAllocationMap(byte[] map) {
+		m_allocMap = new AllocationMap(m_nTotalSectors);
+		m_allocMap.setMapFromBitfield(map, 0, 0);
 	}
 }

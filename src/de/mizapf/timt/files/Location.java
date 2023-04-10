@@ -25,21 +25,18 @@ import de.mizapf.timt.TIImageTool;
 class Location {
 	int cylinder;
 	int head;
-	int track;
 	int sector;
 	
-	Location(int cyl, int hd, int sec, int tr) {
+	Location(int cyl, int hd, int sec) {
 		cylinder = cyl;
 		head = hd;
 		sector = sec;
-		track = tr;
 	}
 	
 	Location(byte[] abyHeader) {
 		cylinder = (int)abyHeader[0];
 		head = (int)abyHeader[1];
 		sector = (int)abyHeader[2];
-		track = -1;
 	}
 
 	public boolean equals(Object obj) {
@@ -53,6 +50,6 @@ class Location {
 	}
 	
 	public String toString() {
-		return String.format(TIImageTool.langstr("LocationString"), track, cylinder, head, sector);
+		return String.format(TIImageTool.langstr("LocationString"), 0, cylinder, head, sector);
 	}
 }

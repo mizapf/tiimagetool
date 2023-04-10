@@ -22,110 +22,41 @@
 package de.mizapf.timt.files;
 
 import java.io.RandomAccessFile;
-import java.io.FileOutputStream;
-import java.io.EOFException;
+// import java.io.FileOutputStream;
+// import java.io.EOFException;
 import java.io.IOException;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.io.File;
+// import java.io.FileNotFoundException;
+// import java.util.ArrayList;
+// import java.io.File;
 import de.mizapf.timt.TIImageTool;
 
-public class CF7ImageFormat extends ImageFormat {
-
-	String[] m_volume;
-	int m_maxVolumes = 0;
+public class CF7ImageFormat extends SectorDumpFormat implements PartitionedStorage {
 	
-	static int vote(RandomAccessFile fileSystem) throws IOException {
-		if (fileSystem.length() < 409600*2) return 0;  // maximum size?
-
-		byte[] header = new byte[1024];
-		fileSystem.seek(0);
-		fileSystem.readFully(header);
-
-		// Check for the DSK signature in the first volume
-		// Note that only every second byte is used in the CF7 format
-		if (header[0x1a] == 'D' && header[0x1c] == 'S' && header[0x1e] == 'K') return 70;
-		else return 0;
+	int m_nPartitions;
+	int m_nActivePartition;
+	
+	static int vote(String sFile) throws IOException {
+		return 0;
 	}
 	
-	public CF7ImageFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
-		super(filesystem, sImageName);
-		writeThrough(true);
-		
-		// Find volumes
-		byte[] header = new byte[32];
-		int offset = 0;
-		int volumesize = 1600 * 256;
-		int voln = 0;
-		
-		ArrayList<String> volumeList = new ArrayList<String>();
-		
-		m_maxVolumes = (int)(filesystem.length() / (409600*2));
-		
-		while (offset < filesystem.length()) {
-			filesystem.seek(offset);
-			filesystem.readFully(header);
-			
-			if (header[0x1a] == 'D' && header[0x1c] == 'S' && header[0x1e] == 'K') {
-				StringBuilder sb = new StringBuilder();
-				for (int i=0; i < 10; i++) {
-					char c = (char)header[i*2];
-					if (c < 32 || c > 126) c = '.';
-					sb.append(c);
-				}
-				volumeList.add(voln + ":" + sb.toString());
-			}		
-			voln++;
-			offset += volumesize * 2;
-		}
-		
-		m_volume = new String[volumeList.size()];
-		volumeList.toArray(m_volume);
-	}
-
-	@Override
-	int getFormatType() {
-		return SET_FORMAT; 
+	public CF7ImageFormat(String sImageName) throws IOException, ImageException {
+		super(sImageName);
 	}
 	
-	public String getDumpFormatName() {
+	public String getFormatName() {
 		return TIImageTool.langstr("CF7ImageType");
 	}
 	
-	public String[] getVolumes() {
-		return m_volume;
+	public int partitionCount() {
+		return m_nPartitions;
 	}
 	
-	/** Write a header. Nothing to do here. */
-	@Override
-	void prepareImageFile() {
+	public void setPartition(int part) {
+		m_nActivePartition = part;
 	}
 	
-	CF7VolumeFormat getSubvolume(int number) throws IOException, ImageException {
-		return new CF7VolumeFormat(m_ImageFile, m_sImageName, number);
-	}
-	
-	@Override
-	TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException {
-		return null;
-	}
-	
-	@Override
-	public void reopenForWrite() throws IOException {
-	}
-	
-	@Override
-	public void reopenForRead() throws IOException {
-	}
-
-	@Override
-	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		return null;
-	}
-	
-	@Override
-	int getBufferIndex(Location loc) {
-		return NONE;
+	public String getPartitionName(int part) {
+		return "FIXME";
 	}
 }
 

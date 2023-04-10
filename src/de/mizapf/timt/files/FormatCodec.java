@@ -30,7 +30,7 @@ import java.util.LinkedList;
 
 
 /** The FormatCodec buffers a set of sectors read from the image or to 
-	be written to the image. In particular, it contains a lookup table for
+	be written to the image. Subclasses may contain a lookup table for
 	the positions and lengths of the buffered blocks.
 	
 	Since the image formats may differ in the kind of block, the codec works
@@ -39,275 +39,35 @@ import java.util.LinkedList;
 */	
 abstract class FormatCodec {
 	
-	// Image of the buffer
-	protected byte[] m_abyBuffer;
-	
-	// Empty pattern
-	protected byte[] m_abyFill; 
-	
-	/** Initial creation. There is no image file yet. */
-	boolean m_bInitial;
-	
-	boolean m_bBufferChanged;
-	String m_sImageName;	
-	int m_nCurrentIndex;
-	
-	protected int m_nPositionInBuffer;
-	
-	private final static int NONE = -1;
-	
+	byte[] m_formatUnit;
+
 	/** The sectors in this buffer as appearing on the medium. */
-	protected List<ImageSector> m_buffsector;
+	protected List<ImageSector> m_decodedSectors;
 	
-	/** Position of the buffer on the image. Indexed by the number of the 
-		buffer (track, cylinder, hunk).	*/
-	protected int[] m_bufferpos;
-		
-	/** Length of the buffer on the image. */
-	protected int[] m_bufferlen;
-	
-	/** Reference to the image file. */
-	private RandomAccessFile m_ImageFile; 
-		
-	protected int m_lastDataBit;
-	
-	class ImageSector {
-		byte[] m_content;
-		byte[] m_crc;
-		int m_crcvalue;
-		int m_initcrc;
-		Location m_loc;
-		int m_nImagePosition;
-		
-		ImageSector(Location loc, byte[] content, byte mark, boolean mfm, int pos) {
-			m_content = new byte[TFileSystem.SECTOR_LENGTH];
-			m_crc = new byte[2];
-			
-			byte[] head = { (byte)0xa1, (byte)0xa1, (byte)0xa1, (byte)0xfb };
-			head[3] = mark;
-			
-			int start = mfm? 0 : 3;
-			m_initcrc = Utilities.crc16_get(head, start, 4-start, 0); 
-
-			setData(content);
-			m_loc = loc;
-			m_nImagePosition = pos;
-		}		
-		
-		void setData(byte[] content) {
-			System.arraycopy(content, 0, m_content, 0, content.length);
-			m_crcvalue = Utilities.crc16_get(m_content, 0, m_content.length, m_initcrc);	
-			m_crc[0] = (byte)((m_crcvalue>>8)&0xff);
-			m_crc[1] = (byte)(m_crcvalue&0xff);
-		}
-		
-		Location getLocation() {
-			return m_loc;
-		}
-		
-		int getImagePosition() {
-			return m_nImagePosition;
-		}
-		
-		/** Delivers the head, the content, and the crc. */
-		byte[] getData() {
-			return m_content;
-		}
-		
-		byte[] getCRCBytes() {
-			return m_crc;
-		}		
-		
-		int getCRC() {
-			return m_crcvalue;
-		}
+	FormatCodec() {
+		m_formatUnit = null;
+		m_decodedSectors = new LinkedList<ImageSector>();
 	}
 	
-	FormatCodec(String sFile, boolean bInitial) {
-		this(null, sFile, bInitial);
-	}
-
-	FormatCodec(RandomAccessFile rafile, String sFile, boolean bInitial) {
-	//	Thread.currentThread().dumpStack();
-		m_ImageFile = rafile; 
-		System.out.println("sFile = " + sFile);
-		m_sImageName = sFile;
-		m_nCurrentIndex = NONE;
-		m_buffsector = new LinkedList<ImageSector>();
-		m_bInitial = bInitial;
-	}
-
-	
-	void setInitial(boolean init) {
-		m_bInitial = init;
+	void setBuffer(byte[] buf) {
+		m_formatUnit = new byte[buf.length];
+		System.arraycopy(buf, 0, m_formatUnit, 0, buf.length);
 	}
 	
-	/** Find the index of the sector in the buffer. 
-		@param loc CHS location
-	*/
-	private ImageSector findSector(Location loc) {
-		for (ImageSector isect : m_buffsector) {
-			if (isect.getLocation().equals(loc)) return isect;
-		}
-		return null;
+	ImageSector[] getDecodedSectors() {
+		return m_decodedSectors.toArray(new ImageSector[0]);
+	}	
+	
+	byte[] getFormatUnitBuffer() {
+		return m_formatUnit;
 	}
 	
-	void setFile(RandomAccessFile rafile) {
-		System.out.println("File set");
-		if (rafile == null) System.out.println("is null");
-		m_ImageFile = rafile; 
-	}
+	/** Takes the buffer and creates a new sequence of decoded sectors. */
+	abstract void decode();
 	
-	void setFillPattern(byte[] fill) {
-		m_abyFill = fill;
-	}
+	/** Takes the decoded sectors and creates a new buffer. */
+	abstract void encode();
 	
-	/** Fills the buffer from the image. The number must be calculated in the
-		ImageFormat subclass.
-		@param nNumber Number of this buffer 
-	*/
-	void loadBuffer(int nNumber) throws IOException {
-		if (nNumber == m_nCurrentIndex) {
-			// System.out.println("Buffer already loaded");
-			return;
-		}
-		// New buffer
-		flush();
-		System.out.println("Load buffer " + nNumber);
-		
-//		System.out.println("Buffer length = " + m_bufferlen[nNumber]);
-		m_abyBuffer = new byte[m_bufferlen[nNumber]];
-		if (m_bInitial) {
-			// Newly created
-			createEmptyBuffer(nNumber);
-		}
-		else {
-			// Read from image
-			m_ImageFile.seek(m_bufferpos[nNumber]);
-			m_ImageFile.readFully(m_abyBuffer);
-		}
-		m_nCurrentIndex = nNumber;
-		// Parse the buffer
-		int foundSectorsPerTrack = decodeBuffer();
-		// 
-		m_bBufferChanged = false;
-	}
-	
-	/** Write the buffer back to the image. Creates the image file if it
-		does not exist.
-		@param nNumber Number of this buffer
-	*/
-	void writeBuffer(int nNumber) throws FileNotFoundException, IOException {
-		encodeBuffer();
-		System.out.println("Write back buffer " + nNumber + " to file " + m_sImageName + " at position " + Utilities.toHex(m_bufferpos[nNumber], 6));
-		m_ImageFile = new RandomAccessFile(m_sImageName, "rw");		
-		m_ImageFile.seek(m_bufferpos[nNumber]);
-		m_ImageFile.write(m_abyBuffer);
-		m_ImageFile = new RandomAccessFile(m_sImageName, "r");	
-		m_bBufferChanged = false;
-	}
-	
-	/** Produce the byte sequence from the sectors. */
-	void encodeBuffer() {
-		m_lastDataBit = 0;
-		// m_currentHead = 0;
-		// We already have the track in the buffer; just need to write
-		// the sector contents into them
-		for (ImageSector sect : m_buffsector) {
-			m_nPositionInBuffer = sect.getImagePosition();
-			// m_currentHead = sect.getLocation().head;
-			writeBits(sect.getData());
-			writeCRC(sect.getCRCBytes());
-		}
-	}
-
-	/** Creates an empty buffer (cylinder, track, hunk). */
-	abstract void createEmptyBuffer(int buffernum);
-	
-	protected void writeCRC(byte[] crc) {
-		// Do nothing by default
-	}
-	
-	protected void writeBits(byte[] seq) {
-		for (int i=0; i < seq.length; i++) {
-			writeBits(seq[i], 8);
-		}
-	}
-	
-	/** Default implementation. */
-	protected void writeBits(int value, int number) {
-		int val1 = value;
-		if (number==16) val1 = (value >> 8);
-				
-		if (m_nPositionInBuffer < m_bufferlen[m_nCurrentIndex]) {
-			m_abyBuffer[m_nPositionInBuffer++] = (byte)(val1 & 0xff);
-		}
-		
-		if (number==16) {
-			if (m_nPositionInBuffer < m_bufferlen[m_nCurrentIndex]) {
-				m_abyBuffer[m_nPositionInBuffer++] = (byte)(value & 0xff);
-			}
-		}
-	}
-	
-	/** Find the sectors and their positions in the buffered bytes. */
-	abstract int decodeBuffer();
-	
-	/** Updates the ImageSector by the contents of the passed Sector. */
-	final void writeSector(Location loc, byte[] content) {
-		m_bBufferChanged = true;
-		ImageSector imgsec = findSector(loc);
-		if (imgsec != null) {
-			imgsec.setData(content);
-		}
-		else System.out.println("*** Sector " + loc + " not found");
-	}
-	
-	Sector readSector(Location loc, int nNumber) {
-		ImageSector is = findSector(loc);
-		if (is != null) {
-			return new Sector(nNumber, is.getData());
-		}
-		return null;
-	}
-	
-	void setBufferParams(int[] pos, int[] len) {
-		m_bufferpos = pos;
-		m_bufferlen = len;
-	}
-	
-	void touch() {
-		m_bBufferChanged = true;
-	}
-	
-	/*
-	Use the same references?
-	1. Existing image: Loaded sectors will appear by reference in the versioning
-	   cache as the original sectors. Changing their content will also change the
-	   history. -> readSector must deliver a clone.
-	   
-	2. No image: New sectors do not contain any image information until the
-	   image is created.
-	   
-	Result: Do not pass Sector instances to the versioning cache. Also, Sectors
-	should not contain other information than their number and data.	
-	
-	We need Sector instances here in order to find the sectors again (by
-	number)
-	
-	Subclass ImageSector?
-	*/
-	
-	/** Encodes all buffered sectors to be written on the image and writes
-	    them on the image. */
-	void flush() throws FileNotFoundException, IOException {
-		if (m_nCurrentIndex == NONE) {
-			// System.out.println("flush: Undefined buffer index");
-			return;
-		}
-		if (m_bBufferChanged) {
-			writeBuffer(m_nCurrentIndex);
-		}
-		else System.out.println("No changes for buffer " + m_nCurrentIndex);		
-	}
+	/** Creates a new format unit from scratch. */
+	abstract void prepareNewFormatUnit(int number, byte[] buffer);
 }	

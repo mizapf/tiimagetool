@@ -107,6 +107,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		}
 		
 		public void changed() {
+			System.out.println("contents changed");
 			fireContentsChanged(this, 0, getSize()-1);
 		}
 	}
@@ -324,7 +325,10 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		java.util.List<Element> aind = m_Listing.getSelectedValuesList();
 		// Check whether we picked up the invisible end of the list and remove it
 		int size = aind.size();
-		if (aind.get(size-1) instanceof EndOfListElement) aind.remove(size-1); 
+		if (size > 0 && aind.get(size-1) instanceof EndOfListElement) {
+			// System.out.println("Got the invisible end, removed");
+			aind.remove(size-1);
+		}
 		return aind;
 	}
 	
@@ -411,7 +415,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 			Directory dir = (Directory)el;
 			if (!dir.isParentLink()) {
 				sType = "Dir";
-				sLength = String.valueOf(vol.getAUSize()*Volume.SECTOR_LENGTH);
+				sLength = String.valueOf(vol.getAUSize()*TFileSystem.SECTOR_LENGTH);
 				sCreation = dir.getCreationTime().toString();
 				sSectors = String.valueOf(el.getAllRequiredSectors(vol.getAUSize()));
 			}

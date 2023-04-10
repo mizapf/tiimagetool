@@ -14,41 +14,27 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2016 Michael Zapf
+    Copyright 2013 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
+package de.mizapf.timt.ui;
 
-package de.mizapf.timt.files;
-
-import java.io.RandomAccessFile;
-import java.io.FileOutputStream;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.io.File;
-
-import de.mizapf.timt.util.Utilities;
+import javax.swing.*;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.NotImplementedException;
 
-/** Obsolete */
+public class RedoAction extends Activity {
 
-class CF7VolumeFormat extends SectorDumpFormat {
-
-	static int vote(String sFile) throws IOException {
-		File fl = new File(sFile);
-		long nLength = fl.length();
-		return (nLength == 409600)? 100 : 0;
+	public String getMenuName() {
+		return TIImageTool.langstr("Redo");
 	}
 	
-	public CF7VolumeFormat(String sImageName) throws IOException, ImageException {
-		super(sImageName);
+	public String getActionName() {
+		return "REDO";
 	}
-
-	public String getDumpFormatName() {
-		// return m_standalone? TIImageTool.langstr("CF7VolumeType") : TIImageTool.langstr("CF7VolumeType") + " #" + (m_volumeNumber+1);
-		return TIImageTool.langstr("CF7VolumeType");
+	
+	public void go() {
+		throw new NotImplementedException("Redo");
 	}
 }
-

@@ -26,6 +26,7 @@ import java.awt.*;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.files.Volume;
 import de.mizapf.timt.files.ImageFormat;
+import de.mizapf.timt.files.FormatParameters;
 
 public class SaveAsImageAction extends Activity {
 
@@ -86,7 +87,7 @@ public class SaveAsImageAction extends Activity {
 			if (dim!=null) jfc.setPreferredSize(dim);
 			
 			// open it now
-			int nReturn = jfc.showOpenDialog(m_parent);
+			int nReturn = jfc.showSaveDialog(m_parent);
 			
 			File selectedFile = null;
 			
@@ -112,7 +113,8 @@ public class SaveAsImageAction extends Activity {
 				System.out.println("Save as " + selectedFile.getAbsolutePath());
 				
 				try {
-					vol.saveNewImage(selectedFile.getAbsolutePath(), sd.getImageType(), imagetool.getFillSequence());
+					// FormatParameters param = sd.getParams();
+					vol.saveNewImage(selectedFile.getAbsolutePath(), sd.getImageType());
 					imagetool.addRecent(selectedFile.getAbsolutePath());
 					imagetool.refreshAllViews();
 					
@@ -129,7 +131,7 @@ public class SaveAsImageAction extends Activity {
 	
 	String getSuffixedName(String sName, int nType) {
 		int nSuffixPos = sName.indexOf(".");
-		if (nSuffixPos==-1 || nSuffixPos == sName.length()-1) {
+		if (nSuffixPos==-1) {
 			String sSuffix = "." + ImageFormat.suffix[nType];
 			if (!sName.endsWith(sSuffix)) {
 				sName = sName + sSuffix;

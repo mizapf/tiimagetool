@@ -46,7 +46,7 @@ public class ConvertToSCSIAction extends Activity {
 		
 		int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ConvLoseInfo"), TIImageTool.langstr("Warning"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 		if (nRet == JOptionPane.OK_OPTION) {
-			try {
+/*			try {
 				vol.hfdc2scsi();
 				// TODO: Close image
 			}
@@ -60,6 +60,7 @@ public class ConvertToSCSIAction extends Activity {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP") + ": " + px.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}
+			*/
 			try {
 				imagetool.reloadVolume(vol);
 				imagetool.refreshPanel(vol);

@@ -77,7 +77,7 @@ public class ConvertToHFDCAction extends Activity {
 		
 		// TODO: Close image
 		if (chs.confirmed()) {
-			try {
+/*			try {
 				vol.scsi2hfdc(chs.getSectorsPerTrack(), 
 					chs.getStepSpeed(), 
 					chs.getReducedWriteCurrent(), 
@@ -101,7 +101,7 @@ public class ConvertToHFDCAction extends Activity {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP") + ": " + px.getMessage(), TIImageTool.langstr("ConvertError"), JOptionPane.ERROR_MESSAGE); 
 				return;
 			}
-			
+*/			
 			try {
 				imagetool.reloadVolume(vol);
 				imagetool.refreshPanel(vol);

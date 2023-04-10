@@ -96,7 +96,7 @@ public class TFile extends Element {
 	}
 		
 	TFile(Volume vol, Sector sectFIB, Directory dirParent) throws IOException, ImageException {
-		byte[] aby = sectFIB.getBytes();
+		byte[] aby = sectFIB.getData();
 		m_sName = Utilities.getString10(aby, 0);
 		m_nRecordLength = (Utilities.getInt16(aby, 0x0a)<<8) + (aby[0x11] & 0xff);
 		m_byFlags = aby[0x0c];
@@ -179,7 +179,7 @@ public class TFile extends Element {
 		
 		int nAUSize = vol.getAUSize();
 		int nNextFibAU = 0;
-		byte[] aby = sect.getBytes();
+		byte[] aby = sect.getData();
 		
 		do {
 			if (!vol.isFloppyImage() && !vol.isCF7Volume()) {
@@ -188,7 +188,7 @@ public class TFile extends Element {
 					int nOffset = (aby[0x27] & 0x0f);
 					int nSectorNumber = nNextFibAU * nAUSize + nOffset;
 					sect = vol.readSector(nSectorNumber);
-					aby = sect.getBytes(); 
+					aby = sect.getData(); 
 					lst.add(nSectorNumber);
 				}
 			} 
@@ -207,7 +207,7 @@ public class TFile extends Element {
 		List<Interval> lstSum = new ArrayList<Interval>();
 		for (int i : anFIBSector) {
 			Sector sect = vol.readSector(i);
-			byte[] aby = sect.getBytes();
+			byte[] aby = sect.getData();
 			lstSum.addAll(getDataChainPointerBlockList(vol, aby));			
 		}
 	
@@ -518,7 +518,7 @@ public class TFile extends Element {
 		if (getUsedSectors() == 0) return new byte[0];
 
 		Volume vol = getVolume();
-		byte[] aby = new byte[getUsedSectors() * Volume.SECTOR_LENGTH];
+		byte[] aby = new byte[getUsedSectors() * TFileSystem.SECTOR_LENGTH];
 		int nAUSize = vol.getAUSize();
 		
 		int nSectorsInLastAU = (nAUSize==1)? 1 : (getUsedSectors() % nAUSize);
@@ -565,7 +565,7 @@ public class TFile extends Element {
 
 			nRead++;
 			Sector sect = vol.readSector(nSector);
-			System.arraycopy(sect.getBytes(), 0, aby, i*256, 256);
+			System.arraycopy(sect.getData(), 0, aby, i*256, 256);
 		}
 		// System.out.println(Utilities.hexdump(0, 0, aby, aby.length, false));
 		return aby;
@@ -645,7 +645,7 @@ public class TFile extends Element {
 		int nSectors = 0;
 		int nLength = 0;
 		nSectors = getAllocatedSectors();
-		nLength = nSectors * Volume.SECTOR_LENGTH;
+		nLength = nSectors * TFileSystem.SECTOR_LENGTH;
 		if (nLength > 0 && getEOFOffset()!=0) {
 			nLength = nLength - 256 + getEOFOffset();
 		}
@@ -663,7 +663,7 @@ public class TFile extends Element {
 			nLength = getRecordCount() * getRecordLength();
 			*/
 			nSectors = getAllocatedSectors();
-			nLength = nSectors * Volume.SECTOR_LENGTH;				
+			nLength = nSectors * TFileSystem.SECTOR_LENGTH;				
 		}
 		else {
 			nSectors = getRecordCount();
@@ -742,6 +742,7 @@ public class TFile extends Element {
 		return baos.toByteArray();
 	}
 	
+	// Called from CommandShell only
 	public String getTextContent() throws IOException, FormatException, ImageException {
 		return new String(getRecordContent());
 	}

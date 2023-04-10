@@ -105,7 +105,8 @@ public class NewCF7VolumeAction extends Activity {
 				}
 				// Open it when it is initialized
 				if (file != null) {
-					newVolume = new Volume(file.getAbsolutePath());
+					ImageFormat image = ImageFormat.determineImageFormat(file.getAbsolutePath());
+					newVolume = new Volume(image);
 					Directory root = newVolume.getRootDirectory();					
 					imagetool.addDirectoryView(root);
 				}

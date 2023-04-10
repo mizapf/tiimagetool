@@ -169,7 +169,7 @@ public class CommandShell {
 	}
 		
 	CommandShell() {
-		SectorCache.setGen(0);
+		// SectorCache.setGen(0);
 	}
 	
 	private static Directory descendToDirectory(Volume image, String[] aSubdir, boolean bDir) throws FileNotFoundException {
@@ -233,8 +233,13 @@ public class CommandShell {
 		return dirPath.toArray(new String[dirPath.size()]);
 	}
 	
+	private ImageFormat getImage(String sFile) throws FileNotFoundException, IOException, ImageException {
+		ImageFormat image = ImageFormat.determineImageFormat(sFile);
+		return image;
+	}
+	
 	public String directory(String sImagename, String sSubdir, String sCommand) throws FileNotFoundException, IOException, ImageException {
-		Volume image = new Volume(sImagename);
+		Volume image = new Volume(getImage(sImagename));
 		boolean bOnlyNames = false;
 		boolean bDecorate = false;
 		
@@ -352,7 +357,7 @@ public class CommandShell {
 	}	
 	
 	public String type(String sImagename, String sFilename) throws FileNotFoundException, IOException, ImageException, FormatException {
-		Volume image = new Volume(sImagename);
+		Volume image = new Volume(getImage(sImagename));
 		// We need to descent to the given directory
 		String[] dirPath = getPath(sFilename);
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);
@@ -362,13 +367,13 @@ public class CommandShell {
 	
 	// TODO: Add method to help.html	
 	public String list(String sImagename, String sFilename) throws FileNotFoundException, IOException, ImageException, FormatException {
-		Volume image = new Volume(sImagename);
+		Volume image = new Volume(getImage(sImagename));
 		// We need to descent to the given directory
 		String[] dirPath = getPath(sFilename);
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);
 		TFile fl = dirCurrent.getFile(dirPath[dirPath.length-1]);
 		if (fl.isBasicFile()) {
-			return fl.listBasic(BasicLine.EX_BASIC, "~%");
+			return fl.listBasic(BasicLine.EX_BASIC, "§%");
 		}
 		else return TIImageTool.langstr("CommandListNotBasic");		
 	}
@@ -394,7 +399,7 @@ public class CommandShell {
 	}
 	
 	public void export(String sImagename, String sDirname) throws FileNotFoundException, IOException, ImageException, FormatException {
-		Volume image = new Volume(sImagename);
+		Volume image = new Volume(getImage(sImagename));
 		// We need to descent to the given directory
 		String[] dirPath = getPath(sDirname);
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);
@@ -426,7 +431,7 @@ public class CommandShell {
 	}
 		
 	public void importFile(String sImagename, String sDirname) throws FileNotFoundException, IOException, ImageException, FormatException {
-		Volume image = new Volume(sImagename);
+		Volume image = new Volume(getImage(sImagename));
 		// We need to descent to the given directory
 		String[] dirPath = getPath(sDirname);
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);

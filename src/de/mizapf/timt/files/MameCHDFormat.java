@@ -37,8 +37,10 @@
     [ 88] UINT8  rawsha1[20];   // raw data SHA1
     [108] (V4 header length)
 
-    Flags are the same as V1
-
+    Flags:
+        0x00000001 - set if this drive has a parent
+        0x00000002 - set if this drive allows writes
+        
     Compression types:
         CHDCOMPRESSION_NONE = 0
         CHDCOMPRESSION_ZLIB = 1
@@ -53,6 +55,10 @@
     [ 12] UINT16 length_lo;     // lower 16 bits of length
     [ 14] UINT8 length_hi;      // upper 8 bits of length
     [ 15] UINT8 flags;          // flags, indicating compression info
+    
+    
+    Header[108]; Map[16*totalhunks]; Metadata; Hunks   
+    Hunks may start at any offset
     
     =========================================================================
 
@@ -83,9 +89,14 @@
     
     [  0] char   tag[4]
     [  4] UINT8  flags
-    [  5] UINT24 length
+    [  5] UINT24 length (+1 for null termination)
     [  8] UINT64 next
     [ 16] UINT8  data[length]
+    
+    Header - Map - Metadata - Hunks   
+    
+    New metadata entries may be added at the end, so the next hunk may require padding
+    
     
 0000000: 4d43 6f6d 7072 4844 0000 007c 0000 0005  MComprHD...|....
 0000010: 0000 0000 0000 0000 0000 0000 0000 0000  ................
@@ -147,12 +158,17 @@
 003f1e0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
 003f1f0: ffff ffff ffff fa00 0000 0000 0000 0000  ................
 
+Hunks:
+- Must have a length of a multiple of 256
+- Sectors are arranged in linear order
+- Sectors are stored without header (only contents)
 */
 
 package de.mizapf.timt.files;
 
 import java.io.File;
 import java.io.RandomAccessFile;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.EOFException;
 import java.io.FileNotFoundException;
@@ -162,166 +178,138 @@ import java.io.FileOutputStream;
 import java.util.zip.CRC32;
 import java.util.Arrays;
 
-import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.*;
 
-public class MameCHDFormat extends ImageFormat {
+public class MameCHDFormat extends HarddiskImageFormat {
 
-	int m_nVersion;
-
-	// We define hunks to be the tracks
+	int m_nVersion;	        // CHD version
 	
-	// This is wrong. Hunks are 4096 bytes, while tracks usually have 32*256 = 8192 bytes
-	// Why does it work at all? --- By getSectorOffset, we only specify the sector number,
-	// and the track length is falsely assumed to be the hunk size, so *internally* it calculates
-	// a track number that is twice as high, thus we are actually located on the hunk number.
-	// That is, when we read sector 50, we should expect it on track 1, offset 18*256, but
-	// here we calculate hunk 3, offset 2*256.
-	
-	// In that sense, this is actually not an issue, because it will yield the 
-	// correct result. However, we should check what happens for sector/track != 32 (possible?)
-	
-	// Let's keep it like this: Hunks are "logical tracks" of the CHD.
-	
-	int m_nCompression;
-	int m_nHeaderLength;
-	int m_nFlags;
-	
+	int m_nHeaderLength;   	// CHD header length
+	int m_nHunkLength;
 	long m_nMapOffset;
-	
-	int m_nTotalHunks;
-	long m_nMetaOffset;
-	long m_nLogicalBytes;
-
-	byte m_byHunkFlags;
+	int m_nHunkCount;
 	long m_nHunkOffset;
-	
+	byte m_byHunkFlags;
+	long m_nLogicalSize;
+	long m_nMetaOffset;
+	int m_nFlags;
 	long m_nAppendOffset;
-		
-	final static int METALENGTH = 16;	
+	
+	byte[] m_header;
+	
+	byte[] m_hunkmap;
+	
 	final static int MAPENTRYSIZEv4 = 16;	
+	final static int MAPENTRYSIZEv5 = 4;	
+
+	final static int METALENGTH = 16;	
+	final static long EMPTY = -1;
+
+	final static int HUNKLENGTH = 4096;
 	
 	final static int CRCIMG = 0;
 	final static int CRCCALC = 1;
+
+	static int vote(String sFile) throws FileNotFoundException, IOException {
 		
-	public static void main(String[] arg) {
-		TIImageTool.localize();
-		try {
-			byte[] abyNewImage = createEmptyCHDImage(new FormatParameters("TEST", 640, 4, 32, 256, 2048, 1, 480, 2, false, 480, Time.createNow(), true, true,5));
-			if (arg.length > 0) {
-				FileOutputStream fos = new FileOutputStream(arg[0]);
-				fos.write(abyNewImage);
-				fos.close();
-			}
-			else
-				System.out.println(Utilities.hexdump(0, 0, abyNewImage, abyNewImage.length, false)); 
-		}
-		catch (IllegalOperationException ix) {
-			ix.printStackTrace();
-		}
-		catch (IOException iox) {
-			iox.printStackTrace();
-		}
-	}
-	
-	public String getDumpFormatName() {
-		return TIImageTool.langstr("CHDImageType");
-	}
-	
-	static int findValue(byte[] aby, String sToken, int nStart, int nEnd) {
-		String sTok = sToken + ":";
-		byte[] abyToken = sTok.getBytes();
-		int i = nStart;
-		int nMatch = 0;
-		boolean bFound = false;
-		int nResult = 0;
-		while (i < nEnd && !bFound) {
-			if (aby[i] == abyToken[nMatch]) nMatch++;
-			else nMatch = 0;
-			i++;
-			if (nMatch == abyToken.length) {
-				bFound = true;
-				boolean bIsNumber = true;
-				while (bIsNumber) {
-					if (aby[i] < 0x30 || aby[i] > 0x39) bIsNumber = false;
-					else nResult = nResult * 10 + (aby[i++]-0x30);
-				}
-			}
-		}
-		return nResult;
-	}
-	
-	static int vote(RandomAccessFile fileSystem) throws IOException, EOFException {
+		FileInputStream fis = new FileInputStream(sFile);
+		
 		// File system size must be bigger than 3 MB
 		// No, not with unexpanded CHD
 //		if (fileSystem.length()==0 || fileSystem.length() < 3000000) return 0;
 		
 		byte[] chd = "MComprHD".getBytes();
-		boolean isChd = true;
-			
+		int vote = 100;
+		
 		// Read start of file
-		byte[] abyStart = new byte[1024];
-		fileSystem.seek(0);
-		fileSystem.readFully(abyStart);
-		
-		for (int i=0; i < chd.length; i++) {
-			if (chd[i]!=abyStart[i]) return 0;
+		for (int i=0; (i < chd.length) && (vote > 0); i++) {
+			int ch = fis.read();
+			if (ch != chd[i]) vote = 0; 
 		}
-		return 100;
+		fis.close();
+		return vote;
+	}
+	
+	class CHDCodec extends FormatCodec {
+
+		void decode() {
+			throw new NotImplementedException("CHDCodec");	
+		}
+
+		void encode() {
+			throw new NotImplementedException("CHDCodec");	
+		}
+		
+		void prepareNewFormatUnit(int number, byte[] buffer) {
+			throw new NotImplementedException("CHDCodec");	
+		}
 	}
 
-	public MameCHDFormat(RandomAccessFile filesystem, String sImageName) throws IOException, ImageException {
-		super(filesystem, sImageName);
-		m_nDensity = 0;
-		writeThrough(true);
-	}
-	
-	public int getVersion() {
-		return m_nVersion;
-	}
-	
-	public int getHunkCount() {
-		return m_nTotalHunks;
-	}
-	
-	void setGeometryAndCodec(boolean bSpecial) throws ImageException, IOException {
-		byte[] abyStart = new byte[1024];
-		m_ImageFile.seek(0);
-		m_ImageFile.readFully(abyStart);
-
-		m_nHeaderLength = Utilities.getInt32be(abyStart, 8);
-		m_nVersion = Utilities.getInt32be(abyStart, 12);
+	public MameCHDFormat(String sImageName) throws FileNotFoundException, IOException, ImageException {
+		super(sImageName);
 		
-		if (m_nVersion < 4) throw new ImageException(String.format(TIImageTool.langstr("MameCHDTooLow"), m_nVersion));
-		if (m_nVersion > 5) throw new ImageException(String.format(TIImageTool.langstr("MameCHDTooHigh"), m_nVersion));
-		if (m_nVersion == 4) {
-			m_nFlags = Utilities.getInt32be(abyStart, 16);
+		int nCompression;
+		
+		// Get the header length at pos 8
+		byte[] abyHeadlen = new byte[4];
+		m_file.seek(8);
+		m_file.readFully(abyHeadlen);
+		m_nHeaderLength = Utilities.getInt32be(abyHeadlen, 0);
+		
+		// Get space for header
+		m_header = new byte[m_nHeaderLength];
+		
+		// Read the header
+		m_file.seek(0);
+		m_file.readFully(m_header);
+		
+		// Read important data
+		m_nVersion = Utilities.getInt32be(m_header, 12);
+	
+		switch (m_nVersion) {
+		case 4: 
+			m_nHunkLength = Utilities.getInt32be(m_header, 44);
+			m_nMapOffset = m_nHeaderLength;
+
+			m_nHunkCount = Utilities.getInt32be(m_header, 24);
+			m_hunkmap = new byte[m_nHunkCount * MAPENTRYSIZEv4];
 			
-			m_nCompression = Utilities.getInt32be(abyStart, 20);
-			if (m_nCompression != 0) throw new ImageException(TIImageTool.langstr("MameCHDCompressed")); 		
+			m_nFlags = Utilities.getInt32be(m_header, 16);
 			
-			m_nTotalHunks   = Utilities.getInt32be(abyStart, 24);
-			m_nLogicalBytes = Utilities.getInt64be(abyStart, 28);
-			m_nMetaOffset   = Utilities.getInt64be(abyStart, 36);
-			m_nTrackLength  = Utilities.getInt32be(abyStart, 44);
+			nCompression = Utilities.getInt32be(m_header, 20);
+			if (nCompression != 0) throw new ImageException(TIImageTool.langstr("MameCHDCompressed")); 		
 			
-			m_abyBuffer = new byte[m_nTrackLength];
-			m_nCurrentTrack = NOTRACK;
+			m_nLogicalSize = Utilities.getInt64be(m_header, 28);
+			m_nMetaOffset  = Utilities.getInt64be(m_header, 36);		
+			break;
+			
+		case 5:
+			m_nHunkLength = Utilities.getInt32be(m_header, 56);
+			m_nMapOffset = Utilities.getInt64be(m_header, 40);
+			
+			m_nLogicalSize = Utilities.getInt64be(m_header, 32);
+			m_nHunkCount = (int)(m_nLogicalSize / m_nHunkLength);
+			m_hunkmap = new byte[m_nHunkCount * MAPENTRYSIZEv5];
+			
+			nCompression = Utilities.getInt32be(m_header, 16);
+			if (nCompression != 0) throw new ImageException(TIImageTool.langstr("MameCHDCompressed")); 		
+			m_nMetaOffset   = Utilities.getInt64be(m_header, 48);
+
+			m_nHunkCount = (int)m_nLogicalSize / m_nHunkLength;			
+			break;
+			
+		default:
+			if (m_nVersion < 4)
+				throw new ImageException(String.format(TIImageTool.langstr("MameCHDTooLow"), m_nVersion));
+			else
+				throw new ImageException(String.format(TIImageTool.langstr("MameCHDTooHigh"), m_nVersion));
+			
 		}
-		if (m_nVersion == 5) {	
-			
-			m_nCompression = Utilities.getInt32be(abyStart, 16);
-			if (m_nCompression != 0) throw new ImageException(TIImageTool.langstr("MameCHDCompressed")); 		
-			
-			m_nMapOffset    = Utilities.getInt64be(abyStart, 40);
-			m_nLogicalBytes = Utilities.getInt64be(abyStart, 32);
-			m_nMetaOffset   = Utilities.getInt64be(abyStart, 48);
-			m_nTrackLength  = Utilities.getInt32be(abyStart, 56);   // actually, hunk length
-			
-			m_abyBuffer = new byte[m_nTrackLength];
-			m_nCurrentTrack = NOTRACK;
-			m_nTotalHunks = (int)m_nLogicalBytes / m_nTrackLength;
-		}
+
+		// Read the map
+		m_file.seek(m_nMapOffset);
+		m_file.readFully(m_hunkmap);
 		
 		// Find metadata of the device
 		long nOffset = m_nMetaOffset;
@@ -330,58 +318,65 @@ public class MameCHDFormat extends ImageFormat {
 		int nMetaFlags = 0;
 		byte[] abyMeta = new byte[METALENGTH];
 		
+		// Find GDDD entry
 		while (!bFound && nOffset!=0) {
-			m_ImageFile.seek(nOffset);
-			m_ImageFile.readFully(abyMeta);
+			m_file.seek(nOffset);
+			m_file.readFully(abyMeta);
 			int nMetaTag = Utilities.getInt32be(abyMeta, 0);
 			nMetaLength = Utilities.getInt32be(abyMeta, 4);
-			nMetaFlags = nMetaLength>>24;
+			nMetaFlags = (nMetaLength>>24)&0xff;
 			nMetaLength = nMetaLength & 0x00ffffff;
 			
 			// See MAME, file chd.h
-			if (nMetaTag == 0x47444444) {
+			if (nMetaTag == 0x47444444) {    // GDDD
 				bFound = true;
 			}
 			else { 
+				// Next entry
 				nOffset = Utilities.getInt64be(abyMeta, 8);
 			}
 		}
 		if (!bFound) throw new ImageException(TIImageTool.langstr("MameCHDNoMetadata"));
 
-		// Read the metadata
-		m_ImageFile.seek(nOffset + METALENGTH);
+		// Read the GDDD metadata entry 
+		m_file.seek(nOffset + METALENGTH);
 		byte[] abyMetadata = new byte[nMetaLength];
-		m_ImageFile.readFully(abyMetadata);
+		m_file.readFully(abyMetadata);
+		
+		// Members of HarddiskImageFormat
 		m_nCylinders = parseValue(abyMetadata, "CYLS", nMetaLength);
 		m_nHeads = parseValue(abyMetadata, "HEADS", nMetaLength);
 		m_nSectorsPerTrack = parseValue(abyMetadata, "SECS", nMetaLength);
 
-		int nBytes = parseValue(abyMetadata, "BPS", nMetaLength);
-		if (nBytes != Volume.SECTOR_LENGTH) throw new ImageException(String.format(TIImageTool.langstr("MameCHDSectorSize"), nBytes, Volume.SECTOR_LENGTH));
-		m_nTotalSectors = m_nCylinders * m_nHeads * m_nSectorsPerTrack;
+		// IDE/SCSI have 512 bytes (low-level)
+		m_nSectorSize = parseValue(abyMetadata, "BPS", nMetaLength);
 
+		m_nTotalSectors = m_nCylinders * m_nHeads * m_nSectorsPerTrack;
+	
 		// Find out where the next position is for adding hunks
 		// Metadata at the end may need to be skipped
 		// Follow the linked list of metadata blobs
-		byte[] metadata = new byte[16];			
 		long nextOffset = m_nMetaOffset;
 		m_nAppendOffset = 1; 
 		
 //		System.out.println("MetaOffset = " + Utilities.toHex((int)m_nMetaOffset, 8));	
 		
-		while (nextOffset != 0 && nextOffset < m_nLogicalBytes) {
+		while (nextOffset != 0 && nextOffset < m_nLogicalSize) {
 //			System.out.println(Utilities.toHex((int)nextOffset, 8));
-			m_ImageFile.seek(nextOffset);
-			m_ImageFile.readFully(metadata);
+			m_file.seek(nextOffset);
+			m_file.readFully(abyMeta);
 			
 			// Round up to the next hunk boundary
-			m_nAppendOffset = ((nextOffset + (m_nTrackLength - 1)) / m_nTrackLength) * m_nTrackLength;
-			nextOffset = Utilities.getInt64be(metadata, 8);
+			m_nAppendOffset = ((nextOffset + (m_nHunkLength - 1)) / m_nHunkLength) * m_nHunkLength;
+			nextOffset = Utilities.getInt64be(abyMeta, 8);
 		}
-//		System.out.println("append offset = " + Utilities.toHex((int)m_nAppendOffset, 8));					
-		// TODO: Check with format in VIB?
-	}
 		
+		// Get the contents of hunk 0; copy the first 512 bytes
+		checkFormat(readHunk(0));
+		
+		setupAllocationMap();
+	}
+
 	private int parseValue(byte[] aby, String sToken, int nEnd) {
 		String sTok = sToken + ":";
 		byte[] abyToken = sTok.getBytes();
@@ -405,163 +400,196 @@ public class MameCHDFormat extends ImageFormat {
 		return nResult;
 	}
 	
-	private void readHunk(int nHunk) throws IOException, ImageException {
-		if (m_nVersion == 4) {
-			m_ImageFile.seek(m_nHeaderLength + nHunk * MAPENTRYSIZEv4);
-			byte[] abyMap = new byte[16];
-			m_ImageFile.readFully(abyMap);
-			m_nHunkOffset = Utilities.getInt64be(abyMap, 0);
-			
-			int crci = Utilities.getInt32be(abyMap, 8);
-			int nLengthHunk = Utilities.getInt16(abyMap, 12) + (abyMap[14]<<16);
-			if (nLengthHunk != m_nTrackLength) throw new ImageException(String.format(TIImageTool.langstr("MameCHDVary"), nLengthHunk, m_nTrackLength));
-			m_byHunkFlags = abyMap[15];
-			m_ImageFile.seek(m_nHunkOffset);
-			m_ImageFile.readFully(m_abyBuffer);
-			CRC32 crcc = new CRC32();
-			crcc.update(m_abyBuffer);
-			int crca = (int)(crcc.getValue() & 0xffffffff);
-			if (crca != crci) throw new ImageException(String.format(TIImageTool.langstr("MameCHDBadCRC"), Utilities.toHex(crca,8), Utilities.toHex(crci,8)));
-		}
-		if (m_nVersion == 5) {
-			m_ImageFile.seek(m_nMapOffset + nHunk * 4);
-			byte[] abyMap = new byte[4];
-			m_ImageFile.readFully(abyMap);
-			m_nHunkOffset = Utilities.getInt32be(abyMap, 0) * m_nTrackLength;
-			if (m_nHunkOffset == 0) {
-				// System.out.println("Hunk " + nHunk + " is empty");
-				Arrays.fill(m_abyBuffer, (byte)0);
-			}
-			else {
-				int nLengthHunk = m_nTrackLength;
-				m_ImageFile.seek(m_nHunkOffset);
-				m_ImageFile.readFully(m_abyBuffer);
-			}
-		}		
-		m_nCurrentTrack = nHunk;
+	public String getFormatName() {
+		return TIImageTool.langstr("HFEImage");
 	}
 	
-	/** Used for converting CHD versions. */
-	public byte[] getHunkContents(int nHunk) throws IOException, ImageException {
-		readHunk(nHunk);
-		return m_abyBuffer;
+	/** Find the image sector by the linear sector number. */
+	@Override
+	ImageSector findSector(int number) throws ImageException {
+		
+		for (ImageSector is : m_codec.getDecodedSectors()) {
+			if (is.getNumber() == number) return is;
+		}
+		return null;
+	}
+	
+	long getFormatUnitPosition(int funum) {
+		byte[] abyMap;
+		long pos = 0;
+		if (m_nVersion == 4) {
+			pos = Utilities.getInt64be(m_hunkmap, funum * MAPENTRYSIZEv4);
+		}
+		else {
+			pos = Utilities.getInt32be(m_hunkmap, funum * MAPENTRYSIZEv5) * m_nHunkLength;
+			if (pos==0) pos = EMPTY;
+		}
+		return pos;
+	}
+	
+	/** Format units are hunks in this format. Sectors are arranged linearly 
+	    from 0 to the maximum number. */
+	int getFUNumberFromSector(int number) throws ImageException {
+		return number * TFileSystem.SECTOR_LENGTH / m_nHunkLength;
+	}
+		
+	int getFormatUnitLength(int number) {
+		return m_nHunkLength;	
 	}
 
-	/** Used for converting CHD versions and for initializing the file system. */
-	public void writeHunkContents(byte[] abyTrack, int nHunkNumber) throws IOException {
-		m_nCurrentTrack = nHunkNumber;
-		System.arraycopy(abyTrack, 0, m_abyBuffer, 0, m_abyBuffer.length);
-		writeCurrentHunk(false);
+	/** Reads a hunk. This does not change the buffer. */
+	public byte[] readHunk(int nHunk) throws IOException, ImageException {
+		byte[] abyBuffer = new byte[m_nHunkLength];
+		
+		if (nHunk > m_nHunkCount)
+			throw new ImageException(String.format(TIImageTool.langstr("MameCHDInvalidHunk")));
+		
+		int pos = 0;
+		long nHunkOffset = 0;
+		int crci = 0;
+		int nLengthHunk = 0;
+		
+		switch (m_nVersion) {
+		case 4:
+			// Read the pointer from the hunkmap
+			pos = nHunk * MAPENTRYSIZEv4;		
+			nHunkOffset = Utilities.getInt64be(m_hunkmap, nHunk * MAPENTRYSIZEv4);
+			crci = Utilities.getInt32be(m_hunkmap, pos+8);
+			nLengthHunk = Utilities.getInt16(m_hunkmap, pos+12) + (m_hunkmap[pos+14]<<16);
+			
+			if (nLengthHunk != m_nHunkLength) 
+				throw new ImageException(String.format(TIImageTool.langstr("MameCHDVary"), nLengthHunk, m_nHunkLength));
+			
+			m_file.seek(nHunkOffset);
+			m_file.readFully(abyBuffer);
+			
+			// Check CRC
+			CRC32 crcc = new CRC32();
+			crcc.update(abyBuffer);
+			
+			int crca = (int)(crcc.getValue() & 0xffffffff);
+			if (crca != crci) 
+				throw new ImageException(String.format(TIImageTool.langstr("MameCHDBadCRC"), Utilities.toHex(crca,8), Utilities.toHex(crci,8)));
+			break;
+			
+		case 5:
+			pos = nHunk * MAPENTRYSIZEv5;	
+			nHunkOffset = Utilities.getInt32be(m_hunkmap, pos) * m_nHunkLength;
+			
+			if (nHunkOffset == 0) {
+				// System.out.println("Hunk " + nHunk + " is empty");
+				Arrays.fill(abyBuffer, (byte)0);
+			}
+			else {
+				m_file.seek(nHunkOffset);
+				m_file.readFully(abyBuffer);
+			}
+			break;
+		
+		default:
+			 throw new ImageException(String.format(TIImageTool.langstr("MameCHDTooHigh"), m_nVersion));
+		}
+		
+		return abyBuffer;
+	}
+	
+	public int getHunkCount() {
+		return m_nHunkCount;
+	}
+		
+	public int getVersion() {
+		return m_nVersion;
 	}
 	
 	@Override
-	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
-		byte[] abySector = new byte[m_nSectorLength];
-		// Get sector offset in track
-		//			System.out.println("Read sector " + nSectorNumber);
-
-		if (nSectorNumber >= m_nTotalSectors) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), m_nTotalSectors));
-		int secoff = getSectorOffset(nSectorNumber);
-		System.arraycopy(m_abyBuffer, secoff, abySector, 0, m_nSectorLength);
-		return new Sector(nSectorNumber, abySector);
+	int getImageType() {
+		return getImageTypeStatic();
 	}
 	
-	public void writeSector(Sector sect) throws IOException, ImageException {
-		try {
-			int secoff = getSectorOffset(sect.getNumber());
-			System.arraycopy(sect.getBytes(), 0, m_abyBuffer, secoff, Volume.SECTOR_LENGTH);
-			writeCurrentHunk(false);
-		}
-		catch (EOFException eofx) {
-			eofx.printStackTrace();
-			throw new EOFException(String.format(TIImageTool.langstr("ImageBeyond"), sect.getNumber()));
-		}
+	static int getImageTypeStatic() {
+		return CHD;
 	}
 	
-	void writeCurrentHunk(boolean bNeedReopen) throws IOException {
-		if (m_nVersion == 4) {
-			CRC32 crcc = new CRC32();
-			crcc.update(m_abyBuffer);
-			int crca = (int)(crcc.getValue() & 0xffffffff);
+	/** Writes a hunk. This does not change the buffer. */
+	public void writeHunk(byte[] abyHunk, int nHunkNumber) throws IOException, ImageException {
 
-			m_ImageFile.seek(m_nHeaderLength + m_nCurrentTrack * MAPENTRYSIZEv4);
-			byte[] abyMap = new byte[16];
-			m_ImageFile.readFully(abyMap);
-			m_nHunkOffset = Utilities.getInt64be(abyMap, 0);
-			
-			long nHunkOff = m_nHunkOffset;
-			for (int i=7; i >=0; i--) {
-				abyMap[i] = (byte)(nHunkOff & 0xff);
-				nHunkOff = nHunkOff >> 8;
-			}
-			
-			abyMap[8] = (byte)((crca >> 24)&0x000000ff);
-			abyMap[9] = (byte)((crca >> 16)&0x000000ff);
-			abyMap[10] = (byte)((crca >> 8)&0x000000ff);
-			abyMap[11] = (byte)(crca&0x000000ff);
-			
-			Utilities.setInt16(abyMap, 12, 0x1000);
-			abyMap[14] = (byte)0x00;
-			abyMap[15] = m_byHunkFlags;
+		int pos = 0;
+		long nHunkOffset = 0;
 		
-			if (bNeedReopen) reopenForWrite();
-//			System.out.println("seek to " + Utilities.toHex(m_nHeaderLength + m_nCurrentTrack * MAPENTRYSIZEv4, 8));
-			m_ImageFile.seek(m_nHeaderLength + m_nCurrentTrack * MAPENTRYSIZEv4);
-			m_ImageFile.write(abyMap);
-		}
-		else
-		{
-			long nMapPos = m_nMapOffset + m_nCurrentTrack * 4;
-			m_ImageFile.seek(nMapPos);
-			byte[] abyMap = new byte[4];
-			m_ImageFile.readFully(abyMap);	
-			int nHunkNumber = Utilities.getInt32be(abyMap, 0);
+		switch (m_nVersion) {
+		case 4:
+			CRC32 crcc = new CRC32();
+			crcc.update(abyHunk);
+			int crca = (int)(crcc.getValue() & 0xffffffff);
+			pos = nHunkNumber * MAPENTRYSIZEv4;
+
+			// Change the CRC in the map entry
+			m_hunkmap[pos + 8] = (byte)((crca >> 24)&0x000000ff);
+			m_hunkmap[pos + 9] = (byte)((crca >> 16)&0x000000ff);
+			m_hunkmap[pos + 10] = (byte)((crca >> 8)&0x000000ff);
+			m_hunkmap[pos + 11] = (byte)(crca&0x000000ff);
+
+			// Hunk length does not change
 			
-			m_nHunkOffset = nHunkNumber * m_nTrackLength;
-			if (nHunkNumber == 0) {
+//			System.out.println("seek to " + Utilities.toHex(m_nHeaderLength + m_nCurrentTrack * MAPENTRYSIZEv4, 8));
+			nHunkOffset = Utilities.getInt64be(m_hunkmap, pos); 
+
+			// Write back the map entry with the update CRC
+			m_file.seek(m_nMapOffset + pos);
+			m_file.write(m_hunkmap, pos, MAPENTRYSIZEv4);
+			
+			break;
+		case 5:
+			pos = nHunkNumber * MAPENTRYSIZEv5;
+			nHunkOffset = Utilities.getInt32be(m_hunkmap, pos) * m_nHunkLength;
+
+			// If the offset is 0, the hunk is filled with zeros
+			if (nHunkOffset == 0) {
+				
 				boolean bNull = true;
-				// Check if the hunk is full of 0. In that case do not allocate a new hunk.
-				for (int j=0; (j < m_abyBuffer.length) && bNull; j++) {
-					if (m_abyBuffer[j] != (byte)0x00) bNull = false;
+				// Check if the new hunk is full of 0. In that case do not allocate a new hunk.
+				for (int j=0; (j < abyHunk.length) && bNull; j++) {
+					if (abyHunk[j] != (byte)0x00) bNull = false;
 				}
-				// Do not change anything
+				
+				// If the new hunk is still filled with 0, do not change anything
 				if (bNull) {
 					// System.out.println("Not writing hunk " + m_nCurrentTrack + " because it is filled with 0");
 					return;
 				}
+				
+				// else we have to append a new record to the end
 				// System.out.println("Hunk " + m_nCurrentTrack + " was empty before, have to append after end of CHD image");
-				m_nHunkOffset = m_ImageFile.length();
-				
-				// If the file is shorter than the next hunk offset, use that offset
-				if (m_nHunkOffset < m_nAppendOffset) m_nHunkOffset = m_nAppendOffset;
-				
-				nHunkNumber = (int)(m_nHunkOffset / m_nTrackLength);
-				// System.out.println("nHunkNumber = " + nHunkNumber + ", m_nHunkOffset =  " + m_nHunkOffset + ", m_nTrackLength = " + m_nTrackLength);
-				if ((nHunkNumber * m_nTrackLength) != m_nHunkOffset) throw new EOFException(TIImageTool.langstr("MameCHDInvalidHunk") + ": " + Long.toHexString(m_nHunkOffset)); 
+				nHunkOffset = m_file.length();
 
-				abyMap[0] = (byte)((nHunkNumber >> 24)&0xff);
-				abyMap[1] = (byte)((nHunkNumber >> 16)&0xff);
-				abyMap[2] = (byte)((nHunkNumber >> 8)&0xff);
-				abyMap[3] = (byte)(nHunkNumber & 0xff);
+					// If the file is shorter than the next hunk offset, use that offset
+				if (nHunkOffset < m_nAppendOffset) nHunkOffset = m_nAppendOffset;
 				
-				if (bNeedReopen) reopenForWrite();
-				m_ImageFile.seek(nMapPos);
-				m_ImageFile.write(abyMap);
+				if ((nHunkOffset % m_nHunkLength)!=0) 
+					throw new EOFException(TIImageTool.langstr("MameCHDInvalidHunk") + ": " + Long.toHexString(nHunkOffset)); 
+				
+				// Put the hunk number in the map entry
+				int nHunkNum = (int)(nHunkOffset / m_nHunkLength);
+				m_hunkmap[pos + 0] = (byte)((nHunkNum >> 24)&0xff);
+				m_hunkmap[pos + 1] = (byte)((nHunkNum >> 16)&0xff);
+				m_hunkmap[pos + 2] = (byte)((nHunkNum >> 8)&0xff);
+				m_hunkmap[pos + 3] = (byte)(nHunkNum & 0xff);
+				
+				// Write back the new map entry 
+				m_file.seek(m_nMapOffset + pos);
+				m_file.write(m_hunkmap, pos, MAPENTRYSIZEv5);
 			}
+
+			break;
+			
+		default:
+			 throw new ImageException(String.format(TIImageTool.langstr("MameCHDTooHigh"), m_nVersion));
 		}
 		
 //		System.out.println("seek to " + Utilities.toHex((int)m_nHunkOffset, 8));
-		m_ImageFile.seek(m_nHunkOffset);
-		m_ImageFile.write(m_abyBuffer);
-		if (bNeedReopen) reopenForRead();
-	}
-	
-	/** Sectors are always numbered from 0..max, i.e. we have LBA. */
-	int getSectorOffset(int nSectorNumber) throws IOException, ImageException {
-		// Determine hunk
-		int nHunk = nSectorNumber * Volume.SECTOR_LENGTH / m_nTrackLength;
-		if (m_nCurrentTrack != nHunk) readHunk(nHunk);
-		return (nSectorNumber * Volume.SECTOR_LENGTH) % m_nTrackLength;
+		// Write the actual hunk
+		m_file.seek(nHunkOffset);
+		m_file.write(abyHunk);
 	}
 	
 	/** Create a new CHD image. */
@@ -575,288 +603,139 @@ public class MameCHDFormat extends ImageFormat {
 			throw new IllegalOperationException(TIImageTool.langstr("MameCHDVersion"));		
 		}
 	}
+	
+	private static byte[] createMetaEntry(String sMetaLabel, String sEntry) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dos = new DataOutputStream(baos);
+		try {
+			dos.writeBytes(sMetaLabel);
+			
+			int nMetaLength = sEntry.length() + 1;
+			byte byFlags = 0x01;
+			dos.writeInt((byFlags<<24) | (nMetaLength & 0x00ffffff));
+			dos.writeLong(0);
+			dos.writeBytes(sEntry);
+			dos.write(0);
+		}
+		catch (IOException iox) {
+			iox.printStackTrace();
+		}
+		return baos.toByteArray();
+	}
+	
+	private static void linkMetaEntry(byte[] entry, long pos) {
+		for (int i=0; i < 7; i++) {
+			entry[15-i] = (byte)(pos & 0xff);
+			pos = pos >> 8;
+		}
+	}
 
-	/** Create a new CHD image. */
+	/** Create a new empty CHD image. */
 	public static byte[] createEmptyCHDImageV5(FormatParameters parm) throws IllegalOperationException, IOException {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dos = new DataOutputStream(baos);
 		dos.writeBytes("MComprHD");
 		int nHeaderLength = 0x7c;
-		long nLogicalBytes = 0;
-		nLogicalBytes = parm.cylinders * parm.heads * parm.sectorsPerTrack * parm.sectorLength; 
-		int nHunkBytes = 0x1000;
-		long nHunks = nLogicalBytes / nHunkBytes;
-		int nCompressors = 0;
+		int nSectorLength = (parm.type==HFDC)? 256:512;
+		
+		long nLogicalSize = parm.cylinders * parm.heads * parm.sectors * nSectorLength; 
+
+		long nHunkCount = nLogicalSize / HUNKLENGTH;
+		// Round up
+		if ((nLogicalSize % HUNKLENGTH)!=0) nHunkCount++;
+
 		int nMapEntrySize = 0;
 		long nMapOffset = 0;
-		int nCompInfo = 0x0002; // for creating V4 map
-		
-		// Metadata
-		StringBuilder sb = new StringBuilder();
-		sb.append("CYLS:").append(parm.cylinders).append(",HEADS:").append(parm.heads);
-		sb.append(",SECS:").append(parm.sectorsPerTrack).append(",BPS:").append(parm.sectorLength);
-		int nMetaLength = sb.length() + 1;
 		long nMetaOffset = 0;
 
-		nHeaderLength = 0x7c;
 		dos.writeInt(nHeaderLength);
 		dos.writeInt(parm.chdVersion);
+		int nCompressors = 0;
 		for (int j=0; j < 4; j++) dos.writeInt(nCompressors);
 		
-		dos.writeLong(nLogicalBytes);
+		dos.writeLong(nLogicalSize);
 		nMapOffset = (long)nHeaderLength;
 		dos.writeLong((long)nMapOffset);
 		// Hunks are always 4096 bytes long 
 		
-		nMapEntrySize = 4;
-		nMetaOffset = nMapOffset + nHunks * nMapEntrySize;
+		nMapEntrySize = MAPENTRYSIZEv5;
+		nMetaOffset = nMapOffset + nHunkCount * MAPENTRYSIZEv5;
 		dos.writeLong(nMetaOffset);
-		dos.writeInt(nHunkBytes);
-		dos.writeInt(parm.sectorLength);
+		dos.writeInt(HUNKLENGTH);
+		dos.writeInt(nSectorLength);
 		// clean the hash values, not going to use them 
 		for (int i=0; i < 60; i++) dos.write(0x00);
 		
-		// Map
-		for (int i=0; i < nHunks; i++) dos.writeInt(0x00000000);
+		// Map: All hunks are filled with zeros
+		for (int i=0; i < nHunkCount; i++) dos.writeInt(0x00000000);
 		
-		// Metadata
-		dos.writeBytes("GDDD");
+		int wpcom = parm.writePrecompensation;
+		int rwc = parm.reducedWriteCurrent;
 		
-		byte byFlags = 0x01;
-		dos.writeInt(nMetaLength | (byFlags<<24));
-		for (int i=0; i < 8; i++) dos.write(0x00);
+		int gap1 = 16;
+		int gap2 = 3;
+		int gap3 = 18;
+		int sync = 13;
+		int hlen = 5;
+		int ecc = -1;
+		int interl = 4;
+		int hskew = 0;
+		int cskew = 0;
+
+		// GDDI IL:x,CSKEW:x,HSKEW:x,WPCOM:x,RWC:x
+		// GDDI GAP1:x,GAP2:x,GAP3:x,SYNC:x,HLEN:x,ECC:x
 		
-		dos.writeBytes(sb.toString());
-		dos.write(0x00);
+		// Default values: IL=4, HSKEW=CSKEW=0, WPCOM=RWC=-1 (unused)
+		// GAP1=16, GAP2=3, GAP3=18, SYNC=13, HLEN=5, ECC=-1
 		
-		// Fill the rest of this area with 0 until the first hunk
-		int nPadding = 4096 - (int)((nMetaOffset + 16 + nMetaLength) & 0xfff);
-		for (int j=0; j < nPadding; j++) {
-			dos.write(0x00);
-		}
-		
-		return baos.toByteArray();
-	}
-	
-	/** Create a new CHD image version 4. */
-	public static byte[] createEmptyCHDImageV4(FormatParameters parm) throws IllegalOperationException, IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutputStream dos = new DataOutputStream(baos);
-		dos.writeBytes("MComprHD");
-		int nHeaderLength = 0x7c;
-		long nLogicalBytes = 0;
-		nLogicalBytes = parm.cylinders * parm.heads * parm.sectorsPerTrack * parm.sectorLength; 
-		int nHunkBytes = 0x1000;
-		long nHunks = nLogicalBytes / nHunkBytes;
-		int nCompressors = 0;
-		int nMapEntrySize = 0;
-		long nMapOffset = 0;
-		int nCompInfo = 0x0002; // for creating V4 map
-		
-		// Metadata
 		StringBuilder sb = new StringBuilder();
+		sb.append("GAP1:").append(gap1).append(",GAP2:").append(gap2);
+		sb.append(",GAP3:").append(gap3).append(",SYNC:").append(sync);
+		sb.append(",HLEN:").append(hlen).append(",ECC:").append(ecc);
+		
+		byte[] abyMetaEntry3 = createMetaEntry("GDDI", sb.toString());
+
+		sb = new StringBuilder();
+		sb.append("IL:").append(interl).append(",CSKEW:").append(cskew);
+		sb.append(",HSKEW:").append(hskew).append(",WPCOM:").append(wpcom);
+		sb.append(",RWC:").append(rwc);
+
+		byte[] abyMetaEntry2 = createMetaEntry("GDDI", sb.toString());
+		
+		sb = new StringBuilder();
 		sb.append("CYLS:").append(parm.cylinders).append(",HEADS:").append(parm.heads);
-		sb.append(",SECS:").append(parm.sectorsPerTrack).append(",BPS:").append(parm.sectorLength);
-		int nMetaLength = sb.length() + 1;
-		long nMetaOffset = 0;
+		sb.append(",SECS:").append(parm.sectors).append(",BPS:").append(nSectorLength);
+	
+		byte[] abyMetaEntry1 = createMetaEntry("GDDD", sb.toString());
 		
-		byte[] abyEmpty = new byte[nHunkBytes];
-		Arrays.fill(abyEmpty, (byte)0x00);
+		linkMetaEntry(abyMetaEntry1, nMetaOffset + abyMetaEntry1.length);
+		linkMetaEntry(abyMetaEntry2, nMetaOffset + abyMetaEntry1.length + abyMetaEntry2.length);
+		linkMetaEntry(abyMetaEntry3, 0);
+	
+		dos.write(abyMetaEntry1);
+		dos.write(abyMetaEntry2);
+		dos.write(abyMetaEntry3);
 		
-		nHeaderLength = 0x6c;
-		dos.writeInt(nHeaderLength);
-		dos.writeInt(parm.chdVersion);
-		dos.writeInt(0x00000002);		// flags: read/write
-		dos.writeInt(nCompressors);		// compression: none 
-		dos.writeInt((int)nHunks);   // Total number of hunks
-		dos.writeLong(nLogicalBytes);
-		
-		nMapOffset = (long)nHeaderLength;
-		nMetaOffset = nMapOffset + nHunks * MAPENTRYSIZEv4 + 16; // "EndOfListCookie\0"
-		// System.out.println("map offset = " + nMapOffset + ", hunks = " + nHunks + ", meta length = " + nMetaLength);
-		
-		dos.writeLong(nMetaOffset);		// meta offset
-		dos.writeInt(0x1000);	// Hunk size
-		// clean the hash values, not going to use them 
-		for (int i=0; i < 60; i++) dos.write(0x00);
-		
-		// Write map
-		CRC32 crcc = new CRC32();
-		crcc.update(abyEmpty);
-		int crca = (int)(crcc.getValue() & 0xffffffff);
-		
-		for (int i=0; i < nHunks; i++) {
-			dos.writeLong(nMetaOffset + 16 + nMetaLength + i * nHunkBytes);  // 16 = "GDDD..." 
-			dos.writeInt(crca);
-			dos.writeInt(((nHunkBytes & 0xffff)<<16) | (((nHunkBytes>>16)&0xff)<<8) | nCompInfo);
-		}
-		dos.writeBytes("EndOfListCookie");
-		dos.write(0);
-		
-		// Metadata
-		dos.writeBytes("GDDD");
-		
-		byte byFlags = 0x01;
-		dos.writeInt(nMetaLength | (byFlags<<24));
-		for (int i=0; i < 8; i++) dos.write(0x00);
-		
-		dos.writeBytes(sb.toString());
-		dos.write(0x00);
-		
-		// We first create an empty CHD
-		// We must use the writeCurrentHunk function to ensure a proper CRC
-		for (int i=0; i < nHunks; i++) {
-			dos.write(abyEmpty);
+		long nMetaEnd = nMetaOffset + abyMetaEntry1.length + abyMetaEntry2.length + abyMetaEntry3.length;
+
+		while ((nMetaEnd % HUNKLENGTH)!=0) {
+			// We have to pad
+			dos.write(0);
+			nMetaEnd++;
 		}
 		
 		return baos.toByteArray();
 	}
 	
-	@Override
-	int getFormatType() {
-		return HD_FORMAT; 
+	/** Create a new CHD image version 4. This is not supported anymore. */
+	public static byte[] createEmptyCHDImageV4(FormatParameters parm) throws IllegalOperationException, IOException {
+		throw new IllegalOperationException(TIImageTool.langstr("MameCHDVersion"));
 	}
 	
-	/** Prepares the file system. This contains sectors 0-31, with 32-63 as a 
-		backup, and 16 sectors filled with zeros.
-		
-		TODO: Do the same with a sequence of Sector
-	*/
-	public void initializeFileSystem(FormatParameters parm) throws IOException {
-
-		int nHunkBytes = 0x1000;
-		
-		// Do it in memory first
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		DataOutputStream dos = new DataOutputStream(baos);
-		
-		// Do it twice (sectors 0-31, with a backup in 32-63)
-		for (int k=0; k < 2; k++) {
-			// Create the VIB
-			// === name
-			dos.writeBytes(parm.name);
-			for (int j=parm.name.length(); j < 10; j++) dos.write(0x20);
-			// === Total AUs
-			int nTotalAU = (parm.cylinders * parm.heads * parm.sectorsPerTrack + (parm.auSize-1))/parm.auSize;
-			dos.writeShort(nTotalAU);
-			
-			if (parm.forHfdc) {
-				// === Sect/track
-				dos.write(parm.sectorsPerTrack & 0xff);
-				// === reserved AUs
-				// System.out.println("res = " + parm.reservedAUs);
-				dos.write((parm.reservedAUs >> 6)&0xff);
-				// === Step speed
-				dos.write(parm.stepRate);
-				// === Reduced write current
-				dos.write(parm.reducedWriteCurrent >> 3);
-				// === Sect/AU-1 | Heads-1
-				dos.write(((parm.auSize-1)<<4) | (parm.heads-1));
-				// === Buffered step | Write precomp
-				dos.write((parm.bufferedStep? 0x80:0x00) | (parm.writePrecompensation>>4));
-			}
-			else {
-				// SCSI
-				dos.write(0x00);
-				// === reserved AUs
-				dos.write((parm.reservedAUs >> 6)&0xff);
-				dos.write(0x00);
-				dos.write(0x00);
-				dos.write(((parm.auSize-1)<<4));
-				dos.write(0x00);
-			}
-			
-			// === Date and time
-			dos.write(parm.time.getBytes());
-			// === no files, no directories yet
-			dos.write(0x00);
-			dos.write(0x00);
-			// === AU number of FDIR for root directory; 
-			// === FDIR is always in sector 64
-			dos.writeShort(64 / parm.auSize);
-			// === DSK1 emulation
-			dos.writeShort(0x0000);
-			// === Subdirectories
-			for (int l=0x1c; l < 0x100; l++) dos.write(0x00); 
-			
-			// Write allocation table
-			int nLen = 0;
-			switch (parm.auSize) {
-			case 1: 
-				dos.writeInt(0xffffffff);
-				dos.writeInt(0xffffffff);
-				dos.writeInt(0x80000000);
-				nLen = 12;
-				break;
-			case 2: 
-				dos.writeInt(0xffffffff);
-				dos.writeInt(0x80000000);
-				nLen = 8;
-				break;
-			case 4:
-				dos.writeInt(0xffff8000);
-				nLen = 4;
-				break;
-			case 8:
-				dos.writeInt(0xff800000);
-				nLen = 4;
-				break;
-			case 16:
-				dos.writeInt(0xf8000000);
-				nLen = 4;
-				break;
-			}
-			// null the rest of the allocation map
-			for (int j=nLen; j < 31*256; j++) dos.write(0x00); 
-		}
-		
-		// Write a hunkful of 0x00 
-		// This includes the FDIR of root
-		for (int j=0; j < nHunkBytes; j++) dos.write(0x00);
-
-		// We should now have 5 hunks in the byte array.
-		// 2*32 sectors + 1 hunk 
-		byte[] formbytes = baos.toByteArray();
-		
-		// Space for one hunk
-		byte[] abyPart = new byte[nHunkBytes];
-		
-		// Write the file system initialization hunk-by-hunk
-		reopenForWrite();
-		for (int i=0; i < formbytes.length / nHunkBytes; i++) {
-			System.arraycopy(formbytes, i*nHunkBytes, abyPart, 0, nHunkBytes);
-			writeHunkContents(abyPart, i);
-		}
-		reopenForRead();
-	}
-	
-	public void flush() {
-		// Do nothing.
-	}
-	
-	// Not needed
-	void createEmptyImage(File newfile, int sides, int density, int tracks, int sectors, boolean format) throws FileNotFoundException, IOException {
-	}
-	
-	// Not needed
-	void formatTrack(int cylinder, int head, int seccount, int density, int[] gap) { }
-	
-	
-	/** Write a header. */
-	@Override
-	void prepareImageFile() {
-		System.out.println("FIXME: prepareImageFile in MAMECHDFormat");
-	}
-	
-	// FIXME
-	@Override
-	int getBufferIndex(Location loc) {
-		return NONE;
-	}
-	
-	@Override
-	TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException {
-		return null;
+	/** Prepare an empty image.  */
+    @Override
+	void prepareNewImage() {
+		throw new NotImplementedException("MameCHDFormat");
 	}
 }
 

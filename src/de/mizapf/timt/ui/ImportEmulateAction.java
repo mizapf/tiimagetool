@@ -69,6 +69,12 @@ public class ImportEmulateAction extends Activity {
 			try {
 				volTarget.reopenForWrite();
 			}
+			catch (ProtectedException px) {
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
+				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				return;
+			}
+
 			catch (IOException iox) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
@@ -83,7 +89,10 @@ public class ImportEmulateAction extends Activity {
 					Volume vol = null;
 					try {
 						vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
-						if (vol==null) vol = new Volume(sAbsFile);
+						if (vol==null) {
+							ImageFormat image = ImageFormat.determineImageFormat(sAbsFile);
+							vol = new Volume(image);
+						}
 					}
 					catch (MissingHeaderException mx) {
 						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImportEmulateNoSig"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
@@ -100,10 +109,10 @@ public class ImportEmulateAction extends Activity {
 					}
 					
 					// Copy the sector contents into the byte array
-					byte[] content = new byte[vol.getTotalSectors()*vol.SECTOR_LENGTH];
+					byte[] content = new byte[vol.getTotalSectors() * TFileSystem.SECTOR_LENGTH];
 					for (int i=0; i < vol.getTotalSectors(); i++) {
 						Sector sect = vol.readSector(i);
-						System.arraycopy(sect.getBytes(), 0, content, i*vol.SECTOR_LENGTH, vol.SECTOR_LENGTH);
+						System.arraycopy(sect.getData(), 0, content, i * TFileSystem.SECTOR_LENGTH, TFileSystem.SECTOR_LENGTH);
 					}
 			
 					try {

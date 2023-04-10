@@ -24,84 +24,86 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Iterator;
 
 /** Caches new sector contents. It contains only new contents and delivers
     them in place of the sector content in the image file.
+    
+    This is the write cache of TIMT.
+    
+    Undo/Redo concept:
+    
+    Each sector has a list of changes by generation.
+    
+    Sector 42: [0] -> [1] -> [2] -> [3] -> [4]
+    Sector 43: [0] -> [1] -> [2]                      unchanged since generation 2
+    Sector 44: [0]        -> [2]        -> [4]        changed for generation 2 and 4
+
+    Generation 0 is the sector with its content from the image (file or memory).
+    
+    There is a current generation pointer, normally the highest number. When
+    retrieving the sector contents, the version is delivered with the highest
+    generation number below or equal to the current generation.
+    
+    For an Undo operation, the current generation (>0) is decreased by 1.
+    For a Redo operation, the current generation (<max) is increased by 1.
+    The DirectoryView must be refreshed each time.
+    
+    When there is a new generation, the current version is relinked to the 
+    new generation, and the previous end of list is dropped with no way to
+    restore it again.    
+    
 */
 public class SectorCache {
 	
 	SortedMap<Integer,LinkedList<Sector>> m_cache;
 	
-	boolean m_bCommitted;
-	private static int m_gen;
+	private int m_generation;
+	private int m_checkpoint;
+	private int m_current;
 	
-	byte[] m_abyFill;
+	private String m_sName; // debugging
 	
 	SectorCache() {
 		m_cache = new TreeMap<Integer,LinkedList<Sector>>();
-		m_bCommitted = true;
+		m_checkpoint = -1; // For memory images, the checkpoint of last save is -1
 	}
 	
-	void setFillPattern(byte[] fill) {
-		m_abyFill = fill;
+	void setName(String sName) {
+		m_sName = sName;
 	}
 	
-	// Static version
-	public static void setGen(int gen) {
-		m_gen = gen;
-	}
-
-	public static void nextGen() {
-		System.out.println("++- next gen");
-		m_gen++;
-	}
-	
-	public static void sameGen() {
-		m_gen--;
-	}
-	
-	public static int getGen() {
-		return m_gen;
-	}
-	
-	public boolean hasEntries() {
-		return m_cache.size()>0;
-	}
-	
-	public void wipe() {
-		System.out.println("Wipe write cache");
-		m_cache = new TreeMap<Integer,LinkedList<Sector>>();
-		m_bCommitted = true;		
-	}
-	
-	public void setCommitted(boolean comm) {
-		m_bCommitted = comm;
-	}
-	
-	Sector read(int number) {
-		return read(number, false);
-	}
-	
-	byte[] getFillPattern() {
-		return m_abyFill;
+	private Sector getRecentVersion(LinkedList<Sector> seclist) {
+		Iterator<Sector> backit = seclist.descendingIterator();
+		System.out.println("Version list length: " + seclist.size() + ", gen = " + m_generation);
+		Sector sect = null;
+		while (backit.hasNext()) {
+			Sector sec = backit.next();
+			System.out.println("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + ")");
+			if (sec.getGeneration() <= m_generation && sect == null) {
+				sect = sec;
+			}
+		}
+		if (sect == null)
+			System.err.println("SectorCache: Could not find requested version of sector");
+		return sect;
 	}
 	
 	/** Get the contents of a given sector.
 	    @param number Sector number
 		@return Sector, or null if the sector was never written to after start
-		or after a write back, or a sector filled with a fill pattern when the
-		volume has just been created
+		or after a write back
 	*/
-	Sector read(int number, boolean retFilled) {
+	Sector read(int number) {
+		// Get the history of this sector
 		LinkedList<Sector> secversions = m_cache.get(number);
 		if (secversions==null) {
-			if (m_bCommitted && !retFilled) return null;
-			else {
-				return new Sector(number, m_abyFill);
-			}
+			// No history yet
+			// System.out.println("Image: Sector " + number);
+			return null;
 		}
-		System.out.println("Sector " + number + " from cache");
-		return secversions.getLast();	
+		
+		return getRecentVersion(secversions);		
 	}
 	
 	/** Store the contents of the sector at the current generation. Does not
@@ -110,134 +112,62 @@ public class SectorCache {
 	    @param sect Sector
 	*/
 	void write(Sector sect) {
+
+		boolean bNew = true;
+		
+		// Set the generation
+		sect.setGeneration(m_generation);
+			
+		// Get the history of this sector
 		LinkedList<Sector> secversions = m_cache.get(sect.getNumber());
-		sect.setGeneration(m_gen);
 
 		if (secversions==null) {
-			// Create a new history
+			// No history yet
 			secversions = new LinkedList<Sector>();
 			m_cache.put(sect.getNumber(), secversions);
+			System.out.println("Creating new history for sector " + sect.getNumber());
 		}
-		secversions.add((Sector)sect.clone());
-		System.out.println("Caching a new version (" + m_gen + ") of sector " + sect.getNumber());
-		// if (sect.getNumber()<2 || sect.getNumber()==20) Thread.currentThread().dumpStack();
+		else {
+			Sector lsect = getRecentVersion(secversions);
+			if (lsect.getGeneration() == m_generation) {
+				// Same generation; overwrite the sector contents
+				lsect.modify(sect.getData());
+				System.out.println("Replacing the contents of sector " + sect.getNumber() + " in generation " + m_generation);
+				bNew = false;
+			}
+		}
+		if (bNew) {
+			// Append new generation
+			secversions.add((Sector)sect.clone());
+			System.out.println("Caching a new version (" + m_generation + ") of sector " + sect.getNumber());
+		}
+	}
+	
+	/** Indicates whether this image has unsaved changes. Note that the
+		variable m_generation refers to the next change, not the current.
+	*/
+	public boolean hasUnsavedEntries() {
+		System.out.println("gen(" + m_sName + ") = " + m_generation + ", last save = " + m_checkpoint);  //#%
+		return m_generation > m_checkpoint + 1;
+	}
 
+	public void nextGeneration() {
+		System.out.println("+ nextgen(" + m_sName + ")");
+		m_generation++;
 	}
 		
-	Integer[] getSectorSequence() {
-		Integer[] list = new Integer[m_cache.size()]; 
-		m_cache.keySet().toArray(list);
-		
-		/* System.out.print("[ ");
-		for (int i : list) {
-			System.out.print(i + " ");			
-		}
-		System.out.println("]"); */
-		return list;
-	}	
+	public void previousGeneration() {
+		System.out.println("- prevgen(" + m_sName + ")");
+		m_generation--;
+	}
+
+	public void setCheckpoint() {
+		m_checkpoint = m_generation;
+	}
+	
+	// Not used yet, and maybe identical to m_generation
+	public void setCurrentGeneration(int n) {
+		m_current = n;
+	}
 }
-/*
-	Concept for Sector Cache
-	------------------------
-	Cache belongs to ImageFormat (for this image)
-	
-	Key = sector number
-	
-	Problem: Cut operation joins two images
-	
-	(Cut operation fails when source image is closed before pasting (IOException, Stream closed);
-	source/dest remains unchanged)
-	
-	
-	Problem with insertFile:
-	1. sector 1 written by insertFile(Directory.java:504): writeFDIR
-	2. sector 0 written by insertFile(Directory.java:510): Volume.update
-	3. sector 1 written by commit(Directory.java:631): writeFDIR
-	4. sector 0 written by commit(Directory.java:633): Volume.update
-	
-	PasteAction calls commit (not needed?)
-	
-	--------------------------
-	
-	Write operations and commit:
-	
-	
-	
-	CommandShell.importFile()                                  -> Directory.insertFile()
-	Archive.moveinFile() -> Archive.insertFile()#rollback     -/
-	Directory.updateFile()                                   -/
-	Directory.updateFile()#rollback                         -/
-	TIImageTool.putTIFileIntoImage()                       -/
-	TIImageTool.putBinaryFileIntoImage()                  -/
-	AssembleAction.go()                                  -/
-	CreateArchiveAction.go()                            -/
-	ImportContentAction.convertAndImport()             -/
-	ImportEmulateAction.go()                          -/
-	PasteAction.paste()                              -/
-	PasteAction.copyDir()                           -/
-	
-	
-	Directory.insertFile() -> Directory.writeFileContents() -> writeSector()
-	
-	RenameAction.go() -> Directory.renameElement() -> writeSector()
-	
-	Directory.insertFile()                                -> Directory.writeFDIR() -> writeSector()
-	Directory.commit()                                   -/
-	Directory.createSubdirectory()                      -/
-	RenameAction.go() -> Directory.renameElement()     -/
-	
-	
-	Directory.insertFile()                                -> Directory.writeDDR() -> writeSector()
-	Directory.commit()                                   -/
-	Directory.createSubdirectory()                      -/
-	RenameAction.go() -> Directory.renameElement()     -/
-	
-	Directory.insertFile()                           -> TFile.writeFIB() -> writeSector()
-	Directory.moveinFile()                          -/
-	RenameAction.go() -> Directory.renameElement() -/
-	CheckFSAction.go() -> TFile.rewriteFIB()      -/
-	
-	
-	
-	Directory.insertFile()           -> Volume.updateAlloc() -> Volume.saveAllocationMap() -> writeSector()
-	Directory.commit()              -/
-	Directory.createSubdirectory() -/  
-	
-	CheckFSAction.go() -> Volume.saveAllocationMap() -> writeSector()
-		
-	
-	Directory.insertFile()           -> Volume.updateVIB() -> writeSector()
-	Directory.commit()              -/
-	Directory.createSubdirectory() -/
-	Volume.toggleEmulateFlag()    -/
-	Volume.renameVolume()        -/
-	CheckFSAction.go()          -/
-	
-	NewCF7VolumeAction.go() -> Volume.createFloppyImage() -> writeSector()
-	NewImageAction.go()    -/
-	
-	ConvertToHFDCAction.go() -> Volume.scsi2hfdc() -> writeSector()
-	ConvertToSCSIAction.go() -> Volume.hfdc2scsi() -> writeSector()
-	
-	SectorEditFrame.actionPerformed() -> SectorEditFrame.writeBackAll() -> writeSector()
-	
-	Archive.moveoutFile() -> Archive.deleteFile() 
-	Directory.insertFile()#overwrite         -> Directory.deleteFile()
-	Directory.deleteDirectory()             -/
-	Directory.updateFile()#replace         -/
-	CreateArchiveAction.go()#rollback     -/
-	DeleteAction.go()                    -/
-	PasteAction.paste()#sameimagemove   -/
-	PasteAction.paste()#diffimagemove  -/
-	
-	Commit:
-	
-	Archive.renameElement()                  -> commit
-	CreateArchiveAction.go()#rollback#del   -/
-	DeleteAction.go()#deleteFile#delDir    -/
-	PasteAction.paste()#sameimagemove     -/
-	PasteAction.paste()#diffimagemove    -/
-	
-	
-*/
 

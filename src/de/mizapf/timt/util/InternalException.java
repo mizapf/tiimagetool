@@ -18,32 +18,11 @@
     www.mizapf.de
     
 ****************************************************************************/
-package de.mizapf.timt.ui;
+package de.mizapf.timt.util;
 
-import javax.swing.*;
-import java.io.*;
-import java.awt.Dimension;
-import java.awt.event.KeyEvent;
-
-import de.mizapf.timt.files.*;
-import de.mizapf.timt.TIImageTool;
-import de.mizapf.timt.util.NotImplementedException;
-
-public class NewImageAction extends Activity {
-
-	public int getKeyCode() {
-		return KeyEvent.VK_N;
-	}
+public class InternalException extends RuntimeException {
 	
-	public String getMenuName() {
-		return TIImageTool.langstr("FloppyImage") + "...";
-	}
-	
-	public String getActionName() {
-		return "NEWIMAGE";
-	}
-	
-	public void go() {
-		// Delete
+	public InternalException(String sName) {
+		super(sName);
 	}
 }

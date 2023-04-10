@@ -56,8 +56,8 @@ public class RawCHDAction extends Activity {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
-			FormatParameters parm = new FormatParameters(dialog.getCylinders(), dialog.getHeads(), 
-				dialog.getSectorsPerTrack(), dialog.getSectorLength(), chdVersion);
+			FormatParameters parm = new FormatParameters("name", "unknownClass", true);
+			
 			try {
 				fileTarget = dialog.getTargetCHD();
 				FileOutputStream fos = new FileOutputStream(fileTarget);
@@ -82,8 +82,8 @@ public class RawCHDAction extends Activity {
 			boolean bOK = false;
 			int nHunkNumber = 0;
 			try {
-				MameCHDFormat target = (MameCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath());
-				target.reopenForWrite();
+				MameCHDFormat target = (MameCHDFormat)ImageFormat.determineImageFormat(fileTarget.getAbsolutePath());
+				// target.reopenForWrite();
 				
 				// We have the allocation still from above
 				AllocationMap alloc = new AllocationMap(dialog.getTotalAU(), dialog.getAUSize(), false);
@@ -110,7 +110,7 @@ public class RawCHDAction extends Activity {
 					// to the target
 					if ((au==dialog.getTotalAU()-1) || ((au % nAUPerHunk)==(nAUPerHunk-1))) {
 						// System.out.println("Write hunk " + nHunkNumber + " after AU " + au);
-						target.writeHunkContents(hunk, nHunkNumber++);
+						target.writeHunk(hunk, nHunkNumber++);
 						// System.out.println(Utilities.hexdump(0, 0, hunk, hunk.length, false));
 					}
 				}				

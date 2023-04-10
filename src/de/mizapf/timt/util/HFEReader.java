@@ -19,10 +19,10 @@ public class HFEReader {
 	public static void main(String[] arg) {
 		byte[] abyFile = null;
 		try {
-			ImageFormat format = ImageFormat.getImageFormat(arg[0]);
+			ImageFormat format = ImageFormat.determineImageFormat(arg[0]);
 			if (format instanceof HFEFormat) {
 				HFEReader readhfe = new HFEReader((HFEFormat)format);
-				byte[] output = readhfe.read(abyFile);
+				byte[] output = readhfe.read(abyFile, ((FloppyImageFormat)format).getSides());
 				if (arg.length >= 2) {
 					FileOutputStream fos = new FileOutputStream(arg[1]);
 					fos.write(output);
@@ -51,18 +51,17 @@ public class HFEReader {
 		m_format = form;
 	}
 	
-	public byte[] read(byte[] content) throws IOException, ImageException {
+	public byte[] read(byte[] content, int sides) throws IOException, ImageException {
 		
 		System.out.println(m_format.getHeaderInformation());
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		
-		FloppyFileSystem ffs = (FloppyFileSystem)m_format.getFileSystem();
-		for (int i=0; i < ffs.getCylinders(); i++) {
+		for (int i=0; i < m_format.getTracks(); i++) {
 			baos.write(m_format.getTrackBytes(i, 0));
 		}
-		if (ffs.getHeads()>1) {
-			for (int i=ffs.getCylinders()-1; i >=0; i--) {
+		if (sides > 1) {
+			for (int i = m_format.getTracks()-1; i >=0; i--) {
 				baos.write(m_format.getTrackBytes(i, 1));
 			}
 		}

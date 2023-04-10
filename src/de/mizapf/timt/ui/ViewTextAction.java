@@ -56,7 +56,7 @@ public class ViewTextAction extends Activity {
 						showit = (nRet == JOptionPane.YES_OPTION); 
 					}					
 					if (showit) {
-						String sContent = Utilities.sanitizeText(content, imagetool.getPropertyString(imagetool.ESCAPE), imagetool.getPropertyBoolean(TIImageTool.VERBOSE));
+						String sContent = Utilities.sanitizeBytes(content, imagetool.getPropertyString(imagetool.ESCAPE), imagetool.getPropertyBoolean(TIImageTool.VERBOSE));
 						imagetool.showTextContent(selected.getName(), sContent);  
 					}
 				}

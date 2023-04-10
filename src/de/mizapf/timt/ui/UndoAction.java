@@ -14,57 +14,40 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2020 Michael Zapf
+    Copyright 2013 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
+package de.mizapf.timt.ui;
 
-package de.mizapf.timt.files;
+import javax.swing.*;
+import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.NotImplementedException;
+import de.mizapf.timt.files.*;
 
-/** Represents a file system containing one or more subvolumes. Only used 
-    with CF7 images. 
-*/	
-public class SetFileSystem extends TFileSystem {
+public class UndoAction extends Activity {
+
+	public String getMenuName() {
+		return TIImageTool.langstr("Undo");
+	}
 	
-	public SetFileSystem() {
+	public String getActionName() {
+		return "UNDO";
 	}
+	
+	public void go() {
+		DirectoryView dvCurrent = imagetool.getSelectedView();
+		Directory dirCurrent = dvCurrent.getDirectory();
+		DirectoryPanel dp = dvCurrent.getPanel();
 
-	Sector[] initialize(FormatParameters param) {
-		return null;
-	}
+		Volume vol = dvCurrent.getVolume();
 		
-	@Override
-	void setupFromFile(byte[] abySect0, byte[] abyAllocMap, boolean bCheck) throws MissingHeaderException, ImageException {
-	}
-
-	@Override
-	int getAllocMapStart() {
-		return 0;
-	}
-
-	@Override
-	int getAllocMapEnd() {
-		return 0; 		
-	}
-
-	@Override
-	Sector[] getAllocationMapSectors() {
-		return null;
-	}
-
-	@Override
-	byte[] createVIB() {
-		return null;
-	}
-	
-	@Override
-	Location lbaToChs(int nSectorNumber) throws ImageException {
-		throw new NotImplementedException("lbaToChs");
-	}
-	
-	@Override
-	int chsToLba(int cylinder, int head, int sector) {
-		throw new NotImplementedException("chsToLba");
+		vol.undoAction();
+		dvCurrent.refreshAll();
+		
+		// We have to re-read all affected directories, otherwise the view
+		// will not change
+		// The refresh only does the refresh based on the internal model,
+		// not on the backing sectors.
 	}
 }

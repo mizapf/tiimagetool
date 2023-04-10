@@ -72,7 +72,10 @@ public class DeleteAction extends Activity {
 		}
 
 		JCheckBox cb = new JCheckBox(TIImageTool.langstr("DeleteEven"));
-		if (bHasDirs) jp.add(cb);
+		if (bHasDirs) {
+			cb.setFont(TIImageTool.subDialogFont);
+			jp.add(cb);
+		}
 
 		int nRet = JOptionPane.showConfirmDialog(dvCurrent.getFrame(), jp, TIImageTool.langstr("DeleteObjects"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 		if (nRet == JOptionPane.OK_OPTION) {

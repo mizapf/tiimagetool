@@ -29,6 +29,7 @@ import java.io.*;
 import java.awt.event.KeyEvent;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.files.ImageFormat;
+import de.mizapf.timt.files.FormatParameters;
 
 public class SaveAsImageDialog  extends ToolDialog {
 	
@@ -64,15 +65,30 @@ public class SaveAsImageDialog  extends ToolDialog {
 		asFor[2] = TIImageTool.langstr("HFEImage");
 		m_rbt = putRadioButtons(this, TIImageTool.langstr("ImageType"), nColumnWidth, asFor, null, 1);
 			
+		int index = 0;
 		if (m_nProposedType != -1) {
-			System.out.println("Proposed type: " + m_nProposedType);
-			m_rbt[m_nProposedType].setSelected(true);
+			// System.out.println("Proposed type: " + m_nProposedType);
+			// Map to options
+			switch (m_nProposedType) {
+			case ImageFormat.SECTORDUMP: 
+				index = 0; 
+				break;
+			case ImageFormat.TRACKDUMP: 
+				index = 1; 
+				break;
+			case ImageFormat.HFE: 
+				index = 2; 
+				break;
+			default: 
+				index = 0;
+				System.out.println("Invalid type proposed: " + m_nProposedType);
+				break;
+			}
 		}
 		else {
 			System.out.println("New image, no proposed type");
-			m_rbt[0].setSelected(true);
 		}
-		
+		m_rbt[index].setSelected(true);
 		add(Box.createVerticalGlue());
 		addButtons();	
 	}
@@ -83,6 +99,10 @@ public class SaveAsImageDialog  extends ToolDialog {
 			if (m_rbt[i].isSelected()) return itype[i];
 		return -1;
 	}
+	
+	/* FormatParameters getParams() {
+		return null;
+	} */
 	
 	/*	
 	JTextField 		m_tfName;

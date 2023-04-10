@@ -105,7 +105,7 @@ public class ImageCheck {
 
 	public static boolean checkCF7Inconsistency(Volume vol, int[] geom) throws IOException, ImageException {
 		Sector sector0 = vol.readSector(0);
-		byte[] abySect0 = sector0.getBytes();
+		byte[] abySect0 = sector0.getData();
 		geom[0] = Utilities.getInt16(abySect0, 0x0a);
 		geom[1] = abySect0[0x12] & 0xff;  // heads
 		geom[2] = abySect0[0x11] & 0xff;  // tracks
@@ -135,7 +135,7 @@ public class ImageCheck {
 	
 	private static boolean checkFill(byte[] aby, int offset, int value) {
 		boolean bBroken = true;
-		for (int i=offset; i < offset + Volume.SECTOR_LENGTH && bBroken; i+=2) {
+		for (int i=offset; i < offset + TFileSystem.SECTOR_LENGTH && bBroken; i+=2) {
 			if (Utilities.getInt16(aby, i) != value) bBroken = false;
 		}
 		return bBroken;
@@ -159,12 +159,12 @@ public class ImageCheck {
 			else {
 				try {
 					byte[] abyFile = aFile[i].getSectorContent();
-					for (int sect=0; sect < abyFile.length / Volume.SECTOR_LENGTH; sect++) {
+					for (int sect=0; sect < abyFile.length / TFileSystem.SECTOR_LENGTH; sect++) {
 						
 						boolean bBroken = true;
-						bBroken = checkFill(abyFile, sect * Volume.SECTOR_LENGTH, 0xdead) 
-						|| checkFill(abyFile, sect * Volume.SECTOR_LENGTH, 0xe5e5)
-						|| checkFill(abyFile, sect * Volume.SECTOR_LENGTH, 0xd7a5);
+						bBroken = checkFill(abyFile, sect * TFileSystem.SECTOR_LENGTH, 0xdead) 
+						|| checkFill(abyFile, sect * TFileSystem.SECTOR_LENGTH, 0xe5e5)
+						|| checkFill(abyFile, sect * TFileSystem.SECTOR_LENGTH, 0xd7a5);
 						
 						if (bBroken) {
 							// System.out.println(Utilities.hexdump(0, 0, abyFile, abyFile.length, false));
@@ -270,6 +270,7 @@ public class ImageCheck {
 	}
 	
 	public static int findCRCErrors(Volume image, boolean fix, boolean reset) throws IOException {
-		return image.checkCRC(fix, reset);
+		throw new NotImplementedException("findCRCErrors");
+//		return image.checkCRC(fix, reset);
 	}
 }

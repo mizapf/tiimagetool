@@ -166,7 +166,7 @@ class CHDRawDialog extends ToolDialog {
 		ImageFormat ifsource = null;
 		MameCHDFormat source = null;
 		try {
-			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath());
+			ifsource = ImageFormat.determineImageFormat(selectedfile.getAbsolutePath());
 			if (!(ifsource instanceof MameCHDFormat)) {
 				JOptionPane.showMessageDialog(m_frmMain, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
 				return false;

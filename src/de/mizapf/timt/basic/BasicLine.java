@@ -233,6 +233,8 @@ public class BasicLine {
 		int nLineNo = 0;
 		
 		char c = 0;
+		byte[] lineb = new byte[1]; 
+		
 		for (int i=0; i < content.length; i++) {
 			nCurrentByte = content[i] & 0xff;
 			switch (state) {
@@ -263,7 +265,8 @@ public class BasicLine {
 				c = (char)content[i];
 				if (c=='"') sb.append("\""); // double the quote
 				try {
-					sb.append(Utilities.sanitizeChar(content[i], escape));  
+					lineb[0] = content[i];
+					sb.append(Utilities.sanitizeBytes(lineb, escape, false));  
 				}
 				catch (FormatException fx) {
 					if (content[i] < 32 || content[i] > 126) sb.append("<").append(Utilities.toHex(content[i],2)).append(">");
@@ -279,7 +282,8 @@ public class BasicLine {
 			case STUNQUOTED_CONT:
 				c = (char)content[i];
 				try {
-					sb.append(Utilities.sanitizeChar(content[i], escape));  
+					lineb[0] = content[i];
+					sb.append(Utilities.sanitizeBytes(lineb, escape, false));  
 				}
 				catch (FormatException fx) {
 					if (content[i] < 32 || content[i] > 126) sb.append("<").append(Utilities.toHex(content[i],2)).append(">");

@@ -158,6 +158,7 @@ class DisassParamDialog extends ToolDialog implements ActionListener {
 		
 		Box box7 = new Box(BoxLayout.X_AXIS);
 		m_taParameter = new JTextArea(10,20);
+		m_taParameter.setFont(TIImageTool.dialogFont);
 		m_taParameter.setLineWrap(true);
 		box7.add(Box.createHorizontalStrut(10));		
 		addField(box7, m_taParameter, 0, 100, 0);

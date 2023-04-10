@@ -50,9 +50,9 @@ public class ViewFIBAction extends Activity {
 			if (selected instanceof TFile) {
 				try {
 					int[] anFIB = ((TFile)selected).getFIBLocations();
-					byte[] content = new byte[anFIB.length * Volume.SECTOR_LENGTH];
+					byte[] content = new byte[anFIB.length * TFileSystem.SECTOR_LENGTH];
 					for (int i=0; i < anFIB.length; i++) {
-						System.arraycopy(vol.readSector(anFIB[i]).getBytes(), 0, content, i * Volume.SECTOR_LENGTH, Volume.SECTOR_LENGTH);
+						System.arraycopy(vol.readSector(anFIB[i]).getData(), 0, content, i * TFileSystem.SECTOR_LENGTH, TFileSystem.SECTOR_LENGTH);
 					}
 					StringBuilder sb = new StringBuilder();
 					

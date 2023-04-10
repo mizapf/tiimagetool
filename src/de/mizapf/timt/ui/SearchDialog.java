@@ -71,16 +71,24 @@ class SearchDialog extends ToolDialog {
 				+-------+           +-----------+
 */	
 		prepareGui();
-	//	FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = getColumnWidth(30);
+		String[] texts = { "SearchText", "SearchRegex", "SearchFor", "SearchArchives", "SearchPath", "SearchSubdir", "SearchMax" };
 		
+		int nColumnWidth = 0;
+		for (String stext : texts) {
+			int nc1 = determineFieldWidth(TIImageTool.langstr(stext));
+			if (nc1 > nColumnWidth) nColumnWidth = nc1;
+		}
+			
 		m_tfSearchString = putTextField(this, TIImageTool.langstr("SearchText"), "", nColumnWidth, 0); 
 
 		m_chbRegex = putCheckBox(this, TIImageTool.langstr("SearchRegex"), false, nColumnWidth);
 		add(Box.createVerticalStrut(10));
 		
-		int[] anFormat = { 100, 100, 100 };
-		
+		int[] anFormat = new int[3];
+		anFormat[0] = determineFieldWidth(TIImageTool.langstr("SearchNames")) + 40;
+		anFormat[1] = determineFieldWidth(TIImageTool.langstr("SearchContent")) + 40;
+		anFormat[2] = determineFieldWidth(TIImageTool.langstr("SearchDate")) + 40;
+					
 		String[] asDoSearch = { TIImageTool.langstr("SearchNames"), TIImageTool.langstr("SearchContent"), TIImageTool.langstr("SearchDate") };
 		JRadioButton[] arb2 = putRadioButtons(this, TIImageTool.langstr("SearchFor"), nColumnWidth, asDoSearch, anFormat, 0);
 		m_jrSearchFile = arb2[0];

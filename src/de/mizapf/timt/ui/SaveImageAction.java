@@ -26,6 +26,7 @@ import java.awt.event.KeyEvent;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.files.Volume;
 import de.mizapf.timt.files.ImageException;
+import de.mizapf.timt.files.ProtectedException;
 
 public class SaveImageAction extends Activity {
 
@@ -46,7 +47,7 @@ public class SaveImageAction extends Activity {
 		DirectoryView dvCurrent = imagetool.getSelectedView();
 		Volume vol = dvCurrent.getVolume();
 		// If the image is still unnamed, treat as Save As
-		if (vol.getImageName()==null) {
+		if (vol.isMemoryImage()) {
 			SaveAsImageAction saia = new SaveAsImageAction();
 			saia.setLinks(imagetool, m_parent); 
 			saia.saveAs(vol);
@@ -55,6 +56,9 @@ public class SaveImageAction extends Activity {
 			try {
 				vol.saveImage();
 				imagetool.refreshAllViews();			
+			}
+			catch (ProtectedException px) {
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
 			}
 			catch (IOException iox) {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);				

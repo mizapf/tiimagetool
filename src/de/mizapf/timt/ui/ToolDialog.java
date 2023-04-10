@@ -80,6 +80,11 @@ public class ToolDialog extends JDialog implements ActionListener {
 		addButtons(OK_AND_CANCEL);
 	}
 		
+	protected Component vspace(int ratio) {
+		int textHeight = TIImageTool.dialogHeight;
+		return Box.createVerticalStrut((textHeight * ratio) / 100);
+	}
+	
 	protected void addButtons(int buttons) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.boldDialogFont);		
 		int textWidth = fm.stringWidth(TIImageTool.langstr("ButtonSampleText"));

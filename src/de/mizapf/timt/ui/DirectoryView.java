@@ -687,7 +687,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 					bUtil = false;
 				}
 */				
-				if (!file.isTextFile()) {
+				if (!file.mayBePrintable()) {
 					bText = false;
 					bAssemble = false;
 				}
@@ -857,7 +857,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 								return;
 							}
 						}
-						sText = Utilities.sanitizeText(content, escape, m_app.getPropertyBoolean(TIImageTool.VERBOSE));
+						sText = Utilities.sanitizeBytes(content, escape, m_app.getPropertyBoolean(TIImageTool.VERBOSE));
 					}
 					else {
 						// Do this only when applicable

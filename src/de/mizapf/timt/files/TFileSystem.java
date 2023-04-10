@@ -23,33 +23,74 @@ package de.mizapf.timt.files;
 import java.util.*;
 import de.mizapf.timt.TIImageTool;
 
-/** Represents a TI file system. */	
+/** Represents a TI file system.
+	Every file system manages the medium as a collection of sectors.
+
+	We assume that every file system has a volume information block (VIB) with
+	a volume name and a total number of sectors.
+	
+	A file system has 
+	- a name (volume name)
+	- a total number of sectors
+	- a map of allocated sectors
+	- a size for allocation units
+	- a link to file or directory entries (root directory)
+	
+	The general file system does not have to deal with cylinders, heads, or
+	number of sectors in a track.
+	
+*/	
 public abstract class TFileSystem {
 
-	// General information from the VIB
-	String m_sName;
-	int	m_nTotalSectors = 0;
-	
-	/** Sector count according to the header. */
-	int	m_nSectorsPerTrack = 0;
-	int m_nHeads = 0;
-	int m_nSectorsPerAU;
-	int m_nReservedAUs;
-	int m_nCylinders;
-
-	Directory m_dirRoot;
-	
-	protected boolean m_bWriteCached;
-	
 	public final static int SECTOR_LENGTH=0x100;   
 	public final static int MAXAU = 0xf800;  // from Directory and RawHDFormat
-	static final int NONE = -1;
 
-	// Sector allocation map
-	AllocationMap m_allocMap;
+	// Check values
+	public final static int GOOD = 0;
+	public final static int NO_SIG = 1;
+	public final static int SIZE_MISMATCH = 2;
+	public final static int BAD_GEOMETRY = 4;
+	public final static int WRONG_DENSITY = 8;
+	public final static int UNSET = 65535;
+
+	/** Volume name. */
+	protected String m_sName;
 	
+	/** Size of the file system. */
+	protected int m_nTotalSectors = 0;
+
+	/** AU size. */
+	protected int m_nSectorsPerAU;
+
+	/** Reserved AUs. */
+	protected int m_nReservedAUs;
+	
+	/** Root directory. */
+	protected Directory m_dirRoot;
+	
+	/** Sector allocation map. */
+	protected AllocationMap m_allocMap;
+
 	public TFileSystem() {
-		m_bWriteCached = false;
+	}
+
+	public TFileSystem(int total, int reserved) {
+		m_nTotalSectors = total;
+		m_nReservedAUs = reserved;
+	}
+	
+	protected void setVolumeName(String newName) throws InvalidNameException {
+		if (newName == null || newName.length()==0 || newName.length()>10) throw new InvalidNameException(TIImageTool.langstr("VolumeNameConstr"));
+		if (newName.indexOf(".")!=-1) throw new InvalidNameException(TIImageTool.langstr("VolumeNamePeriod"));
+		m_sName = newName;
+	}
+	
+	void setVolumeName0(String newName) {
+		m_sName = newName;
+	}
+
+	public String getVolumeName() {
+		return m_sName;
 	}
 
 	void setRootDirectory(Directory root) {
@@ -59,74 +100,34 @@ public abstract class TFileSystem {
 	Directory getRootDirectory() {
 		return m_dirRoot;
 	}
-		
-	abstract void setupFromFile(byte[] sector0, byte[] abyAlloc, boolean bCheck) throws MissingHeaderException, ImageException;
-
-	public String getName() {
-		return m_sName;
-	}
-	
-	void setName(String newName) throws InvalidNameException {
-		if (newName == null || newName.length()==0 || newName.length()>10) throw new InvalidNameException(TIImageTool.langstr("VolumeNameConstr"));
-		if (newName.indexOf(".")!=-1) throw new InvalidNameException(TIImageTool.langstr("VolumeNamePeriod"));
-		m_sName = newName;
-	}
-	
-	public int getCylinders() {
-		return m_nCylinders;
-	}
-	
-	public int getSectors() {
-		return m_nSectorsPerTrack;
-	}
-	
-	public int getSectorLength() {
-		return SECTOR_LENGTH;
-	}
-	
-	public int getSectorsPerAU() {
-		return m_nSectorsPerAU;
-	}
-
-	public int getHeads() {
-		return m_nHeads;
-	}
-	
-	public int getReservedAUs() {
-		return m_nReservedAUs;
-	}
 	
 	public int getTotalSectors() {
 		return m_nTotalSectors;
 	}
 	
-	public boolean isProtected() {
-		return false;
-	}
-	
-	public boolean isWriteCached() {	
-		return m_bWriteCached;
-	}
-	
-	abstract Location lbaToChs(int nSectorNumber) throws ImageException;
-	abstract int chsToLba(int cylinder, int head, int sector);
-	
-	static boolean hasFloppyVib(byte[] abySect) {
-		return (abySect[13]=='D' && abySect[14]=='S' && abySect[15]=='K');	
-	}
-	
-	public int toAU(int nSectorNumber) {
+	public int getAUNumber(int nSectorNumber) {
 		return nSectorNumber / m_nSectorsPerAU;
 	}
 	
-	abstract Sector[] initialize(FormatParameters param);
+	public int getReservedAUs() {
+		return m_nReservedAUs;
+	}
+
+	abstract FormatParameters getParams();
 	
+	abstract int getSectorsPerAU();
+	abstract byte[] createVIBContents();
+	abstract Sector[] createInitSectors();	 // initialize
+	abstract Sector[] createAllocationMapSectors(); 
+	abstract boolean isProtected();
 	abstract int getAllocMapStart();
 	abstract int getAllocMapEnd();
-
-	abstract Sector[] getAllocationMapSectors(); 
-
-	abstract byte[] createVIB();
+	
+	abstract void setupAllocationMap(byte[] map);
+	
+	/* 
+		Allocation handling
+	*/
 	
 	public Interval[] findFreeSpace(int nSectors, int nStarting) {
 		List<Interval> intList = new LinkedList<Interval>();
@@ -251,29 +252,13 @@ public abstract class TFileSystem {
 		return null;
 	}
 	
-	public int getAllRequiredSectors(int nAUSize) {
-		// Sector 0 is already used for the root directory
-		// Allocation map is included in sector 0 for floppies
-	
-		int nAllocMapSectors = ((m_allocMap.getMaxAU()/8)-1) / SECTOR_LENGTH + 1; 
-		
-		// Round up to AU size
-		// Starts with sector 1, so we must ignore the first AU
-		// sector 1 .. ausize-1
-		
-		nAllocMapSectors = nAllocMapSectors - (nAUSize-1);
-		
-		int nAllocMapAU = ((nAllocMapSectors-1) / nAUSize) + 1;
-		return nAllocMapAU;
-	}
-	
 	public int getAllocatedSectorCount() {
 		return m_allocMap.countAllocated() * m_nSectorsPerAU;
 	}
-	
+
 	public AllocationMap getAllocationMap() {
 		return m_allocMap;
-	}	 
+	}
 	
 	void allocate(Interval intv) {
 		m_allocMap.allocate(intv);
@@ -281,5 +266,5 @@ public abstract class TFileSystem {
 	
 	void deallocate(Interval intv) {
 		m_allocMap.deallocate(intv);
-	}
+	} 
 }

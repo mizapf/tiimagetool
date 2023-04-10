@@ -34,9 +34,14 @@ class NewHDImageDialog extends ToolDialog implements ActionListener, FocusListen
 	// TODO: Add standard hard disk layouts
 	
 	JTextField 		m_tfName;
+	JComboBox<String> m_jcDrive;
+	JTextField		m_tfCapacity;
+
+	
 	JTextField		m_tfCylinders;
 	JTextField		m_tfHeads;
 	JTextField		m_tfSectors;
+
 	JComboBox<String> m_jcSectorLength;
 //	JComboBox<String> m_jcCHDVersion;
 
@@ -55,33 +60,19 @@ class NewHDImageDialog extends ToolDialog implements ActionListener, FocusListen
 	JComboBox<String> m_jcFilesystem;
 	JCheckBox		m_chbBuffered;	
 	
-	NewHDImageDialog(JFrame owner) {
+	int m_nType;
+	
+	/** Constructor
+		@param owner Frame which contains this dialog
+		@param type HarddiskImageFormat.{SCSI|IDE|HFDC}
+	*/
+	NewHDImageDialog(JFrame owner, int type) {
 		super(owner, TIImageTool.langstr("NewImageTitle"));
+		m_nType = type;
 	}
 	
 /*
-	| 	Create new hard disk image										|
 
-		Volume name			[EMPTY________]
-		Cylinders           [615]
-		Heads               [4]
-		Sectors/track       [32]
-		Sector length       [v 256]
-		MESS CHD version    [v 5]
-	
-		Format              [x]
-		Advanced options    [x]
-
-		Reserved AUs        [2048]
-		Write precomp       [464]
-		Reduced current     [464]
-		Step rate           [1]
-		File system			[v HFDC]
-		Buffered step		[x]
-		
-				+-------+			+-----------+
-				|	OK	|			|	Cancel	|
-				+-------+           +-----------+
 
 Default values:
 	Total sectors	reserved		precomp ~ cylinders/22 * 16
@@ -91,20 +82,84 @@ Default values:
 	< 196608		4096
 	< 327680		8192
 	more			16384
-	
+
+
+              	+---------------+
+		New > 	| Floppy image  | -> memory image
+				| CF7 image     | -> save to disk / open dialog - new - overwrite? 
+				| IDE image     | -> open dialog / new / overwrite?
+				| SCSI image    | -> save to disk
+				| HFDC image    | -> save to disk
+				+---------------+
 				
+				
+				
+				
+		| 	Create new HFDC disk image										|
+
+		Volume name			[EMPTY________]
+		Drive				[v ST213 | ST225 | ST251 | generic]
+		
+		Capacity (MiB)		[32] (auto)
+		Reserved AUs		[2048] (auto)
+
+		Cylinders			[615] (auto)
+		Heads				[4]   (auto)
+		Sectors/track		[32]  (auto)
+		Write precomp		[464] (auto)
+		Reduced current		[464] (auto)
+		Step rate			[1] (auto)
+		Buffered step		[x] (auto)
+
+				+-------+			+-----------+
+				|	OK	|			|	Cancel	|
+				+-------+           +-----------+
+
+				
+		| 	Create new SCSI disk image										|
+
+		Volume name			[EMPTY________]
+		
+		Size (MiB)			[32]
+		Reserved AUs		[2048] (auto)
+
+				+-------+			+-----------+
+				|	OK	|			|	Cancel	|
+				+-------+           +-----------+
+
+				
+		| 	Create new IDE disk image										|
+
+		Volume name			[EMPTY________]
+		
+		Size (MiB)			[32]
+		Reserved AUs		[2048] (auto)
+		
+		Create as partition [ ]
+
+				+-------+			+-----------+
+				|	OK	|			|	Cancel	|
+				+-------+           +-----------+
+		
 */	
 	public void createGui(Font font) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("NewHDColumn"));
 		int nFieldWidth = fm.stringWidth("XXXXXXXXXXXX");
-
-		add(Box.createVerticalStrut(10));		
-
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+		add(vspace(50));		
 
 		m_tfName = putTextField(this, TIImageTool.langstr("VolumeName"), "HARDDISK", nColumnWidth, nFieldWidth);
+		add(vspace(50));		
 		
+		String[] asDrive = { TIImageTool.langstr("Generic"), "ST-213", "ST-225", "ST-251"  };
+		m_jcDrive = putComboBox(this, TIImageTool.langstr("Drive"), asDrive, 0, nColumnWidth);
+		m_jcDrive.addActionListener(this);
+		add(vspace(50));		
+
+		m_tfCapacity = putTextField(this, TIImageTool.langstr("Capacity"), "0", nColumnWidth, nFieldWidth); 
+		add(vspace(50));		
+				
 		m_tfCylinders = putTextField(this, TIImageTool.langstr("Cylinders"), "615", nColumnWidth, nFieldWidth);
 		m_tfCylinders.addFocusListener(this);		
 		
@@ -114,34 +169,12 @@ Default values:
 		m_tfSectors = putTextField(this, TIImageTool.langstr("SectorsPerTrack"), "32", nColumnWidth, nFieldWidth);
 		m_tfSectors.addFocusListener(this);
 		
-		String[] asOpti = { "256", "512" };
-		m_jcSectorLength = putComboBox(this, TIImageTool.langstr("SectorLength"), asOpti, 0, nColumnWidth);
-		
-		m_chbFormat = putCheckBox(this, TIImageTool.langstr("NewHDDoFormat"), true, nColumnWidth);
-		m_chbFormat.addActionListener(this);
+		m_tfReserved = putTextField(this, TIImageTool.langstr("NewHDReservedAUs"), "2048", nColumnWidth, nFieldWidth); 
+		m_tfPrecomp = putTextField(this, TIImageTool.langstr("WritePC"), "464", nColumnWidth, nFieldWidth); 
+		m_tfReduced = putTextField(this, TIImageTool.langstr("ReducedWC"), "464", nColumnWidth, nFieldWidth); 
+		m_tfStep = putTextField(this, TIImageTool.langstr("StepSpeed"), "1", nColumnWidth, nFieldWidth);	
 
-		m_chbAdvanced = putCheckBox(this, TIImageTool.langstr("NewHDAdvancedOptions"), false, nColumnWidth);
-		m_chbAdvanced.addActionListener(this);
-
-		m_jpAdvancedFrame = new JPanel();
-
-		m_jpAdvanced = new JPanel();
-		m_jpAdvanced.setLayout(new BoxLayout(m_jpAdvanced, BoxLayout.Y_AXIS));
-
-		// add(Box.createVerticalStrut(10));
-
-		m_tfReserved = putTextField(m_jpAdvanced, TIImageTool.langstr("NewHDReservedAUs"), "2048", nColumnWidth, nFieldWidth); 
-		m_tfPrecomp = putTextField(m_jpAdvanced, TIImageTool.langstr("WritePC"), "464", nColumnWidth, nFieldWidth); 
-		m_tfReduced = putTextField(m_jpAdvanced, TIImageTool.langstr("ReducedWC"), "464", nColumnWidth, nFieldWidth); 
-		m_tfStep = putTextField(m_jpAdvanced, TIImageTool.langstr("StepSpeed"), "1", nColumnWidth, nFieldWidth);	
-
-		String[] asOptions = { "HFDC", "SCSI" };
-		m_jcFilesystem = putComboBox(m_jpAdvanced, TIImageTool.langstr("FileSystem"), asOptions, 0, nColumnWidth);
-
-		m_chbBuffered = putCheckBox(m_jpAdvanced, TIImageTool.langstr("BufferedStep"), true, nColumnWidth);
-		add(m_jpAdvancedFrame);
-		add(Box.createVerticalStrut(10));
-
+		m_chbBuffered = putCheckBox(this, TIImageTool.langstr("BufferedStep"), true, nColumnWidth);
 		add(Box.createVerticalGlue());
 
 		addButtons();
@@ -277,11 +310,38 @@ Default values:
 		return m_chbBuffered.isSelected();
 	}
 	
+	String getFormatClass() {
+		return "NoSuchClass";
+	}
+	
 	public FormatParameters getFormatParameters() {
-		return new FormatParameters(getVolumeName(), getCylinders(), getHeads(), 
-			getSectors(), getSectorLength(), getReserved(), getStepRate(), 
-			getReducedWriteCurrent(), 0, getBufferedStep(), 
-			getWritePrecompensation(), Time.createNow(), formatImage(), 
-			forHfdc(), 5);
+		FormatParameters param = new FormatParameters(getVolumeName(), getFormatClass(), /* toBeFormatted() */ true);
+		return param;
 	}
 }
+
+/*
+Alternativen:
+Oder?
+
+IDE: Neue IDE-Partitionstabelle; direkt speichern
+IDE: Bestehende Datei öffnen; anbieten, Partitionen zu ändern, zu löschen, zu öffnen oder neu anzulegen
+
+Oder?
+
+		Create as 			[v partition | single image]  -> File dialog
+		
+Oder
+              	+--------------------+
+		New > 	| Floppy disk image  | -> memory image
+				| CF7 image          | -> save to disk
+				| CF7 partition      | -> open dialog / new / overwrite?
+				| IDE partition table| -> save to disk
+				| IDE partition      | -> open dialog / new / overwrite?
+				| SCSI image         | -> save to disk
+				| IDE image          | -> save to disk
+				| HFDC image         | -> save to disk
+				+--------------------+
+				
+
+*/

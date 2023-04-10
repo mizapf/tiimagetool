@@ -22,7 +22,22 @@ package de.mizapf.timt.files;
 
 public class ProtectedException extends Exception {
 	
-	public ProtectedException(String sName) {
+	public final static int UNSPEC = 0;
+	public final static int IMAGE = 1;
+	public final static int FILE = 2;
+	
+	private int m_nType;
+	
+	public ProtectedException(String sName, int nType) {
 		super(sName);
+		m_nType = nType; 
+	}
+
+	public ProtectedException(String sName) {
+		this(sName, UNSPEC);
+	}
+	
+	public int getType() {
+		return m_nType;
 	}
 }

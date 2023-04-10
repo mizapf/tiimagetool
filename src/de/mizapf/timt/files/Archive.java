@@ -159,10 +159,10 @@ public class Archive extends Directory {
 		
 		// Go through all entries
 		while (!bFound && (nDirSectors < 10)) {
-			if (content[nDirSectors*Volume.SECTOR_LENGTH + 0xfc] == (byte)'E' 
-				&& content[nDirSectors*Volume.SECTOR_LENGTH + 0xfd] == (byte)'N' 
-			&& content[nDirSectors*Volume.SECTOR_LENGTH + 0xfe] == (byte)'D' 
-			&& content[nDirSectors*Volume.SECTOR_LENGTH + 0xff] == (byte)'!') bFound = true;
+			if (content[nDirSectors*TFileSystem.SECTOR_LENGTH + 0xfc] == (byte)'E' 
+				&& content[nDirSectors*TFileSystem.SECTOR_LENGTH + 0xfd] == (byte)'N' 
+			&& content[nDirSectors*TFileSystem.SECTOR_LENGTH + 0xfe] == (byte)'D' 
+			&& content[nDirSectors*TFileSystem.SECTOR_LENGTH + 0xff] == (byte)'!') bFound = true;
 			else nDirSectors++;
 		}
 		
@@ -173,14 +173,14 @@ public class Archive extends Directory {
 		bDone = false;
 		nPos = 0;
 				
-		nStart = nDirSectors * Volume.SECTOR_LENGTH;
+		nStart = nDirSectors * TFileSystem.SECTOR_LENGTH;
 
 		nSector = 0;
 		// System.out.println("nDirSectors = " +nDirSectors); 
 		
 		while (!bDone) {
 			// System.out.println("nPos = " + nPos);
-			if (content[nPos] != (byte)0 && (nSector < (nDirSectors-1) || (nPos != (nDirSectors-1)*Volume.SECTOR_LENGTH + 0xfc))) {
+			if (content[nPos] != (byte)0 && (nSector < (nDirSectors-1) || (nPos != (nDirSectors-1)*TFileSystem.SECTOR_LENGTH + 0xfc))) {
 				sFileName = Utilities.getString10(content, nPos);
 				nPos += 10;
 				byFlags = content[nPos++];
@@ -198,13 +198,13 @@ public class Archive extends Directory {
 				files.add(new ArchiveFile(m_abyContent, nStart, sFileName, nRecordLength, 
 					byFlags, nRecPerSect, nEOFOffset, nL3, nSectors, this));
 
-				nStart += nSectors * Volume.SECTOR_LENGTH;
+				nStart += nSectors * TFileSystem.SECTOR_LENGTH;
 			}
 			else {
 				// System.out.println("nSector = " + nSector);
 				nSector++;
 				if (nSector == nDirSectors) bDone = true;
-				else nPos = nSector * Volume.SECTOR_LENGTH;
+				else nPos = nSector * TFileSystem.SECTOR_LENGTH;
 			}
 		}
 		m_Files = new TFile[files.size()];
@@ -271,7 +271,7 @@ public class Archive extends Directory {
 		// Create a File
 		TFile fileNew = new TFile(abyTif);
 		
-		nSectors = (abyTif.length - 128)/Volume.SECTOR_LENGTH;
+		nSectors = (abyTif.length - 128)/TFileSystem.SECTOR_LENGTH;
 		// System.out.println("Needs " + nSectors + " sectors (without FIB)");
 		
 		// New file name
@@ -343,7 +343,7 @@ public class Archive extends Directory {
 			byte[] abyTif = tifile.toByteArray();
 			TFile fileNew = new TFile(abyTif);
 	
-			nSectors = (abyTif.length - 128)/Volume.SECTOR_LENGTH;
+			nSectors = (abyTif.length - 128)/TFileSystem.SECTOR_LENGTH;
 			// System.out.println("Needs " + nSectors + " sectors (without FIB)");
 			
 			// New file name

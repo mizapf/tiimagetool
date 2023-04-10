@@ -20,28 +20,58 @@
 ****************************************************************************/
 
 /*
-	TODOs for 2.x
+	TODOs for 3.0
 	-------------
     
-	New for 2.4.4
+    Images
+	[ ] SCSI/IDE harddisk (512 bytes/sector)
+	[ ] IDE harddisk support (incl. partitions)
 	[ ] Add default hard disk format selection ("Seagate ST-225 | ... | maxAU8 | maxAU16 | user-defined")
 	[ ] Add check for CF card read (check for newly created image file)
-	[x] Change MacOS defaults (see below in this file)
 	[ ] Search for CF7 card and for dd / chown automatically.
 	[ ] Check for CF7 open issues in Windows
 	[x] "Please wait" window for CF7
-	[ ] Cartridge creator (RPK)
+
+	Disassembler
 	[ ] Disassembler problem in symbolic mode; see disassembler file
-	[ ] Show embedded machine language in BASIC (or indicate at least)
-	[ ] Add access to xdt99
-	[ ] Allow for more DIS/VAR formats to be viewed
-	[ ] SCSI/IDE harddisk (512 bytes/sector)
-	[ ] IDE harddisk support (incl. partitions)
+    [ ] Disassembly stops 6 bytes too early when using header
+    [ ] IDT label in Disassembler
+
+    Display
+	[ ] Fix font size:
+	    - Change CHD version (file name is truncated)
 	[ ] Paste error: If last entry is dir, object will be pasted there
 	[ ] Safe area for right-click outside of file
-	[ ] Fix font size:
-	    - Disassembler hints text area
-	    - Search dialog (Datein...)
+    [x] Periods appear doubled in XB file listing -> appears when . is used as escape character       [ ] Add note in documentation to avoid "~" or "." as escape character
+	[?] Recent files need escaping for semicolon in file name    
+    [-] Right-click on another file does not deselect the previously marked file → javax.swing.ListSelectionModel
+	
+    Files
+	[x] Create archive in newly created image (not loaded) triggers Exception (java.lang.IndexOutOfBoundsException: Index: -1
+        at java.base/java.util.Collections$EmptyList.get(Collections.java:4483)
+        at de.mizapf.timt.ui.DirectoryPanel.getSelectedEntries(DirectoryPanel.java:299))
+    [x] Create archive fails with same exception when the current folder
+        has no files, only directories
+    [ ] Cannot drag&drop into Archive
+    [ ] YAPP G7 cannot be loaded; treated wrongly as G6 (ImageFrame:246)
+	[ ] Show embedded machine language in BASIC (or indicate at least)
+	[?] Allow for more DIS/VAR formats to be viewed (needs test)
+
+    Utils
+    [ ] Next sector does not work in Sector Editor with raw file
+	[ ] Cartridge creator (RPK)
+	[ ] Add access to xdt99
+	[x] Change MacOS defaults (see below in this file)
+	
+    Current:
+    [ ] Allow Return key for New floppy image
+    [ ] Encode control characters in files from escape sequence (like §81 -> CTRL-a)
+    [ ] Add undo/redo menu items
+    [ ] Use empty sector pattern 
+    [ ] Save As is active after closing all open images
+    [ ] Complete undo/redo
+    [ ] Restore all floppy formats
+    [ ] Restore all hd formats
 */
 
 package de.mizapf.timt;
@@ -112,9 +142,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "2.5.0";
-	public final static String MONTH = "January";
-	public final static String YEAR = "2021";
+	public final static String VERSION = "3.0.0";
+	public final static String MONTH = "April";
+	public final static String YEAR = "2023";
 	
 	private static final String TITLE = "TIImageTool";
 
@@ -157,6 +187,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String FONTSIZE = "fontsize";
 	public final static String UIFONT = "uifont";
 	public final static String FILLSECT = "fillpat";
+	public final static String IMGFORM = "imgform";
 	
 	Properties m_propNames;
 	
@@ -307,6 +338,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public static Font plainFont;
 	public static Font boldFont;
 	public static Font dialogFont;
+	public static Font subDialogFont;
 	public static Font boldDialogFont;
 	public static Font contentFont;
 	public static Font menuFont;
@@ -358,7 +390,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			boldHeight = (int)Math.round(lm.getHeight());
 			menuFont = new Font(FONT, Font.PLAIN, fontSize);
 			dialogFont = new Font(FONT, Font.PLAIN, fontSize);	
-			boldDialogFont = new Font(FONT, Font.BOLD, fontSize);	
+			subDialogFont = new Font(FONT, Font.PLAIN, fontSize*5/6);	// for additional dialog parts
+			boldDialogFont = new Font(FONT, Font.BOLD, fontSize);
+			
 			lm = dialogFont.getLineMetrics("XXX", 0, 2, frc);
 			dialogHeight = (int)Math.round(lm.getHeight());
 			
@@ -1035,6 +1069,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_sPropertiesPath = null;
 		m_Settings = new Properties();
 		loadProperties();
+		checkProperties();
 		
 		// Load localized strings
 		// m_resources = ResourceBundle.getBundle(LANGTEXT, getLocale(getPropertyString(LANG)));
@@ -1198,7 +1233,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		findPathsForCF();
 		m_maxMemory = Runtime.getRuntime().freeMemory();
 
-		SectorCache.setGen(0);
+		// SectorCache.setGen(0);
+		
+		ImageFormat.setFormats(m_Settings.getProperty("imgform"));
 		
 		// new CreateGui().run();
 		SwingUtilities.invokeLater(new CreateGui());
@@ -1423,7 +1460,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		getPropertyString(BASICVER, "true");
 		getPropertyString(TFIFILTER, "true");
 		getPropertyString(NEWFRAME, "false");
-		getPropertyString(ESCAPE, ".");
+		getPropertyString(ESCAPE, "§%");
 		getPropertyString(LANG, "0");
 		getPropertyString(DNDC, "true");
 		getPropertyString(VERBOSE, "true");
@@ -1431,8 +1468,15 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		getPropertyString(CONTFONT, "Monospaced");
 		getPropertyString(UIFONT, "SansSerif");
 		getPropertyString(FILLSECT, "E5");
+		getPropertyString(IMGFORM, "CF7VolumeFormat,CF7ImageFormat,SectorDumpFormat,TrackDumpFormat,HFEFormat,RawHDFormat,MameCHDFormat");
 	}
 
+	private void checkProperties() {
+		String escape = getPropertyString(TIImageTool.ESCAPE);
+		if (escape.length()>0 && escape.charAt(0) < 127)
+			System.err.println("Do not use '" + escape.charAt(0) + "' as the escape character; pick a character which is not in the TI character set. Check the preferences.");
+	}
+	
 	public List<String> getPreferences(String category) {
 		List<String> lst = new ArrayList<String>();
 		for (Object key : m_propNames.keySet()) {
@@ -2059,6 +2103,13 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return null;
 	}
 	
+	public boolean hasAlreadyOpenedVolume(String sImageName) {
+		for (DirectoryView dv : m_Views) {
+			if (sImageName.equals(dv.getVolume().getImageName())) return true;
+		}
+		return false;
+	}
+	
 	public void closeVolume(Volume vol, DirectoryView closingView) throws IOException {
 		boolean stillInUse = false;
 		for (DirectoryView dv : m_Views) {
@@ -2069,7 +2120,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	/** Open a new view. We cannot rely on the tab count to find out whether 
 		there is already a view, so we use a separate flag. */
-	public void addDirectoryView(Directory dir) throws FileExistsException {
+	public void addDirectoryView(Directory dir) {
 		boolean bAttach = true;
 		if (!m_first) {
 			bAttach = !getPropertyBoolean(NEWFRAME);
@@ -2078,9 +2129,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		SwingUtilities.invokeLater(new NewDirectoryView(dir, bAttach));
 		
 		// If the image is not saved yet, do not add to the recent list
-		String sImageName = dir.getVolume().getImageName();
-		if (sImageName != null) 
+		if (!dir.getVolume().isMemoryImage()) {
+			String sImageName = dir.getVolume().getImageName();
 			addRecent(dir.getVolume().getImageName());
+		}
 	}
 	
 	public void refreshPanel(Volume vol) {
@@ -2088,7 +2140,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 
 	public void reloadVolume(Volume vol) throws FileNotFoundException, IOException, ImageException {
-		Volume volNew = new Volume(vol.getImageName());
+		// Volume volNew = new Volume(vol.getImageName());
 		SwingUtilities.invokeLater(new ViewRefresher(vol, true));
 	}
 	

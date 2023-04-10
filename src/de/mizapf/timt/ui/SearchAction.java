@@ -144,11 +144,12 @@ public class SearchAction extends Activity {
 		}
 	}
 	
-	private void search(File image, ArrayList<SearchResult> list) {
+	private void search(File imagefile, ArrayList<SearchResult> list) {
 		try {
-			Volume vol = new Volume(image.getAbsolutePath());
+			ImageFormat image = ImageFormat.determineImageFormat(imagefile.getAbsolutePath());
+			Volume vol = new Volume(image);
 			// System.out.println("Searching image " + image.getAbsolutePath());
-			m_view.setFilename(image.getAbsolutePath());
+			m_view.setFilename(imagefile.getAbsolutePath());
 			if (!m_view.stopRequested() && m_count < m_maxhits) {
 				searchDir(vol.getRootDirectory(), list);
 			}

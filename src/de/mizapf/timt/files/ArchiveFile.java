@@ -52,7 +52,7 @@ public class ArchiveFile extends TFile {
 	@Override
 	public byte[] getSectorContent() throws ImageException {
 		try {
-			byte[] abyReturn = new byte[m_nAllocatedSectors*Volume.SECTOR_LENGTH];
+			byte[] abyReturn = new byte[m_nAllocatedSectors*TFileSystem.SECTOR_LENGTH];
 			System.arraycopy(m_abyArchive, m_nOffset, abyReturn, 0, abyReturn.length);
 			return abyReturn;
 		}

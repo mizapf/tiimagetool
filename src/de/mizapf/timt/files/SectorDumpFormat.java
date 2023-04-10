@@ -30,24 +30,26 @@ import java.util.ArrayList;
 import java.io.File;
 
 import de.mizapf.timt.TIImageTool;
-import de.mizapf.timt.util.NotImplementedException;
+import de.mizapf.timt.util.*;
 
-class SectorDumpFormat extends ImageFormat {
+class SectorDumpFormat extends FloppyImageFormat {
 
-	int m_maxSector;
+	private final static int NONE = -1;	
 	
-	static final int[][] sdfgeometry = { 
-		{ 92160, 1, 40, 9 }, 
-		{ 184320, 2, 40, 9 },
-	    { 327680, 2, 40, 16 },
-		{ 368640, 2, 40, 18 }, 
-		{ 655360, 2, 80, 16 }, 
-		{ 737280, 2, 80, 18 }, 
-		{ 1474560, 2, 80, 36 }, 
-	    { 2949120, 2, 80, 72 } };
+	static final int[][] sdfgeometry = {    // Alternatives
+		{ 92160, 1, 40, 9 },           // SSSD40                            1*1*40
+		{ 184320, 2, 40, 9 },          // DSSD40, SSDD40, SSSD80            2*1*40, 1*2*40, 1*1*80
+	    { 327680, 2, 40, 16 },         // DSDD16                         
+		{ 368640, 2, 40, 18 },         // DSDD40, DSSD80, SSDD80, SSQD40    2*2*40, 2*1*80, 1*2*80, 1*4*40
+		{ 737280, 2, 80, 18 },         // DSDD80, DSQD40, SSUD40, SSQD80    2*2*80, 2*4*40, 1*8*40, 1*4*80
+		{ 1474560, 2, 80, 36 },        // DSQD80, DSUD40, SSUD80            2*4*80, 2*8*40, 1*8*80
+	    { 2949120, 2, 80, 72 },        // DSUD80                            2*8*80
+		{ 409600, 2, 40, 20} };	        // CF7 volume
+
+	static int vote(String sFile) throws IOException {
 		
-	static int vote(RandomAccessFile fileSystem) throws IOException {
-		long nLength = fileSystem.length();
+		File fl = new File(sFile);
+		long nLength = fl.length();
 		
 		// File system size must be less than 3 MB
 		if (nLength==0 || nLength > 3000000) return 0;
@@ -55,7 +57,7 @@ class SectorDumpFormat extends ImageFormat {
 		int nVal = 100;
 		
 		if (((nLength / 256) % 10)==3) nLength -= 768;
-		if ((nLength % Volume.SECTOR_LENGTH) != 0) nVal = 10;
+		if ((nLength % 256) != 0) nVal = 10;
 
 		for (int i=0; i < sdfgeometry.length; i++) {
 			if (nLength == sdfgeometry[i][0]) {
@@ -64,138 +66,145 @@ class SectorDumpFormat extends ImageFormat {
 		}
 		return 0;		
 	}
-
-	class SectorDumpCodec extends FormatCodec {
-		SectorDumpCodec(String sFile, boolean bInitial) {
-			super(sFile, bInitial);
-		}	
-		
-		SectorDumpCodec(RandomAccessFile rafile, String sFile, boolean bInitial) {
-			super(rafile, sFile, bInitial);
-		}
-				
-		void createEmptyBuffer(int buffernum) {
-			// System.out.println("createEmptyBuffer " + buffernum);
-			// Thread.currentThread().dumpStack();
-			m_abyBuffer = new byte[m_bufferlen[buffernum]];
-			for (int i=0; i < m_nSectorsPerTrack; i++) {
-				System.arraycopy(m_abyFill, 0, m_abyBuffer, i * 256, 256);
-			}
-		}
-		
-		int decodeBuffer() {
-			// System.out.println("decodeBuffer");
-			m_buffsector.clear();
-			int count =  m_fs.getSectors();
-			if (count==0) {
-				// We do not know how many sectors we'll get
-				count = m_abyBuffer.length / 256;
-			}
-			byte[] content = new byte[256];
-			for (int i = 0; i < count; i++) {
-				Location loc = new Location(m_locCurrent.cylinder, m_locCurrent.head, i, m_locCurrent.track);
-				System.arraycopy(m_abyBuffer, i * 256, content, 0, 256);
-				m_buffsector.add(new ImageSector(loc, content, (byte)0xfb, count>10, i*256));
-			}
-			return count;	
-		}
-	}
-
-	/** Loaded image. Called from getImageFormat. */
-	SectorDumpFormat(RandomAccessFile rafile, String sImageName) throws IOException, ImageException {
-		super(rafile, sImageName);
-		m_codec = new SectorDumpCodec(rafile, sImageName, false);
-		setupBuffers(sImageName, false);
-		writeThrough(false);
-	}
-
-	/** Newly created image. */
-	SectorDumpFormat(RandomAccessFile rafile, String sImageName, TFileSystem fs) throws IOException, ImageException {
-		super(rafile, sImageName, fs);
-		m_codec = new SectorDumpCodec(rafile, sImageName, true);
-		setupBuffers(sImageName, true);
-		writeThrough(false);
-	}
-	
-	// Called from ImageFormat.createFloppyImage
-	SectorDumpFormat() {
-		writeThrough(false);
-	}
-
-	public String getDumpFormatName() {
-		return TIImageTool.langstr("SectorDump");
-	}
-
-	/** Write a header. Nothing to do here. */
-	@Override
-	void prepareImageFile() {
-	}
-	
-	@Override
-	int getFormatType() {
-		return FLOPPY_FORMAT; 
-	}
 	
 	@Override
 	int getImageType() {
-		return SECTORDUMP; 
+		return getImageTypeStatic();
 	}
 	
-	@Override
-	TFileSystem determineFileSystem(RandomAccessFile rafile) throws IOException, ImageException {
-		long nLength = rafile.length();
+	static int getImageTypeStatic() {
+		return SECTORDUMP;
+	}
+	
+	/** Codec for the Sector Dump Format. Not much to do here. */
+	class SectorDumpCodec extends FormatCodec {
+		void decode() {
+			// TODO: Try to unify with TrackDumpCodec
+			
+			// The current FU number is member of ImageFormat
+			// A format unit is a track
+			int count = getSectorsPerTrack();
+			int headerpos = getFirstHeaderPos();
+			int contpos = getFirstContentPos();
+			int increm = getIncrement(); 
+
+			boolean mfm = (count>10);
+			
+			int nFound = 0;
+			m_decodedSectors.clear();
+			
+			while ((nFound < count) && ((contpos+256) <= m_formatUnit.length)) {
+				ImageSector is = new ImageSector(getLinearSectorNumber(headerpos), 
+					m_formatUnit, (byte)0xfb, mfm, contpos);
+				m_decodedSectors.add(is);
+				headerpos += increm;
+				contpos += increm;
+				nFound++;
+			}
+		}
+		
+		void encode() {
+			for (ImageSector sect : m_decodedSectors) {
+				System.arraycopy(sect.getData(), 0, m_formatUnit, sect.getPosition(), TFileSystem.SECTOR_LENGTH);  
+			}
+		}
+		
+		void prepareNewFormatUnit(int number, byte[] buffer) {
+			// Do nothing
+		}
+		
+		private int getIncrement() {
+			return TFileSystem.SECTOR_LENGTH;
+		}
+		
+		private int getFirstHeaderPos() {
+			return 0;
+		}
+		
+		private int getFirstContentPos() {
+			return 0;
+		}
+		
+		int getLinearSectorNumber(int bufferpos) {
+			// The first sector is always the first in the FU
+			int start = m_nCurrentFormatUnit * getSectorsPerTrack();
+			return start + bufferpos / getIncrement();
+		}
+	}
+	
+	/** Loaded image. Called from getImageFormat. */
+	public SectorDumpFormat(String sImageName) throws IOException, ImageException {
+		super(sImageName);
+		
+		m_codec = new SectorDumpCodec();
+		
+		long nLength = m_file.length();
 		if (((nLength / 256) % 10)==3) nLength -= 768;
-		
-		int format = NONE;
-		
+
+		m_nFormatIndex = NONE;
 		for (int i=0; i < sdfgeometry.length; i++) {
 			if (nLength == sdfgeometry[i][0]) {
-				format = i;
+				m_nFormatIndex = i;
 				break;
 			}
 		}
-		if (format==-1) throw new ImageException(TIImageTool.langstr("SectorDumpInvLength") + ": " + m_ImageFile.length());
-			
-		FloppyFileSystem ffs = new FloppyFileSystem(
-			sdfgeometry[format][2],  // cyl
-			sdfgeometry[format][1],  // head
-			sdfgeometry[format][3],  // sect
-			FloppyFileSystem.UNKNOWN_DENSITY);  // dens
-		return ffs;
-	}
-			
-	@Override
-	void setupBuffers(String sImageName, boolean bInitial) {
-		// Calculate length	
-		int tracklen = SECTOR_LENGTH * m_nSectorsPerTrack;
-		int[] bufferpos = new int[m_nCylinders*2];
-		int[] bufferlen = new int[m_nCylinders*2];
+				
+		if (m_nFormatIndex==NONE) throw new ImageException(TIImageTool.langstr("SectorDumpInvLength") + ": " + nLength);
+					
+		m_nVibCheck = TFileSystem.UNSET;
+		// Sizes according to the image file (not VIB)
+		m_nSectorsPerTrackFromSize = sdfgeometry[m_nFormatIndex][3];
+		m_nTracks = sdfgeometry[m_nFormatIndex][2];
+		m_nSides = sdfgeometry[m_nFormatIndex][1];
+		m_nTotalSectors =  (int)(nLength / TFileSystem.SECTOR_LENGTH);
 		
-		int pos = 0;
-		for (int j=0; j < m_nCylinders*2; j++) {
-			bufferpos[j] = pos;
-			bufferlen[j] = tracklen;
-			pos += tracklen;
+		m_fs = new FloppyFileSystem(m_nTotalSectors);
+		
+		Sector sector0 = readSector(0);	
+		try {
+			m_fs.setVolumeName(Utilities.getString10(sector0.getData(), 0));
 		}
-		m_maxSector = 11520;
+		catch (InvalidNameException inx) {
+			m_fs.setVolumeName0("UNNAMED");
+		}
+				
+		m_nVibCheck = setupGeometry();
+		setupAllocationMap();
+		// setGeometry
+	}
+	
+	public SectorDumpFormat(String sFileName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
+		super(sFileName, false);
+		m_codec = new SectorDumpCodec();
+		m_format = params;
+	}
+	
+	@Override
+	int getSectorsPerTrack() {
+		// We have to get the sectors per track from the file system
+		if (m_nVibCheck == TFileSystem.GOOD) {
+			return ((FloppyFileSystem)m_fs).getSectorsPerTrack();
+		}
+		else 
+			return m_nSectorsPerTrackFromSize;
+	}
+	
+	public String getFormatName() {
+		return TIImageTool.langstr("SectorDump");
+	}
 		
-		m_codec.setBufferParams(bufferpos, bufferlen);
+	int getFUNumberFromSector(int secnum) {
+		return secnum / getSectorsPerTrack();
 	}
 	
-	/** Return the track number as the buffer index. */
-	@Override
-	int getBufferIndex(Location loc) {
-		return loc.track;
+	int getFormatUnitLength(int funum) {
+		return getSectorsPerTrack() * FloppyFileSystem.SECTOR_LENGTH;
 	}
 	
-	@Override
-	public void reopenForWrite() throws IOException {
-		// Don't do anything here
+	/** Prepare an empty image. The SectorDumpFormat has no additional data
+		outside of its format units. */
+    @Override
+	void prepareNewImage() {
 	}
-	
-	@Override
-	public void reopenForRead() throws IOException {
-		// Don't do anything here
-	}	
 }
 
