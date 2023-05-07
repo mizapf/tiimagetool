@@ -328,6 +328,10 @@ public abstract class ImageFormat  {
 		m_fs = fs;
 	}
 	
+	public void setTotalSectors(int nTotal) {
+		m_nTotalSectors = nTotal;
+	}
+	
 	public abstract Sector readSector(int nSectorNumber) throws ImageException, IOException;
 	
 	public abstract void writeSector(Sector sect) throws ImageException, IOException, ProtectedException;

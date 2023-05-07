@@ -36,8 +36,8 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 	/** Sectors per track according to the image format. */
 	int m_nSides;
 
-	/** Sectors per track, determined from the file size. */
-	int m_nSectorsPerTrackFromSize;
+	/** Sectors per track, determined from the file size or metadata. */
+	int m_nSectorsPerTrack;
 	
 	/** Format index */
 	protected int m_nFormatIndex;	
@@ -94,9 +94,11 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 			return new Location(0, 0, 0);
 		}
 		
-		if (m_nTotalSectors != 0 && nSectorNumber >= m_nTotalSectors) 
+		if (m_nTotalSectors != 0 && nSectorNumber >= m_nTotalSectors)  {
+			Thread.currentThread().dumpStack();
+			// System.out.println("total sectors = " + m_nTotalSectors + ", secno = " + nSectorNumber);
 			throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), m_nTotalSectors));
-					
+		}					
 		int sector = nSectorNumber % getSectorsPerTrack();
 		int lintrack = nSectorNumber / getSectorsPerTrack();
 		
@@ -108,8 +110,10 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 		// System.out.println("total=" + m_nTotalSectors + ", sec=" + nSectorNumber + ", secbyform=" + getCountedSectors() + ", track=" + track + ", m_nCylinders=" + m_nCylinders + ", cylinder=" + cylinder);
 		
 		if (cylinder < 0) throw new ImageException(TIImageTool.langstr("ImageInvalidHeads"));
-
+		
 		Location loc = new Location(cylinder, head, sector);
+		// System.out.println("lba2chs(" + nSectorNumber + ") = " + loc);
+
 		return loc;
 	}
 	
@@ -121,6 +125,7 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 		}
 		else {
 			lintrack = loc.cylinder;
+			if (lintrack == 0) return loc.sector;
 		}
 		return lintrack * getSectorsPerTrack() + loc.sector;	
 	}

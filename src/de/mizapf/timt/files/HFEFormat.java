@@ -59,7 +59,7 @@ import de.mizapf.timt.TIImageTool;
        unsigned char dnu;                       // Free
        unsigned short track_list_offset;        // Offset of the track list LUT in block of 512 bytes
                                                 // (Ex: 1=0x200)
-       unsigned char write_allowed;             // The Floppy image is write protected ?
+       unsigned char write_allowed;             // The Floppy image is write protected?
        unsigned char single_step;               // 0xFF : Single Step – 0x00 Double Step mode
        unsigned char track0s0_altencoding;      // 0x00 : Use an alternate track_encoding for track 0 Side 0
        unsigned char track0s0_encoding;         // alternate track_encoding for track 0 Side 0
@@ -83,7 +83,7 @@ import de.mizapf.timt.TIImageTool;
          unsigned short track_len;            // Length of the track data in byte.
      } pictrack;
    
-	 This table has a size of  number_of_track*4 bytes.
+	 This table has a size of (number_of_track*4) bytes.
 	   
 	 Track data
 	 ----------
@@ -101,7 +101,7 @@ import de.mizapf.timt.TIImageTool;
 	 Each block (Head 0 + Head 1) is 0x200 bytes long, with 0x100 bytes for
 	 each head. Block n-1 may be partially filled, e.g. with 64 bytes for 
 	 head 0 and 64 bytes for head 1. The contents for head 1 in block n-1
-	 start at offxet 0x100 nevertheless:
+	 start at offset 0x100 nevertheless:
 	   
 	 +--------+--------+
 	 |]]]]  0 |]]]]  1 |
@@ -133,6 +133,13 @@ import de.mizapf.timt.TIImageTool;
 */
 
 public class HFEFormat extends FloppyImageFormat {
+	
+	HFEHeader m_header;	
+
+	long m_cylinderpos[];
+	int m_cylinderlen[];
+	byte[] m_abyBufferLUT;
+
 	
 	/** Taken from the official documentation. */
 	class HFEHeader {
@@ -276,15 +283,184 @@ public class HFEFormat extends FloppyImageFormat {
 		}
 	}
 		
-	HFEHeader m_header;	
-	long m_cylinderpos[];
-	int m_cylinderlen[];
-	
 	/** Codec for reading / writing HFE */
 	class HFECodec extends FormatCodec {
 		
+		int m_positionInBuffer;   // format unit length * 8
+		int m_currentHead;
+		boolean m_mfm;
+		byte m_currentGroup;		
+		int m_cells;
+		int m_value;
+		boolean m_first = true;		
+		int m_codeRate;
+		int m_shiftRegister;
+
+		HFECodec(boolean mfm) {
+			super();
+			m_mfm = mfm;
+		}
+		
 		void decode() {
-			throw new NotImplementedException("HFECodec");	
+			
+			int initcrc = 0;
+			byte[] abyHeader = new byte[4];
+			byte[] abySector;
+			m_decodedSectors.clear();
+			
+			// System.out.println("Format unit number " + m_nCurrentFormatUnit + ", length=" + m_formatUnit.length);
+			m_cells = m_formatUnit.length * 4;  // All bits for either head
+
+			for (m_currentHead = 0; m_currentHead < 2; m_currentHead++) {
+				m_positionInBuffer = 0;
+			
+				while (m_positionInBuffer < m_formatUnit.length*8) {
+					
+					boolean foundIDAM = searchIDAM();
+					if (foundIDAM) {
+						// For MFM we have an ident byte to consume
+						if (m_mfm) {
+							initcrc = 0xb230;
+							readBits(8);
+						}
+						else initcrc = 0xef21;
+						// Read the header
+						abyHeader[0] = (byte)readBits(8);
+						abyHeader[1] = (byte)readBits(8);
+						abyHeader[2] = (byte)readBits(8);
+						abyHeader[3] = (byte)readBits(8);
+						
+						// and the header CRC
+						int crch = readBits(16);
+						// and check against the calculated CRC
+						int crcc = Utilities.crc16_get(abyHeader, 0, 4, initcrc);
+						if (crch != crcc) System.out.println(String.format(TIImageTool.langstr("BadHeaderCRC"), abyHeader[0], abyHeader[1], abyHeader[2], Utilities.toHex(crcc, 4), Utilities.toHex(crch, 4)));
+						// FIXME: We should abandon this sector when the CRC is bad
+						
+						boolean foundDAM = searchDAM();
+						if (foundDAM) {
+							int mark = m_value;
+							int pos = m_positionInBuffer; // right after the DAM, first cell of the contents
+							
+							// Create a new ImageSector
+							abySector = new byte[TFileSystem.SECTOR_LENGTH];
+							for (int i=0; i < TFileSystem.SECTOR_LENGTH; i++) {
+								abySector[i] = (byte)readBits(8);
+							}
+							// Read the CRC
+							int crcd = readBits(16);
+							// System.out.println("Found sector " + new Location(abyHeader));
+							// System.out.println(Utilities.hexdump(abySector));
+							Location loc = new Location(abyHeader);
+							ImageSector sect = new ImageSector(chsToLba(loc), abySector, (byte)mark, m_mfm, pos);
+							sect.setLocation(loc);
+							// Check against the calculated value						
+							if (crcd != sect.getCRC()) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), chsToLba(loc), Utilities.toHex(sect.getCRC(),4), Utilities.toHex(crcd, 4)));
+							
+							m_decodedSectors.add(sect);
+						}
+					}
+					else {
+						if (m_nSectorsPerTrack == -1) m_nSectorsPerTrack = m_decodedSectors.size();
+						break;
+					}
+				}
+				// System.out.println("Next head " + (m_currentHead+1));
+			}
+		}
+		
+		/** Get the number of bits from the cell level sequence. 
+		*/
+		private int readBits(int number) {
+			m_value = 0;
+			for (int i=0; i < number; i++) {
+				m_value <<= 1;
+				m_value |= getNextBit();
+			}
+			return m_value;
+		}		
+		
+		/** Get the next bit from the cell level sequence.	*/
+		private int getNextBit() {
+			int value = 0;
+			// FM images are shifted by one cell position
+			if (m_first && (m_codeRate == 4)) getNextCell(); 
+			int level = getNextCell();
+			m_shiftRegister = ((m_shiftRegister << 1) | level) & 0xffff;
+			if (m_codeRate == 4) getNextCell();  // ignore the next cell
+			value = getNextCell(); 
+			m_shiftRegister = ((m_shiftRegister << 1) | value) & 0xffff;
+			if (m_codeRate == 4) getNextCell();  // ignore the next cell
+			return value;
+		}
+		
+		/** Gets the next cell. This depends on the currently selected head. */
+		private int getNextCell() {
+			if ((m_positionInBuffer % 8)==0) {			
+				int position = m_positionInBuffer / 8; 
+				// Consider the interleave of both sides every 0x100 bytes
+				// 0000   0100    0200    0300    0400   0500   ...
+				// C0H0   C0H1    C1H0    C1H1    C2H0   C2H1   ...
+				
+				int block = position / 256;
+				int offset = position % 256;		
+				int actPosition = block*512 + m_currentHead * 256 + offset;
+				if (actPosition >= m_formatUnit.length) {
+					m_positionInBuffer = m_cells;
+					m_currentGroup = 0;
+				}
+				else {
+					m_currentGroup = (byte)((m_formatUnit[actPosition])&0xff);
+				}
+			}
+			int value = m_currentGroup & 1;
+			m_currentGroup >>= 1;
+			//		System.out.println("current cellpos = " + m_positionInBuffer + ", value = " + value);
+			m_positionInBuffer++;
+			m_first = false;
+			return value; 		
+		}
+		
+		private boolean searchIDAM() {
+			// System.out.println("Searching next IDAM");
+			int marks = 0;
+			int am = 0;
+			
+			if (m_mfm) {
+				marks = 3;
+				am = 0x4489; // A1
+			}
+			else {
+				marks = 1;
+				am = 0xf57e; // FE
+			}
+			
+			while (m_positionInBuffer < m_cells && marks != 0) {
+				getNextBit();
+				if (m_shiftRegister == am) marks--;
+			}
+			// System.out.println("Next IDAM found: " + (marks==0));		
+			return (marks == 0);
+		}
+	
+		private boolean searchDAM() {
+			m_value = 0;
+			int marks = 1;
+			if (m_mfm) {
+				marks = 3;
+				while (m_positionInBuffer < m_cells && marks != 0) {
+					getNextBit();
+					if (m_shiftRegister == 0x4489) marks--;  // A1
+					if (marks==0) m_value = readBits(8);  // read the ident field
+				}
+			}
+			else {
+				while (m_positionInBuffer < m_cells) {
+					m_value = ((m_value << 1 ) | getNextBit())&0xff;
+					if ((m_shiftRegister & 0xfffa) == 0xf56a) return true;
+				}
+			}
+			return (marks == 0);
 		}
 		
 		void encode() {
@@ -313,10 +489,59 @@ public class HFEFormat extends FloppyImageFormat {
 	
 	public HFEFormat(String sImageName) throws IOException, ImageException {
 		super(sImageName);
+		
+		// Read the header
+		m_file.seek(0);
+		byte[] fhead = new byte[512];
+		m_file.readFully(fhead);
+
+		// The format cannot say anything about the track organisation
+		m_header = new HFEHeader(fhead);
+		m_nSectorsPerTrack = -1;
+		m_nTracks = m_header.number_of_track;
+		m_nSides = m_header.number_of_side;
+
+		m_codec = new HFECodec(m_header.track_encoding < HFEHeader.ISOIBM_FM_ENCODING);
+
+		// Get geometry from image file
+		m_nVibCheck = TFileSystem.UNSET;
+			
+		// Populate the lookup table
+		readTrackLookupTables();
+			
+		m_fs = new FloppyFileSystem(-1);
+		m_nVibCheck = setupGeometry();
+		setTotalSectors(m_fs.getTotalSectors());
+		setupAllocationMap();
+		// setGeometry
+		
+		Sector sector0 = readSector(0);	
+		try {
+			m_fs.setVolumeName(Utilities.getString10(sector0.getData(), 0));
+		}
+		catch (InvalidNameException inx) {
+			m_fs.setVolumeName0("UNNAMED");
+		}					
 	}
 	
 	public String getFormatName() {
 		return TIImageTool.langstr("HFEImage");
+	}
+	
+	private void readTrackLookupTables() throws IOException {
+				
+		m_abyBufferLUT = new byte[m_nTracks * 4];
+		m_file.seek(m_header.track_list_offset*512);  // given in multiples of 0x200
+		m_file.readFully(m_abyBufferLUT);  // Read the LUT
+		
+		m_cylinderpos = new long[m_nTracks];
+		m_cylinderlen = new int[m_nTracks];
+		
+		for (int i=0; i < m_nTracks; i++) {
+			m_cylinderpos[i] = Utilities.getInt16rev(m_abyBufferLUT, i*4) * 512;
+			m_cylinderlen[i] = Utilities.getInt16rev(m_abyBufferLUT, i*4+2);
+			// System.out.println("Cylinder " + i + " at pos " + m_cylinderpos[i] + ", len " +  m_cylinderlen[i]);
+		}
 	}
 	
 	/** Find the image sector by the linear sector number. */
@@ -338,6 +563,7 @@ public class HFEFormat extends FloppyImageFormat {
 	
 	/** Format units are cylinders (tracks for head 0 and head 1) in this format. */
 	int getFUNumberFromSector(int number) throws ImageException {
+		// System.out.println("getFUn " + number + ", sectors per track = " + m_nSectorsPerTrack);
 		return lbaToChs(number).cylinder;
 	}	
 		
@@ -359,7 +585,7 @@ public class HFEFormat extends FloppyImageFormat {
 	}
 
 	int getSectorsPerTrack() {
-		throw new NotImplementedException("HFE:SPT");
+		return m_nSectorsPerTrack;
 	}
 	
 	/** Called from HFEReader. Similar to the method above, just not trying to find sectors. */

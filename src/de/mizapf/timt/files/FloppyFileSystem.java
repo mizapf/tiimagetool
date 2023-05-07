@@ -44,6 +44,7 @@ public class FloppyFileSystem extends TFileSystem {
 	protected int m_nFSHeads;
 	protected int m_nFSSectorsPerTrack;
 	protected int m_nFSDensity;
+	protected int m_nFSTotalSectors;
 	
 	/** Values used in the VIB for the density options. */
 	public final static int[] densityCode = { 1, 2, 3, 4, 2 };
@@ -173,24 +174,24 @@ public class FloppyFileSystem extends TFileSystem {
 	/** Try to load the VIB and get the logical geometry. 
 	*/
 	int getGeometryFromFile(byte[] vib) {
-		
+	
 		int ret = TFileSystem.GOOD;
 
 		if (!FloppyFileSystem.hasFloppySignature(vib))
 			ret |= TFileSystem.NO_SIG;
 		
 		// Get the tracks, sectors, and sides
-		int nTotalSectors = Utilities.getInt16(vib, 0x0a);
+		m_nFSTotalSectors = Utilities.getInt16(vib, 0x0a);
 		
 		// Is the sector count correct?
-		if (nTotalSectors != m_nTotalSectors)
+		if (m_nFSTotalSectors != m_nTotalSectors)
 			ret |= TFileSystem.SIZE_MISMATCH;
 		
 		m_nFSSectorsPerTrack = vib[0x0c] & 0xff;
 		m_nFSHeads = vib[0x12] & 0xff;
 		m_nFSCylinders = vib[0x11] & 0xff;
 		
-		if ((m_nFSSectorsPerTrack * m_nFSCylinders * m_nFSHeads) != nTotalSectors)
+		if ((m_nFSSectorsPerTrack * m_nFSCylinders * m_nFSHeads) != m_nFSTotalSectors)
 			ret |= TFileSystem.BAD_GEOMETRY;
 		
 		// What about density?
@@ -203,6 +204,12 @@ public class FloppyFileSystem extends TFileSystem {
 		return ret;
 	}
 		
+	@Override	
+	public int getTotalSectors() {
+		if (m_nTotalSectors == -1) return m_nFSTotalSectors;
+		return m_nTotalSectors;
+	}
+
 	private int getDensityFromCode(int code, int sectors) {
 		if (sectors==16) return DOUBLE_DENSITY_16;
 		for (int i=0; i < densityCode.length; i++) {

@@ -105,6 +105,7 @@ public abstract class FileImageFormat extends ImageFormat {
 			ImageSector isect = findSector(nSectorNumber); // throws ImageException
 			if (isect == null) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 			sect = isect;
+			// System.out.println(Utilities.hexdump(sect.getData()));
 		}
 		return sect;	
 	}

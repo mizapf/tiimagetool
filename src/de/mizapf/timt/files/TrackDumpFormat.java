@@ -120,7 +120,8 @@ class TrackDumpFormat extends FloppyImageFormat {
 						
 			int nFound = 0;
 			m_decodedSectors.clear();
-			
+			byte[] content = new byte[TFileSystem.SECTOR_LENGTH];
+
 			while ((nFound < count) && ((contpos+256) <= m_formatUnit.length)) {
 				// m_nCurrentIndex is the current buffer number = track
 
@@ -130,9 +131,11 @@ class TrackDumpFormat extends FloppyImageFormat {
 				// -> ImageException?
 				
 				// System.out.println("Found " + loc + "(curr index=" + m_nCurrentIndex + ")");		
-				ImageSector is = new ImageSector(
-						getLinearSectorNumber(headerpos), 
-						m_formatUnit, (byte)0xfb, mfm, contpos);
+				
+				System.arraycopy(m_formatUnit, contpos, content, 0, TFileSystem.SECTOR_LENGTH);
+
+				ImageSector is = new ImageSector(getLinearSectorNumber(headerpos), 
+												content, (byte)0xfb, mfm, contpos);
 				m_decodedSectors.add(is);			
 				headerpos += increm;
 				contpos += increm;
@@ -311,7 +314,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 		// Set the geometry from the format
 		m_nTracks = tdfgeometry[m_nFormatIndex][2];
 		m_nSides = tdfgeometry[m_nFormatIndex][1];
-		m_nSectorsPerTrackFromSize = tdfgeometry[m_nFormatIndex][3];
+		m_nSectorsPerTrack = tdfgeometry[m_nFormatIndex][3];
 		
 		Sector sector0 = readSector(0);	
 		try {

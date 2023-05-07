@@ -134,6 +134,7 @@ public class Volume {
 		@throws ProtectedException if the image is write-protected so that the write back fails
 	*/
 	public Sector readSector(int nSectorNumber) throws EOFException, IOException, ImageException {
+		// System.out.println("readSector " + nSectorNumber);
 		return m_Image.readSector(nSectorNumber);
 	}
 		

@@ -37,17 +37,17 @@ public class ImageSector extends Sector {
 	Location m_loc;
 	int m_nFormatUnitPosition;
 		
-	ImageSector(int number, byte[] abySector) {
-		super(number, abySector);
+	ImageSector(int number, byte[] content) {
+		super(number, content);
 	}
 	
-	ImageSector(int number, byte[] abySector, int offset) {
-		super(number, abySector, offset);
+	ImageSector(int number, byte[] content, int offset) {
+		super(number, content);
 		setPosition(offset);
 	}
 	
-	ImageSector(int number, byte[] abyFormatUnit, byte mark, boolean mfm, int pos) {
-		this(number, abyFormatUnit, pos);
+	ImageSector(int number, byte[] content, byte mark, boolean mfm, int pos) {
+		this(number, content, pos);
 		initCrc(mark, mfm);
 		calculateCrc();
 	}
@@ -69,7 +69,7 @@ public class ImageSector extends Sector {
 		byte[] head = { (byte)0xa1, (byte)0xa1, (byte)0xa1, (byte)0xfb };
 		head[3] = mark;
 		int start = mfm? 0 : 3;
-		m_initcrc = Utilities.crc16_get(head, start, 4-start, 0); 	
+		m_initcrc = Utilities.crc16_get(head, start, 4-start, 0xffff); 	
 	}
 	
 	void calculateCrc() {
@@ -77,6 +77,10 @@ public class ImageSector extends Sector {
 		m_crcvalue = Utilities.crc16_get(m_content, 0, m_content.length, m_initcrc);	
 		m_crc[0] = (byte)((m_crcvalue>>8)&0xff);
 		m_crc[1] = (byte)(m_crcvalue&0xff);
+	}
+	
+	int getCRC() {
+		return m_crcvalue;
 	}
 		
 	/** Sets the data and calculates the CRC. */

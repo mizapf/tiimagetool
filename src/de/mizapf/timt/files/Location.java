@@ -50,6 +50,6 @@ class Location {
 	}
 	
 	public String toString() {
-		return String.format(TIImageTool.langstr("LocationString"), 0, cylinder, head, sector);
+		return String.format(TIImageTool.langstr("LocationString"), cylinder, head, sector);
 	}
 }

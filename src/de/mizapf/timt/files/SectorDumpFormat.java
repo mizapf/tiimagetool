@@ -92,10 +92,12 @@ class SectorDumpFormat extends FloppyImageFormat {
 			
 			int nFound = 0;
 			m_decodedSectors.clear();
+			byte[] content = new byte[TFileSystem.SECTOR_LENGTH];
 			
 			while ((nFound < count) && ((contpos+256) <= m_formatUnit.length)) {
+				System.arraycopy(m_formatUnit, contpos, content, 0, TFileSystem.SECTOR_LENGTH);
 				ImageSector is = new ImageSector(getLinearSectorNumber(headerpos), 
-					m_formatUnit, (byte)0xfb, mfm, contpos);
+					content, (byte)0xfb, mfm, contpos);
 				m_decodedSectors.add(is);
 				headerpos += increm;
 				contpos += increm;
@@ -153,7 +155,7 @@ class SectorDumpFormat extends FloppyImageFormat {
 					
 		m_nVibCheck = TFileSystem.UNSET;
 		// Sizes according to the image file (not VIB)
-		m_nSectorsPerTrackFromSize = sdfgeometry[m_nFormatIndex][3];
+		m_nSectorsPerTrack = sdfgeometry[m_nFormatIndex][3];
 		m_nTracks = sdfgeometry[m_nFormatIndex][2];
 		m_nSides = sdfgeometry[m_nFormatIndex][1];
 		m_nTotalSectors =  (int)(nLength / TFileSystem.SECTOR_LENGTH);
@@ -186,7 +188,7 @@ class SectorDumpFormat extends FloppyImageFormat {
 			return ((FloppyFileSystem)m_fs).getSectorsPerTrack();
 		}
 		else 
-			return m_nSectorsPerTrackFromSize;
+			return m_nSectorsPerTrack;
 	}
 	
 	public String getFormatName() {
