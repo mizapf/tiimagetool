@@ -309,23 +309,14 @@ class TrackDumpFormat extends FloppyImageFormat {
 						* tdfgeometry[m_nFormatIndex][2]
 						* tdfgeometry[m_nFormatIndex][3];
 		
-		m_fs = new FloppyFileSystem(m_nTotalSectors);
-		
 		// Set the geometry from the format
 		m_nTracks = tdfgeometry[m_nFormatIndex][2];
 		m_nSides = tdfgeometry[m_nFormatIndex][1];
 		m_nSectorsPerTrack = tdfgeometry[m_nFormatIndex][3];
+
+		m_fs = new FloppyFileSystem(m_nTotalSectors);
 		
-		Sector sector0 = readSector(0);	
-		try {
-			m_fs.setVolumeName(Utilities.getString10(sector0.getData(), 0));
-		}
-		catch (InvalidNameException inx) {
-			m_fs.setVolumeName0("UNNAMED");
-		}
-						
-		m_nVibCheck = setupGeometry();
-		setupAllocationMap();
+		setVolumeInformation();
 	}
 	
 	/** Called for newly created images. */
@@ -381,9 +372,16 @@ class TrackDumpFormat extends FloppyImageFormat {
 		
 	/** Format units are numbered from outside to inside on head 0, and from
 		outside to inside on head 1.
+		
+		-------->
+		=========[  ]==========
+		-------->
 	*/
-	int getFUNumberFromSector(int secnum) {
-		return secnum / getSectorsPerTrack();	
+	int getFUNumberFromSector(int secnum) throws ImageException {
+		Location loc = lbaToChs(secnum);
+		int funum = loc.cylinder;
+		if (loc.head > 0) funum += m_nTracks;
+		return funum;	
 	}   
 
 	int getSectorsPerTrack() {

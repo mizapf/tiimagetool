@@ -153,7 +153,6 @@ class SectorDumpFormat extends FloppyImageFormat {
 				
 		if (m_nFormatIndex==NONE) throw new ImageException(TIImageTool.langstr("SectorDumpInvLength") + ": " + nLength);
 					
-		m_nVibCheck = TFileSystem.UNSET;
 		// Sizes according to the image file (not VIB)
 		m_nSectorsPerTrack = sdfgeometry[m_nFormatIndex][3];
 		m_nTracks = sdfgeometry[m_nFormatIndex][2];
@@ -161,18 +160,7 @@ class SectorDumpFormat extends FloppyImageFormat {
 		m_nTotalSectors =  (int)(nLength / TFileSystem.SECTOR_LENGTH);
 		
 		m_fs = new FloppyFileSystem(m_nTotalSectors);
-		
-		Sector sector0 = readSector(0);	
-		try {
-			m_fs.setVolumeName(Utilities.getString10(sector0.getData(), 0));
-		}
-		catch (InvalidNameException inx) {
-			m_fs.setVolumeName0("UNNAMED");
-		}
-				
-		m_nVibCheck = setupGeometry();
-		setupAllocationMap();
-		// setGeometry
+		setVolumeInformation();
 	}
 	
 	public SectorDumpFormat(String sFileName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
@@ -184,7 +172,7 @@ class SectorDumpFormat extends FloppyImageFormat {
 	@Override
 	int getSectorsPerTrack() {
 		// We have to get the sectors per track from the file system
-		if (m_nVibCheck == TFileSystem.GOOD) {
+		if (m_nVibCheck == FloppyFileSystem.GOOD) {
 			return ((FloppyFileSystem)m_fs).getSectorsPerTrack();
 		}
 		else 
@@ -196,6 +184,7 @@ class SectorDumpFormat extends FloppyImageFormat {
 	}
 		
 	int getFUNumberFromSector(int secnum) {
+		if (secnum == 0) return 0;
 		return secnum / getSectorsPerTrack();
 	}
 	

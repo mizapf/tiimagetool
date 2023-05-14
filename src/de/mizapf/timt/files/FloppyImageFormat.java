@@ -26,7 +26,7 @@ import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.*;
 
 public abstract class FloppyImageFormat extends FileImageFormat {
-	
+
 	/** Sector count according to the sectors found on a track. */
 	private int m_nCountedSectors;  
 		
@@ -95,8 +95,8 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 		}
 		
 		if (m_nTotalSectors != 0 && nSectorNumber >= m_nTotalSectors)  {
-			Thread.currentThread().dumpStack();
-			// System.out.println("total sectors = " + m_nTotalSectors + ", secno = " + nSectorNumber);
+			// Thread.currentThread().dumpStack();
+			System.out.println("total sectors = " + m_nTotalSectors + ", secno = " + nSectorNumber);
 			throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), m_nTotalSectors));
 		}					
 		int sector = nSectorNumber % getSectorsPerTrack();
@@ -115,6 +115,33 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 		// System.out.println("lba2chs(" + nSectorNumber + ") = " + loc);
 
 		return loc;
+	}
+	
+	void setVolumeInformation() throws ImageException, IOException {
+
+		// Use UNSET for the next accesses until we set the header
+		m_nVibCheck = FloppyFileSystem.UNSET;
+		
+		Sector sector0 = readSector(0);	
+		try {
+			m_fs.setVolumeName(Utilities.getString10(sector0.getData(), 0));
+		}
+		catch (InvalidNameException inx) {
+			m_fs.setVolumeName0("UNNAMED");
+		}
+						
+		m_nVibCheck = setupGeometry(sector0.getData());
+		setupAllocationMap();
+
+/*		for (int i=0; i < m_nTotalSectors; i++) {
+			try {
+				Sector test = readSector(i);
+				System.out.println(Utilities.hexdump(test.getData()));
+			}
+			catch (ImageException icx) {
+				System.out.println("Sector " + i + " not found");
+			}
+		} */
 	}
 	
 	int chsToLba(Location loc) {
@@ -155,9 +182,8 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 		return funum * getFormatUnitLength(funum);
 	}	
 	
-	protected int setupGeometry() throws ImageException, IOException {
-		Sector sector0 = readSector(0);	
-		return ((FloppyFileSystem)m_fs).getGeometryFromFile(sector0.getData());
+	protected int setupGeometry(byte[] sec0) {
+		return ((FloppyFileSystem)m_fs).getGeometryFromVIB(sec0);
 	}
 	
 	protected void setupAllocationMap() throws ImageException, IOException {

@@ -182,6 +182,11 @@ public abstract class ImageFormat  {
 	
 	/** Determine the image format. */
 	public static ImageFormat determineImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
+		
+		File fl = new File(sFile);
+		long nLength = fl.length();
+		if (nLength == 0) throw new ImageException(sFile + ": " + TIImageTool.langstr("ImageEmpty"));
+		
 		for (Class<?> cls : m_formatClass) {
 			try {
 				if (cls != null) {

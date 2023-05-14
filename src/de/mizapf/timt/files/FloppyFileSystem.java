@@ -28,6 +28,14 @@ import java.util.Arrays;
 /** Represents a TI floppy disk file system. */	
 public class FloppyFileSystem extends TFileSystem {
 
+	// Check values
+	public final static int GOOD = 0;
+	public final static int NO_SIG = 1;
+	public final static int SIZE_MISMATCH = 2;
+	public final static int BAD_GEOMETRY = 4;
+	public final static int WRONG_DENSITY = 8;
+	public final static int UNSET = 65535;
+	
 	public final static int UNKNOWN_DENSITY = -1;
 	public final static int SINGLE_DENSITY = 0;
 	public final static int DOUBLE_DENSITY = 1;
@@ -77,6 +85,11 @@ public class FloppyFileSystem extends TFileSystem {
 		super(nTotal, 0x21);  
 		m_bCF7 = false;
 		m_nSectorsPerAU = m_nTotalSectors/1600 + 1;
+	}
+
+	public FloppyFileSystem() {
+		super(0x21);  
+		m_bCF7 = false;
 	}
 
 	/** Create a new empty file system */
@@ -173,33 +186,33 @@ public class FloppyFileSystem extends TFileSystem {
 
 	/** Try to load the VIB and get the logical geometry. 
 	*/
-	int getGeometryFromFile(byte[] vib) {
+	int getGeometryFromVIB(byte[] vib) {
 	
-		int ret = TFileSystem.GOOD;
+		int ret = GOOD;
 
 		if (!FloppyFileSystem.hasFloppySignature(vib))
-			ret |= TFileSystem.NO_SIG;
+			ret |= NO_SIG;
 		
 		// Get the tracks, sectors, and sides
 		m_nFSTotalSectors = Utilities.getInt16(vib, 0x0a);
 		
 		// Is the sector count correct?
-		if (m_nFSTotalSectors != m_nTotalSectors)
-			ret |= TFileSystem.SIZE_MISMATCH;
+		if (m_nTotalSectors != -1 && m_nFSTotalSectors != m_nTotalSectors)
+			ret |= SIZE_MISMATCH;
 		
 		m_nFSSectorsPerTrack = vib[0x0c] & 0xff;
 		m_nFSHeads = vib[0x12] & 0xff;
 		m_nFSCylinders = vib[0x11] & 0xff;
 		
 		if ((m_nFSSectorsPerTrack * m_nFSCylinders * m_nFSHeads) != m_nFSTotalSectors)
-			ret |= TFileSystem.BAD_GEOMETRY;
+			ret |= BAD_GEOMETRY;
 		
 		// What about density?
 		int nDensity = getDensityFromCode(vib[0x13] & 0xff, m_nFSSectorsPerTrack);		
 		m_nFSDensity = getDensityFromSectors(m_nFSSectorsPerTrack);
 		if (m_nFSDensity != nDensity) {
 			System.err.println("Wrong density value " + (vib[0x13] & 0xff) + " for sector count " + m_nFSSectorsPerTrack); 
-			ret |= TFileSystem.WRONG_DENSITY;
+			ret |= WRONG_DENSITY;
 		}
 		return ret;
 	}
@@ -329,6 +342,25 @@ public class FloppyFileSystem extends TFileSystem {
 	void setupAllocationMap(byte[] map) {
 		m_allocMap = new AllocationMap(m_nTotalSectors);
 		m_allocMap.setMapFromBitfield(map, 0x38, 0);
+	}
+	
+	public static String getFormatCheckText(int val) {
+		StringBuilder sb = new StringBuilder();
+		if ((val & NO_SIG)!=0) sb.append("no sig");
+		if ((val & SIZE_MISMATCH)!=0) {
+			if (sb.length() > 0) sb.append(", ");
+			sb.append("size mismatch");
+		}
+		if ((val & BAD_GEOMETRY)!=0) {
+			if (sb.length() > 0) sb.append(", ");
+			sb.append("bad geometry");
+		}
+		if ((val & WRONG_DENSITY)!=0) {
+			if (sb.length() > 0) sb.append(", ");
+			sb.append("wrong density");
+		}		
+		if (sb.length() > 0) return sb.toString();
+		return "good";
 	}
 }
 

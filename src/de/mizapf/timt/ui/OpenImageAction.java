@@ -30,6 +30,7 @@ import java.awt.Cursor;
 import de.mizapf.timt.util.ImageCheck;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.NotImplementedException;
+import de.mizapf.timt.util.Utilities;
 
 public class OpenImageAction extends Activity {
 
@@ -71,7 +72,12 @@ public class OpenImageAction extends Activity {
 					
 					// ============== Open the image			
 					ImageFormat image = ImageFormat.determineImageFormat(sAbsFile); // throws ImageExc if unknown
-										
+							
+					if (image instanceof FloppyImageFormat) {
+						int check = ((FloppyImageFormat)image).getFormatCheck();
+						System.out.println("Format check: " + FloppyFileSystem.getFormatCheckText(check));
+					}
+					
 					// Do we have a partitioned image?
 					if (image instanceof PartitionedStorage) {
 						if (((PartitionedStorage)image).partitionCount()>0)

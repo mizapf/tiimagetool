@@ -90,7 +90,7 @@ public abstract class FileImageFormat extends ImageFormat {
 	*/
 	public Sector readSector(int nSectorNumber) throws ImageException, IOException {
 		// If there is a write cache, try to get the sector from there
-		// MemoryImageFormats and FloppyImageFormats always have a write cache
+		// MemoryImageFormats and FloppyImageFormats always have a write cache		
 		Sector sect = null;
 		if (m_writeCache != null) {
 			sect = m_writeCache.read(nSectorNumber);
@@ -206,6 +206,10 @@ public abstract class FileImageFormat extends ImageFormat {
 		m_file = new RandomAccessFile(m_sFileName, "r");		
 	}
 		
+	public int getFormatCheck() {
+		return m_nVibCheck;
+	}
+	
 	/** Gets the format unit number from the linear sector number. */
 	abstract int getFUNumberFromSector(int nSectorNumber) throws ImageException;	
 
