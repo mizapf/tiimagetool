@@ -36,6 +36,7 @@ public class ImageSector extends Sector {
 	int m_initcrc;
 	Location m_loc;
 	int m_nFormatUnitPosition;
+	int m_nPos = 0;
 		
 	ImageSector(int number, byte[] content) {
 		super(number, content);
@@ -92,4 +93,17 @@ public class ImageSector extends Sector {
 	Location getLocation() {
 		return m_loc;
 	}
+	
+	void startStream() {
+		m_nPos = -1;
+	}
+	
+	byte nextByte() {
+		m_nPos++;
+		if (m_nPos < m_content.length) 
+			return m_content[m_nPos];
+		if (m_nPos < m_content.length + 2) 
+			return m_crc[m_nPos - m_content.length];
+		return 0;
+	}	
 }

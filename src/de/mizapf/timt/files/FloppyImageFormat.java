@@ -28,7 +28,7 @@ import de.mizapf.timt.util.*;
 public abstract class FloppyImageFormat extends FileImageFormat {
 
 	/** Sector count according to the sectors found on a track. */
-	private int m_nCountedSectors;  
+	// private int m_nCountedSectors;  
 		
 	/** Sectors per track according to the image format. */
 	int m_nTracks;
@@ -64,9 +64,9 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 		super(sImageName, bRead);
 	}
 	
-	int getCountedSectorsPerTrack() {
+/*	int getCountedSectorsPerTrack() {
 		return m_nCountedSectors;
-	}
+	} */
 	
 	/** Must be overridden by formats like SectorDumpFormat which cannot rely on this. */
 	abstract int getSectorsPerTrack();
@@ -84,7 +84,7 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 	/** Delivers the position on the image file by track and sector.
 		Result is returned as a Location instance.
 	*/
-	Location lbaToChs(int nSectorNumber) throws ImageException {
+	static Location lbaToChs(int nSectorNumber, int tracks, int nSecPerTrack) throws ImageException {
 		// Now we should know the sector count, so we can calculate the track and
 		// sector. The track number is counted from head 0, cylinder 0 ... max,
 		// then head 1, cylinder max ... 0.
@@ -94,20 +94,23 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 			return new Location(0, 0, 0);
 		}
 		
-		if (m_nTotalSectors != 0 && nSectorNumber >= m_nTotalSectors)  {
+/*		if (m_nTotalSectors != 0 && nSectorNumber >= m_nTotalSectors)  {
 			// Thread.currentThread().dumpStack();
 			System.out.println("total sectors = " + m_nTotalSectors + ", secno = " + nSectorNumber);
 			throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), m_nTotalSectors));
-		}					
-		int sector = nSectorNumber % getSectorsPerTrack();
-		int lintrack = nSectorNumber / getSectorsPerTrack();
+		} */					
+		int sector = nSectorNumber % nSecPerTrack;
+		int lintrack = nSectorNumber / nSecPerTrack;
 		
 		// track is linearly counted over both sides, cylinder is one side only
 		// track is the logical count (TI file system), cylinder is physical count
-		int cylinder = trackToCyl(getTracks(), lintrack);
-		int head = trackToHead(getTracks(), lintrack);
+		int cylinder = trackToCyl(tracks, lintrack);
+		int head = trackToHead(tracks, lintrack);
+		
+		// System.out.println("secnum=" + nSectorNumber + ", sec/track=" + nSecPerTrack + " -> cyl=" + cylinder + ", head=" + head + ", sector=" + sector + ", tracks=" + tracks + ", lintrack=" + lintrack); 
 
 		// System.out.println("total=" + m_nTotalSectors + ", sec=" + nSectorNumber + ", secbyform=" + getCountedSectors() + ", track=" + track + ", m_nCylinders=" + m_nCylinders + ", cylinder=" + cylinder);
+		// System.out.println("m_nTotalSectors=" + m_nTotalSectors);
 		
 		if (cylinder < 0) throw new ImageException(TIImageTool.langstr("ImageInvalidHeads"));
 		
@@ -118,11 +121,14 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 	}
 	
 	void setVolumeInformation() throws ImageException, IOException {
+		// System.out.println("setVolumeInfo");
 
 		// Use UNSET for the next accesses until we set the header
 		m_nVibCheck = FloppyFileSystem.UNSET;
 		
 		Sector sector0 = readSector(0);	
+		// System.out.println(Utilities.hexdump(sector0.getData()));
+		
 		try {
 			m_fs.setVolumeName(Utilities.getString10(sector0.getData(), 0));
 		}
@@ -183,7 +189,7 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 	}	
 	
 	protected int setupGeometry(byte[] sec0) {
-		return ((FloppyFileSystem)m_fs).getGeometryFromVIB(sec0);
+		return ((FloppyFileSystem)m_fs).deriveGeometryFromVIB(sec0);
 	}
 	
 	protected void setupAllocationMap() throws ImageException, IOException {

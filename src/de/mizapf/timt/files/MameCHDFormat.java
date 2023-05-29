@@ -351,7 +351,7 @@ public class MameCHDFormat extends HarddiskImageFormat {
 		// IDE/SCSI have 512 bytes (low-level)
 		m_nSectorSize = parseValue(abyMetadata, "BPS", nMetaLength);
 
-		m_nTotalSectors = m_nCylinders * m_nHeads * m_nSectorsPerTrack;
+		int nTotalSectors = m_nCylinders * m_nHeads * m_nSectorsPerTrack;
 	
 		// Find out where the next position is for adding hunks
 		// Metadata at the end may need to be skipped

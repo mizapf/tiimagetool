@@ -186,7 +186,7 @@ public class FloppyFileSystem extends TFileSystem {
 
 	/** Try to load the VIB and get the logical geometry. 
 	*/
-	int getGeometryFromVIB(byte[] vib) {
+	int deriveGeometryFromVIB(byte[] vib) {
 	
 		int ret = GOOD;
 
@@ -199,6 +199,8 @@ public class FloppyFileSystem extends TFileSystem {
 		// Is the sector count correct?
 		if (m_nTotalSectors != -1 && m_nFSTotalSectors != m_nTotalSectors)
 			ret |= SIZE_MISMATCH;
+		
+		// System.out.println("nTotal = " + m_nTotalSectors + ", FStotal = " + m_nFSTotalSectors);
 		
 		m_nFSSectorsPerTrack = vib[0x0c] & 0xff;
 		m_nFSHeads = vib[0x12] & 0xff;
@@ -340,7 +342,7 @@ public class FloppyFileSystem extends TFileSystem {
 	
 	@Override
 	void setupAllocationMap(byte[] map) {
-		m_allocMap = new AllocationMap(m_nTotalSectors);
+		m_allocMap = new AllocationMap(getTotalSectors());
 		m_allocMap.setMapFromBitfield(map, 0x38, 0);
 	}
 	

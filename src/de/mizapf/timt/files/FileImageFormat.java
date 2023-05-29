@@ -133,7 +133,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		int secnum = sect.getNumber();
 		int funum = getFUNumberFromSector(secnum); // throws ImageException
 		loadFormatUnit(funum);
-		System.out.println("writeBack " + secnum);
+		// System.out.println("writeBack " + secnum);
 
 		m_nCurrentFormatUnit = funum;		
 		ImageSector isect = findSector(secnum);
@@ -147,7 +147,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		for (int i=0; i < m_fs.getTotalSectors(); i++) {
 			Sector sect = m_writeCache.read(i);
 			if (sect != null) {
-				System.out.println("Write back sector "  + sect.getNumber());  // #%
+				// System.out.println("Write back sector "  + sect.getNumber());  // #%
 				writeBack(sect);
 			}
 		}
@@ -166,7 +166,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		try {
 			for (int i=0; i < m_fs.getTotalSectors(); i++) {
 				Sector sect = imgOld.readSector(i);
-				System.out.println("Write back sector "  + sect.getNumber());  // #%
+				// System.out.println("Write back sector "  + sect.getNumber());  // #%
 				writeBack(sect);
 			}
 			// Write back the last format unit, which has not yet been committed 

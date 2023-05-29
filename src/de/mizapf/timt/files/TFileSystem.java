@@ -22,6 +22,7 @@
 package de.mizapf.timt.files;
 import java.util.*;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.InternalException;
 
 /** Represents a TI file system.
 	Every file system manages the medium as a collection of sectors.
@@ -152,6 +153,8 @@ public abstract class TFileSystem {
 		int nMaxSize = 0;
 		int nMaxStart = 0;
 		boolean bFirst = true;
+		
+		if (allocMap.getMaxAU() < 0) throw new InternalException("Negative max AU in allocation map");
 		
 		// First pass
 		// If we hit the end of the medium, the first pass fails, and we 

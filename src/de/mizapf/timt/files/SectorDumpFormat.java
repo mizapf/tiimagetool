@@ -157,9 +157,9 @@ class SectorDumpFormat extends FloppyImageFormat {
 		m_nSectorsPerTrack = sdfgeometry[m_nFormatIndex][3];
 		m_nTracks = sdfgeometry[m_nFormatIndex][2];
 		m_nSides = sdfgeometry[m_nFormatIndex][1];
-		m_nTotalSectors =  (int)(nLength / TFileSystem.SECTOR_LENGTH);
+		int nTotalSectors =  (int)(nLength / TFileSystem.SECTOR_LENGTH);
 		
-		m_fs = new FloppyFileSystem(m_nTotalSectors);
+		m_fs = new FloppyFileSystem(nTotalSectors);
 		setVolumeInformation();
 	}
 	

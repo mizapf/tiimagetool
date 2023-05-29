@@ -131,7 +131,7 @@ public abstract class ImageFormat  {
 	public final static String[] suffix = { "", "dsk", "dtk", "hfe", "hd", "raw" };
 
 	// Independent of the file system, a physical property
-	int m_nTotalSectors;
+	// int m_nTotalSectors;
 	
 	// Indicates whether the current format unit has been changed 
 	boolean m_bDirty;
@@ -333,9 +333,9 @@ public abstract class ImageFormat  {
 		m_fs = fs;
 	}
 	
-	public void setTotalSectors(int nTotal) {
+/*	public void setTotalSectors(int nTotal) {
 		m_nTotalSectors = nTotal;
-	}
+	} */
 	
 	public abstract Sector readSector(int nSectorNumber) throws ImageException, IOException;
 	
@@ -364,9 +364,9 @@ public abstract class ImageFormat  {
 		m_writeCache.previousGeneration();
 	}
 	
-	public int getTotalSectors() {
+/*	public int getTotalSectors() {
 		return m_nTotalSectors;
-	}
+	} */
 	
 	public void setCheckpoint() {
 		m_writeCache.setCheckpoint();

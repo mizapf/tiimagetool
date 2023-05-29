@@ -305,7 +305,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 		if (m_nFormatIndex==NONE) throw new ImageException(TIImageTool.langstr("InvalidFormat"));		
 		System.out.println("TDF / FormatIndex = " + m_nFormatIndex);
 		
-		m_nTotalSectors = tdfgeometry[m_nFormatIndex][1] 
+		int nTotalSectors = tdfgeometry[m_nFormatIndex][1] 
 						* tdfgeometry[m_nFormatIndex][2]
 						* tdfgeometry[m_nFormatIndex][3];
 		
@@ -314,7 +314,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 		m_nSides = tdfgeometry[m_nFormatIndex][1];
 		m_nSectorsPerTrack = tdfgeometry[m_nFormatIndex][3];
 
-		m_fs = new FloppyFileSystem(m_nTotalSectors);
+		m_fs = new FloppyFileSystem(nTotalSectors);
 		
 		setVolumeInformation();
 	}
@@ -378,7 +378,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 		-------->
 	*/
 	int getFUNumberFromSector(int secnum) throws ImageException {
-		Location loc = lbaToChs(secnum);
+		Location loc = lbaToChs(secnum, getTracks(), getSectorsPerTrack());
 		int funum = loc.cylinder;
 		if (loc.head > 0) funum += m_nTracks;
 		return funum;	

@@ -76,7 +76,10 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	
 	JTextField m_tfSector;
 	
-	int m_lastSector;
+	// FIXME:
+	// The last sector is only known for existing file systems (note 
+	// in particular the HFE format)
+	// int m_lastSector;
 	
 	String m_imageName;
 	
@@ -384,7 +387,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 
 		try {
 			getSector(0);
-			m_lastSector = m_image.getTotalSectors() -1; // only known after the first read sector
+			// m_lastSector = m_image.getTotalSectors() -1; // only known after the first read sector
 			showContent();
 		}
 		catch (IOException iox) {
@@ -647,11 +650,12 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 								}
 								else {
 									if (ae.getActionCommand()==NEXT) {
-										if (m_currentSector < m_lastSector) m_currentSector++;
+										/* if (m_currentSector < m_lastSector) */ m_currentSector++;
 									}
 									else {
 										if (ae.getActionCommand()==END) {
-											m_currentSector = m_lastSector;
+											// FIXME
+											// m_currentSector = m_lastSector;
 										}
 									}
 								}

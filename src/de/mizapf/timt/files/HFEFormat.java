@@ -286,16 +286,18 @@ public class HFEFormat extends FloppyImageFormat {
 	/** Codec for reading / writing HFE */
 	class HFECodec extends FormatCodec {
 		
-		int m_currentcell;   // format unit length * 8
+		int m_currentSampleNumber;   // format unit length * 8
 		int m_currentHead;
 		boolean m_mfm;
 		byte m_currentGroup;		
-		int m_cellcount;
+		int m_samplecount;
 		int m_value;
 		boolean m_first;		
 		int m_codeRate;
 		int m_shiftRegister;
-
+		int m_lastDataBit;
+		boolean m_debug = false;
+		
 		HFECodec(int encoding, int rate) {
 			super();
 			m_mfm = (encoding < HFEHeader.ISOIBM_FM_ENCODING);
@@ -311,28 +313,24 @@ public class HFEFormat extends FloppyImageFormat {
 			m_decodedSectors.clear();
 			
 			// System.out.println("Format unit number " + m_nCurrentFormatUnit + ", length=" + m_formatUnit.length);
-			m_cellcount = m_formatUnit.length * 8;  // Each byte encodes 8 cells; all bits for either head
+			m_samplecount = m_formatUnit.length * 8;  // Each byte encodes 8 cells; all bits for either head
 			// We count all cells, even for the oversampling of FM. In that case,
 			// a data bit takes four cells.
 						
 			// System.out.println("mfm = " + m_mfm);
 			// System.out.println("coderate = " + m_codeRate);
-			// System.out.println("cells = " + m_cellcount);
+			// System.out.println("cells = " + m_samplecount);
 			
 			for (m_currentHead = 0; m_currentHead < 2; m_currentHead++) {
 				m_first = true;
-				m_currentcell = 0;
+				m_currentSampleNumber = 0;
 			
-				while (m_currentcell < m_cellcount) {
-					
+				while (m_currentSampleNumber < m_samplecount) {
+					// System.out.println(m_currentSampleNumber);
 					boolean foundIDAM = searchIDAM();
 					if (foundIDAM) {
-						// For MFM we have an ident byte to consume
-						if (m_mfm) {
-							initcrc = 0xb230;
-							readBits(8);
-						}
-						else initcrc = 0xef21;
+						initcrc = (m_mfm)? 0xb230 : 0xef21;
+
 						// Read the header
 						abyHeader[0] = (byte)readBits(8);
 						abyHeader[1] = (byte)readBits(8);
@@ -345,11 +343,12 @@ public class HFEFormat extends FloppyImageFormat {
 						int crcc = Utilities.crc16_get(abyHeader, 0, 4, initcrc);
 						if (crch != crcc) System.out.println(String.format(TIImageTool.langstr("BadHeaderCRC"), abyHeader[0], abyHeader[1], abyHeader[2], Utilities.toHex(crcc, 4), Utilities.toHex(crch, 4)));
 						// FIXME: We should abandon this sector when the CRC is bad
+						// TODO: Discuss what to do when things are not quite ok
 						
 						boolean foundDAM = searchDAM();
-						if (foundDAM) {
+						if (foundDAM) {					
 							int mark = m_value;
-							int pos = m_currentcell; // right after the DAM, first cell of the contents
+							int pos = m_currentSampleNumber; // right after the DAM, first cell of the contents
 							
 							// Create a new ImageSector
 							abySector = new byte[TFileSystem.SECTOR_LENGTH];
@@ -358,25 +357,27 @@ public class HFEFormat extends FloppyImageFormat {
 							}
 							// Read the CRC
 							int crcd = readBits(16);
-							// System.out.println("Found sector " + new Location(abyHeader));
+							// System.out.println("Found sector " + new Location(abyHeader) + ", pos=" + pos);
 							// System.out.println(Utilities.hexdump(abySector));
 							Location loc = new Location(abyHeader);
 							ImageSector sect = new ImageSector(chsToLba(loc), abySector, (byte)mark, m_mfm, pos);
 							sect.setLocation(loc);
 							// Check against the calculated value						
 							if (crcd != sect.getCRC()) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), chsToLba(loc), Utilities.toHex(sect.getCRC(),4), Utilities.toHex(crcd, 4)));
+							// else System.out.println("Good data CRC = " + Utilities.toHex(crcd, 4));
 							
 							m_decodedSectors.add(sect);
 						}
 					}
 					else {
+						// TODO: What if we have different sector counts?
 						if (m_nSectorsPerTrack == -1) m_nSectorsPerTrack = m_decodedSectors.size();
 						break;
 					}
 				}
 				// System.out.println("Next head " + (m_currentHead+1));
 			}
-			// System.out.println(m_decodedSectors.size() + " sectors found");
+			System.out.println("Found " + m_decodedSectors.size() + " sectors in format unit " + m_nCurrentFormatUnit);
 		}
 		
 		/** Get the number of bits from the cell level sequence. 
@@ -392,22 +393,36 @@ public class HFEFormat extends FloppyImageFormat {
 		
 		/** Get the next bit from the cell level sequence.	*/
 		private int getNextBit() {
-			int value = 0;
-			// FM images are shifted by one cell position
-			if (m_first && (m_codeRate == 4)) getNextCell(); 
-			int level = getNextCell();
-			m_shiftRegister = ((m_shiftRegister << 1) | level) & 0xffff;
-			if (m_codeRate == 4) getNextCell();  // ignore the next cell
-			value = getNextCell(); 
-			m_shiftRegister = ((m_shiftRegister << 1) | value) & 0xffff;
-			if (m_codeRate == 4) getNextCell();  // ignore the next cell
-			return value;
+			int clock = getNextCell();
+			if (clock < 0) return -1;
+			
+			return getNextCell(); 
 		}
 		
-		/** Gets the next cell. This depends on the currently selected head. */
+		/** Gets the next cell. This depends on the currently selected head.  
+		    When we are at the end of this format unit, any further read will
+		    stay at the last bit. */
 		private int getNextCell() {
-			if ((m_currentcell % 8)==0) {			
-				int position = m_currentcell / 8; 
+			int value = 0;
+			if (m_first) {
+				while (value == 0) {
+					value = getNextSample();
+					if (value < 0) return -1;
+				}
+				m_first = false;
+			}
+			else 
+				value = getNextSample();
+
+			if (m_codeRate == 4) getNextSample();
+			
+			m_shiftRegister = ((m_shiftRegister << 1) | value) & 0xffff;					
+			return value; 		
+		}
+		
+		private int getNextSample() {
+			if ((m_currentSampleNumber % 8)==0) {			
+				int position = m_currentSampleNumber / 8; 
 				// Consider the interleave of both sides every 0x100 bytes
 				// 0000   0100    0200    0300    0400   0500   ...
 				// C0H0   C0H1    C1H0    C1H1    C2H0   C2H1   ...
@@ -415,71 +430,178 @@ public class HFEFormat extends FloppyImageFormat {
 				int block = position / 256;
 				int offset = position % 256;		
 				int actPosition = block*512 + m_currentHead * 256 + offset;
-				if (actPosition >= m_formatUnit.length) {
-					m_currentcell = m_cellcount;
-					m_currentGroup = 0;
+				if (actPosition >= m_formatUnit.length) {			
+					// Go to the last position for this head
+					// actPosition = m_formatUnit.length - (1-m_currentHead) * 256 - 1;
+					// m_currentSampleNumber = (m_formatUnit.length / 2) * 8 - 1;
+					return -1;
 				}
-				else {
-					m_currentGroup = (byte)((m_formatUnit[actPosition])&0xff);
-				}
+				
+				m_currentGroup = (byte)((m_formatUnit[actPosition])&0xff);
 			}
 			int value = m_currentGroup & 1;
 			m_currentGroup >>= 1;
-			//		System.out.println("current cellpos = " + m_currentcell + ", value = " + value);
-			m_currentcell++;
-			m_first = false;
-			return value; 		
+			// System.out.println("current cellpos = " + m_currentSampleNumber + ", value = " + value);
+			m_currentSampleNumber++;
+			return value;
+		}
+			
+		private boolean searchIDAM() {
+			return searchMark(false);
 		}
 		
-		private boolean searchIDAM() {
-			// System.out.println("Searching next IDAM");
-			int marks = 0;
-			int am = 0;
-			
-			if (m_mfm) {
-				marks = 3;
-				am = 0x4489; // A1
-			}
-			else {
-				marks = 1;
-				am = 0xf57e; // FE
-			}
-			
-			while (m_currentcell < m_cellcount && marks != 0) {
-				getNextBit();
-				if (m_shiftRegister == am) marks--;
-			}
-			// System.out.println("Next IDAM found: " + (marks==0));		
-			return (marks == 0);
-		}
-	
 		private boolean searchDAM() {
+			return searchMark(true);
+		}
+		
+		private boolean searchMark(boolean dam) {
 			m_value = 0;
 			int marks = 1;
+			int bit = 0;
+			int val = 0;
+			int mark = 0;
+			int mask = 0;
+
 			if (m_mfm) {
-				marks = 3;
-				while (m_currentcell < m_cellcount && marks != 0) {
-					getNextBit();
-					if (m_shiftRegister == 0x4489) marks--;  // A1
-					if (marks==0) m_value = readBits(8);  // read the ident field
+				if (dam) {
+					mark = 0xf8;
+					mask = 0xfc;
 				}
+				else {
+					mark = 0xfe;
+					mask = 0xff;
+				}
+				
+				marks = 3;
+				while (marks > 0) {
+					bit = getNextCell();
+					if (bit < 0) return false;
+					if (m_shiftRegister == 0x4489) marks--;  // A1
+					
+					if (marks == 0) {
+						m_value = readBits(8);  // read the ident field
+						if ((m_value & mask) != mark) marks = 3; // Not the expected mark
+					}
+				}
+				// System.out.println(Utilities.toHex(m_value,4));
 			}
 			else {
-				while (m_currentcell < m_cellcount) {
-					m_value = ((m_value << 1 ) | getNextBit())&0xff;
-					if ((m_shiftRegister & 0xfffa) == 0xf56a) return true;
+				if (dam) {
+					mark = 0xf56a;
+					mask = 0xfffa;
+				}
+				else {
+					mark = 0xf57e;
+					mask = 0xffff;
+				}
+				
+				while (marks > 0) {
+					bit = getNextCell();
+					if (bit < 0) return false;
+					// Valid DAMs are 1111 0101 0110 1010  = f56a
+					//                1111 0101 0110 1011  = f56b
+					//                1111 0101 0110 1110  = f56e
+					//                1111 0101 0110 1111  = f56f
+					if ((m_shiftRegister & mask) == mark) marks--;
+				}
+				
+				// Get the value
+				m_value = 0;
+				val = m_shiftRegister; // .d.d.d.d.d.d.d.d
+				int setbit = 0x0100;
+				for (int i=0; i < 8; i++) {
+					if ((val & 1)!=0) m_value |= setbit;
+					val >>= 2;
+					m_value >>= 1;
 				}
 			}
-			return (marks == 0);
+			return true;
 		}
 		
 		void encode() {
-			throw new NotImplementedException("HFECodec");	
+			boolean ok = true;
+			for (ImageSector isect : m_decodedSectors) {
+				int pos = isect.getPosition();
+				m_currentSampleNumber = pos;
+				m_currentHead = isect.getLocation().head;
+				// m_debug = (isect.getNumber()==0);
+
+				// System.out.println("writing sector " + isect.getNumber() + ", pos=" + pos);
+				isect.startStream();
+				
+				for (int i=0; i < isect.getData().length + 2; i++) {
+					int val = isect.nextByte();
+					ok = writeBits(val, 8);
+					if (!ok) break;
+				}
+			}
+			if (!ok) System.out.println("End of track encountered during write");
 		}
 		
 		void prepareNewFormatUnit(int number, byte[] buffer) {
 			throw new NotImplementedException("HFECodec");	
-		}		
+		}
+		
+		/** Writes the last n bits of the value. Starts with the leftmost bit. */ 
+		private boolean writeBits(int value, int number) {
+			int mask = 1 << (number-1);
+			boolean ok = true;
+			for (int i=0; i < number; i++) {
+				int bit = ((value & mask)!=0)? 1 : 0;
+				ok = writeNextBit(bit);
+				if (!ok) break;
+				mask >>= 1;
+			}
+			return ok;
+		}
+		
+		private boolean writeNextBit(int databit) {
+			int clock = 1;
+			
+			if ((m_header.track_encoding == HFEHeader.ISOIBM_MFM_ENCODING)
+				&& ((m_lastDataBit == 1) || (databit == 1)))
+				clock = 0; 
+			
+			boolean ok = writeNextCell(clock);     // Clock bit
+			if (!ok) return false;
+			writeNextCell(databit);   // Data bit
+			if (!ok) return false;
+			m_lastDataBit = databit;
+			return true;
+		}
+
+		private boolean writeNextCell(int value) {
+			// if (m_debug) System.out.print(value);
+			boolean ok = writeNextSample(value);
+			if (!ok) return false;
+			if (m_codeRate == 4) ok = writeNextSample(0);  // no change for the next cell
+			return ok;
+		}
+		
+		private boolean writeNextSample(int level) {
+			// For each track, sample 0 starts at a byte boundary
+			// if (m_debug) System.out.print(level);
+			int position = m_currentSampleNumber / 8; 
+			
+			int block = position / 256;
+			int offset = position % 256;		
+			int actPosition = block*512 + m_currentHead * 256 + offset;
+
+			if (actPosition >= m_formatUnit.length) {
+				return false;
+			}		
+			
+			level &= 1;
+			int bit = 1 << (m_currentSampleNumber % 8);
+			
+			if (level == 1) 
+				m_formatUnit[actPosition] |= bit;
+			else 
+				m_formatUnit[actPosition] &= ~bit;
+
+			m_currentSampleNumber++;
+			return true;
+		}
 	}
 	
 	static int vote(String sFile) throws FileNotFoundException, IOException {
@@ -546,7 +668,9 @@ public class HFEFormat extends FloppyImageFormat {
 	@Override
 	ImageSector findSector(int number) throws ImageException {
 		// Calculate the CHS location
-		Location loc = lbaToChs(number);
+		if (number >= getTotalSectors()) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), getTotalSectors()));
+		if ((number != 0) && getSectorsPerTrack() < 8) throw new ImageException(String.format(TIImageTool.langstr("ImageUnknown")));
+		Location loc = lbaToChs(number, getTracks(), getSectorsPerTrack());
 		
 		for (ImageSector is : m_codec.getDecodedSectors()) {
 			if (is.getLocation().equals(loc)) return is;
@@ -562,7 +686,11 @@ public class HFEFormat extends FloppyImageFormat {
 	/** Format units are cylinders (tracks for head 0 and head 1) in this format. */
 	int getFUNumberFromSector(int number) throws ImageException {
 		// System.out.println("funum(" + number + ") = " + lbaToChs(number).cylinder);
-		return lbaToChs(number).cylinder;
+		// System.out.println("total=" + getTotalSectors() + ", sect=" +number);
+		if ((number != 0) && getSectorsPerTrack() < 8) throw new ImageException(String.format(TIImageTool.langstr("ImageUnknown")));
+
+		if (number >= getTotalSectors()) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), getTotalSectors()));
+		return lbaToChs(number, getTracks(), getSectorsPerTrack()).cylinder;
 	}	
 		
 	int getFormatUnitLength(int funum) {
@@ -586,6 +714,15 @@ public class HFEFormat extends FloppyImageFormat {
 		return m_nSectorsPerTrack;
 	}
 	
+	int getTotalSectors() {
+		int ts = m_fs.getTotalSectors();
+		if (ts == -1) {
+			ts = getSectorsPerTrack() * getTracks() * 2;
+		}
+		if (ts == 0) return 99999;
+		return ts;
+	}
+	
 	/** Called from HFEReader. Similar to the method above, just not trying to find sectors. */
 	public byte[] getTrackBytes(int cylinder, int head) throws IOException, ImageException {
 		throw new NotImplementedException("HFE");
@@ -600,13 +737,13 @@ public class HFEFormat extends FloppyImageFormat {
 		m_ImageFile.seek(m_bufferpos[loc.track]);
 		m_ImageFile.readFully(m_abyBuffer);
 		
-		m_cellcount = m_abyBuffer.length * 4;  // All bits for either head
+		m_samplecount = m_abyBuffer.length * 4;  // All bits for either head
 			
 		// Reset to start
-		m_currentcell = 0;
+		m_currentSampleNumber = 0;
 		m_first = true;
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		while (m_currentcell < m_bufferlen1[loc.cylinder] * 4) {
+		while (m_currentSampleNumber < m_bufferlen1[loc.cylinder] * 4) {
 			baos.write(readBits(8));
 		}
 
