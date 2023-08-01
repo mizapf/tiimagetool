@@ -68,7 +68,7 @@ public abstract class FileImageFormat extends ImageFormat {
 			long offset = getFormatUnitPosition(funum);
 			// System.out.println("offset = " + offset + ", funum = " + funum);
 			if (m_bInitial) {
-				m_codec.prepareNewFormatUnit(funum, abyFU);
+				m_codec.prepareNewFormatUnit(funum, abyFU, getFillPattern());
 			}
 			else {
 				m_file.seek(offset);
@@ -209,7 +209,7 @@ public abstract class FileImageFormat extends ImageFormat {
 	public int getFormatCheck() {
 		return m_nVibCheck;
 	}
-	
+		
 	/** Gets the format unit number from the linear sector number. */
 	abstract int getFUNumberFromSector(int nSectorNumber) throws ImageException;	
 

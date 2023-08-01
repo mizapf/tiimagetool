@@ -33,16 +33,22 @@ import de.mizapf.timt.TIImageTool;
 
 public class MemoryImageFormat extends ImageFormat {
 	
-	byte[] m_empty;
-	
 	// Used for displaying still unnamed volumes
 	private int m_nUnnamedIndex;
+	
+	// Empty sector
+	byte[] m_empty;
 
 	MemoryImageFormat(String sImageName, int number) throws FileNotFoundException {
 		// super(sImageName);
 		m_empty = new byte[TFileSystem.SECTOR_LENGTH];
 		m_nUnnamedIndex = number;
 		m_writeCache.setName(sImageName + number);
+		byte[] fillpat = getFillPattern();
+		
+		for (int j=0; j < TFileSystem.SECTOR_LENGTH; j++) {
+			m_empty[j] = fillpat[j % fillpat.length];
+		}
 	}
 	
 	public String getFormatName() {

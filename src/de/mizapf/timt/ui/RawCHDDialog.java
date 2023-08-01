@@ -147,7 +147,7 @@ class RawCHDDialog extends ToolDialog {
 			}
 			else jfc = new JFileChooser();
 			
-			Dimension dim = imagetool.getPropertyDim(imagetool.FILEDIALOG);
+			Dimension dim = settings.getPropertyDim(imagetool.FILEDIALOG);
 			if (dim!=null) jfc.setPreferredSize(dim);
 			jfc.setMultiSelectionEnabled(false);
 			
@@ -158,7 +158,7 @@ class RawCHDDialog extends ToolDialog {
 				m_rawFile = jfc.getSelectedFile();
 				File filePar = m_rawFile.getParentFile();
 				if (!filePar.getName().equals(".")) imagetool.setSourceDirectory(filePar, "image");  // sets the property only for non-UNC paths
-				imagetool.setProperty(imagetool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+				settings.put(imagetool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 				m_tfRawFile.setText(m_rawFile.getAbsolutePath());
 				
 				m_validRaw = fillFields(m_rawFile);
@@ -172,7 +172,7 @@ class RawCHDDialog extends ToolDialog {
 			}
 			else jfc = new JFileChooser();
 			
-			Dimension dim = imagetool.getPropertyDim(imagetool.FILEDIALOG);
+			Dimension dim = settings.getPropertyDim(imagetool.FILEDIALOG);
 			if (dim!=null) jfc.setPreferredSize(dim);
 			jfc.setMultiSelectionEnabled(false);
 			ImageFileFilter im = new ImageFileFilter();
@@ -196,7 +196,7 @@ class RawCHDDialog extends ToolDialog {
 				m_tfImageFile.setText(m_targetCHD.getAbsolutePath());
 				File filePar = m_targetCHD.getParentFile();
 				if (!filePar.getName().equals(".")) imagetool.setSourceDirectory(filePar, "image");  // sets the property only for non-UNC paths
-				imagetool.setProperty(imagetool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+				settings.put(imagetool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 				m_validCHD = true;
 			}
 		}

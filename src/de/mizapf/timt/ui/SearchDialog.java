@@ -136,7 +136,7 @@ class SearchDialog extends ToolDialog {
 			jfc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 			jfc.setMultiSelectionEnabled(true);
 			
-			Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+			Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 			if (dim!=null) jfc.setPreferredSize(dim);
 			
 			int nReturn = jfc.showOpenDialog(m_parent);

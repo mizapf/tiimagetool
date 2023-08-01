@@ -110,7 +110,7 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 			char type = m_app.getPreferenceType(s);
 			switch (type) {
 			case 'c':
-				value = m_app.getPropertyString(s);
+				value = settings.getPropertyString(s);
 				try {
 					index = Integer.parseInt(value);
 				}
@@ -127,23 +127,23 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 				m_entries.put(s, jc);
 				break;
 			case 's':
-				value = m_app.getPropertyString(s);
+				value = settings.getPropertyString(s);
 				jc = putTextField(tabPanel, name, value, m_nColumnWidth, m_fieldWidth);
 				m_entries.put(s, jc);
 				break;
 			case 'b':
-				boolean selected = m_app.getPropertyBoolean(s);
+				boolean selected = settings.getPropertyBoolean(s);
 				jc = putCheckBox(tabPanel, name, selected, m_nColumnWidth);
 				m_entries.put(s, jc);
 				break;					
 			case 'p':
-				value = m_app.getPropertyString(s);
+				value = settings.getPropertyString(s);
 				jc = putTextField(tabPanel, name, value, m_nColumnWidth, m_fieldWidth);
 				m_entries.put(s, jc);
 				break;
 			case 'u': // only for Linux
 				if (!isWindows && !isMac) {
-					value = m_app.getPropertyString(s);
+					value = settings.getPropertyString(s);
 					jc = putTextField(tabPanel, name, value, m_nColumnWidth, m_fieldWidth);
 					m_entries.put(s, jc);
 				}

@@ -241,7 +241,7 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			throw new NotImplementedException("CHDCodec");	
 		}
 		
-		void prepareNewFormatUnit(int number, byte[] buffer) {
+		void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat) {
 			throw new NotImplementedException("CHDCodec");	
 		}
 	}

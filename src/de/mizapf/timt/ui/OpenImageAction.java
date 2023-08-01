@@ -145,7 +145,7 @@ public class OpenImageAction extends Activity {
 		}
 		else jfc = new JFileChooser();
 		
-		Dimension dim = imagetool.getPropertyDim(imagetool.FILEDIALOG);
+		Dimension dim = settings.getPropertyDim(imagetool.FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
 		ImageFileFilter im = new ImageFileFilter();
 		jfc.addChoosableFileFilter(im);
@@ -158,7 +158,7 @@ public class OpenImageAction extends Activity {
 			selectedfiles = jfc.getSelectedFiles();
 			java.io.File filePar = selectedfiles[0].getParentFile();
 			imagetool.setSourceDirectory(filePar, "image");
-			imagetool.setProperty(imagetool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+			settings.put(imagetool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 		}
 		else return;
 		

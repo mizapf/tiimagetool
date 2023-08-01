@@ -36,25 +36,26 @@ public class PreferencesAction extends Activity {
 	
 	public void go() {
 		PreferencesDialog param = new PreferencesDialog(imagetool.getMainFrame(), imagetool);
+		param.setSettings(settings);
 		param.createGui(imagetool.boldFont);
 		param.setVisible(true);
 		if (param.confirmed()) {
-			Map<String,JComponent> settings = param.getSettings();
-			for (String prop : settings.keySet()) {
-				JComponent jc = settings.get(prop);
+			Map<String,JComponent> oursettings = param.getSettings();
+			for (String prop : oursettings.keySet()) {
+				JComponent jc = oursettings.get(prop);
 				if (jc instanceof JTextField) {
 					String value = ((JTextField)jc).getText();
-					imagetool.setProperty(prop, value);
+					settings.put(prop, value);
 				}
 				else {
 					if (jc instanceof JCheckBox) {
 						boolean selected = ((JCheckBox)jc).isSelected();
-						imagetool.setProperty(prop, selected? "true" : "false");
+						settings.put(prop, selected? "true" : "false");
 					}
 					else {
 						if (jc instanceof JComboBox) {
 							int index = ((JComboBox)jc).getSelectedIndex();
-							imagetool.setProperty(prop, String.valueOf(index));
+							settings.put(prop, String.valueOf(index));
 						}
 					}
 				}

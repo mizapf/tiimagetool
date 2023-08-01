@@ -111,8 +111,14 @@ class SectorDumpFormat extends FloppyImageFormat {
 			}
 		}
 		
-		void prepareNewFormatUnit(int number, byte[] buffer) {
-			// Do nothing
+		void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat) {
+			// Only add the fill pattern
+			for (int i=0; i < getSectorsPerTrack(); i++) {
+				for (int j=0; j < TFileSystem.SECTOR_LENGTH; j++) {
+					int k = j % fillpat.length;
+					buffer[i*TFileSystem.SECTOR_LENGTH + j] = fillpat[k];
+				}
+			}
 		}
 		
 		private int getIncrement() {

@@ -65,12 +65,13 @@ public class ImportContentAction extends Activity {
 		ImportDialog impdia = null;
 		boolean bDone = false;
 		int mode = 0;
-		mode = BasicCruncher.contentLooksLikeBasic(abyContent, imagetool.getPropertyBoolean(TIImageTool.VERBOSE))? ImportDialog.BASIC : ImportDialog.TEXTONLY;					
+		mode = BasicCruncher.contentLooksLikeBasic(abyContent, settings.getPropertyBoolean(TIImageTool.VERBOSE))? ImportDialog.BASIC : ImportDialog.TEXTONLY;					
 		
 		while (!bDone) {   // While file exists
 			while (!bValid) {
 				impdia = new ImportDialog(dvCurrent.getFrame(), sSuggested, false, mode);
 				impdia.setContent(abyContent);
+				impdia.setSettings(settings);
 				impdia.createGui();
 				impdia.setVisible(true);
 				if (impdia.confirmed()) {

@@ -55,20 +55,21 @@ public class ReadCFCardAction extends Activity {
 		
 		// Find missing commands
 		if (imagetool.getOperatingSystem()==TIImageTool.WINDOWS) {
-			String ddpath = imagetool.getPropertyString(TIImageTool.DDPATH);
+			String ddpath = settings.getPropertyString(TIImageTool.DDPATH);
 			if (ddpath == null) ddpath = "";
 			if (ddpath.length() > 0) {
 				// Test whether the path is still valid
 				File ddfile = new File(ddpath);
 				if (!ddfile.exists()) {
 					ddpath = "";
-					imagetool.setProperty(TIImageTool.DDPATH, ddpath);
+					settings.put(TIImageTool.DDPATH, ddpath);
 				}
 			}
 			
 			// Path is not valid; let's search for the proper path
 			if (ddpath.length()==0) {
 				FindCFUtilDialog findd = new FindCFUtilDialog(m_parent, imagetool);
+				findd.setSettings(settings);
 				findd.createGui(imagetool.boldFont);
 				findd.setVisible(true);
 				
@@ -79,9 +80,9 @@ public class ReadCFCardAction extends Activity {
 				else {
 					ddpath = findd.getDDPath();
 					if (ddpath == null) ddpath = "";
-					imagetool.setProperty(TIImageTool.DDPATH, ddpath);
+					settings.put(TIImageTool.DDPATH, ddpath);
 				}
-				ddpath = imagetool.getPropertyString(TIImageTool.DDPATH);
+				ddpath = settings.getPropertyString(TIImageTool.DDPATH);
 			}
 			
 			if (ddpath.length()==0) {
@@ -103,6 +104,7 @@ public class ReadCFCardAction extends Activity {
 
 		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, true);
 
+		rwd.setSettings(settings);
 		rwd.createGui(imagetool.boldFont);
 		rwd.setVisible(true);
 		

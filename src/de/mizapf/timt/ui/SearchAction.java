@@ -60,6 +60,7 @@ public class SearchAction extends Activity {
 	public void go() {	
 		SearchDialog sd = new SearchDialog(m_parent, imagetool);
 
+		sd.setSettings(settings);
 		sd.createGui(imagetool.boldFont);
 		sd.setVisible(true);
 		

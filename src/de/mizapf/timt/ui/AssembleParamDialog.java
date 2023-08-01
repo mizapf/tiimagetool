@@ -80,7 +80,7 @@ class AssembleParamDialog extends ToolDialog implements ActionListener {
 		add(Box.createVerticalStrut(10));		
 		putTextLine(this, "!" + TIImageTool.langstr("AsmTitle"),0);
 		add(Box.createVerticalStrut(10));		
-		m_tfCommand = putTextField(this, TIImageTool.langstr("AsmExternal"), m_app.getPropertyString("asmtool"), nColumnWidth, 0);
+		m_tfCommand = putTextField(this, TIImageTool.langstr("AsmExternal"), settings.getPropertyString("asmtool"), nColumnWidth, 0);
 		add(Box.createVerticalStrut(10));		
 		putTextLine(this, TIImageTool.langstr("AsmExplainParam"), 0);
 		add(Box.createVerticalStrut(10));		

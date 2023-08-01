@@ -30,7 +30,6 @@ import de.mizapf.timt.files.*;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.basic.BasicLine;
 
-
 public class ListAction extends Activity {
 
 	public String getMenuName() {
@@ -49,13 +48,13 @@ public class ListAction extends Activity {
 		String sText = TIImageTool.langstr("NoContent");			
 		Volume vol = dvCurrent.getVolume();
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		String escape = imagetool.getPropertyString(TIImageTool.ESCAPE);
+		String escape = settings.getPropertyString(TIImageTool.ESCAPE);
 
 		for (Element selected : dvCurrent.getSelectedEntries()) {
 			if (selected instanceof TFile) {
 				try {
 					if (((TFile)selected).isBasicFile()) {
-						sText = ((TFile)selected).listBasic((imagetool.getPropertyBoolean(TIImageTool.BASICVER)==true)? BasicLine.EX_BASIC : BasicLine.TI_BASIC, escape);
+						sText = ((TFile)selected).listBasic((settings.getPropertyBoolean(TIImageTool.BASICVER)==true)? BasicLine.EX_BASIC : BasicLine.TI_BASIC, escape);
 					}
 					
 					imagetool.showTextContent(selected.getName(), sText);  

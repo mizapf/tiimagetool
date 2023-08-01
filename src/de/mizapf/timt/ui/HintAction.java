@@ -54,7 +54,7 @@ public class HintAction extends Activity {
 		
 		int fontsize = 12;
 		try {
-			fontsize = Integer.parseInt(imagetool.getPropertyString(TIImageTool.FONTSIZE, "12"));
+			fontsize = Integer.parseInt(settings.getPropertyString(TIImageTool.FONTSIZE, "12"));
 		}
 		catch (NumberFormatException nfx) {
 			fontsize = 12;

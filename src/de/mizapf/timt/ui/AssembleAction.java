@@ -58,6 +58,7 @@ public class AssembleAction extends Activity {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
 		AssembleParamDialog asparm = new AssembleParamDialog(dvCurrent.getFrame(), imagetool);
+		asparm.setSettings(settings);
 		asparm.createGui(imagetool.boldFont);
 		asparm.setVisible(true);
 		if (asparm.confirmed()) { 

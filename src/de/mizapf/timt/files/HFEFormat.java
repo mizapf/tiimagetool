@@ -538,7 +538,7 @@ public class HFEFormat extends FloppyImageFormat {
 			if (!ok) System.out.println("End of track encountered during write");
 		}
 		
-		void prepareNewFormatUnit(int number, byte[] buffer) {
+		void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat) {
 			throw new NotImplementedException("HFECodec");	
 		}
 		

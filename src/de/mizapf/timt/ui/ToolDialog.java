@@ -38,6 +38,8 @@ public class ToolDialog extends JDialog implements ActionListener {
 	protected JButton	m_btnOK;
 	protected JButton	m_btnCancel;
 	
+	protected Settings	settings;
+	
 	protected static final int DEVLINE = 1;
 	protected static final int FILELINE = 2;
 	protected static final int DDLINE = 3;
@@ -74,6 +76,10 @@ public class ToolDialog extends JDialog implements ActionListener {
 		m_bSet = false;			
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		add(Box.createVerticalStrut(10));
+	}
+	
+	void setSettings(Settings set) {
+		settings = set;
 	}
 	
 	protected void addButtons() {

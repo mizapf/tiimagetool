@@ -28,13 +28,15 @@ abstract public class Activity {
 	
 	protected JFrame m_parent;
 	protected TIImageTool imagetool;
+	protected Settings settings;
 	
 	protected final static String NAME_ABORT = ".abort";
 	protected final static String NAME_SKIP = ".skip";
 	
-	public void setLinks(TIImageTool timt, JFrame parent) {
+	public void setLinks(TIImageTool timt, JFrame parent, Settings set) {
 		m_parent = parent;
 		imagetool = timt;
+		settings = set;
 	}
 	
 	public abstract String getMenuName();

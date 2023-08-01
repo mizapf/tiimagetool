@@ -175,7 +175,9 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 	// Each FIB is read twice: for the file name, and for the file contents
 	@Override
 	ImageSector findSector(int number) throws ImageException {
+		// System.out.println("find " + number);
 		for (ImageSector is : m_codec.getDecodedSectors()) {
+			// System.out.println("- number " + is.getNumber());
 			if (is.getNumber() == number) {
 				return is;
 			}

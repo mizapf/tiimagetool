@@ -49,7 +49,7 @@ public class SectorEditAction extends Activity {
 		}
 		else jfc = new JFileChooser();
 		
-		Dimension dim = imagetool.getPropertyDim(imagetool.FILEDIALOG);
+		Dimension dim = settings.getPropertyDim(imagetool.FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
 		ImageFileFilter im = new ImageFileFilter();
 		jfc.addChoosableFileFilter(im);

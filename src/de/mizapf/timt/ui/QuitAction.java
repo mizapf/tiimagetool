@@ -45,6 +45,5 @@ public class QuitAction extends Activity {
 		}
 		m_parent.dispose();
 		imagetool.terminate();
-		imagetool.saveProperties();
 	}
 }

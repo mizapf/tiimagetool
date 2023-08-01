@@ -50,14 +50,13 @@ public class ExportEmulateAction extends Activity {
 		for (Element selected : dvCurrent.getSelectedEntries()) {
 			if (selected instanceof TFile) {
 				try {
-					
 					JFileChooser jfc = null;
 					if (imagetool.getSourceDirectory("image")!=null) {
 						jfc = new JFileChooser(imagetool.getSourceDirectory("image"));
 					}
 					else jfc = new JFileChooser();
 					
-					Dimension dim = imagetool.getPropertyDim(imagetool.FILEDIALOG);
+					Dimension dim = settings.getPropertyDim(imagetool.FILEDIALOG);
 					if (dim!=null) jfc.setPreferredSize(dim);
 					
 					ImageFileFilter im = new ImageFileFilter();
@@ -67,7 +66,7 @@ public class ExportEmulateAction extends Activity {
 					int nReturn = jfc.showSaveDialog(m_parent);
 					File file = null;
 					if (nReturn == JFileChooser.APPROVE_OPTION) {
-						imagetool.setProperty(imagetool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+						settings.put(imagetool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 						file = jfc.getSelectedFile();
 						int nSuffixPos = file.getName().indexOf(".");
 						if (nSuffixPos==-1 || nSuffixPos == file.getName().length()-1) {

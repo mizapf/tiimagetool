@@ -67,7 +67,7 @@ class RawHDFormat extends HarddiskImageFormat {
 			throw new NotImplementedException("RawHDCodec");	
 		}
 		
-		void prepareNewFormatUnit(int number, byte[] buffer) {
+		void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat) {
 			throw new NotImplementedException("RawHDCodec");	
 		}
 	}

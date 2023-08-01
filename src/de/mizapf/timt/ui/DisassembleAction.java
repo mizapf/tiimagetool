@@ -59,10 +59,10 @@ public class DisassembleAction extends Activity {
 					disparm.setType(((TFile)selected).isProgram());
 					disparm.createGui(imagetool.boldFont);
 					String sHash = Utilities.getHash(content);
-					disparm.setParams(imagetool.loadDisassParams(TIImageTool.ASMPREFIX, sHash));
+					disparm.setParams(settings.loadDisassParams(TIImageTool.ASMPREFIX, sHash));
 					disparm.setVisible(true);
 					if (disparm.confirmed()) {			
-						imagetool.saveDisassParams(TIImageTool.ASMPREFIX, sHash, disparm.getStartAddress(), disparm.getOffset(), disparm.getLength(), disparm.getHint(), false);
+						settings.saveDisassParams(TIImageTool.ASMPREFIX, sHash, disparm.getStartAddress(), disparm.getOffset(), disparm.getLength(), disparm.getHint(), false);
 
 						if (((TFile)selected).isProgram() && disparm.symbolic()) {
 							byte[] toc = createTocFromDump(content, disparm.getOffset(), disparm.getStartAddress());

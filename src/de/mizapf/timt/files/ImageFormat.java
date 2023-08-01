@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.lang.reflect.*;
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.ui.Settings;
 
 /** ImageFormat handles everything concerning the physical image. It delivers or
     takes sector contents, but does not care about their meaning.
@@ -140,6 +141,10 @@ public abstract class ImageFormat  {
 	
 	protected static Class[] m_formatClass;
 	
+	protected static Settings m_Settings; 
+
+	protected byte[] m_fillPattern;
+	
 	// Called from TIImageTool during startup
 	public static void setFormats(String formstr) {
 		formatline = formstr;
@@ -179,6 +184,19 @@ public abstract class ImageFormat  {
 			}
 		}
 	}	
+
+	public static void setSettings(Settings set) {
+		m_Settings = set;
+		setFormats(m_Settings.getPropertyString(TIImageTool.IMGFORM));
+		// setFillPattern(m_Settings.getPropertyString(FILLPAT));
+	}
+	
+	public void setFillPattern(String pat) {
+		m_fillPattern = new byte[pat.length()/2];
+		for (int i=0; i < m_fillPattern.length; i++) {
+			m_fillPattern[i] = (byte)Integer.parseInt(pat.substring(i*2, (i+1)*2), 16);
+		}
+	}
 	
 	/** Determine the image format. */
 	public static ImageFormat determineImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
@@ -248,6 +266,11 @@ public abstract class ImageFormat  {
 
 		return ifmt;
 	}
+	
+	protected byte[] getFillPattern() {
+		return m_fillPattern;
+	}
+
 		
 /*		String[] formats = formatline.split(",\\s*");		                 
 		
@@ -323,6 +346,7 @@ public abstract class ImageFormat  {
 
 	protected ImageFormat() throws FileNotFoundException {
 		m_writeCache = new SectorCache();
+		setFillPattern(m_Settings.getPropertyString(TIImageTool.FILLPAT));
 	}
 	
 	public TFileSystem getFileSystem() {

@@ -85,9 +85,11 @@ class DDTransferHandler extends TransferHandler {
 	// ===================================================================
 	
 	private DirectoryPanel m_panel;
+	private Settings m_Settings;
 	
-	DDTransferHandler(DirectoryPanel panel) {
+	DDTransferHandler(DirectoryPanel panel, Settings set) {
 		m_panel = panel;
+		m_Settings = set;
 	}
 	
 	public boolean canImport(TransferHandler.TransferSupport support) {
@@ -155,7 +157,7 @@ class DDTransferHandler extends TransferHandler {
 					
 					TIImageTool app = m_panel.getView().getImageTool();
 					ImportFilesAction action = new ImportFilesAction();
-					action.setLinks(app, app.getMainFrame());
+					action.setLinks(app, app.getMainFrame(), m_Settings);
 					action.importElements(afile, m_panel.getView());
 				}
 			} 

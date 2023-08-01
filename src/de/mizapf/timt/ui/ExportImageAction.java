@@ -53,7 +53,7 @@ public class ExportImageAction extends Activity {
 		JFileChooser jfc = null;
 		if (imagetool.getSourceDirectory("export")!=null) jfc = new JFileChooser(imagetool.getSourceDirectory("impexp"));
 		else jfc = new JFileChooser();
-		Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+		Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
 
 		jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -61,12 +61,12 @@ public class ExportImageAction extends Activity {
 		if (nReturn == jfc.CANCEL_OPTION) return;
 		
 		ExportDialog expparm = new ExportDialog(m_parent);
-		expparm.createGui(imagetool.boldFont, imagetool.getPropertyString(imagetool.CONVERT), imagetool.contentFont);
+		expparm.createGui(imagetool.boldFont, settings.getPropertyString(imagetool.CONVERT), imagetool.contentFont);
 		expparm.setVisible(true);
 		
 		if (expparm.confirmed()) {
-			imagetool.setProperty(imagetool.CONVERT, expparm.getSubstSource() + " " + expparm.getSubstTarget());		
-			imagetool.setProperty(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+			settings.put(imagetool.CONVERT, expparm.getSubstSource() + " " + expparm.getSubstTarget());		
+			settings.put(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			try {

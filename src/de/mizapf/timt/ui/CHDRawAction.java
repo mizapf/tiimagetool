@@ -46,6 +46,7 @@ public class CHDRawAction extends Activity {
 	
 	public void go() {
 		CHDRawDialog expdialog = new CHDRawDialog(m_parent, imagetool);
+		expdialog.setSettings(settings);
 		expdialog.createGui(imagetool.boldFont);
 		expdialog.setVisible(true);
 		

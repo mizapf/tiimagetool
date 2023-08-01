@@ -133,7 +133,7 @@ class FormatCFDialog extends ToolDialog {
 			jfc = new JFileChooser();
 			jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			
-			Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+			Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 			if (dim!=null) jfc.setPreferredSize(dim);
 			
 			int nReturn = jfc.showOpenDialog(m_parent);

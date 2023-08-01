@@ -83,7 +83,7 @@ public class SaveAsImageAction extends Activity {
 			jfc.addChoosableFileFilter(im);
 			jfc.setFileFilter(im);	
 			
-			Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+			Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 			if (dim!=null) jfc.setPreferredSize(dim);
 			
 			// open it now

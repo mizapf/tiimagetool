@@ -43,6 +43,7 @@ public class FormatCFCardAction extends Activity {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		FormatCFDialog fcfd = new FormatCFDialog(m_parent, imagetool);
 
+		fcfd.setSettings(settings);
 		fcfd.createGui(imagetool.boldFont);
 		fcfd.setVisible(true);
 

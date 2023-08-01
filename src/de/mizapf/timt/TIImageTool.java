@@ -40,6 +40,8 @@
     Display
 	[ ] Fix font size:
 	    - Change CHD version (file name is truncated)
+	    - Serial bridge
+	    - Search dialog
 	[ ] Paste error: If last entry is dir, object will be pasted there
 	[ ] Safe area for right-click outside of file
     [x] Periods appear doubled in XB file listing -> appears when . is used as escape character       [ ] Add note in documentation to avoid "~" or "." as escape character
@@ -67,11 +69,13 @@
     [ ] Allow Return key for New floppy image
     [ ] Encode control characters in files from escape sequence (like §81 -> CTRL-a)
     [ ] Add undo/redo menu items
-    [ ] Use empty sector pattern 
+    [x] Use empty sector pattern 
     [ ] Save As is active after closing all open images
     [ ] Complete undo/redo
     [ ] Restore all floppy formats
     [ ] Restore all hd formats
+  	[ ] Unformatted image (998dd.dsk) can be opened without warning
+
 */
 
 package de.mizapf.timt;
@@ -186,7 +190,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String VERBOSE = "verbose";
 	public final static String FONTSIZE = "fontsize";
 	public final static String UIFONT = "uifont";
-	public final static String FILLSECT = "fillpat";
+	public final static String FILLPAT = "fillpat";
 	public final static String IMGFORM = "imgform";
 	
 	Properties m_propNames;
@@ -280,7 +284,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 
 	public final static String LANGTEXT = "de.mizapf.timt.ui.Strings";
 
-	Properties m_Settings;
+	Settings m_Settings;
 	String m_sPropertiesPath;
 
 	private static ResourceBundle m_resources;
@@ -459,7 +463,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			// Fill recent menu
 			int i = 0;
-			String recents = getPropertyString(RECENT);
+			String recents = m_Settings.getPropertyString(RECENT);
 			if (recents != null && recents.length() > 0) {
 				String[] recent = recents.split(System.getProperty("path.separator"));
 				for (String s : recent) {
@@ -597,7 +601,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 						
 			activateMenuItems();
 			
-			Dimension dim = getPropertyDim(WINDOWSIZE);
+			Dimension dim = m_Settings.getPropertyDim(WINDOWSIZE);
 			if (dim==null) dim = new Dimension(800,600);
 			
 			m_frmMain.setSize(dim);
@@ -611,7 +615,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			}
 			
 			// Let the hint window pop up on start
-			if (getPropertyBoolean(HINTSTART)) setUserInput("HINTS");
+			if (m_Settings.getPropertyBoolean(HINTSTART)) setUserInput("HINTS");
 		}
 	}
 	
@@ -689,7 +693,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		
 		public void run() {
-			DirectoryView dv = new DirectoryView(m_dirdv, m_bAttachdv, TIImageTool.this);
+			DirectoryView dv = new DirectoryView(m_dirdv, m_bAttachdv, TIImageTool.this, m_Settings);
 			m_Views.add(dv);
 			activateMenuItems();
 			setSaveOptions();
@@ -1047,7 +1051,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 	
 	private InputStream getLocalizedStream(String name, String suffix) {
-		String resourceFile = name + getLocale(getPropertyString(LANG)).getLanguage() + suffix;
+		String resourceFile = name + getLocale(m_Settings.getPropertyString(LANG)).getLanguage() + suffix;
 		InputStream is = ToolDialog.class.getResourceAsStream(resourceFile);
 		if (is==null) {
 			// Try to load the file from user.home
@@ -1067,12 +1071,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	TIImageTool() {
 		m_sPropertiesPath = null;
-		m_Settings = new Properties();
-		loadProperties();
-		checkProperties();
+		m_Settings = new Settings(getOperatingSystem());
 		
 		// Load localized strings
-		// m_resources = ResourceBundle.getBundle(LANGTEXT, getLocale(getPropertyString(LANG)));
+		// m_resources = ResourceBundle.getBundle(LANGTEXT, getLocale(m_Settings.getPropertyString(LANG)));
 		try {
 			InputStream is = getLocalizedStream("Strings_", ".properties");
 			m_resources = new PropertyResourceBundle(new InputStreamReader(is, "UTF-8"));			
@@ -1092,7 +1094,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}		
 			
 		// Redirect Console output
-		String sLogFile = getPropertyString(LOGFILE, "tiimagetool.log");
+		String sLogFile = m_Settings.getPropertyString(LOGFILE, "tiimagetool.log");
 		if (sLogFile.length()>0) {
 			try {
 				m_logFile = new java.io.File(sLogFile); 
@@ -1107,9 +1109,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			}
 		}
 		
-		FONT = m_Settings.getProperty("uifont", Font.SANS_SERIF);
-		CONTENTFONT = m_Settings.getProperty(CONTFONT);
-		if (CONTENTFONT == null) setProperty(CONTFONT, Font.MONOSPACED);
+		FONT = m_Settings.getPropertyString("uifont", Font.SANS_SERIF);
+		CONTENTFONT = m_Settings.getPropertyString(CONTFONT);
+		if (CONTENTFONT == null) m_Settings.put(CONTFONT, Font.MONOSPACED);
 		m_frmMain = new JFrame(TITLE);
 		m_frmMain.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		m_frmMain.addWindowListener(this);
@@ -1134,7 +1136,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_nUnnamedVolumeCount = 0;
 		
 		// Set the look and feel
-		String lafclass = getPropertyString(LOOKANDFEEL, "javax.swing.plaf.metal.MetalLookAndFeel");
+		String lafclass = m_Settings.getPropertyString(LOOKANDFEEL, "javax.swing.plaf.metal.MetalLookAndFeel");
 		try {
 			UIManager.setLookAndFeel(lafclass);
 		}
@@ -1153,7 +1155,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_recent = new LinkedList<String>();
 		
 		// Create temporary directory
-		String sTempDir = m_Settings.getProperty(TEMPDIR, System.getProperty("java.io.tmpdir"));
+		String sTempDir = m_Settings.getPropertyString(TEMPDIR, System.getProperty("java.io.tmpdir"));
 		if (sTempDir == null || sTempDir.length() == 0) sTempDir = "."; 
 
 		m_tmpDir = new java.io.File(sTempDir, TEMPDIRNAME);
@@ -1204,7 +1206,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		m_turnedoff = new byte[maxnumber / 8 +1];
 
-		String hintnotes = getPropertyString(HINTS,"0");
+		String hintnotes = m_Settings.getPropertyString(HINTS, "0");
 		try {
 			if (hintnotes != null) {
 				String[] ahintn = hintnotes.split(",");
@@ -1223,7 +1225,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		saveHintSettings();
 		
 		try {
-			fontSize = Integer.parseInt(getPropertyString(FONTSIZE, "12"));
+			fontSize = Integer.parseInt(m_Settings.getPropertyString(FONTSIZE, "12"));
 		}
 		catch (NumberFormatException nfx) {
 			fontSize = 12;
@@ -1234,8 +1236,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_maxMemory = Runtime.getRuntime().freeMemory();
 
 		// SectorCache.setGen(0);
-		
-		ImageFormat.setFormats(m_Settings.getProperty("imgform"));
+		ImageFormat.setSettings(m_Settings);
 		
 		// new CreateGui().run();
 		SwingUtilities.invokeLater(new CreateGui());
@@ -1261,7 +1262,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		// Find chown, dd, graphical su
 		m_utilsfound = true;
 		if (getOperatingSystem() != WINDOWS) {
-			String chown = getPropertyString(COPATH);
+			String chown = m_Settings.getPropertyString(COPATH);
 			File flChown = null;
 			if (chown != null) flChown = new File(chown);
 			if (flChown == null || !flChown.exists()) {
@@ -1274,12 +1275,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					m_utilsfound = false;
 				}
 				else {
-					setProperty(COPATH, chownfound);
+					m_Settings.put(COPATH, chownfound);
 					System.out.println("found");
 				}
 			}
 			
-			String dd = getPropertyString(DDPATH);
+			String dd = m_Settings.getPropertyString(DDPATH);
 			File flDD = null; 
 			if (dd != null) flDD = new File(dd);
 			if (flDD == null || !flDD.exists()) {
@@ -1292,7 +1293,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					m_utilsfound = false;
 				}
 				else {
-					setProperty(DDPATH, ddfound);
+					m_Settings.put(DDPATH, ddfound);
 					System.out.println("found");
 				}									
 			}
@@ -1300,7 +1301,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			if (getOperatingSystem() == UNIX) {
 				// Find graphical su for Linux
 				// MacOS uses osascript
-				String gsu = getPropertyString(SUPATH);
+				String gsu = m_Settings.getPropertyString(SUPATH);
 				File flgsu = null;
 				if (gsu != null) flgsu = new File(gsu);
 				if (flgsu == null || !flgsu.exists()) {
@@ -1316,12 +1317,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 							m_utilsfound = false;
 						}
 						else {
-							setProperty(SUPATH, sufound);
+							m_Settings.put(SUPATH, sufound);
 							System.out.println("found");
 						}
 					}
 					else {
-						setProperty(SUPATH, sufound);
+						m_Settings.put(SUPATH, sufound);
 						System.out.println("found");
 					}
 				}
@@ -1343,7 +1344,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		for (int i=0; i < m_turnedoff.length; i++) {
 			sb.append(",").append((int)m_turnedoff[i] & 255);
 		}
-		setProperty(HINTS, sb.toString());
+		m_Settings.put(HINTS, sb.toString());
 	}
 	
 	public String getHint() {
@@ -1384,7 +1385,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		
 		if (knowThatOne) setHintBit(m_lastHint);
 
-		if (notInterested) setProperty(HINTSTART, "false");
+		if (notInterested) m_Settings.put(HINTSTART, "false");
 		saveHintSettings();
 	}
 	
@@ -1400,81 +1401,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		int test = 128 >> (number % 8);
 		if (m_turnedoff.length < block) return false;
 		return ((m_turnedoff[block] & test)!=0);
-	}
-
-	private void loadProperties() {
-
-		String sFile = (getOperatingSystem()==WINDOWS)? "tiimagetool.prop" : ".tiimagetoolrc";
-				
-		// Try to load
-		// 1. from the current directory
-		// 2. from the special path 
-		FileReader fr = null;
-		try {
-			fr = new FileReader(sFile);
-		}
-		catch (FileNotFoundException fx) {
-			sFile = System.getProperty("user.home") + System.getProperty("file.separator") + sFile; 
-		}
-		try {
-			fr = new FileReader(sFile);
-		}
-		catch (FileNotFoundException fx) {
-			// Try to get the value and pre-set it if not available 
-			setDefaults();
-			saveProperties(); // No properties
-			return;
-		}
-		m_sPropertiesPath = sFile;
-		try {
-			m_Settings.load(fr);
-		}
-		catch (IOException iox) {
-			System.err.println(langstr("MainNoProperties"));
-		}
-		
-		setDefaults();
-		
-		try {
-			fr.close();
-		}
-		catch (IOException iox1) {
-			iox1.printStackTrace();
-		}
-	}
-	
-	private void setDefaults() {
-		int type = getOperatingSystem();
-		getPropertyString(CONVERT, "/\\* __x");
-		getPropertyString(SUFFIX, ".tfi");
-		getPropertyString(UNDERSCORE, "true");		
-		getPropertyString(EXPLOWER, "true");	
-		getPropertyString(CFCARD, (type==WINDOWS)? "k:" : ((type==MACOS)? "/dev/disk4" : "/dev/sdg"));
-		getPropertyString(DDPATH, (type==WINDOWS)? "" : ((type==MACOS)? "/bin/dd" : "/usr/bin/dd"));
-		getPropertyString(COPATH, (type==WINDOWS)? "" : ((type==MACOS)? "/usr/sbin/chown" : "/usr/bin/chown"));
-		getPropertyString(BSIZE, "4096");
-		getPropertyString(CONVERT, "true");	
-		getPropertyString(KEEPNAME, "false");	
-		getPropertyString(FORCEUPPER, "true");	
-		getPropertyString(HINTSTART, "true");
-		getPropertyString(BASICVER, "true");
-		getPropertyString(TFIFILTER, "true");
-		getPropertyString(NEWFRAME, "false");
-		getPropertyString(ESCAPE, "§%");
-		getPropertyString(LANG, "0");
-		getPropertyString(DNDC, "true");
-		getPropertyString(VERBOSE, "true");
-		getPropertyString(FONTSIZE, "12");
-		getPropertyString(CONTFONT, "Monospaced");
-		getPropertyString(UIFONT, "SansSerif");
-		getPropertyString(FILLSECT, "E5");
-		getPropertyString(IMGFORM, "CF7VolumeFormat,CF7ImageFormat,SectorDumpFormat,TrackDumpFormat,HFEFormat,RawHDFormat,MameCHDFormat");
-	}
-
-	private void checkProperties() {
-		String escape = getPropertyString(TIImageTool.ESCAPE);
-		if (escape.length()>0 && escape.charAt(0) < 127)
-			System.err.println("Do not use '" + escape.charAt(0) + "' as the escape character; pick a character which is not in the TI character set. Check the preferences.");
 	}
 	
 	public List<String> getPreferences(String category) {
@@ -1500,86 +1426,14 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return aval[2];
 	}
 	
-	public void saveProperties() {
-		if (m_frmMain != null) setProperty(WINDOWSIZE, m_frmMain.getWidth() + "x" + m_frmMain.getHeight());
-		else setProperty(WINDOWSIZE, "640x480");
-		if (m_sPropertiesPath == null) {
-			String sFile = null;
-			if (System.getProperty("os.name").startsWith("Windows")) sFile="tiimagetool.prop";
-			else sFile = ".tiimagetoolrc";
-			m_sPropertiesPath = System.getProperty("user.home") + System.getProperty("file.separator") + sFile; 			
-		}
-		
-		try {
-			FileWriter fw = new FileWriter(m_sPropertiesPath);
-			m_Settings.store(fw, "Settings for TIImageTool");
-			fw.close();
-		}
-		catch (IOException iox) {
-			System.err.println(langstr("MainPropSaveError"));
-			iox.printStackTrace();
-		}
+	public void saveFrameSize() {
+		if (m_frmMain != null) m_Settings.put(WINDOWSIZE, m_frmMain.getWidth() + "x" + m_frmMain.getHeight());
+		else m_Settings.put(WINDOWSIZE, "640x480");
 	}
-	
+	/*
 	public void setProperty(String prop, String value) {
 		m_Settings.put(prop, value);
-	}
-
-	public Dimension getPropertyDim(String sKey) {
-		Dimension dim = null; 
-		String sVal = m_Settings.getProperty(sKey);
-		if (sVal!=null && (sVal.indexOf("x")!=-1)) {
-			String[] asPart = sVal.split("x");
-			try {
-				dim = new Dimension(Integer.parseInt(asPart[0]), Integer.parseInt(asPart[1]));
-			}
-			catch (NumberFormatException nfx) {
-				System.err.println(langstr("MainInvalidDim") + " " + sKey);
-			}
-			catch (ArrayIndexOutOfBoundsException ax) {
-				System.err.println(langstr("MainInvalidDim") + " " + sKey);
-			}
-		}
-		return dim;		
-	}
-	
-	public String getPropertyString(String sKey) {
-		return m_Settings.getProperty(sKey);
-	}	
-	
-	public String getPropertyString(String sKey, String def) {
-		String value = m_Settings.getProperty(sKey);
-		if (value==null) {
-			value = def;
-			m_Settings.put(sKey, value);
-		}
-		return value;
-	}	
-	
-	public boolean getPropertyBoolean(String key) {
-		String value = m_Settings.getProperty(key);
-		if (value==null) value = "false";
-		return (value.equalsIgnoreCase("true") || value.equalsIgnoreCase("yes"));
-	}
-	
-	public void saveDisassParams(String sPrefix, String sFile, int nStart, int nOffset, int nLength, Hint[] hint, boolean bSkipInv) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(Utilities.toHex(nStart, 4)).append("#").append(Utilities.toHex(nOffset, 4)).append("#").append(Utilities.toHex(nLength, 4));
-		sb.append(bSkipInv? "#1" : "#0");
-		if (hint.length>0) {
-			sb.append("#");
-		}
-		for (int i=0; i < hint.length; i++) {
-			if (i>0) sb.append(",");
-			sb.append(hint[i].toString());
-		}
-		m_Settings.put(sPrefix + "_" + sFile, sb.toString());
-	}
-	
-	public String loadDisassParams(String sPrefix, String sFile) {
-		String sValues = m_Settings.getProperty(sPrefix + "_" + sFile);
-		return sValues;
-	}
+	} */
 	
 	public static Locale getLocale(String loc) {
 		int index = 0;
@@ -1606,7 +1460,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return lang;
 	}
 	
-	public int getOperatingSystem() {
+	public static int getOperatingSystem() {
 		if (System.getProperty("os.name").startsWith("Windows")) return WINDOWS;
 		else {
 			if (System.getProperty("os.name").startsWith("Mac")) return MACOS;
@@ -1626,7 +1480,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 
 	public void registerActivity(Activity act) {
-		act.setLinks(this, m_frmMain);
+		act.setLinks(this, m_frmMain, m_Settings);
 		activities.put(act.getActionName(), act);
 	}
 	
@@ -1718,7 +1572,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		JFileChooser jfc = null;
 		if (m_flSourceDirectory!=null) jfc = new JFileChooser(m_flSourceDirectory);
 		else jfc = new JFileChooser();
-		Dimension dim = getPropertyDim(FILEDIALOG);
+		Dimension dim = m_Settings.getPropertyDim(FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
 		
 		if (bAsTifile) {
@@ -1728,7 +1582,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		int nReturn = jfc.showSaveDialog(m_frmMain);
 		if (nReturn == JFileChooser.APPROVE_OPTION) {
-			setProperty(FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+			m_Settings.put(FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 			java.io.File iofile = jfc.getSelectedFile();
 			if (bAsTifile && !(iofile.getName().endsWith(".tfi") 
 				|| iofile.getName().endsWith(".tifile") 
@@ -1761,7 +1615,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		if (name.length() > 10) name = name.substring(0,10);
 		
-		if (getPropertyBoolean(FORCEUPPER)) name = name.toUpperCase();
+		if (m_Settings.getPropertyBoolean(FORCEUPPER)) name = name.toUpperCase();
 		return name;
 	}
 	
@@ -1802,7 +1656,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public List<java.io.File> exportDirectory(Directory dirCurrent, java.io.File iofBaseDir, List<Element> selected, boolean deleteOnExit) throws ReplaceTableException, InvalidNameException, IOException, FileNotFoundException, ImageException {
 		List<java.io.File> lst = new ArrayList<java.io.File>();
 		
-		String value = getPropertyString(CONVERT, "/\\*><: __x___");
+		String value = m_Settings.getPropertyString(CONVERT, "/\\*><: __x___");
 		String fromList = null;
 		String toList = null;
 
@@ -1811,7 +1665,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		// For safety
 		if (separ==-1) {
 			value = "/\\*><: __x___";
-			setProperty(CONVERT, value);
+			m_Settings.put(CONVERT, value);
 			separ = value.indexOf(" ");
 		}
 		
@@ -1835,12 +1689,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			abyCont = tif.toByteArray();
 			
 			// Transform the file name
-			if (getPropertyBoolean(UNDERSCORE)) sExpFile = transliterate(sExpFile, "_", ".");
+			if (m_Settings.getPropertyBoolean(UNDERSCORE)) sExpFile = transliterate(sExpFile, "_", ".");
 			
 			sExpFile = transliterate(sExpFile, fromList, toList);
 			
-			if (getPropertyBoolean(EXPLOWER)==true) sExpFile = sExpFile.toLowerCase();
-			sExpFile += getPropertyString(SUFFIX, ".tfi");
+			if (m_Settings.getPropertyBoolean(EXPLOWER)==true) sExpFile = sExpFile.toLowerCase();
+			sExpFile += m_Settings.getPropertyString(SUFFIX, ".tfi");
 						
 			// Create full pathname for exporting
 			java.io.File iofSave = new java.io.File(iofBaseDir, sExpFile);
@@ -1868,7 +1722,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			String sDirName = dir.getName();
 			sDirName = transliterate(sDirName, fromList, toList);
 
-			if (getPropertyBoolean(EXPLOWER)==true) sDirName = sDirName.toLowerCase();
+			if (m_Settings.getPropertyBoolean(EXPLOWER)==true) sDirName = sDirName.toLowerCase();
 			
 			// create new directory
 			java.io.File iofNewDir = new java.io.File(iofBaseDir, sDirName);
@@ -1897,7 +1751,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		String sName = createValidInputFileName(sDefaultFilename);
 			
 		// Shall we keep the external filename or take the name in the TIFILES header?
-		if (getPropertyBoolean(KEEPNAME)==false)  
+		if (m_Settings.getPropertyBoolean(KEEPNAME)==false)  
 			sName = TIFiles.getName(abyTif);
 
 		// What if there is no valid name in TIFILES?
@@ -1932,7 +1786,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					}
 					else {					
 						ImportContentAction ia = new ImportContentAction();
-						ia.setLinks(this, m_frmMain);
+						ia.setLinks(this, m_frmMain, m_Settings);
 						ia.convertAndImport(abyTif, dvCurrent, createValidInputFileName(sDefaultFilename), false);
 					}
 				}
@@ -1948,7 +1802,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					sName = createValidInputFileName(sDefaultFilename);
 				}
 				ImportContentAction ia = new ImportContentAction();
-				ia.setLinks(this, m_frmMain);
+				ia.setLinks(this, m_frmMain, m_Settings);
 				ia.convertAndImport(abyTif, dvCurrent, sName, false);
 			}
 		}
@@ -1995,7 +1849,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			dv.close();
 		}
 		closeAllFrames();
-		saveProperties();
+		saveFrameSize();
+		m_Settings.saveProperties();
 	}
 	
 	public void windowClosed(WindowEvent we) {
@@ -2059,7 +1914,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 	
 	public java.io.File getSourceDirectory(String sWhich) {
-		String sDir = m_Settings.getProperty(sWhich + SOURCEDIR);
+		String sDir = m_Settings.getPropertyString(sWhich + SOURCEDIR);
 		if (sDir == null) return null;
 		else return new java.io.File(sDir);
 	}
@@ -2073,6 +1928,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 	
 	public void terminate() {
+		saveFrameSize();
+		m_Settings.saveProperties();
 		m_bRunning = false;
 	}
 	
@@ -2123,7 +1980,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public void addDirectoryView(Directory dir) {
 		boolean bAttach = true;
 		if (!m_first) {
-			bAttach = !getPropertyBoolean(NEWFRAME);
+			bAttach = !m_Settings.getPropertyBoolean(NEWFRAME);
 		}
 		m_first = false;
 		SwingUtilities.invokeLater(new NewDirectoryView(dir, bAttach));
@@ -2252,7 +2109,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			if (sb.length()>0) sb.append(System.getProperty("path.separator"));
 			sb.append(file);
 		}
-		setProperty(RECENT, sb.toString());
+		m_Settings.put(RECENT, sb.toString());
 		
 		if (i > 0) m_mOpenRecent.setEnabled(true);   
 	}
@@ -2384,35 +2241,5 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	public int nextUnnamedIndex() {
 		return ++m_nUnnamedVolumeCount;
-	}
-	
-	/** Returns a complete sector content filled with the fill pattern.
-		@throws NumberFormatException if the provided String cannot be parsed  
-	*/
-	public byte[] getFillSequence() throws NumberFormatException {
-		String sPattern = getPropertyString(FILLSECT);
-		if ((sPattern.length() != 2) && (sPattern.length() != 4) && (sPattern.length() != 8))
-			throw new NumberFormatException("Invalid fill pattern: " + sPattern);
-		
-		byte[] abyPattern = new byte[4];
-		
-		if (sPattern.length()==2) {
-			sPattern = sPattern + sPattern;  // make it xxxx
-		}
-		
-		if (sPattern.length()==4) {
-			sPattern = sPattern + sPattern;  // make it xxxxxxxx
-		}
-		
-		for (int i=0; i < 4; i++) {
-			abyPattern[i] = (byte)Integer.parseInt(sPattern.substring(i*2, (i+1)*2), 16);
-		}
-		
-		byte[] abySector = new byte[256];
-		for (int pos = 0; pos < 256; pos +=4 ) 
-			System.arraycopy(abyPattern, 0, abySector, pos, 4);
-		
-		return abySector;
-	}
-	
+	}	
 }

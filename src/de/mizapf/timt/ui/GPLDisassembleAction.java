@@ -56,13 +56,13 @@ public class GPLDisassembleAction extends Activity {
 					DisassParamDialog disparm = new DisassParamDialog(dvCurrent.getFrame(), content, true);
 					disparm.createGui(imagetool.boldFont);
 					String sHash = Utilities.getHash(content);
-					disparm.setParams(imagetool.loadDisassParams(TIImageTool.GPLPREFIX, sHash));
+					disparm.setParams(settings.loadDisassParams(TIImageTool.GPLPREFIX, sHash));
 					disparm.setVisible(true);
 					int len = disparm.getLength();
 					if (len==0) len = content.length; 
 					if (disparm.confirmed()) {
 						boolean bInvAddr = disparm.skipInvalidAddresses();
-						imagetool.saveDisassParams(TIImageTool.GPLPREFIX, sHash, disparm.getStartAddress(), disparm.getOffset(), len, disparm.getHint(), bInvAddr);
+						settings.saveDisassParams(TIImageTool.GPLPREFIX, sHash, disparm.getStartAddress(), disparm.getOffset(), len, disparm.getHint(), bInvAddr);
 						GPLAssembler gplasm = new GPLAssembler();
 						sText = gplasm.disassemble(content, disparm.getOffset(), disparm.getStartAddress(), len, disparm.getHint(), bInvAddr, disparm.showDataLoc());
 

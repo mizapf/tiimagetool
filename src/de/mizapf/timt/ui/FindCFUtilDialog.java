@@ -78,7 +78,7 @@ class FindCFUtilDialog extends ToolDialog {
 		add(Box.createVerticalStrut(10));
 		String ddprompt = TIImageTool.langstr("ReadWriteCFDD");
 		
-		m_tfddpath = new JTextField(imagetool.getPropertyString(imagetool.DDPATH));
+		m_tfddpath = new JTextField(settings.getPropertyString(imagetool.DDPATH));
 		addSearchLine(nColumnWidth, ddprompt, m_tfddpath);
 		
 		add(Box.createVerticalGlue());

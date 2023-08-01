@@ -78,7 +78,7 @@ public class SaveTFIAction extends Activity {
 		// Set the last import/export directory
 		if (imagetool.getSourceDirectory("impexp")!=null) jfc = new JFileChooser(imagetool.getSourceDirectory("impexp"));
 		else jfc = new JFileChooser();
-		Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+		Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
 
 		jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -87,13 +87,13 @@ public class SaveTFIAction extends Activity {
 		
 		// Not cancelled
 		ExportDialog expparm = new ExportDialog(dvCurrent.getFrame());
-		expparm.createGui(imagetool.boldFont, imagetool.getPropertyString(imagetool.CONVERT, "/\\*_ __x."), imagetool.contentFont);
+		expparm.createGui(imagetool.boldFont, settings.getPropertyString(imagetool.CONVERT, "/\\*_ __x."), imagetool.contentFont);
 
 		expparm.setVisible(true);
 		if (expparm.confirmed()) {
 			// Save the dimensions of the file dialog
-			imagetool.setProperty(imagetool.CONVERT, expparm.getSubstSource() + " " + expparm.getSubstTarget());		
-			imagetool.setProperty(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+			settings.put(imagetool.CONVERT, expparm.getSubstSource() + " " + expparm.getSubstTarget());		
+			settings.put(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			try {
 				// Do a recursive export

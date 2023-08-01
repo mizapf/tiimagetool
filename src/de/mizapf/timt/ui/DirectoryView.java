@@ -55,6 +55,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	boolean			m_bAttached;
 	DirectoryPanel	m_panel;
 	TIImageTool		m_app;
+	Settings		m_Settings;
 	boolean			m_bFocused;
 	JFrame			m_frmOwn;
 	
@@ -119,11 +120,12 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	final static String SAVE = "save";
 	final static String SAVEAS = "saveas";
 	
-	public DirectoryView(Directory dir, boolean bAttached, TIImageTool app) {
+	public DirectoryView(Directory dir, boolean bAttached, TIImageTool app, Settings set) {
 		m_dirCurrent = dir;
 		m_bAttached = bAttached;
 		m_app = app;
-		m_panel = new DirectoryPanel(this);
+		m_Settings = set;
+		m_panel = new DirectoryPanel(this, set);
 			
 		m_bFocused = false;
 		
@@ -366,7 +368,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		else {
 			m_app.markForCut(action == DnDConstants.ACTION_MOVE);
 			PasteAction pa = new PasteAction();
-			pa.setLinks(m_app, getFrame());
+			pa.setLinks(m_app, getFrame(), m_Settings);
 			
 			if (lastSelected instanceof Directory) {
 				pa.paste(this, (Directory)lastSelected);
@@ -382,7 +384,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	void paste(Transferable t) {
 		m_app.setClipboard(t);
 		PasteAction pa = new PasteAction();
-		pa.setLinks(m_app, getFrame());
+		pa.setLinks(m_app, getFrame(), m_Settings);
 		pa.paste(this);
 		// m_panel.updateView();
 	}
@@ -440,7 +442,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		//	System.out.println(DNDCOPY);
 			m_app.markForCut(false);
 			PasteAction pa = new PasteAction();
-			pa.setLinks(m_app, getFrame());
+			pa.setLinks(m_app, getFrame(), m_Settings);
 			if (m_lastSelected instanceof Directory) {
 				pa.paste(this, (Directory)m_lastSelected);
 			}
@@ -452,7 +454,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				//  System.out.println(DNDMOVE);
 				m_app.markForCut(true);
 				PasteAction pa = new PasteAction();
-				pa.setLinks(m_app, getFrame());
+				pa.setLinks(m_app, getFrame(), m_Settings);
 				if (m_lastSelected instanceof Directory) {
 					pa.paste(this, (Directory)m_lastSelected);
 				}
@@ -843,11 +845,11 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			try {
 				if (file.isImageFile()) {
 					ViewImageAction va = new ViewImageAction();
-					va.setLinks(m_app, getFrame());
+					va.setLinks(m_app, getFrame(), m_Settings);
 					va.showPicture(file, file.getVolume(), this);
 				}
 				else {
-					String escape = m_app.getPropertyString(TIImageTool.ESCAPE);
+					String escape = m_Settings.getPropertyString(TIImageTool.ESCAPE);
 					if (file.isTextFile()) {
 						byte[] content = file.getRecordContent();
 						if (Utilities.checkForText(content)==false) {
@@ -857,12 +859,12 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 								return;
 							}
 						}
-						sText = Utilities.sanitizeBytes(content, escape, m_app.getPropertyBoolean(TIImageTool.VERBOSE));
+						sText = Utilities.sanitizeBytes(content, escape, m_Settings.getPropertyBoolean(TIImageTool.VERBOSE));
 					}
 					else {
 						// Do this only when applicable
 						if (file.isBasicFile()) {
-							sText = file.listBasic((m_app.getPropertyBoolean(TIImageTool.BASICVER)==true)? BasicLine.EX_BASIC : BasicLine.TI_BASIC, escape);
+							sText = file.listBasic((m_Settings.getPropertyBoolean(TIImageTool.BASICVER)==true)? BasicLine.EX_BASIC : BasicLine.TI_BASIC, escape);
 						}
 						else {
 							byte[] content = null;

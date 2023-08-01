@@ -51,14 +51,14 @@ public class ImportBinaryAction extends Activity {
 		JFileChooser jfc = null;
 		if (imagetool.getSourceDirectory("impexp")!=null) jfc = new JFileChooser(imagetool.getSourceDirectory("impexp"));
 		else jfc = new JFileChooser();
-		Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+		Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
 
 		jfc.setMultiSelectionEnabled(true);
 		int nReturn = jfc.showOpenDialog(dvCurrent.getFrame());
 
 		if (nReturn == JFileChooser.APPROVE_OPTION) {
-			imagetool.setProperty(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+			settings.put(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 			java.io.File[] afile = jfc.getSelectedFiles();
 			imagetool.setSourceDirectory(afile[0].getParentFile(), "impexp");
 			

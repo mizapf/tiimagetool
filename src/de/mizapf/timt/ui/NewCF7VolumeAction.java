@@ -62,7 +62,7 @@ public class NewCF7VolumeAction extends Activity {
 				}
 				else jfc = new JFileChooser();
 				
-				Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+				Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 				if (dim!=null) jfc.setPreferredSize(dim);
 				
 				ImageFileFilter im = new ImageFileFilter();
@@ -72,7 +72,7 @@ public class NewCF7VolumeAction extends Activity {
 				int nReturn = jfc.showSaveDialog(m_parent);
 				File file = null;
 				if (nReturn == JFileChooser.APPROVE_OPTION) {
-					imagetool.setProperty(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+					settings.put(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 					file = jfc.getSelectedFile();
 					int nSuffixPos = file.getName().indexOf(".");
 					if (nSuffixPos==-1 || nSuffixPos == file.getName().length()-1) {

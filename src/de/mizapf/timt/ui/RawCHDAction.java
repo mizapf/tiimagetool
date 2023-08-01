@@ -44,6 +44,7 @@ public class RawCHDAction extends Activity {
 	public void go() {
 	
 		RawCHDDialog dialog = new RawCHDDialog(m_parent, imagetool);
+		dialog.setSettings(settings);
 		dialog.createGui(imagetool.boldFont);
 		dialog.setVisible(true);
 		

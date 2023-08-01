@@ -153,8 +153,8 @@ public class InstallGenOSAction extends Activity {
 
 		// Before importing, save the "ignore TIFILES name" flag because
 		// we rely on the TIFILES name in this case
-		boolean nameMode = imagetool.getPropertyBoolean(TIImageTool.KEEPNAME);
-		imagetool.setProperty(TIImageTool.KEEPNAME, "false");
+		boolean nameMode = settings.getPropertyBoolean(TIImageTool.KEEPNAME);
+		settings.put(TIImageTool.KEEPNAME, "false");
 		
 		if (sTargetName != null) {
 			String sAutoexec = new String(abyTif);
@@ -175,7 +175,7 @@ public class InstallGenOSAction extends Activity {
 			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InvalidFileName") + ": " + inx.getMessage(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
 		}
 
-		imagetool.setProperty(TIImageTool.KEEPNAME, nameMode? "true" : "false");
+		settings.put(TIImageTool.KEEPNAME, nameMode? "true" : "false");
 
 		dis.close();		
 	}

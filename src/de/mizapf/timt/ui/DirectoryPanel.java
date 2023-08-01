@@ -55,6 +55,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	boolean m_moveAsDefault;
 	
 	JLabel m_FreeMem;
+	Settings m_Settings;
 	
 	static final Color NORM = new Color(250,255,255);
 	private static final Color COLTEXT = new Color(51,51,51);
@@ -112,8 +113,9 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		}
 	}
 	
-	DirectoryPanel(DirectoryView dv) {
+	DirectoryPanel(DirectoryView dv, Settings set) {
 		m_dvCurrent = dv;
+		m_Settings = set;
 		setOpaque(false);
 		setLayout(new BoxLayout(DirectoryPanel.this, BoxLayout.Y_AXIS));
 		createGui();
@@ -144,7 +146,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 //		m_Listing.addListSelectionListener(this);
 		m_Listing.setDragEnabled(true);
 		m_Listing.setDropMode(DropMode.ON);
-		m_Listing.setTransferHandler(new DDTransferHandler(this));
+		m_Listing.setTransferHandler(new DDTransferHandler(this, m_Settings));
 		m_Listing.addMouseListener(m_dvCurrent);
 		
 		InputMap imap = m_Listing.getInputMap();
@@ -153,7 +155,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		imap.put(KeyStroke.getKeyStroke("ctrl V"), "anotherpaste");
 		
 		// We need this to determine the pressed modifiers
-		if (m_dvCurrent.getImageTool().getPropertyBoolean(TIImageTool.DNDC)==false) {
+		if (m_Settings.getPropertyBoolean(TIImageTool.DNDC)==false) {
 			m_moveAsDefault = true;
 		}
 		else {

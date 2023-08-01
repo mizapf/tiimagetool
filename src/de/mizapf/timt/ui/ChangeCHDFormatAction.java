@@ -50,7 +50,7 @@ public class ChangeCHDFormatAction extends Activity {
 		}
 		else jfc = new JFileChooser();
 		
-		Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+		Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
 		ImageFileFilter im = new ImageFileFilter();
 		im.setOnlyHD();
@@ -64,7 +64,7 @@ public class ChangeCHDFormatAction extends Activity {
 			selectedfile = jfc.getSelectedFile();
 			java.io.File filePar = selectedfile.getParentFile();
 			if (!filePar.getName().equals(".")) imagetool.setSourceDirectory(filePar, "image");  // sets the property only for non-UNC paths
-			imagetool.setProperty(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+			settings.put(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 		}
 		else return;
 		
@@ -130,7 +130,7 @@ public class ChangeCHDFormatAction extends Activity {
 			byte[] abyNewImage = null; // MameCHDFormat.createEmptyCHDImage(parm);
 			
 			JFileChooser jfc1 = new JFileChooser();
-			Dimension dim1 = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+			Dimension dim1 = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 			if (dim1!=null) jfc1.setPreferredSize(dim1);
 			
 			ImageFileFilter im1 = new ImageFileFilter();
@@ -139,7 +139,7 @@ public class ChangeCHDFormatAction extends Activity {
 			
 			int nReturn1 = jfc1.showSaveDialog(m_parent);
 			if (nReturn1 == JFileChooser.APPROVE_OPTION) {
-				imagetool.setProperty(TIImageTool.FILEDIALOG, jfc1.getWidth() + "x" + jfc1.getHeight());
+				settings.put(TIImageTool.FILEDIALOG, jfc1.getWidth() + "x" + jfc1.getHeight());
 				fileTarget = jfc1.getSelectedFile();
 				int nSuffixPos = fileTarget.getName().indexOf(".");
 				if (nSuffixPos==-1 || nSuffixPos == fileTarget.getName().length()-1) { 

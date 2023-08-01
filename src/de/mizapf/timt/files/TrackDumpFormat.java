@@ -83,7 +83,18 @@ class TrackDumpFormat extends FloppyImageFormat {
 		return TRACKDUMP;
 	}
 	
-	/** Codec for the Track Dump Format. */
+	/** Codec for the Track Dump Format.
+	
+		Format units are numbered from outside to inside on head 0, and from
+		outside to inside on head 1.
+		
+		funum = cyl + #tracks * head
+		
+		1------->
+		=========[  ]==========
+		0------->
+	*/
+
 	class TrackDumpCodec extends FormatCodec {
 		// WGAP1, WGAP2, WGAP3, WGAP4, WGAP1BYTE, WGAPBYTE, WSYNC1, WSYNC2
 		private static final int WGAP1 = 0;
@@ -183,7 +194,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 			GAP4:      FF (231)               4E (712)    (206, DSDD16)
 
 		*/
-		void prepareNewFormatUnit(int number, byte[] buffer) {
+		void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat) {
 			int start = 0;
 			boolean mfm = true;
 			// System.out.println("prepareNewFU(" + number + ")");
@@ -209,8 +220,8 @@ class TrackDumpFormat extends FloppyImageFormat {
 				buffer[pos++] = (byte)0xfe;
 				
 				// Header
-				buffer[pos++] = (byte)trackToCyl(getTracks(), number);
-				buffer[pos++] = (byte)trackToHead(getTracks(), number);
+				buffer[pos++] = (byte)(number % getTracks());
+				buffer[pos++] = (byte)(number / getTracks());
 				buffer[pos++] = (byte)secno;	
 				buffer[pos++] = (byte)1;
 				buffer[pos++] = (byte)0xf7;
@@ -225,8 +236,9 @@ class TrackDumpFormat extends FloppyImageFormat {
 				buffer[pos++] = (byte)0xfb;
 				
 				// Contents
-				// TODO: Use empty pattern
-				for (int i=0; i < 256; i++) buffer[pos++] = 0x00;
+				for (int i=0; i < 256; i++) {
+					buffer[pos++] = fillpat[i % fillpat.length];
+				}
 				
 				buffer[pos++] = (byte)0xf7;
 				buffer[pos++] = (byte)0xf7;
@@ -370,13 +382,6 @@ class TrackDumpFormat extends FloppyImageFormat {
 		}
 	}
 		
-	/** Format units are numbered from outside to inside on head 0, and from
-		outside to inside on head 1.
-		
-		-------->
-		=========[  ]==========
-		-------->
-	*/
 	int getFUNumberFromSector(int secnum) throws ImageException {
 		Location loc = lbaToChs(secnum, getTracks(), getSectorsPerTrack());
 		int funum = loc.cylinder;

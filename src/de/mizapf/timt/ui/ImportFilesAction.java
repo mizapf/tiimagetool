@@ -55,7 +55,7 @@ public class ImportFilesAction extends Activity {
 		sDirName = imagetool.createValidInputFileName(sDirName);
 							
 		// Shall we look for the metafile?
-		if (imagetool.getPropertyBoolean(TIImageTool.KEEPNAME)==false) {
+		if (settings.getPropertyBoolean(TIImageTool.KEEPNAME)==false) {
 			for (java.io.File iofile : aiof) {
 				Directory sub = null;
 				if (iofile.getName().endsWith("meta.inf")) {
@@ -213,7 +213,7 @@ public class ImportFilesAction extends Activity {
 		if (imagetool.getSourceDirectory("impexp")!=null) jfc = new JFileChooser(imagetool.getSourceDirectory("impexp"));
 		else jfc = new JFileChooser();
 		jfc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+		Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
 
 		jfc.setMultiSelectionEnabled(true);
@@ -221,7 +221,7 @@ public class ImportFilesAction extends Activity {
 		TFIFileFilter im = new TFIFileFilter();
 		jfc.addChoosableFileFilter(im);
 
-		if (imagetool.getPropertyBoolean(imagetool.TFIFILTER)) {
+		if (settings.getPropertyBoolean(imagetool.TFIFILTER)) {
 			jfc.setFileFilter(im);
 		}
 		
@@ -229,7 +229,7 @@ public class ImportFilesAction extends Activity {
 
 		if (nReturn == JFileChooser.APPROVE_OPTION) {
 			// Save dialog dimensions and directory for next time
-			imagetool.setProperty(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
+			settings.put(TIImageTool.FILEDIALOG, jfc.getWidth() + "x" + jfc.getHeight());
 			java.io.File[] afile = jfc.getSelectedFiles();
 			imagetool.setSourceDirectory(afile[0].getParentFile(), "impexp");
 			

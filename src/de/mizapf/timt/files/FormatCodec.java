@@ -69,5 +69,5 @@ abstract class FormatCodec {
 	abstract void encode();
 	
 	/** Creates a new format unit from scratch. */
-	abstract void prepareNewFormatUnit(int number, byte[] buffer);
+	abstract void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat);
 }	

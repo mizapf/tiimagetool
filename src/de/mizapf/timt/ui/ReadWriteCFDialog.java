@@ -134,7 +134,7 @@ class ReadWriteCFDialog extends ToolDialog {
 					 	 ((type==WINDOWS)?	TIImageTool.langstr("ReadWriteCFPathWin") :
 										  	TIImageTool.langstr("ReadWriteCFPathMac"));
 		
-		String lastPath = imagetool.getPropertyString(imagetool.CFCARD);
+		String lastPath = settings.getPropertyString(imagetool.CFCARD);
 		String fileprompt = TIImageTool.langstr("ReadWriteCFImage");
 		String ddprompt = TIImageTool.langstr("ReadWriteCFDD");
 		m_tfImageFile = new JTextField(m_read? TIImageTool.langstr("ReadWriteCFClick") : TIImageTool.langstr("ClickToSelect"));
@@ -184,13 +184,13 @@ class ReadWriteCFDialog extends ToolDialog {
 		int type = imagetool.getOperatingSystem();
 
 		if (type != WINDOWS) {
-			elevate = imagetool.getPropertyString(imagetool.SUPATH);
-			chown = imagetool.getPropertyString(imagetool.COPATH);
+			elevate = settings.getPropertyString(imagetool.SUPATH);
+			chown = settings.getPropertyString(imagetool.COPATH);
 			user = System.getProperty("user.name");
 		}
 		
-		command = imagetool.getPropertyString(imagetool.DDPATH);
-		bsize = imagetool.getPropertyString(imagetool.BSIZE);
+		command = settings.getPropertyString(imagetool.DDPATH);
+		bsize = settings.getPropertyString(imagetool.BSIZE);
 		
 		if (!cfcard.equals(TIImageTool.langstr("ClickToSelect")) 
 			&& !(image.equals(TIImageTool.langstr("ClickToSelect")) || image.equals(TIImageTool.langstr("ReadWriteCFClick"))) 
@@ -252,7 +252,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			dispose();
 		}
 		if (ae.getActionCommand().equals(String.valueOf(DEV))) {
-			String lastPath = imagetool.getPropertyString(imagetool.CFCARD);
+			String lastPath = settings.getPropertyString(imagetool.CFCARD);
 			if (lastPath != null && lastPath.length() > 0) {
 				try {
 					if (type==WINDOWS) {
@@ -275,7 +275,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			if (type==WINDOWS) jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 			else jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			
-			Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+			Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 			if (dim!=null) jfc.setPreferredSize(dim);
 			
 			int nReturn = jfc.showOpenDialog(m_parent);
@@ -300,7 +300,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			jfc = new JFileChooser();
 			jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			
-			Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+			Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 			if (dim!=null) jfc.setPreferredSize(dim);
 			
 			int nReturn = jfc.showOpenDialog(m_parent);
@@ -315,7 +315,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			setupCommand();
 		}
 		if (ae.getActionCommand().equals(String.valueOf(DDLINE))) {
-			String sLastDD = imagetool.getPropertyString(imagetool.DDPATH);
+			String sLastDD = settings.getPropertyString(imagetool.DDPATH);
 			
 			if (sLastDD != null && sLastDD.length() > 0) {
 				if (type==WINDOWS) {
@@ -330,7 +330,7 @@ class ReadWriteCFDialog extends ToolDialog {
 
 			jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 			
-			Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
+			Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 			if (dim!=null) jfc.setPreferredSize(dim);
 			
 			int nReturn = jfc.showOpenDialog(m_parent);
@@ -338,7 +338,7 @@ class ReadWriteCFDialog extends ToolDialog {
 			if (nReturn == JFileChooser.APPROVE_OPTION) {
 				File file = jfc.getSelectedFile();
 				m_tfddpath.setText(file.getAbsolutePath());
-				imagetool.setProperty(imagetool.DDPATH, file.getAbsolutePath());
+				settings.put(imagetool.DDPATH, file.getAbsolutePath());
 			}
 			setupCommand();
 		}
