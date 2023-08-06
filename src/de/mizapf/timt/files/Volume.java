@@ -420,7 +420,7 @@ public class Volume {
 		// Get the format (includes preparing the image) 
 		FileImageFormat newImage = (FileImageFormat)ImageFormat.getImageFormatInstance(sFileName, nFormat, m_FileSystem.getParams());
 		if (newImage == null) {
-			System.err.println("Unknown format");  
+			throw new InternalException(TIImageTool.langstr("ImageUnknown") + ": " + ImageFormat.suffix[nFormat]);
 		}
 		else {
 			newImage.setFileSystem(m_FileSystem);

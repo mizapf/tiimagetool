@@ -36,9 +36,9 @@
          includes="de/mizapf/timt/**/*.java" >
        <compilerarg value="-Xlint:unchecked" />
        <compilerarg value="-Xlint:deprecation" />
-   <!-- javac> -->
+   <!-- javac> 
        <compilerarg value="-Xmaxerrs"/>
-	 <compilerarg value="10"/>
+	 <compilerarg value="10"/>  -->
    </javac> 
 
    <copy todir="${build}/de/mizapf/timt/ui">

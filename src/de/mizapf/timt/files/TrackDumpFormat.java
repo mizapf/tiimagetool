@@ -58,6 +58,17 @@ class TrackDumpFormat extends FloppyImageFormat {
 //		{ 2007040, 2, 80, 36, 3 } 
 	};
 	
+/*	int fm9param[]   = { 16, 11, 45, 231, 0x00, 0xff,  6,  6 };
+	int mfm16param[] = { 50, 22, 50, 206, 0x4e, 0x4e, 12, 12 };
+	int mfm18param[] = { 40, 22, 24, 712, 0x4e, 0x4e, 10, 12 };
+	int mfm36param[] = { 40, 22, 24, 264, 0x4e, 0x4e, 10, 12 }; */
+		
+	int fm9param[]   = { 0, 16, 11, 45, 231, 0x00, 0xff,  6,  6 };
+	int mfm16param[] = { 0, 50, 22, 50, 206, 0x4e, 0x4e, 12, 12 };
+	int mfm18param[] = { 0, 40, 22, 24, 712, 0x4e, 0x4e, 10, 12 };
+	int mfm36param[] = { 0, 40, 22, 24, 264, 0x4e, 0x4e, 10, 12 };
+	Object param[] = { fm9param, mfm16param, mfm18param, mfm36param };		
+	
 	static int vote(String sFile) throws IOException {
 
 		File fl = new File(sFile);
@@ -96,21 +107,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 	*/
 
 	class TrackDumpCodec extends FormatCodec {
-		// WGAP1, WGAP2, WGAP3, WGAP4, WGAP1BYTE, WGAPBYTE, WSYNC1, WSYNC2
-		private static final int WGAP1 = 0;
-		private static final int WGAP2 = 1;
-		private static final int WGAP3 = 2;
-		private static final int WGAP4 = 3;
-		private static final int WGAP1BYTE = 4;
-		private static final int WGAPBYTE = 5;
-		private static final int WSYNC1 = 6;
-		private static final int WSYNC2 = 7;
-		
-		int fm9param[]   = { 16, 11, 45, 231, 0x00, 0xff,  6,  6 };
-		int mfm16param[] = { 50, 22, 50, 206, 0x4e, 0x4e, 12, 12 };
-		int mfm18param[] = { 40, 22, 24, 712, 0x4e, 0x4e, 10, 12 };
-		int mfm36param[] = { 40, 22, 24, 264, 0x4e, 0x4e, 10, 12 };
-		
+						
 		Object param[] = { fm9param, mfm16param, mfm18param, mfm36param };
 		
 		/** Takes the buffer and creates a new sequence of decoded sectors.
@@ -120,22 +117,21 @@ class TrackDumpFormat extends FloppyImageFormat {
 		*/
 		void decode() {
 			// System.out.println("m_nFormatIndex=" + m_nFormatIndex);
-			int count = getSectorsPerTrack(); // tdfgeometry[m_nFormatIndex][3];	
-			int headerpos = getFirstHeaderPos();
-			int contpos = getFirstContentPos();
-			int increm = getIncrement();
+			TrackFormatParameters t = getTrackParameters();
+			int headerpos = getFirstHeaderPos(t);
+			int contpos = getFirstContentPos(t);
+			int increm = getIncrement(t);
 
 			// System.out.println("firsthead=" + bufferpos + ", gap=" + increm);
-			boolean mfm = (count>10);
+			boolean mfm = (t.sectors>10);
 			// System.out.println("format index=" + m_nFormatIndex);
 						
 			int nFound = 0;
 			m_decodedSectors.clear();
 			byte[] content = new byte[TFileSystem.SECTOR_LENGTH];
 
-			while ((nFound < count) && ((contpos+256) <= m_formatUnit.length)) {
+			while ((nFound < t.sectors) && ((contpos+256) <= m_formatUnit.length)) {
 				// m_nCurrentIndex is the current buffer number = track
-
 				
 				// TODO: What should happen if the sector number is outside of
 				// the expected range for this format unit?
@@ -145,6 +141,8 @@ class TrackDumpFormat extends FloppyImageFormat {
 				
 				System.arraycopy(m_formatUnit, contpos, content, 0, TFileSystem.SECTOR_LENGTH);
 
+				// System.out.println("headerpos " + headerpos);
+				
 				ImageSector is = new ImageSector(getLinearSectorNumber(headerpos), 
 												content, (byte)0xfb, mfm, contpos);
 				m_decodedSectors.add(is);			
@@ -194,103 +192,97 @@ class TrackDumpFormat extends FloppyImageFormat {
 			GAP4:      FF (231)               4E (712)    (206, DSDD16)
 
 		*/
-		void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat) {
-			int start = 0;
+		void prepareNewFormatUnit(int number, TrackFormatParameters t) {
+			int start = 0;			
 			boolean mfm = true;
 			// System.out.println("prepareNewFU(" + number + ")");
 			// Skew (only for single density), else start with sector 0 for
 			// each track
-			if (m_nFormatIndex == 0) {
+			if (!t.mfm) {
 				start = (number * 6) % 9;
 			}	
 			int pos = 0;
-			
-			int[] gap = (int[])param[m_nFormatIndex];
 
 			// Fill gap 1
-			for (int i=0; i < gap[WGAP1]; i++) buffer[pos++] = (byte)gap[WGAP1BYTE];
+			for (int i=0; i < t.gap1; i++) m_formatUnit[pos++] = (byte)t.gap1byte;
 			
 			int secno = start;
-			for (int sect = 0; sect < m_format.sectors; sect++) {
+			for (int sect = 0; sect < t.sectors; sect++) {
 				// Sync
-				for (int i=0; i < gap[WSYNC1]; i++) buffer[pos++] = (byte)0;
+				for (int i=0; i < t.sync1; i++) m_formatUnit[pos++] = (byte)0;
 				// IDAM
-				if (m_nFormatIndex != 0)
-					for (int i=0; i < 3; i++) buffer[pos++] = (byte)0xa1;		
-				buffer[pos++] = (byte)0xfe;
+				if (t.mfm)
+					for (int i=0; i < 3; i++) m_formatUnit[pos++] = (byte)0xa1;		
+				m_formatUnit[pos++] = (byte)0xfe;
 				
 				// Header
-				buffer[pos++] = (byte)(number % getTracks());
-				buffer[pos++] = (byte)(number / getTracks());
-				buffer[pos++] = (byte)secno;	
-				buffer[pos++] = (byte)1;
-				buffer[pos++] = (byte)0xf7;
-				buffer[pos++] = (byte)0xf7;
+				m_formatUnit[pos++] = (byte)(number % getTracks());
+				m_formatUnit[pos++] = (byte)(number / getTracks());
+				m_formatUnit[pos++] = (byte)secno;	
+				m_formatUnit[pos++] = (byte)1;
+				m_formatUnit[pos++] = (byte)0xf7;
+				m_formatUnit[pos++] = (byte)0xf7;
 				
-				for (int i=0; i < gap[WGAP2]; i++) buffer[pos++] = (byte)gap[WGAPBYTE];
-				for (int i=0; i < gap[WSYNC2]; i++) buffer[pos++] = (byte)0;
+				for (int i=0; i < t.gap2; i++) m_formatUnit[pos++] = (byte)t.gapbyte;
+				for (int i=0; i < t.sync; i++) m_formatUnit[pos++] = (byte)0;
 
 				// DAM
-				if (m_nFormatIndex != 0)
-					for (int i=0; i < 3; i++) buffer[pos++] = (byte)0xa1;		
-				buffer[pos++] = (byte)0xfb;
+				if (t.mfm)
+					for (int i=0; i < 3; i++) m_formatUnit[pos++] = (byte)0xa1;		
+				m_formatUnit[pos++] = (byte)0xfb;
 				
 				// Contents
 				for (int i=0; i < 256; i++) {
-					buffer[pos++] = fillpat[i % fillpat.length];
+					m_formatUnit[pos++] = t.fillpattern[i % t.fillpattern.length];
 				}
 				
-				buffer[pos++] = (byte)0xf7;
-				buffer[pos++] = (byte)0xf7;
+				m_formatUnit[pos++] = (byte)0xf7;
+				m_formatUnit[pos++] = (byte)0xf7;
+				
 				// GAP3
-				for (int i=0; i < gap[WGAP3]; i++) buffer[pos++] = (byte)gap[WGAPBYTE];
+				for (int i=0; i < t.gap3; i++) m_formatUnit[pos++] = (byte)t.gapbyte;
 				
 				// Save sector position
 				
 				// Now increase the sector number
-				switch (m_nFormatIndex)
-				{
-				case 0:
+				if (t.sectors == 9) {
 					secno = (secno + 7) % 9;
-					break;
-				case 1: 
-					secno = (secno + 9) % 16;
-					break;
-				case 2:
-					secno = (secno + 11) % 18;
-					break;
+				}
+				else {
+					if (t.sectors == 16) {
+						secno = (secno + 9) % 16;
+					}
+					else { 
+						secno = (secno + 11) % 18;
+					}
 				}
 			}
 			// Fill gap 4
-			for (int i=0; i < gap[WGAP4]; i++) buffer[pos++] = (byte)gap[WGAPBYTE];
+			for (int i=0; i < t.gap4; i++) m_formatUnit[pos++] = (byte)t.gapbyte;
 		}
 		
 		// sync1 + mark (1|4) + header + crc + gap2 + sync2 + mark (1|4) + contlen + crc + gap3  
-		private int getIncrement() {
-			int[] gap = (int[])param[m_nFormatIndex];
-			int mark = (gap != fm9param)? 4 : 1;
+		private int getIncrement(TrackFormatParameters t) {
+			int mark = (t.sectors > 10)? 4 : 1;
 			int headerlen = 4;
 			int crclen = 2;
-			int contlen = 256;
-			return gap[WSYNC1] + mark + headerlen + crclen 
-			    +  gap[WGAP2] + gap[WSYNC2] + mark + contlen + crclen 
-			    +  gap[WGAP3];
+			return t.sync1 + mark + headerlen + crclen 
+			    +  t.gap2 + t.sync + mark + TFileSystem.SECTOR_LENGTH + crclen 
+			    +  t.gap3;
 		}
 		
 		// gap1 + sync1 + mark (1|4)
-		private int getFirstHeaderPos() {
-			int[] gap = (int[])param[m_nFormatIndex];
-			int mark = (gap != fm9param)? 4 : 1;
-			return gap[WGAP1] + gap[WSYNC1] + mark;
+		private int getFirstHeaderPos(TrackFormatParameters t) {
+			int mark = (t.sectors > 10)? 4 : 1;
+			return t.gap1 + t.sync1 + mark;
 		}
 		
-		private int getFirstContentPos() {
-			int[] gap = (int[])param[m_nFormatIndex];
-			int mark = (gap != fm9param)? 4 : 1;
+		private int getFirstContentPos(TrackFormatParameters t) {
+			int mark = (t.sectors > 10)? 4 : 1;
 			int headerlen = 4;
 			int crclen = 2;
 				
-			return getFirstHeaderPos() + headerlen + crclen + gap[WGAP2] + gap[WSYNC2] + mark; 
+			return getFirstHeaderPos(t) + headerlen + crclen + t.gap2 + t.sync + mark; 
 		}
 		
 		private Location getHeader(int bufferpos) {
@@ -333,7 +325,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 	
 	/** Called for newly created images. */
 	public TrackDumpFormat(String sFileName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
-		super(sFileName, false);
+		super(sFileName, params);
 		m_codec = new TrackDumpCodec();
 		m_format = params;
 		
@@ -356,12 +348,13 @@ class TrackDumpFormat extends FloppyImageFormat {
 
 		// We do not need to set a new file system because the old one will
 		// be copied here
+		prepareNewImage(params);
 	}
 
 	/** Prepare an empty image. The TrackDumpFormat has no additional data
 		outside of its format units. */
     @Override
-	void prepareNewImage() {
+	void prepareNewImage(FormatParameters params) {
 		System.out.println("Prepare new image; nothing to do for TrackDumpFormat");
 	}
 		
@@ -391,5 +384,10 @@ class TrackDumpFormat extends FloppyImageFormat {
 
 	int getSectorsPerTrack() {
 		return tdfgeometry[m_nFormatIndex][3]; 
+	}
+	
+	@Override
+	TrackFormatParameters getTrackParameters() {
+		return new TrackFormatParameters((int[])param[m_nFormatIndex], getSectorsPerTrack(), getFillPattern());
 	}
 }

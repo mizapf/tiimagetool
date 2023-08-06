@@ -130,6 +130,63 @@ import de.mizapf.timt.TIImageTool;
      
      It is possible that these intermediate bits are at even positions (0, 2, ...)
      so that the read process may have to be advanced by one sample.	
+     
+     Example:
+     
+     MFM
+     
+     00000000: 4858 4350 4943 4645 0028 0200 fa00 0000  HXCPICFE.(......
+     00000010: 0701 0100 ffff ffff ffff ffff ffff ffff  ................
+     00000020: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+     ...
+     000001f0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+     00000200: 0200 c061 3300 c061 6400 c061 9500 c061  ...a3..ad..a...a
+     00000210: c600 c061 f700 c061 2801 c061 5901 c061  ...a...a(..aY..a
+     00000220: 8a01 c061 bb01 c061 ec01 c061 1d02 c061  ...a...a...a...a
+     00000230: 4e02 c061 7f02 c061 b002 c061 e102 c061  N..a...a...a...a
+     00000240: 1203 c061 4303 c061 7403 c061 a503 c061  ...aC..at..a...a
+     00000250: d603 c061 0704 c061 3804 c061 6904 c061  ...a...a8..ai..a
+     00000260: 9a04 c061 cb04 c061 fc04 c061 2d05 c061  ...a...a...a-..a
+     00000270: 5e05 c061 8f05 c061 c005 c061 f105 c061  ^..a...a...a...a
+     00000280: 2206 c061 5306 c061 8406 c061 b506 c061  "..aS..a...a...a
+     00000290: e606 c061 1707 c061 4807 c061 7907 c061  ...a...aH..ay..a
+     000002a0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+     000002b0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+     
+     Track length = 61c0 (raw, both heads;
+                          v-------------6200------------------v
+                          |----30c0----| 40 |---30c0-----| 40 |
+                          ^-------------61c0-------------^
+                          
+     Track length = 30c0 / 2 = 1860 = 6240 bytes
+                          
+     
+     FM
+     
+     00000000: 4858 4350 4943 4645 0028 0202 fa00 0000  HXCPICFE.(......
+     00000010: 0701 0100 ffff ffff ffff ffff ffff ffff  ................
+     00000020: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+     ...
+     000001f0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+     00000200: 0200 b061 3300 b061 6400 b061 9500 b061  ...a3..ad..a...a
+     00000210: c600 b061 f700 b061 2801 b061 5901 b061  ...a...a(..aY..a
+     00000220: 8a01 b061 bb01 b061 ec01 b061 1d02 b061  ...a...a...a...a
+     00000230: 4e02 b061 7f02 b061 b002 b061 e102 b061  N..a...a...a...a
+     00000240: 1203 b061 4303 b061 7403 b061 a503 b061  ...aC..at..a...a
+     00000250: d603 b061 0704 b061 3804 b061 6904 b061  ...a...a8..ai..a
+     00000260: 9a04 b061 cb04 b061 fc04 b061 2d05 b061  ...a...a...a-..a
+     00000270: 5e05 b061 8f05 b061 c005 b061 f105 b061  ^..a...a...a...a
+     00000280: 2206 b061 5306 b061 8406 b061 b506 b061  "..aS..a...a...a
+     00000290: e606 b061 1707 b061 4807 b061 7907 b061  ...a...aH..ay..a
+     000002a0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+     000002b0: ffff ffff ffff ffff ffff ffff ffff ffff  ................
+
+     Track length = 61b0 (raw, see above)
+                          v-------------6200------------------v
+                          |----30b0----| 50 |---30b0-----| 50 |
+                          ^-------------61b0-------------^
+     
+     Track length = 30b0 / 4 = c2c = 3116 bytes
 */
 
 public class HFEFormat extends FloppyImageFormat {
@@ -140,6 +197,20 @@ public class HFEFormat extends FloppyImageFormat {
 	int m_cylinderlen[];
 	byte[] m_abyBufferLUT;
 
+	/*        gap0 sync ixam gap1 ( sync idam head crc gap2 sync dam content crc gap3 )*n    gap4 
+	   FM:    3    6    1    16   (  6    1    4    2   11   6    1   256     2   45  )=334  84
+	   MFM18: 6    12   4    32   (  12   4    4    2   22   12   4   256     2   24  )=342  30   
+	   MFM16: 80   12   4    50   (  12   4    4    2   22   12   4   256     2   50  )=368  206
+	*/
+	
+	// gap0, 1, 2, 3, 4; gapbyte, gap1byte, sync, sync1
+	int fm9param[]   = {  3, 16, 11, 45,  84, 0xff, 0,  6, 0 };
+	int mfm16param[] = {  6, 50, 22, 13, 136, 0x4e, 0, 12, 0 };
+	int mfm18param[] = { 80, 50, 22, 50, 206, 0x4e, 0, 12, 0 };
+	Object param[] = { fm9param, mfm16param, mfm18param };		
+	
+	class EndOfTrackException extends Exception {
+	}
 	
 	/** Taken from the official documentation. */
 	class HFEHeader {
@@ -197,6 +268,7 @@ public class HFEFormat extends FloppyImageFormat {
 		int track0s1_encoding;
 		byte[] m_bheader;
 		
+		/** Create header from file contents. */
 		HFEHeader(byte[] bytes) {
 			m_bheader = bytes;
 			readHeader();
@@ -206,52 +278,9 @@ public class HFEFormat extends FloppyImageFormat {
 			this(ffs.getTracksPerSide(), ffs.getSides(), ffs.getDensity());
 		}
 		
-		private void readHeader() {
-			byte[] bytes = m_bheader;
-			signature = new String(bytes, 0, 8);
-			formatrevision = bytes[8] & 0xff;
-			number_of_track = bytes[9] & 0xff;
-			number_of_side = bytes[10] & 0xff;
-			track_encoding = bytes[11] & 0xff;
-			bitRate = Utilities.getInt16rev(bytes, 12);
-			floppyRPM = Utilities.getInt16rev(bytes, 14);
-			floppyinterfacemode = bytes[16] & 0xff;
-			dnu = bytes[17] & 0xff;
-			track_list_offset = Utilities.getInt16rev(bytes, 18);
-			write_allowed = (bytes[20]!=((byte)0x00));
-			single_step = (bytes[21]!=((byte)0x00));
-			track0s0_altencoding = (bytes[22]==((byte)0x00));
-			track0s0_encoding = bytes[23] & 0xff;
-			track0s1_altencoding = (bytes[24]==((byte)0x00));
-			track0s1_encoding = bytes[25] & 0xff;
-			
-			// TODO: Check this?
-			// m_nHeads = number_of_side;
-		}		
-		
-		// No localized because this is only used in a commented output operation
-		public String toString() {
-			StringBuilder sb = new StringBuilder();
-			sb.append("Revision = ").append(formatrevision);
-			sb.append("\nTracks = ").append(number_of_track);
-			sb.append("\nSides = ").append(number_of_side);
-			sb.append("\nEncoding = ");
-			if (track_encoding < 4) sb.append(encoding[track_encoding]);
-			else sb.append(encoding[UNKNOWN_ENCODING]);
-			sb.append("\nBit rate = ").append(bitRate).append(" kbps");
-			if (floppyRPM != 0) sb.append("\nFloppy RPM = ").append(floppyRPM);
-			sb.append("\nFloppy interface mode = ");
-			if (floppyinterfacemode != 0xfe) sb.append(mode[floppyinterfacemode]);
-			else sb.append(mode[0x0e]);
-			sb.append("\nTrack tables at offset = ").append(track_list_offset*512);
-			sb.append("\nWrite allowed = ").append(write_allowed);
-			sb.append("\nSingle steps = ").append(single_step);
-			if (track0s0_altencoding) sb.append("\nAlternate encoding for track 0 side 0 = ").append(track0s0_encoding);
-			if (track0s1_altencoding) sb.append("\nAlternate encoding for track 0 side 1 = ").append(track0s1_encoding);
-			return sb.toString();			
-		}
-		
 		// Cannot use static in inner class...
+		
+		/** Create a new header from the settings. */
 		public HFEHeader(int tracks, int sides, int density) {
 			byte[] newheader = new byte[512];
 			for (int i=0; i < 8; i++) newheader[i] = (byte)("HXCPICFE".charAt(i)); 
@@ -278,8 +307,53 @@ public class HFEFormat extends FloppyImageFormat {
 			readHeader();
 		}
 		
+		private void readHeader() {
+			byte[] bytes = m_bheader;
+			signature = new String(bytes, 0, 8);
+			formatrevision = bytes[8] & 0xff;
+			number_of_track = bytes[9] & 0xff;
+			number_of_side = bytes[10] & 0xff;
+			track_encoding = bytes[11] & 0xff;
+			bitRate = Utilities.getInt16rev(bytes, 12);
+			floppyRPM = Utilities.getInt16rev(bytes, 14);
+			floppyinterfacemode = bytes[16] & 0xff;
+			dnu = bytes[17] & 0xff;
+			track_list_offset = Utilities.getInt16rev(bytes, 18);
+			write_allowed = (bytes[20]!=((byte)0x00));
+			single_step = (bytes[21]!=((byte)0x00));
+			track0s0_altencoding = (bytes[22]==((byte)0x00));
+			track0s0_encoding = bytes[23] & 0xff;
+			track0s1_altencoding = (bytes[24]==((byte)0x00));
+			track0s1_encoding = bytes[25] & 0xff;
+			
+			// TODO: Check this?
+			// m_nHeads = number_of_side;
+		}		
+		
 		public byte[] getBytes() {
 			return m_bheader;
+		}
+		
+		// No localized because this is only used in a commented output operation
+		public String toString() {
+			StringBuilder sb = new StringBuilder();
+			sb.append("Revision = ").append(formatrevision);
+			sb.append("\nTracks = ").append(number_of_track);
+			sb.append("\nSides = ").append(number_of_side);
+			sb.append("\nEncoding = ");
+			if (track_encoding < 4) sb.append(encoding[track_encoding]);
+			else sb.append(encoding[UNKNOWN_ENCODING]);
+			sb.append("\nBit rate = ").append(bitRate).append(" kbps");
+			if (floppyRPM != 0) sb.append("\nFloppy RPM = ").append(floppyRPM);
+			sb.append("\nFloppy interface mode = ");
+			if (floppyinterfacemode != 0xfe) sb.append(mode[floppyinterfacemode]);
+			else sb.append(mode[0x0e]);
+			sb.append("\nTrack tables at offset = ").append(track_list_offset*512);
+			sb.append("\nWrite allowed = ").append(write_allowed);
+			sb.append("\nSingle steps = ").append(single_step);
+			if (track0s0_altencoding) sb.append("\nAlternate encoding for track 0 side 0 = ").append(track0s0_encoding);
+			if (track0s1_altencoding) sb.append("\nAlternate encoding for track 0 side 1 = ").append(track0s1_encoding);
+			return sb.toString();			
 		}
 	}
 		
@@ -301,8 +375,7 @@ public class HFEFormat extends FloppyImageFormat {
 		HFECodec(int encoding, int rate) {
 			super();
 			m_mfm = (encoding < HFEHeader.ISOIBM_FM_ENCODING);
-			m_codeRate = rate / 125;
-			if (encoding==HFEHeader.ISOIBM_FM_ENCODING) m_codeRate <<=1;
+			m_codeRate = rate;
 		}
 		
 		void decode() {
@@ -312,7 +385,7 @@ public class HFEFormat extends FloppyImageFormat {
 			byte[] abySector;
 			m_decodedSectors.clear();
 			
-			// System.out.println("Format unit number " + m_nCurrentFormatUnit + ", length=" + m_formatUnit.length);
+			// System.out.println("Format unit length=" + m_formatUnit.length);
 			m_samplecount = m_formatUnit.length * 8;  // Each byte encodes 8 cells; all bits for either head
 			// We count all cells, even for the oversampling of FM. In that case,
 			// a data bit takes four cells.
@@ -320,17 +393,17 @@ public class HFEFormat extends FloppyImageFormat {
 			// System.out.println("mfm = " + m_mfm);
 			// System.out.println("coderate = " + m_codeRate);
 			// System.out.println("cells = " + m_samplecount);
-			
+
 			for (m_currentHead = 0; m_currentHead < 2; m_currentHead++) {
 				m_first = true;
 				m_currentSampleNumber = 0;
-			
+				
 				while (m_currentSampleNumber < m_samplecount) {
 					// System.out.println(m_currentSampleNumber);
-					boolean foundIDAM = searchIDAM();
-					if (foundIDAM) {
+					try {
+						searchIDAM();
 						initcrc = (m_mfm)? 0xb230 : 0xef21;
-
+						
 						// Read the header
 						abyHeader[0] = (byte)readBits(8);
 						abyHeader[1] = (byte)readBits(8);
@@ -345,31 +418,29 @@ public class HFEFormat extends FloppyImageFormat {
 						// FIXME: We should abandon this sector when the CRC is bad
 						// TODO: Discuss what to do when things are not quite ok
 						
-						boolean foundDAM = searchDAM();
-						if (foundDAM) {					
-							int mark = m_value;
-							int pos = m_currentSampleNumber; // right after the DAM, first cell of the contents
-							
-							// Create a new ImageSector
-							abySector = new byte[TFileSystem.SECTOR_LENGTH];
-							for (int i=0; i < TFileSystem.SECTOR_LENGTH; i++) {
-								abySector[i] = (byte)readBits(8);
-							}
-							// Read the CRC
-							int crcd = readBits(16);
-							// System.out.println("Found sector " + new Location(abyHeader) + ", pos=" + pos);
-							// System.out.println(Utilities.hexdump(abySector));
-							Location loc = new Location(abyHeader);
-							ImageSector sect = new ImageSector(chsToLba(loc), abySector, (byte)mark, m_mfm, pos);
-							sect.setLocation(loc);
-							// Check against the calculated value						
-							if (crcd != sect.getCRC()) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), chsToLba(loc), Utilities.toHex(sect.getCRC(),4), Utilities.toHex(crcd, 4)));
-							// else System.out.println("Good data CRC = " + Utilities.toHex(crcd, 4));
-							
-							m_decodedSectors.add(sect);
+						int mark = searchDAM();
+						int pos = m_currentSampleNumber; // right after the DAM, first cell of the contents
+						
+						// Read the sector contents
+						abySector = new byte[TFileSystem.SECTOR_LENGTH];
+						for (int i=0; i < TFileSystem.SECTOR_LENGTH; i++) {
+							abySector[i] = (byte)readBits(8);
 						}
+						// and the CRC
+						int crcd = readBits(16);
+						// System.out.println("Found sector " + new Location(abyHeader) + ", pos=" + pos);
+						// System.out.println(Utilities.hexdump(abySector));
+						
+						Location loc = new Location(abyHeader);
+						ImageSector sect = new ImageSector(chsToLba(loc), abySector, (byte)mark, m_mfm, pos);
+						sect.setLocation(loc);
+						// Check against the calculated value						
+						if (crcd != sect.getCRC()) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), chsToLba(loc), Utilities.toHex(sect.getCRC(),4), Utilities.toHex(crcd, 4)));
+						// else System.out.println("Good data CRC = " + Utilities.toHex(crcd, 4));
+						
+						m_decodedSectors.add(sect);
 					}
-					else {
+					catch (EndOfTrackException ex) {
 						// TODO: What if we have different sector counts?
 						if (m_nSectorsPerTrack == -1) m_nSectorsPerTrack = m_decodedSectors.size();
 						break;
@@ -377,12 +448,13 @@ public class HFEFormat extends FloppyImageFormat {
 				}
 				// System.out.println("Next head " + (m_currentHead+1));
 			}
-			System.out.println("Found " + m_decodedSectors.size() + " sectors in format unit " + m_nCurrentFormatUnit);
+			if ((m_decodedSectors.size() % 9) != 0 && m_decodedSectors.size() % 16 != 0)
+				System.out.println("Found " + m_decodedSectors.size() + " sectors");
 		}
 		
 		/** Get the number of bits from the cell level sequence. 
 		*/
-		private int readBits(int number) {
+		private int readBits(int number) throws EndOfTrackException {
 			m_value = 0;
 			for (int i=0; i < number; i++) {
 				m_value <<= 1;
@@ -392,35 +464,34 @@ public class HFEFormat extends FloppyImageFormat {
 		}		
 		
 		/** Get the next bit from the cell level sequence.	*/
-		private int getNextBit() {
-			int clock = getNextCell();
-			if (clock < 0) return -1;
-			
-			return getNextCell(); 
+		private int getNextBit() throws EndOfTrackException {
+			int clock = getNextCell();	// throw away clock bit 	
+			return getNextCell(); // return data bit
 		}
 		
 		/** Gets the next cell. This depends on the currently selected head.  
+			Skip all leading 0 at the beginning of the track. 
 		    When we are at the end of this format unit, any further read will
 		    stay at the last bit. */
-		private int getNextCell() {
+		private int getNextCell() throws EndOfTrackException {
 			int value = 0;
 			if (m_first) {
 				while (value == 0) {
 					value = getNextSample();
-					if (value < 0) return -1;
 				}
 				m_first = false;
 			}
 			else 
 				value = getNextSample();
 
-			if (m_codeRate == 4) getNextSample();
+			// For double-rate sampling, throw away the next sample
+			if ((m_codeRate == 250) && !m_mfm) getNextSample();
 			
 			m_shiftRegister = ((m_shiftRegister << 1) | value) & 0xffff;					
 			return value; 		
 		}
 		
-		private int getNextSample() {
+		private int getNextSample() throws EndOfTrackException {
 			if ((m_currentSampleNumber % 8)==0) {			
 				int position = m_currentSampleNumber / 8; 
 				// Consider the interleave of both sides every 0x100 bytes
@@ -434,7 +505,7 @@ public class HFEFormat extends FloppyImageFormat {
 					// Go to the last position for this head
 					// actPosition = m_formatUnit.length - (1-m_currentHead) * 256 - 1;
 					// m_currentSampleNumber = (m_formatUnit.length / 2) * 8 - 1;
-					return -1;
+					throw new EndOfTrackException();
 				}
 				
 				m_currentGroup = (byte)((m_formatUnit[actPosition])&0xff);
@@ -446,16 +517,16 @@ public class HFEFormat extends FloppyImageFormat {
 			return value;
 		}
 			
-		private boolean searchIDAM() {
+		private int searchIDAM() throws EndOfTrackException{
 			return searchMark(false);
 		}
 		
-		private boolean searchDAM() {
+		private int searchDAM() throws EndOfTrackException {
 			return searchMark(true);
 		}
 		
-		private boolean searchMark(boolean dam) {
-			m_value = 0;
+		private int searchMark(boolean dam) throws EndOfTrackException {
+			int value = 0;
 			int marks = 1;
 			int bit = 0;
 			int val = 0;
@@ -474,13 +545,12 @@ public class HFEFormat extends FloppyImageFormat {
 				
 				marks = 3;
 				while (marks > 0) {
-					bit = getNextCell();
-					if (bit < 0) return false;
+					getNextCell();
 					if (m_shiftRegister == 0x4489) marks--;  // A1
 					
 					if (marks == 0) {
-						m_value = readBits(8);  // read the ident field
-						if ((m_value & mask) != mark) marks = 3; // Not the expected mark
+						value = readBits(8);  // read the ident field
+						if ((value & mask) != mark) marks = 3; // Not the expected mark
 					}
 				}
 				// System.out.println(Utilities.toHex(m_value,4));
@@ -496,8 +566,7 @@ public class HFEFormat extends FloppyImageFormat {
 				}
 				
 				while (marks > 0) {
-					bit = getNextCell();
-					if (bit < 0) return false;
+					getNextCell();
 					// Valid DAMs are 1111 0101 0110 1010  = f56a
 					//                1111 0101 0110 1011  = f56b
 					//                1111 0101 0110 1110  = f56e
@@ -506,79 +575,103 @@ public class HFEFormat extends FloppyImageFormat {
 				}
 				
 				// Get the value
-				m_value = 0;
+				value = 0;
 				val = m_shiftRegister; // .d.d.d.d.d.d.d.d
 				int setbit = 0x0100;
 				for (int i=0; i < 8; i++) {
-					if ((val & 1)!=0) m_value |= setbit;
+					if ((val & 1)!=0) value |= setbit;
 					val >>= 2;
-					m_value >>= 1;
+					value >>= 1;
 				}
 			}
-			return true;
+			return value;
 		}
 		
 		void encode() {
-			boolean ok = true;
-			for (ImageSector isect : m_decodedSectors) {
-				int pos = isect.getPosition();
-				m_currentSampleNumber = pos;
-				m_currentHead = isect.getLocation().head;
-				// m_debug = (isect.getNumber()==0);
-
-				// System.out.println("writing sector " + isect.getNumber() + ", pos=" + pos);
-				isect.startStream();
-				
-				for (int i=0; i < isect.getData().length + 2; i++) {
-					int val = isect.nextByte();
-					ok = writeBits(val, 8);
-					if (!ok) break;
+			try {
+				for (ImageSector isect : m_decodedSectors) {
+					int pos = isect.getPosition();
+					m_currentSampleNumber = pos;
+					m_currentHead = isect.getLocation().head;
+					// m_debug = (isect.getNumber()==0);
+					
+					// System.out.println("writing sector " + isect.getNumber() + ", pos=" + pos);
+					isect.startStream();
+					
+					for (int i=0; i < isect.getData().length + 2; i++) {
+						int val = isect.nextByte();
+						writeBits(val, 8);
+					}
 				}
 			}
-			if (!ok) System.out.println("End of track encountered during write");
+			catch (EndOfTrackException eotx) {
+				System.out.println("End of track encountered during write");
+			}
 		}
 		
-		void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat) {
-			throw new NotImplementedException("HFECodec");	
+		void prepareNewFormatUnit(int funum, TrackFormatParameters t) {
+			try {
+				formatTrack(funum, 0, t);
+			}
+			catch (EndOfTrackException et) {
+				System.out.println("Reached end of track for head 0");
+			}
+			try {
+				formatTrack(funum, 1, t);
+			}
+			catch (EndOfTrackException et) {
+				// System.out.println("Reached end of track for head 1");
+			}
+			
+			// After the innermost cylinder has been written, set the image as
+			// initialized
+			if (funum == m_nTracks-1) m_bInitial = false; 
+		}
+		
+		private void writeBytes(int value, int count) throws EndOfTrackException {
+			for (int i=0; i < count; i++) {
+				// System.out.println(m_currentSampleNumber);
+				writeBits(value, 8);
+			}
 		}
 		
 		/** Writes the last n bits of the value. Starts with the leftmost bit. */ 
-		private boolean writeBits(int value, int number) {
+		private void writeBits(int value, int number) throws EndOfTrackException {
 			int mask = 1 << (number-1);
-			boolean ok = true;
 			for (int i=0; i < number; i++) {
 				int bit = ((value & mask)!=0)? 1 : 0;
-				ok = writeNextBit(bit);
-				if (!ok) break;
+				writeNextBit(bit);
 				mask >>= 1;
 			}
-			return ok;
-		}
-		
-		private boolean writeNextBit(int databit) {
-			int clock = 1;
-			
-			if ((m_header.track_encoding == HFEHeader.ISOIBM_MFM_ENCODING)
-				&& ((m_lastDataBit == 1) || (databit == 1)))
-				clock = 0; 
-			
-			boolean ok = writeNextCell(clock);     // Clock bit
-			if (!ok) return false;
-			writeNextCell(databit);   // Data bit
-			if (!ok) return false;
-			m_lastDataBit = databit;
-			return true;
 		}
 
-		private boolean writeNextCell(int value) {
-			// if (m_debug) System.out.print(value);
-			boolean ok = writeNextSample(value);
-			if (!ok) return false;
-			if (m_codeRate == 4) ok = writeNextSample(0);  // no change for the next cell
-			return ok;
+		private void writePattern(int value) throws EndOfTrackException {
+			for (int i=0; i < 16; i++) {
+				int cell = ((value & 0x8000)>>15);
+				writeNextCell(cell);
+				value <<= 1;
+				if ((i & 1)==1) m_lastDataBit = cell;
+			}
 		}
 		
-		private boolean writeNextSample(int level) {
+		private void writeNextBit(int databit) throws EndOfTrackException {
+			int clock = 1;
+			
+			if (m_mfm && ((m_lastDataBit == 1) || (databit == 1)))
+				clock = 0; 
+			
+			writeNextCell(clock);     // Clock bit
+			writeNextCell(databit);   // Data bit
+			m_lastDataBit = databit;
+		}
+
+		private void writeNextCell(int value) throws EndOfTrackException {
+			// if (m_debug) System.out.print(value);
+			writeNextSample(value);
+			if ((m_codeRate == 250) && !m_mfm) writeNextSample(0);  // no change for the next cell
+		}
+		
+		private void writeNextSample(int level) throws EndOfTrackException {
 			// For each track, sample 0 starts at a byte boundary
 			// if (m_debug) System.out.print(level);
 			int position = m_currentSampleNumber / 8; 
@@ -587,8 +680,11 @@ public class HFEFormat extends FloppyImageFormat {
 			int offset = position % 256;		
 			int actPosition = block*512 + m_currentHead * 256 + offset;
 
+			// For FM, the last cell may be beyond the end of the track
+			// because we added a 0 cell at the beginning
 			if (actPosition >= m_formatUnit.length) {
-				return false;
+				// System.out.println("Gone too far: actPos = " + actPosition + ", max = " + m_formatUnit.length);
+				throw new EndOfTrackException();
 			}		
 			
 			level &= 1;
@@ -600,8 +696,123 @@ public class HFEFormat extends FloppyImageFormat {
 				m_formatUnit[actPosition] &= ~bit;
 
 			m_currentSampleNumber++;
-			return true;
 		}
+		
+		private void formatTrack(int cylinder, int head, TrackFormatParameters t) throws EndOfTrackException {
+			// System.out.println("Creating new track on cylinder " + cylinder + ", head " + head);
+						
+			// Init track position
+			m_currentSampleNumber = 0;
+			m_currentHead = head;
+			
+			// Start sector number
+			int sector = 0;
+			m_lastDataBit = 0;
+			int initcrc = 0;
+						
+			byte[] abyHeader = new byte[4];
+			
+			if (!t.mfm) {
+				if (m_codeRate == 250) writeNextCell(0); // Write a first empty cell		
+				sector = (cylinder * 6) % 9;
+			}
+			
+			writeBytes(t.gapbyte, t.gap0);		// Gap 0
+			writeBytes(0x00, t.sync);			// Sync
+			
+			// write IXAM
+			if (!t.mfm) {
+				writePattern(0xf77a);    // fc
+			}
+			else {
+				writePattern(0x5224);    // c2
+				writePattern(0x5224);    
+				writePattern(0x5224);    
+				writeBits(0xfc, 8);
+			}
+			
+			writeBytes(t.gapbyte, t.gap1);		// Gap 1 (different gap byte only for TDF)
+			
+			// For all sectors ...
+			// System.out.println("t.sectors = " + t.sectors);
+			for (int i=0; i < t.sectors; i++) {
+
+				// Sync 
+				writeBytes(0x00, t.sync);			// Sync (different sync only for TDF)
+				
+				if (!t.mfm) {			
+					// IDAM
+					writePattern(0xf57e);     // fe
+					initcrc = 0xef21;
+				}
+				else {
+					writePattern(0x4489); 
+					writePattern(0x4489); 
+					writePattern(0x4489); 
+					writeBits(0xfe, 8);
+					initcrc = 0xb230;
+				}
+				
+				// System.out.println("Write c=" + cylinder + ", h=" + head + ", s=" + sector);
+				abyHeader[0] = (byte)cylinder;
+				abyHeader[1] = (byte)head;
+				abyHeader[2] = (byte)sector;
+				abyHeader[3] = (byte)0x01;
+				
+				for (byte b : abyHeader) writeBits(b, 8);
+				int crcc = Utilities.crc16_get(abyHeader, 0, 4, initcrc);	
+				writeBits(crcc, 16);
+				
+				// Gap2
+				// System.out.println("Write GAP 2 at " + m_currentSampleNumber);
+				writeBytes(t.gapbyte, t.gap2);	
+
+				// Sync
+				writeBytes(0x00, t.sync);
+
+				// DAM
+				if (!t.mfm) {
+					writePattern(0xf56f); 
+				}
+				else {
+					writePattern(0x4489); 
+					writePattern(0x4489); 
+					writePattern(0x4489); 
+					writeBits(0xfb, 8);
+				}
+				
+				// Sector content
+				// All sectors are filled with the empty pattern
+				byte[] content = new byte[TFileSystem.SECTOR_LENGTH];
+				// System.out.println("Write content at " + m_currentSampleNumber);
+				for (int k=0; k < 256; k++) {
+					content[k] = t.fillpattern[k % t.fillpattern.length];
+					writeBits(t.fillpattern[k % t.fillpattern.length], 8);
+				}
+				
+				// CRC
+				initcrc = t.mfm? 0xe295 : 0xbf84;
+				int crcd = Utilities.crc16_get(content, 0, 256, initcrc);
+				writeBits(crcd, 16);
+				
+				// Gap3
+				// System.out.println("Write GAP 3 at " + m_currentSampleNumber);
+				writeBytes(t.gapbyte, t.gap3);	
+				
+				// Next sector
+				if (t.sectors < 10)
+					sector = (sector + 7) % 9;
+				else {
+					if (t.sectors < 18)
+						sector = (sector + 9) % 16;
+					else
+						sector = (sector + 11) % 18;
+				}
+			}	
+			// GAP4
+			// System.out.println("Write GAP 4 at " + m_currentSampleNumber);
+			writeBytes(t.gapbyte, t.gap4);	
+		}	
 	}
 	
 	static int vote(String sFile) throws FileNotFoundException, IOException {
@@ -619,10 +830,11 @@ public class HFEFormat extends FloppyImageFormat {
 		return 100;
 	}
 	
+	/** Create from file. */
 	public HFEFormat(String sImageName) throws IOException, ImageException {
 		super(sImageName);
 		
-		// Read the header
+		// Read the header from the file
 		m_file.seek(0);
 		byte[] fhead = new byte[512];
 		m_file.readFully(fhead);
@@ -637,31 +849,62 @@ public class HFEFormat extends FloppyImageFormat {
 		m_codec = new HFECodec(m_header.track_encoding, m_header.bitRate);
 		
 		// Populate the lookup table
-		readTrackLookupTables();
-			
+		m_abyBufferLUT = new byte[m_nTracks * 4];
+		m_file.seek(m_header.track_list_offset*512);  // given in multiples of 0x200
+		m_file.readFully(m_abyBufferLUT);  // Read the LUT
+		
+		locateFormatUnits(m_header.number_of_track);
+
 		// We do not know the total sector count yet
 		m_fs = new FloppyFileSystem();
 		setVolumeInformation();
+		
+		System.out.println("total sectors = " + m_fs.getTotalSectors());
+	}
+
+	/** Create new format. */
+	public HFEFormat(String sFileName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
+		super(sFileName, params);
+		prepareNewImage(params);
 	}
 	
 	public String getFormatName() {
 		return TIImageTool.langstr("HFEImage");
 	}
 	
-	private void readTrackLookupTables() throws IOException {
-				
-		m_abyBufferLUT = new byte[m_nTracks * 4];
-		m_file.seek(m_header.track_list_offset*512);  // given in multiples of 0x200
-		m_file.readFully(m_abyBufferLUT);  // Read the LUT
+	private void locateFormatUnits(int tracks) {
+		m_cylinderpos = new long[tracks];
+		m_cylinderlen = new int[tracks];
 		
-		m_cylinderpos = new long[m_nTracks];
-		m_cylinderlen = new int[m_nTracks];
-		
-		for (int i=0; i < m_nTracks; i++) {
+		for (int i=0; i < tracks; i++) {
 			m_cylinderpos[i] = Utilities.getInt16rev(m_abyBufferLUT, i*4) * 512;
 			m_cylinderlen[i] = Utilities.getInt16rev(m_abyBufferLUT, i*4+2);
 			// System.out.println("Cylinder " + i + " at pos " + m_cylinderpos[i] + ", len " +  m_cylinderlen[i]);
 		}
+	}
+	
+	/** Create a new LUT. */
+	private byte[] createLookupTable(int tracks, int encoding) {
+		// Lookup table
+		byte[] tracklut = new byte[512];
+		Arrays.fill(tracklut, (byte)0xff);
+
+		int trackpos = 0x0400;	
+		int tracklen = (encoding == HFEHeader.ISOIBM_FM_ENCODING)? 0x61b0 : 0x61c0;
+
+		// Round up to next 0x200 multiple
+		int trackinc = (tracklen + 0x200) & 0xfe00;
+		
+		for (int cyl = 0; cyl < tracks; cyl++) {
+			// little-endian
+			tracklut[cyl*4] = (byte)((trackpos >> 9) & 0xff);
+			tracklut[cyl*4+1] = (byte)((trackpos >> 17) & 0xff);
+			tracklut[cyl*4+2] = (byte)(tracklen & 0xff);
+			tracklut[cyl*4+3] = (byte)((tracklen >> 8) & 0xff);
+
+			trackpos += trackinc;
+		}		
+		return tracklut;
 	}
 	
 	/** Find the image sector by the linear sector number. */
@@ -719,40 +962,54 @@ public class HFEFormat extends FloppyImageFormat {
 		if (ts == -1) {
 			ts = getSectorsPerTrack() * getTracks() * 2;
 		}
-		if (ts == 0) return 99999;
+		if (ts == 0) return 99999;   // FIXME
 		return ts;
 	}
-	
-	/** Called from HFEReader. Similar to the method above, just not trying to find sectors. */
-	public byte[] getTrackBytes(int cylinder, int head) throws IOException, ImageException {
-		throw new NotImplementedException("HFE");
-		/*
-		Location loc = new Location(cylinder, head, 0, 0);
 
-		// TODO
-		m_currentCylinder = loc.cylinder;
-		m_currentHead = loc.head;
-
-		m_abyBuffer = new byte[m_bufferlen1[loc.track]];
-		m_ImageFile.seek(m_bufferpos[loc.track]);
-		m_ImageFile.readFully(m_abyBuffer);
-		
-		m_samplecount = m_abyBuffer.length * 4;  // All bits for either head
-			
-		// Reset to start
-		m_currentSampleNumber = 0;
-		m_first = true;
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		while (m_currentSampleNumber < m_bufferlen1[loc.cylinder] * 4) {
-			baos.write(readBits(8));
-		}
-
-		return baos.toByteArray(); */
-	}
-
-	/** Prepare an empty image.  */
+	/** Prepare an empty image. Write a new header and create a lookup table. */
     @Override
-	void prepareNewImage() {
-		throw new NotImplementedException("HFEFormat");
+	void prepareNewImage(FormatParameters params) throws IOException, ImageException {
+		
+		m_nSectorsPerTrack = params.sectors;
+		
+		// Create header
+		m_header = new HFEHeader(params.cylinders, 
+								  params.heads, 
+								 (params.sectors < 10)? FloppyFileSystem.SINGLE_DENSITY : FloppyFileSystem.DOUBLE_DENSITY);
+		
+		m_codec = new HFECodec(m_header.track_encoding, m_header.bitRate);
+						
+		m_nTracks = m_header.number_of_track;
+		
+		m_abyBufferLUT = createLookupTable(m_header.number_of_track, m_header.track_encoding);
+		locateFormatUnits(m_header.number_of_track);
+		
+		m_file.seek(0);
+		m_file.write(m_header.getBytes());  // 512 bytes
+		m_file.seek(0x200);
+		m_file.write(m_abyBufferLUT);
+		
+		// Determine the suitable track layout
+		m_nFormatIndex = NONE;
+		switch (params.sectors) {
+		case 9:
+			m_nFormatIndex = 0;
+			break;
+		case 16: 
+			m_nFormatIndex = 2;
+			break;
+		case 18: 
+			m_nFormatIndex = 1;
+			break;
+		}
+		
+		if (m_nFormatIndex == NONE) {
+			throw new ImageException(TIImageTool.langstr("InvalidFormat"));
+		}
+	}
+		
+	TrackFormatParameters getTrackParameters() {
+		// System.out.println("Index = " + m_nFormatIndex);
+		return new TrackFormatParameters((int[])param[m_nFormatIndex], getSectorsPerTrack(), getFillPattern());
 	}
 }

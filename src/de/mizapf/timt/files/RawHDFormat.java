@@ -67,13 +67,16 @@ class RawHDFormat extends HarddiskImageFormat {
 			throw new NotImplementedException("RawHDCodec");	
 		}
 		
-		void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat) {
+		void prepareNewFormatUnit(int funum, TrackFormatParameters t) {
 			throw new NotImplementedException("RawHDCodec");	
 		}
 	}
 	
 	public RawHDFormat(String sImageName) throws IOException, ImageException {
 		super(sImageName);
+		
+		m_file = new RandomAccessFile(sImageName, "r");
+		m_bInitial = false;
 		
 		// Read the first 512 bytes
 		byte[] sector0 = new byte[512];
@@ -125,7 +128,12 @@ class RawHDFormat extends HarddiskImageFormat {
 
 	/** Prepare an empty image.  */
     @Override
-	void prepareNewImage() {
+	void prepareNewImage(FormatParameters params) {
+		throw new NotImplementedException("RawHDFormat");
+	}
+		
+	@Override
+	TrackFormatParameters getTrackParameters() {
 		throw new NotImplementedException("RawHDFormat");
 	}
 }

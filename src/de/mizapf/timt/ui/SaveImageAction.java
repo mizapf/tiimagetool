@@ -27,6 +27,7 @@ import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.files.Volume;
 import de.mizapf.timt.files.ImageException;
 import de.mizapf.timt.files.ProtectedException;
+import de.mizapf.timt.util.InternalException;
 
 public class SaveImageAction extends Activity {
 
@@ -47,25 +48,28 @@ public class SaveImageAction extends Activity {
 		DirectoryView dvCurrent = imagetool.getSelectedView();
 		Volume vol = dvCurrent.getVolume();
 		// If the image is still unnamed, treat as Save As
-		if (vol.isMemoryImage()) {
-			SaveAsImageAction saia = new SaveAsImageAction();
-			saia.setLinks(imagetool, m_parent, settings); 
-			saia.saveAs(vol);
-		}
-		else {
-			try {
+		try {
+			if (vol.isMemoryImage()) {
+				SaveAsImageAction saia = new SaveAsImageAction();
+				saia.setLinks(imagetool, m_parent, settings); 
+				saia.saveAs(vol);
+			}
+			else {
 				vol.saveImage();
-				imagetool.refreshAllViews();			
+				imagetool.refreshAllViews();
 			}
-			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
-			}
-			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);				
-			}
-			catch (ImageException ix) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);				
-			}
+		}
+		catch (ProtectedException px) {
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
+		}
+		catch (IOException iox) {
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);				
+		}
+		catch (ImageException ix) {
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);				
+		}
+		catch (InternalException e) {
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InternalError") + ": " + e.getMessage(), TIImageTool.langstr("InternalError"), JOptionPane.ERROR_MESSAGE);
 		}
 	}
 }

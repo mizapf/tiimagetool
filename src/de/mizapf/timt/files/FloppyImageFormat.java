@@ -60,8 +60,8 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 		super(sImageName);
 	}
 	
-	protected FloppyImageFormat(String sImageName, boolean bRead) throws FileNotFoundException, IOException, ImageException {
-		super(sImageName, bRead);
+	protected FloppyImageFormat(String sImageName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
+		super(sImageName, params);
 	}
 	
 /*	int getCountedSectorsPerTrack() {

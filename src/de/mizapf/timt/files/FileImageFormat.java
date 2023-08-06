@@ -37,18 +37,24 @@ public abstract class FileImageFormat extends ImageFormat {
 
 	FormatParameters m_format;
 
+	/** Existing format. */
 	protected FileImageFormat(String sFileName) throws FileNotFoundException {
-		this(sFileName, true);
+		m_sFileName = sFileName;
+		m_file = new RandomAccessFile(sFileName, "r");
+		System.out.println("Opening image " + sFileName + " for reading"); 
+		m_nCurrentFormatUnit = NONE;
+		m_bInitial = false;
+		m_writeCache.setName(getShortImageName());
 	}
 	
-	protected FileImageFormat(String sFileName, boolean bRead) throws FileNotFoundException {
+	/** New format. */
+	protected FileImageFormat(String sFileName, FormatParameters param) throws FileNotFoundException, IOException {
 		m_sFileName = sFileName;
-		m_file = new RandomAccessFile(sFileName, bRead? "r" : "rw");
-		System.out.println("Opening image " + sFileName + ", read = " + bRead); 
+		m_file = new RandomAccessFile(sFileName, "rw");
+		System.out.println("Opening image " + sFileName + " for writing"); 
 		m_nCurrentFormatUnit = NONE;
-		m_bInitial = !bRead;
+		m_bInitial = true;
 		m_writeCache.setName(getShortImageName());
-		if (m_bInitial) prepareNewImage();
 	}
 	
 	protected void loadFormatUnit(int funum) throws ImageException, IOException {
@@ -65,19 +71,19 @@ public abstract class FileImageFormat extends ImageFormat {
 			}
 			
 			byte[] abyFU = new byte[getFormatUnitLength(funum)];
-			long offset = getFormatUnitPosition(funum);
-			// System.out.println("offset = " + offset + ", funum = " + funum);
+			m_codec.setBuffer(abyFU);
+			m_nCurrentFormatUnit = funum;
+			m_bDirty = false;
+
 			if (m_bInitial) {
-				m_codec.prepareNewFormatUnit(funum, abyFU, getFillPattern());
+				// System.out.println("Create FU " + funum);
+				m_codec.prepareNewFormatUnit(funum, getTrackParameters());
 			}
 			else {
-				m_file.seek(offset);
+				m_file.seek(getFormatUnitPosition(funum));
 				m_file.readFully(abyFU);
 				// System.out.println(Utilities.hexdump(abyFU));
 			}
-			m_nCurrentFormatUnit = funum;
-			m_bDirty = false;
-			m_codec.setBuffer(abyFU);
 			m_codec.decode();
 		} /*
 		else {
@@ -144,6 +150,7 @@ public abstract class FileImageFormat extends ImageFormat {
 	
 	/** Saves all changed sectors to the image. No format change. */
 	public void saveImage() throws ImageException, IOException, ProtectedException {
+		reopenForWrite();
 		for (int i=0; i < m_fs.getTotalSectors(); i++) {
 			Sector sect = m_writeCache.read(i);
 			if (sect != null) {
@@ -155,6 +162,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		writeCurrentFormatUnit();
 		
 		m_writeCache.setCheckpoint();
+		reopenForRead();
 	}
 	
 	/** Save from the old image to this image. 
@@ -163,7 +171,9 @@ public abstract class FileImageFormat extends ImageFormat {
 	    By this method, new images do not support any copy protection.
 	*/
 	public void saveImageFromOld(ImageFormat imgOld) throws ImageException, IOException {
+		m_nCurrentFormatUnit = NONE;
 		try {
+			reopenForWrite();
 			for (int i=0; i < m_fs.getTotalSectors(); i++) {
 				Sector sect = imgOld.readSector(i);
 				// System.out.println("Write back sector "  + sect.getNumber());  // #%
@@ -174,6 +184,8 @@ public abstract class FileImageFormat extends ImageFormat {
 			
 			m_writeCache.setCheckpoint();
 			m_bInitial = false;
+			m_bDirty = false;
+			reopenForRead();
 		}
 		catch (ProtectedException px) {
 			px.printStackTrace();  // should not happen
@@ -184,11 +196,11 @@ public abstract class FileImageFormat extends ImageFormat {
 	void writeCurrentFormatUnit() throws IOException, ProtectedException {
 		m_codec.encode();
 		long offset = getFormatUnitPosition(m_nCurrentFormatUnit);
-		System.out.println("write format unit " + m_nCurrentFormatUnit + " at position " + offset);  // #%
-		reopenForWrite();
+		// System.out.println("write format unit " + m_nCurrentFormatUnit + " at position " + offset);  // #%
+		// reopenForWrite();
 		m_file.seek(offset);
 		m_file.write(m_codec.getFormatUnitBuffer());
-		reopenForRead();
+		// reopenForRead();
 	}
 	
 	public void reopenForWrite() throws IOException, ProtectedException {
@@ -222,7 +234,9 @@ public abstract class FileImageFormat extends ImageFormat {
 	/** Finds the sector in the format unit. */
 	abstract ImageSector findSector(int number) throws ImageException;
 	
-	abstract void prepareNewImage();
+	abstract void prepareNewImage(FormatParameters param) throws IOException, ImageException;
+	
+	abstract TrackFormatParameters getTrackParameters();
 	
 	@Override
 	public String getImageName() {

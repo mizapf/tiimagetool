@@ -52,9 +52,6 @@ public abstract class TFileSystem {
 	/** Size of the file system. */
 	protected int m_nTotalSectors = 0;
 
-	/** AU size. */
-	protected int m_nSectorsPerAU;
-
 	/** Reserved AUs. */
 	protected int m_nReservedAUs;
 	
@@ -103,7 +100,7 @@ public abstract class TFileSystem {
 	}
 	
 	public int getAUNumber(int nSectorNumber) {
-		return nSectorNumber / m_nSectorsPerAU;
+		return nSectorNumber / getSectorsPerAU();
 	}
 	
 	public int getReservedAUs() {
@@ -134,8 +131,10 @@ public abstract class TFileSystem {
 		int nStartSector = 0;
 //		System.out.println("find free space for " + nSectors + " sectors, starting from sector " + nStarting);
 
-		if (m_nSectorsPerAU > 1) {
-			if ((nSectors % m_nSectorsPerAU)!=0) nSectors = ((nSectors/m_nSectorsPerAU)+1)*m_nSectorsPerAU;
+		int nSectorsPerAU = getSectorsPerAU();
+
+		if (nSectorsPerAU > 1) {
+			if ((nSectors % nSectorsPerAU)!=0) nSectors = ((nSectors/nSectorsPerAU)+1)*nSectorsPerAU;
 		}
 				
 		// Two-Pass search: 
@@ -252,7 +251,7 @@ public abstract class TFileSystem {
 	}
 	
 	public int getAllocatedSectorCount() {
-		return m_allocMap.countAllocated() * m_nSectorsPerAU;
+		return m_allocMap.countAllocated() * getSectorsPerAU();
 	}
 
 	public AllocationMap getAllocationMap() {

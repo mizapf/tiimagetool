@@ -27,6 +27,7 @@ import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.files.Volume;
 import de.mizapf.timt.files.ImageFormat;
 import de.mizapf.timt.files.FormatParameters;
+import de.mizapf.timt.util.InternalException;
 
 public class SaveAsImageAction extends Activity {
 
@@ -120,6 +121,9 @@ public class SaveAsImageAction extends Activity {
 					
 					java.io.File filePar = selectedFile.getParentFile();
 					imagetool.setSourceDirectory(filePar, "image");
+				}
+				catch (InternalException e) {
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InternalError") + ": " + e.getMessage(), TIImageTool.langstr("InternalError"), JOptionPane.ERROR_MESSAGE);
 				}
 				catch (Exception e) {
 					e.printStackTrace();

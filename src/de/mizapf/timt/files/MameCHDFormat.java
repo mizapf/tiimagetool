@@ -241,13 +241,15 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			throw new NotImplementedException("CHDCodec");	
 		}
 		
-		void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat) {
+		void prepareNewFormatUnit(int funum, TrackFormatParameters t) {
 			throw new NotImplementedException("CHDCodec");	
 		}
 	}
 
 	public MameCHDFormat(String sImageName) throws FileNotFoundException, IOException, ImageException {
 		super(sImageName);
+		m_file = new RandomAccessFile(sImageName, "r");
+		m_bInitial = false;		
 		
 		int nCompression;
 		
@@ -734,7 +736,12 @@ public class MameCHDFormat extends HarddiskImageFormat {
 	
 	/** Prepare an empty image.  */
     @Override
-	void prepareNewImage() {
+	void prepareNewImage(FormatParameters params) {
+		throw new NotImplementedException("MameCHDFormat");
+	}
+	
+	@Override
+	TrackFormatParameters getTrackParameters() {
 		throw new NotImplementedException("MameCHDFormat");
 	}
 }

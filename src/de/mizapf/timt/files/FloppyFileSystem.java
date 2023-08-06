@@ -84,7 +84,6 @@ public class FloppyFileSystem extends TFileSystem {
 	public FloppyFileSystem(int nTotal) {
 		super(nTotal, 0x21);  
 		m_bCF7 = false;
-		m_nSectorsPerAU = m_nTotalSectors/1600 + 1;
 	}
 
 	public FloppyFileSystem() {
@@ -107,7 +106,6 @@ public class FloppyFileSystem extends TFileSystem {
 		m_allocMap.allocate(1);
 		
 		m_bCF7 = false;
-		m_nSectorsPerAU = m_nTotalSectors/1600 + 1;
 	}
 	
 	@Override
@@ -174,11 +172,12 @@ public class FloppyFileSystem extends TFileSystem {
 	}
 
 	int getSectorsPerAU() {
-		if (m_nTotalSectors < 1600) return 1;
+		int total = getTotalSectors();
+		if (total < 1600) return 1;
 		else {
-			if (m_nTotalSectors < 3200) return 2;
+			if (total < 3200) return 2;
 			else {
-				if (m_nTotalSectors < 6400) return 4;
+				if (total < 6400) return 4;
 				else return 8;
 			}
 		}

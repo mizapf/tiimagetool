@@ -50,8 +50,7 @@ abstract class FormatCodec {
 	}
 	
 	void setBuffer(byte[] buf) {
-		m_formatUnit = new byte[buf.length];
-		System.arraycopy(buf, 0, m_formatUnit, 0, buf.length);
+		m_formatUnit = buf;
 	}
 	
 	ImageSector[] getDecodedSectors() {
@@ -68,6 +67,6 @@ abstract class FormatCodec {
 	/** Takes the decoded sectors and creates a new buffer. */
 	abstract void encode();
 	
-	/** Creates a new format unit from scratch. */
-	abstract void prepareNewFormatUnit(int number, byte[] buffer, byte[] fillpat);
+	/** Creates a new format unit from scratch. m_formatUnit must have been allocated. */
+	abstract void prepareNewFormatUnit(int funum, TrackFormatParameters param);
 }	
