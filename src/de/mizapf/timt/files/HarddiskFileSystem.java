@@ -55,33 +55,55 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	int m_nSectorsPerAU = 0;	
 	Time m_tCreation;
 
+	// As read from the VIB
+	protected int m_nFSCylinders;
+	protected int m_nFSHeads;
+	protected int m_nFSSectorsPerTrack;
+	protected int m_nFSTotalSectors;
+	protected int m_nFSSectorsPerAU;
+	
 	// From the image
 	protected int m_nCylinders;
 	protected int m_nHeads;
 	protected int m_nSectorsPerTrack;
 	
-	public HarddiskFileSystem() {
+	public HarddiskFileSystem(int nTotal) {
+		super(nTotal, 0x21);
 		m_nReservedAUs = 2048; // if new
 	}
 
+	public HarddiskFileSystem() {
+		super(0x21);
+		m_nReservedAUs = 2048; // if new
+	}
+	
 	Sector[] getInitSectors(FormatParameters param) {
 		return null;
 	}
 	
 	public int getCylinders() {
-		return m_nCylinders;
+		if (m_nCylinders != -1) 
+			return m_nCylinders;
+		else 
+			return m_nFSCylinders;
 	}
 	
 	public int getHeads() {
-		return m_nHeads;
+		if (m_nHeads != -1) 
+			return m_nHeads;
+		else 
+			return m_nFSHeads;
 	}
 	
 	public int getSectors() {
-		return m_nSectorsPerTrack;
+		if (m_nSectorsPerTrack != -1) 
+			return m_nSectorsPerTrack;
+		else 
+			return m_nFSSectorsPerTrack;
 	}
 	
 	public int getSectorLength() {
-		return SECTOR_LENGTH;
+		return getSectors();
 	}
 
 	int getSectorsPerTrack() {
@@ -95,7 +117,10 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	
 	@Override
 	int getSectorsPerAU() {
-		return m_nSectorsPerAU;
+		if (m_nSectorsPerAU != -1) 
+			return m_nSectorsPerAU;
+		else 
+			return m_nFSSectorsPerAU;
 	}
 	
 	@Override
@@ -152,12 +177,37 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		
 		return slist;
 	}
-	
+
+	@Override	
+	public int getTotalSectors() {
+		if (m_nTotalSectors == -1) return m_nFSTotalSectors;
+		return m_nTotalSectors;
+	}
+
 	abstract byte[] createVIBContents();
 	
 	@Override
 	void setupAllocationMap(byte[] map) {
-		m_allocMap = new AllocationMap(m_nTotalSectors);
+		m_allocMap = new AllocationMap(getTotalSectors());
 		m_allocMap.setMapFromBitfield(map, 0, 0);
 	}
+	
+	/** Try to load the VIB and get the logical geometry. 
+	*/
+	int deriveGeometryFromVIB(byte[] vib) {
+	
+		int ret = GOOD;
+		
+		// Get the tracks, sectors, and sides
+		int ausize = ((Utilities.getInt16(vib, 0x10) >> 4) & 0x0f) + 1; 
+		m_nFSTotalSectors = Utilities.getInt16(vib, 0x0a) * ausize;
+		
+		System.out.println("nTotal = " + m_nFSTotalSectors);
+		
+		m_nFSSectorsPerTrack = vib[0x0c] & 0xff;   // only HFDC
+		m_nFSHeads = (vib[0x10] & 0x0f) + 1;
+		m_nFSCylinders = (m_nFSTotalSectors / m_nFSSectorsPerTrack) / m_nFSHeads;
+	
+		return ret;
+	}	
 }

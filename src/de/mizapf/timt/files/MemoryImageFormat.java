@@ -107,4 +107,8 @@ public class MemoryImageFormat extends ImageFormat {
 	public String getShortImageName() {
 		return TIImageTool.langstr("Unnamed") + m_nUnnamedIndex;
 	}
+	
+	static String checkFormatCompatibility(FormatParameters params) {
+		return null; 
+	}
 }

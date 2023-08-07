@@ -75,7 +75,7 @@ class RawHDFormat extends HarddiskImageFormat {
 	public RawHDFormat(String sImageName) throws IOException, ImageException {
 		super(sImageName);
 		
-		m_file = new RandomAccessFile(sImageName, "r");
+/*		m_file = new RandomAccessFile(sImageName, "r");
 		m_bInitial = false;
 		
 		// Read the first 512 bytes
@@ -83,6 +83,11 @@ class RawHDFormat extends HarddiskImageFormat {
 		m_file.seek(0);
 		m_file.readFully(sector0);
 		checkFormat(sector0);
+		*/
+		m_codec = new RawHDCodec();
+		// HIER: Geht so nicht, wir müssen erst den Typ herausfinden (SCSI, IDE, HFDC) 
+		// m_fs = new HarddiskFileSystem();   
+		setVolumeInformation();
 	}
 	
 	public String getFormatName() {
@@ -135,6 +140,10 @@ class RawHDFormat extends HarddiskImageFormat {
 	@Override
 	TrackFormatParameters getTrackParameters() {
 		throw new NotImplementedException("RawHDFormat");
+	}
+		
+	static String checkFormatCompatibility(FormatParameters params) {
+		return null; 
 	}
 }
 

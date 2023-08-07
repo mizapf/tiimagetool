@@ -38,13 +38,15 @@ class SectorDumpFormat extends FloppyImageFormat {
 	
 	static final int[][] sdfgeometry = {    // Alternatives
 		{ 92160, 1, 40, 9 },           // SSSD40                            1*1*40
+		{ 163840, 1, 40, 16 },			// SSDD16
 		{ 184320, 2, 40, 9 },          // DSSD40, SSDD40, SSSD80            2*1*40, 1*2*40, 1*1*80
 	    { 327680, 2, 40, 16 },         // DSDD16                         
 		{ 368640, 2, 40, 18 },         // DSDD40, DSSD80, SSDD80, SSQD40    2*2*40, 2*1*80, 1*2*80, 1*4*40
 		{ 737280, 2, 80, 18 },         // DSDD80, DSQD40, SSUD40, SSQD80    2*2*80, 2*4*40, 1*8*40, 1*4*80
 		{ 1474560, 2, 80, 36 },        // DSQD80, DSUD40, SSUD80            2*4*80, 2*8*40, 1*8*80
 	    { 2949120, 2, 80, 72 },        // DSUD80                            2*8*80
-		{ 409600, 2, 40, 20} };	        // CF7 volume
+		{ 409600, 2, 40, 20 }			// CF7 volume
+	};
 
 	static int vote(String sFile) throws IOException {
 		
@@ -209,6 +211,11 @@ class SectorDumpFormat extends FloppyImageFormat {
 		outside of its format units. */
     @Override
 	void prepareNewImage(FormatParameters params) {
+	}
+
+	static String checkFormatCompatibility(FormatParameters params) {
+		if (params.sectors > 18) return TIImageTool.langstr("Format.unsupported");
+		return null; 
 	}
 }
 

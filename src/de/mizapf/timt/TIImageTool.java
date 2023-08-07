@@ -68,13 +68,12 @@
     Current:
     [ ] Allow Return key for New floppy image
     [ ] Encode control characters in files from escape sequence (like §81 -> CTRL-a)
-    [ ] Add undo/redo menu items
     [x] Use empty sector pattern 
-    [ ] Save As is active after closing all open images
+    [x] Save As is active after closing all open images
     [ ] Complete undo/redo
-    [ ] Restore all floppy formats
+    [x] Restore all floppy formats
     [ ] Restore all hd formats
-  	[ ] Unformatted image (998dd.dsk) can be opened without warning
+  	[x] Unformatted image (998dd.dsk) can be opened without warning
 
 */
 
@@ -680,6 +679,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			if (m_Views.size()==0) m_first = true;
 			activateMenuItems();
 			updateMemoryInfo();
+			setSaveOptions();
 		}
 	}
 	

@@ -82,7 +82,7 @@ public class Volume {
 		
 		m_FileSystem = m_Image.getFileSystem();
 		if (m_FileSystem == null) {
-			System.out.println("** FileSystem is null");
+			throw new ImageException("** FileSystem is null");
 		}
 		System.out.println(m_Image.getClass().getName());   // #%
 		System.out.println(m_FileSystem.getClass().getName());   // #%
@@ -411,49 +411,18 @@ public class Volume {
 	}
 	
 	/** Write all sectors to the new image. */
-	public void saveNewImage(String sFileName, int nFormat) throws FileNotFoundException, IOException, ImageException {
+	public void saveNewImage(FileImageFormat newImage) throws FileNotFoundException, IOException, ImageException {
 		// We have a memory image or an existing file-based image
 		
 		// We have to retrieve the format parameters here
 		// They are available via the FileSystem
 		
 		// Get the format (includes preparing the image) 
-		FileImageFormat newImage = (FileImageFormat)ImageFormat.getImageFormatInstance(sFileName, nFormat, m_FileSystem.getParams());
-		if (newImage == null) {
-			throw new InternalException(TIImageTool.langstr("ImageUnknown") + ": " + ImageFormat.suffix[nFormat]);
-		}
-		else {
-			newImage.setFileSystem(m_FileSystem);
-			newImage.saveImageFromOld(m_Image);
-		}
-		// imagetool.replaceImage(this, newImage);  to be done in the SaveAsImageAction
+		newImage.setFileSystem(m_FileSystem);
+		newImage.saveImageFromOld(m_Image);
 		
 		m_Image = newImage;
 		System.out.println(newImage.getClass().getName());
-		
-		// The old (file-based) image remains unchanged since the last save operation
-		// Do we know the format (SS/DS, SD/DD, tracks)?
-		// Yes, from the source (m_FileSystem)
-		
-		/*
-			Save as new image:
-			- Nicht gecachte Sektoren werden vom alten Image gelesen
-			- Cache wird geleert
-			- Das bisherige Volume wird ausgetragen, das neue eingetragen
-			- Alle Tabs dieses Volumes zeigen den neuen Dateinamen an
-			- Alle weiteren Operationen finden auf dem neuen Dateinamen statt
-		
-			- Achtung: Wir wissen nicht, wo die Positionen der ImageSectors
-			  im Zielimage sind (Beispiel: SectorDump -> HFE). Deshalb muss 
-			  - erst das Zielimage erzeugt werden (leer)
-			  - dann für jedes i ein loadFormatUnit(i) des Zielimages mit 
-			    readSector-Umleitung auf das Quellimage ausgeführt werden
-			  - dabei werden die Sektoren aus dem Cache sowie die Sektoren aus
-			    der Quelle gelesen
-			  - dann wird ein writeCurrentFormatUnit auf dem Zielimage ausgeführt
-			  
-			  - Anschluss des alten Images im SectorCache (via read)?
-		*/	
 	}
 		
 	public boolean isMemoryImage() {
@@ -466,6 +435,10 @@ public class Volume {
 	
 	public void undoAction() {
 		m_Image.previousGeneration();
+	}
+	
+	public FormatParameters getFormatParams() {
+		return m_FileSystem.getParams();
 	}
 	
 /*	public String getProposedName() {

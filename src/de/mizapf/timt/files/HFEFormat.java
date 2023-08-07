@@ -223,7 +223,7 @@ public class HFEFormat extends FloppyImageFormat {
 		
 		public String[] encoding = { "ISOIBM_MFM_ENCODING",
 			"AMIGA_MFM_ENCODING", "ISOIBM_FM_ENCODING", "EMU_FM_ENCODING",
-		"UNKNOWN_ENCODING" };
+			"UNKNOWN_ENCODING" };
 
 		public final static int IBMPC_DD_FLOPPYMODE = 0x00;
 		public final static int IBMPC_HD_FLOPPYMODE = 0x01;
@@ -990,7 +990,6 @@ public class HFEFormat extends FloppyImageFormat {
 		m_file.write(m_abyBufferLUT);
 		
 		// Determine the suitable track layout
-		m_nFormatIndex = NONE;
 		switch (params.sectors) {
 		case 9:
 			m_nFormatIndex = 0;
@@ -1000,6 +999,9 @@ public class HFEFormat extends FloppyImageFormat {
 			break;
 		case 18: 
 			m_nFormatIndex = 1;
+			break;
+		default:
+			m_nFormatIndex = NONE;
 			break;
 		}
 		
@@ -1011,5 +1013,12 @@ public class HFEFormat extends FloppyImageFormat {
 	TrackFormatParameters getTrackParameters() {
 		// System.out.println("Index = " + m_nFormatIndex);
 		return new TrackFormatParameters((int[])param[m_nFormatIndex], getSectorsPerTrack(), getFillPattern());
+	}
+	
+	static String checkFormatCompatibility(FormatParameters params) {
+		if ((params.sectors != 9) && (params.sectors != 18) && (params.sectors != 16))
+			return TIImageTool.langstr("Format.invalid") + ": sectors=" + params.sectors;
+		
+		return null; 
 	}
 }

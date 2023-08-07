@@ -46,6 +46,14 @@ public abstract class TFileSystem {
 	public final static int SECTOR_LENGTH=0x100;   
 	public final static int MAXAU = 0xf800;  // from Directory and RawHDFormat
 
+	// Check values
+	public final static int GOOD = 0;
+	public final static int NO_SIG = 1;
+	public final static int SIZE_MISMATCH = 2;
+	public final static int BAD_GEOMETRY = 4;
+	public final static int WRONG_DENSITY = 8;
+	public final static int UNSET = 65535;
+	
 	/** Volume name. */
 	protected String m_sName;
 	

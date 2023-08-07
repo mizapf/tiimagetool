@@ -76,6 +76,12 @@ public class OpenImageAction extends Activity {
 					if (image instanceof FloppyImageFormat) {
 						int check = ((FloppyImageFormat)image).getFormatCheck();
 						System.out.println("Format check: " + FloppyFileSystem.getFormatCheckText(check));
+						if ((check & TFileSystem.NO_SIG)!=0) {
+							int doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageNoDSK"), TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
+							if (doCheckSig == JOptionPane.NO_OPTION) {
+								continue;
+							}
+						}
 					}
 					
 					// Do we have a partitioned image?
@@ -89,6 +95,7 @@ public class OpenImageAction extends Activity {
 						vol = new Volume(image);					
 					}
 					catch (MissingHeaderException mx) {
+						// FIXME: Not used
 						// No DSK signature
 						int doCheck1 = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageNoDSK"), TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
 						if (doCheck1 == JOptionPane.YES_OPTION) {

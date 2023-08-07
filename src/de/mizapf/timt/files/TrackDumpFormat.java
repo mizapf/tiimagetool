@@ -57,16 +57,11 @@ class TrackDumpFormat extends FloppyImageFormat {
 //		{ 1099520, 2, 80, 18, 2 },      
 //		{ 2007040, 2, 80, 36, 3 } 
 	};
-	
-/*	int fm9param[]   = { 16, 11, 45, 231, 0x00, 0xff,  6,  6 };
-	int mfm16param[] = { 50, 22, 50, 206, 0x4e, 0x4e, 12, 12 };
-	int mfm18param[] = { 40, 22, 24, 712, 0x4e, 0x4e, 10, 12 };
-	int mfm36param[] = { 40, 22, 24, 264, 0x4e, 0x4e, 10, 12 }; */
-		
+
 	int fm9param[]   = { 0, 16, 11, 45, 231, 0x00, 0xff,  6,  6 };
 	int mfm16param[] = { 0, 50, 22, 50, 206, 0x4e, 0x4e, 12, 12 };
-	int mfm18param[] = { 0, 40, 22, 24, 712, 0x4e, 0x4e, 10, 12 };
-	int mfm36param[] = { 0, 40, 22, 24, 264, 0x4e, 0x4e, 10, 12 };
+	int mfm18param[] = { 0, 40, 22, 24, 712, 0x4e, 0x4e, 12, 10 };
+	int mfm36param[] = { 0, 40, 22, 24, 264, 0x4e, 0x4e, 12, 10 };
 	Object param[] = { fm9param, mfm16param, mfm18param, mfm36param };		
 	
 	static int vote(String sFile) throws IOException {
@@ -389,5 +384,16 @@ class TrackDumpFormat extends FloppyImageFormat {
 	@Override
 	TrackFormatParameters getTrackParameters() {
 		return new TrackFormatParameters((int[])param[m_nFormatIndex], getSectorsPerTrack(), getFillPattern());
+	}
+	
+	static String checkFormatCompatibility(FormatParameters params) {
+		if (params.heads < 2) 
+			return TIImageTool.langstr("Format.invalid") + ": heads=" + params.heads;
+		if ((params.sectors != 9) && (params.sectors != 18))
+			return TIImageTool.langstr("Format.unsupported") + ": sectors=" + params.sectors;
+		if (params.sectors > 18)
+			return TIImageTool.langstr("Format.invalid") + ": sectors=" + params.sectors;
+		
+		return null;
 	}
 }

@@ -26,7 +26,9 @@ import java.awt.*;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.files.Volume;
 import de.mizapf.timt.files.ImageFormat;
+import de.mizapf.timt.files.FileImageFormat;
 import de.mizapf.timt.files.FormatParameters;
+import de.mizapf.timt.files.ImageException;
 import de.mizapf.timt.util.InternalException;
 
 public class SaveAsImageAction extends Activity {
@@ -55,21 +57,17 @@ public class SaveAsImageAction extends Activity {
 		sd.setVisible(true);
 		
 		if (sd.confirmed()) {		
-			// Sanity checks
-			if (sd.getImageType()==ImageFormat.TRACKDUMP) {
-				if (vol.getHeads()==1)
-				{
-					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NewImageTDF2Side"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-					return;
-				}				
-				if (vol.getTracksPerSide()!=40)
-				{
-					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NewImageTDF40T"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+			String sWarn = ImageFormat.checkFormatCompatibility(vol.getFormatParams(), sd.getImageType());
+			if (sWarn != null) {
+				if (sWarn.startsWith("!")) {
+					JOptionPane.showMessageDialog(m_parent, sWarn.substring(1), TIImageTool.langstr("ImageError"), JOptionPane.ERROR_MESSAGE);
 					return;
 				}
-			}			
-
-			// Now the save dialog
+				else {
+					JOptionPane.showMessageDialog(m_parent, sWarn, TIImageTool.langstr("Warning"), JOptionPane.WARNING_MESSAGE);
+				}
+			}
+			
 			JFileChooser jfc = null;
 			if (imagetool.getSourceDirectory("image")!=null) {
 				jfc = new JFileChooser(imagetool.getSourceDirectory("image"));
@@ -104,18 +102,25 @@ public class SaveAsImageAction extends Activity {
 			
 			if (selectedFile != null) {
 				
+				FileImageFormat newImage = null;
+				
 				// Overwrite?
 				if (selectedFile.exists()) {		
 					int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ExistsOverwrite"), TIImageTool.langstr("NewImageTitle"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 					if (nRet == JOptionPane.NO_OPTION) return;
+					selectedFile.delete();
 				}
 				
 				// Ready to save
 				System.out.println("Save as " + selectedFile.getAbsolutePath());
 				
 				try {
-					// FormatParameters param = sd.getParams();
-					vol.saveNewImage(selectedFile.getAbsolutePath(), sd.getImageType());
+					newImage = (FileImageFormat)ImageFormat.getImageFormatInstance(selectedFile.getAbsolutePath(), sd.getImageType(), vol.getFormatParams());
+					if (newImage == null) {
+						throw new InternalException(TIImageTool.langstr("ImageUnknown") + ": " + ImageFormat.suffix[sd.getImageType()]);
+					}
+
+					vol.saveNewImage(newImage);
 					imagetool.addRecent(selectedFile.getAbsolutePath());
 					imagetool.refreshAllViews();
 					
@@ -125,8 +130,11 @@ public class SaveAsImageAction extends Activity {
 				catch (InternalException e) {
 					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InternalError") + ": " + e.getMessage(), TIImageTool.langstr("InternalError"), JOptionPane.ERROR_MESSAGE);
 				}
-				catch (Exception e) {
-					e.printStackTrace();
+				catch (IOException iox) {
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);				
+				}
+				catch (ImageException ix) {
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ImageError"), JOptionPane.ERROR_MESSAGE);				
 				}
 			}
 		}

@@ -139,4 +139,26 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 				
 		((HarddiskFileSystem)m_fs).setupAllocationMap(allocMap);
 	}
+
+	protected int setupGeometry(byte[] sec0) {
+		return ((HarddiskFileSystem)m_fs).deriveGeometryFromVIB(sec0);
+	}
+	
+	protected void setVolumeInformation() throws ImageException, IOException {
+		// System.out.println("setVolumeInfo");
+
+		Sector sector0 = readSector(0);	
+		// System.out.println(Utilities.hexdump(sector0.getData()));
+		
+		try {
+			m_fs.setVolumeName(Utilities.getString10(sector0.getData(), 0));
+		}
+		catch (InvalidNameException inx) {
+			m_fs.setVolumeName0("UNNAMED");
+		}
+						
+		checkFormat(sector0.getData());
+		setupGeometry(sector0.getData());
+		setupAllocationMap();
+	}
 }

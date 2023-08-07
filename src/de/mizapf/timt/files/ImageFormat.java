@@ -227,8 +227,14 @@ public abstract class ImageFormat  {
 				else {
 					if (itx.getCause() instanceof IOException) 
 						throw (IOException)itx.getCause();
-					else
-						itx.printStackTrace();
+					else {
+						if (itx.getCause() instanceof ImageException) {
+							throw (ImageException)itx.getCause();
+						}
+						else {
+							itx.printStackTrace();
+						}
+					}
 				}
 			}
 			catch (InstantiationException iax) {
@@ -242,7 +248,7 @@ public abstract class ImageFormat  {
 		return m_formatClass[nFormat];
 	}
 	
-	static ImageFormat getImageFormatInstance(String sFileName, int nFormat, FormatParameters param) {
+	public static ImageFormat getImageFormatInstance(String sFileName, int nFormat, FormatParameters param) throws FileNotFoundException, IOException, ImageException {
 		ImageFormat ifmt = null;
 		Class<?> cls = null;
 		try {
@@ -260,90 +266,54 @@ public abstract class ImageFormat  {
 			System.err.println("Ignoring class " + cls.getName() + ": No access to constructor");
 		}
 		catch (InvocationTargetException itx) {
-			System.err.println("Ignoring class " + cls.getName() + ": Invocation target exception");
-			itx.printStackTrace();
+			if (itx.getCause() instanceof FileNotFoundException) 
+				throw (FileNotFoundException)itx.getCause();
+			else {
+				if (itx.getCause() instanceof IOException) { 
+					throw (IOException)itx.getCause();
+				}
+				else {
+					if (itx.getCause() instanceof ImageException) {
+						throw (ImageException)itx.getCause();
+					}
+					else {
+						itx.printStackTrace();
+					}
+				}
+			}
 		}
 
 		return ifmt;
+	}
+		
+	public static String checkFormatCompatibility(FormatParameters params, int nFormat) {
+		Class<?> cls = null;
+		try {
+			cls = m_formatClass[nFormat];
+			if (cls != null) {
+				Method check = cls.getDeclaredMethod("checkFormatCompatibility", FormatParameters.class);
+				return (String)check.invoke(null, params);
+			}
+		}
+		catch (NoSuchMethodException nmx) {
+			System.err.println("Internal error: " + cls.getName() + " has no method \"checkFormatCompatibility\"");
+		}
+		catch (IllegalAccessException iax) {
+			System.err.println("Internal error: " + cls.getName() + " does not allow access to method \"checkFormatCompatibility\"");
+		}
+		catch (InvocationTargetException itx) {
+			itx.printStackTrace();
+		}
+		return null;
 	}
 	
 	protected byte[] getFillPattern() {
 		return m_fillPattern;
 	}
-
-		
-/*		String[] formats = formatline.split(",\\s*");		                 
-		
-		for (int i=0; i < formats.length; i++) {
-			try {
-				Class<?> fmt = Class.forName("de.mizapf.timt.files." + formats[i]);
-				Method vote = fmt.getDeclaredMethod("vote", String.class);
-				Constructor<?> cons = fmt.getConstructor(String.class);
-				if (((Integer)vote.invoke(null, sFile)).intValue() > 50) { 
-					return (ImageFormat)cons.newInstance(sFile);
-				}
-			}
-			catch (ClassNotFoundException cnfx) {
-				cnfx.printStackTrace();
-			}
-			catch (NoSuchMethodException nsmx) {
-				System.err.println("Ignoring class " + formats[i] + ", no such method");
-				nsmx.printStackTrace();
-			}
-			catch (IllegalAccessException iax) {
-				System.err.println("Ignoring class " + formats[i] + ", illegal access");
-			}
-			catch (InvocationTargetException itx) {
-				System.err.println("Ignoring class " + formats[i] + ", invocation exception");
-				itx.printStackTrace();
-			}
-			catch (InstantiationException ix) {
-				System.err.println("Ignoring class " + formats[i] + ", instantiation exception");
-			}
-		}
-					
-		throw new ImageException(sFile + ": " + TIImageTool.langstr("ImageUnknown"));
-	
-	}
-		*/
 	
 	// Static methods cannot be overridden
 	abstract int getImageType();
 	
-/*	static String getClassNameForFormat(int nFormat) {
-		String[] formats = formatline.split(",\\s*");		
-		for (int i=0; i < formats.length; i++) {
-			Object[] ao = new Object[0];
-			try {
-				String sFullClass = "de.mizapf.timt.files." + formats[i];
-				Class<?> fmt = Class.forName(sFullClass);
-				Method type = fmt.getDeclaredMethod("getImageType");
-				
-				if (((Integer)type.invoke(null, ao)).intValue() == nFormat) { 
-					return sFullClass;
-				}
-			}
-			catch (ClassNotFoundException cnfx) {
-				cnfx.printStackTrace();
-			}
-			catch (NoSuchMethodException nsmx) {
-				System.err.println("Ignoring class " + formats[i] + ", no such method");
-				nsmx.printStackTrace();
-			}
-			catch (IllegalAccessException iax) {
-				System.err.println("Ignoring class " + formats[i] + ", illegal access");
-			}
-			catch (InvocationTargetException itx) {
-				System.err.println("Ignoring class " + formats[i] + ", invocation exception");
-				itx.printStackTrace();
-			}
-			catch (InstantiationException ix) {
-				System.err.println("Ignoring class " + formats[i] + ", instantiation exception");
-			}
-		}
-		return null;
-	}*/
-
 	protected ImageFormat() throws FileNotFoundException {
 		m_writeCache = new SectorCache();
 		setFillPattern(m_Settings.getPropertyString(TIImageTool.FILLPAT));
@@ -356,15 +326,10 @@ public abstract class ImageFormat  {
 	public void setFileSystem(TFileSystem fs) {
 		m_fs = fs;
 	}
-	
-/*	public void setTotalSectors(int nTotal) {
-		m_nTotalSectors = nTotal;
-	} */
-	
 	public abstract Sector readSector(int nSectorNumber) throws ImageException, IOException;
 	
 	public abstract void writeSector(Sector sect) throws ImageException, IOException, ProtectedException;
-	
+		
 	void close() throws IOException {
 		// TODO
 		// Write back all sectors

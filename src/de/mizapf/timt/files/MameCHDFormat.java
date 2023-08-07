@@ -744,6 +744,10 @@ public class MameCHDFormat extends HarddiskImageFormat {
 	TrackFormatParameters getTrackParameters() {
 		throw new NotImplementedException("MameCHDFormat");
 	}
+	
+	static String checkFormatCompatibility(FormatParameters params) {
+		return null; 
+	}
 }
 
 

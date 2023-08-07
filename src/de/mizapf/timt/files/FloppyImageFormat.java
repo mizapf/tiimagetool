@@ -138,16 +138,6 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 						
 		m_nVibCheck = setupGeometry(sector0.getData());
 		setupAllocationMap();
-
-/*		for (int i=0; i < m_nTotalSectors; i++) {
-			try {
-				Sector test = readSector(i);
-				System.out.println(Utilities.hexdump(test.getData()));
-			}
-			catch (ImageException icx) {
-				System.out.println("Sector " + i + " not found");
-			}
-		} */
 	}
 	
 	int chsToLba(Location loc) {
