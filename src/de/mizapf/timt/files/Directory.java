@@ -79,12 +79,15 @@ public class Directory extends Element {
 		// Create files
 		Sector sectFiles = vol.readSector(m_nFileIndexSector);
 		int bad = 0;
+		// System.out.println("Directory " + getFullPathname());
+		// if (m_dirParent == null) System.out.println("> " + System.currentTimeMillis());
 		for (int nFile : getFilePointers(sectFiles, vol.getAUSize())) {
 			try {
 				Sector sectFile = vol.readSector(nFile);
 				TFile file = new TFile(vol, sectFile, this);
 				// if (file.getAllocatedSectors()==0) System.err.println("Warning: File " + file.getPathname() + " has no contents");
 				files.add(file);
+				// System.out.println("File " + file.getName());
 			}
 			catch (ImageException ix) {
 				bad++;
@@ -98,8 +101,10 @@ public class Directory extends Element {
 				}
 			}
 		}
+		// if (m_dirParent == null) System.out.println("| " + System.currentTimeMillis());
 		// Create directories
 		for (int nDir : getDirPointers(vibddr, vol.getAUSize())) {
+			// System.out.println("- " + System.currentTimeMillis());
 			Sector ddr = vol.readSector(nDir);
 			// Recurse
 			subdirs.add(new Directory(vol, ddr, this));
@@ -112,6 +117,7 @@ public class Directory extends Element {
 		
 		m_Files = new TFile[files.size()];
 		files.toArray(m_Files);
+		// if (m_dirParent == null) System.out.println("< " + System.currentTimeMillis());
 	}
 
 	/** Creates a parent directory link (".."). */

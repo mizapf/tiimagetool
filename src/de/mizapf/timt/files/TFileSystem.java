@@ -57,9 +57,6 @@ public abstract class TFileSystem {
 	/** Volume name. */
 	protected String m_sName;
 	
-	/** Size of the file system. */
-	protected int m_nTotalSectors = 0;
-
 	/** Reserved AUs. */
 	protected int m_nReservedAUs;
 	
@@ -69,6 +66,12 @@ public abstract class TFileSystem {
 	/** Sector allocation map. */
 	protected AllocationMap m_allocMap;
 
+	protected int m_nVibCheck;
+	
+	protected int m_nFSTotalSectors;
+	
+	protected ImageFormat m_Image;
+	
 	public TFileSystem() {
 	}
 
@@ -76,8 +79,8 @@ public abstract class TFileSystem {
 		this(-1, reserved);
 	}
 
-	public TFileSystem(int total, int reserved) {
-		m_nTotalSectors = total;
+	private TFileSystem(int total, int reserved) {
+		// m_nTotalSectors = total;
 		m_nReservedAUs = reserved;
 	}
 	
@@ -90,9 +93,17 @@ public abstract class TFileSystem {
 	void setVolumeName0(String newName) {
 		m_sName = newName;
 	}
+	
+	void setImage(ImageFormat image) {
+		m_Image = image;
+	}
 
 	public String getVolumeName() {
 		return m_sName;
+	}
+	
+	int getTotalSectors() {
+		return m_nFSTotalSectors;
 	}
 
 	void setRootDirectory(Directory root) {
@@ -101,10 +112,6 @@ public abstract class TFileSystem {
 	
 	Directory getRootDirectory() {
 		return m_dirRoot;
-	}
-	
-	public int getTotalSectors() {
-		return m_nTotalSectors;
 	}
 	
 	public int getAUNumber(int nSectorNumber) {
@@ -124,9 +131,7 @@ public abstract class TFileSystem {
 	abstract boolean isProtected();
 	abstract int getAllocMapStart();
 	abstract int getAllocMapEnd();
-	
-	abstract void setupAllocationMap(byte[] map);
-	
+		
 	/* 
 		Allocation handling
 	*/
@@ -273,4 +278,10 @@ public abstract class TFileSystem {
 	void deallocate(Interval intv) {
 		m_allocMap.deallocate(intv);
 	} 
+	
+	abstract int configure(byte[] vib);
+	
+	int getVibCheck() {
+		return m_nVibCheck;
+	}
 }

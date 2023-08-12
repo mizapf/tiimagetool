@@ -123,7 +123,6 @@ class TrackDumpFormat extends FloppyImageFormat {
 						
 			int nFound = 0;
 			m_decodedSectors.clear();
-			byte[] content = new byte[TFileSystem.SECTOR_LENGTH];
 
 			while ((nFound < t.sectors) && ((contpos+256) <= m_formatUnit.length)) {
 				// m_nCurrentIndex is the current buffer number = track
@@ -133,13 +132,11 @@ class TrackDumpFormat extends FloppyImageFormat {
 				// -> ImageException?
 				
 				// System.out.println("Found " + loc + "(curr index=" + m_nCurrentIndex + ")");		
-				
-				System.arraycopy(m_formatUnit, contpos, content, 0, TFileSystem.SECTOR_LENGTH);
-
+	
 				// System.out.println("headerpos " + headerpos);
 				
 				ImageSector is = new ImageSector(getLinearSectorNumber(headerpos), 
-												content, (byte)0xfb, mfm, contpos);
+												m_formatUnit, (byte)0xfb, mfm, contpos);
 				m_decodedSectors.add(is);			
 				headerpos += increm;
 				contpos += increm;
@@ -304,7 +301,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 		if (m_nFormatIndex==NONE) throw new ImageException(TIImageTool.langstr("InvalidFormat"));		
 		System.out.println("TDF / FormatIndex = " + m_nFormatIndex);
 		
-		int nTotalSectors = tdfgeometry[m_nFormatIndex][1] 
+		m_nTotalSectors = tdfgeometry[m_nFormatIndex][1] 
 						* tdfgeometry[m_nFormatIndex][2]
 						* tdfgeometry[m_nFormatIndex][3];
 		
@@ -312,10 +309,6 @@ class TrackDumpFormat extends FloppyImageFormat {
 		m_nTracks = tdfgeometry[m_nFormatIndex][2];
 		m_nSides = tdfgeometry[m_nFormatIndex][1];
 		m_nSectorsPerTrack = tdfgeometry[m_nFormatIndex][3];
-
-		m_fs = new FloppyFileSystem(nTotalSectors);
-		
-		setVolumeInformation();
 	}
 	
 	/** Called for newly created images. */

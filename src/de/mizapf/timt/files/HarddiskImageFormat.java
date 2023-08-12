@@ -23,6 +23,7 @@ package de.mizapf.timt.files;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
+import de.mizapf.timt.util.NotImplementedException;
 
 import de.mizapf.timt.util.Utilities;
 
@@ -113,6 +114,28 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		}
 	}
 	
+	public HarddiskFileSystem getFileSystem(byte[] vibmap) {
+		int nHDType = 0;
+		HarddiskFileSystem fs = null;
+		
+		if (vibmap[14] == 'P' && vibmap[15] == 'T' 
+			&& vibmap[254] == (byte)0x5a && vibmap[255] == (byte)0xa5) {
+			// We have a partitioned IDE image
+			throw new NotImplementedException("IDE");			
+		}
+		else {
+			// Sectors/track or write precomp == 0 and heads == 1 -> SCSI
+			// It may be sufficient if any of these is true
+			if (((vibmap[12] == 0) || (vibmap[17] == 0)) && ((vibmap[16] & 0x0f)==0))
+				fs = new SCSIFileSystem();
+			else
+				fs = new HFDCFileSystem();
+		}
+		fs.setImage(this);
+		fs.configure(vibmap);
+		return fs;
+	}
+	
 	public int getHDType() {
 		return m_nHDType;
 	}	
@@ -128,37 +151,5 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 	public String getPartitionName(int part) {
 		if (part > m_nPartitions) return null;
 		return "FIXME";	
-	}
-	
-	protected void setupAllocationMap() throws ImageException, IOException {
-		byte[] allocMap = new byte[31*TFileSystem.SECTOR_LENGTH];
-		for (int i=1; i < 32; i++) {
-			Sector sect = readSector(i);
-			System.arraycopy(sect.getData(), 0, allocMap, (i-1) * TFileSystem.SECTOR_LENGTH, TFileSystem.SECTOR_LENGTH);
-		}
-				
-		((HarddiskFileSystem)m_fs).setupAllocationMap(allocMap);
-	}
-
-	protected int setupGeometry(byte[] sec0) {
-		return ((HarddiskFileSystem)m_fs).deriveGeometryFromVIB(sec0);
-	}
-	
-	protected void setVolumeInformation() throws ImageException, IOException {
-		// System.out.println("setVolumeInfo");
-
-		Sector sector0 = readSector(0);	
-		// System.out.println(Utilities.hexdump(sector0.getData()));
-		
-		try {
-			m_fs.setVolumeName(Utilities.getString10(sector0.getData(), 0));
-		}
-		catch (InvalidNameException inx) {
-			m_fs.setVolumeName0("UNNAMED");
-		}
-						
-		checkFormat(sector0.getData());
-		setupGeometry(sector0.getData());
-		setupAllocationMap();
 	}
 }

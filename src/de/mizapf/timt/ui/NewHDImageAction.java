@@ -27,6 +27,7 @@ import java.awt.event.KeyEvent;
 
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.TIImageTool;
+import de.mizapf.timt.util.NotImplementedException;
 
 /*
 Contents of a new HD image (example of a 20 MiB hd, 615-4-32)
@@ -472,7 +473,8 @@ public class NewHDImageAction extends Activity {
 																	
 									// Now open the newly created file system in a view
 									ImageFormat image = ImageFormat.determineImageFormat(file.getAbsolutePath());
-									vol = new Volume(image);
+									if (true) throw new NotImplementedException("NewHD");
+									vol = new Volume(image, null);
 									Directory root = vol.getRootDirectory();					
 									imagetool.addDirectoryView(root);
 								}

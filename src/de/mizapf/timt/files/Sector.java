@@ -38,9 +38,9 @@ public class Sector implements Cloneable {
 		this(nNumber, abySector, 0);
 	}
 	
-	public Sector(int nNumber, byte[] abySector, int offset) {
+	public Sector(int nNumber, byte[] abyFormatUnit, int offset) {
 		m_content = new byte[TFileSystem.SECTOR_LENGTH];
-		System.arraycopy(abySector, offset, m_content, 0, m_content.length);
+		System.arraycopy(abyFormatUnit, offset, m_content, 0, m_content.length);
 		m_nNumber = nNumber;
 		m_generation = 0;
 	}

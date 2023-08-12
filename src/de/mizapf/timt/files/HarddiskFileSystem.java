@@ -24,6 +24,8 @@ import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.NotImplementedException;
 
+import java.io.IOException;
+
 /** Represents a TI harddisk file system.
 
     IDE:
@@ -55,6 +57,10 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	int m_nSectorsPerAU = 0;	
 	Time m_tCreation;
 
+	int m_nFiles;
+	int m_nSubdirs;
+	int m_nRootFD;
+	
 	// As read from the VIB
 	protected int m_nFSCylinders;
 	protected int m_nFSHeads;
@@ -67,8 +73,8 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	protected int m_nHeads;
 	protected int m_nSectorsPerTrack;
 	
-	public HarddiskFileSystem(int nTotal) {
-		super(nTotal, 0x21);
+	public HarddiskFileSystem(int nTotal, byte[] vibmap) {
+		super(0x21);
 		m_nReservedAUs = 2048; // if new
 	}
 
@@ -178,36 +184,64 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		return slist;
 	}
 
-	@Override	
 	public int getTotalSectors() {
-		if (m_nTotalSectors == -1) return m_nFSTotalSectors;
-		return m_nTotalSectors;
+		return m_nFSTotalSectors;
 	}
 
 	abstract byte[] createVIBContents();
 	
-	@Override
-	void setupAllocationMap(byte[] map) {
-		m_allocMap = new AllocationMap(getTotalSectors());
-		m_allocMap.setMapFromBitfield(map, 0, 0);
-	}
-	
 	/** Try to load the VIB and get the logical geometry. 
 	*/
-	int deriveGeometryFromVIB(byte[] vib) {
+	public abstract int configure(byte[] vib); 
 	
+	int analyzeVIBCommon(byte[] vibmap) {
 		int ret = GOOD;
+		try {
+			setVolumeName(Utilities.getString10(vibmap, 0));
+		}
+		catch (InvalidNameException inx) {
+			setVolumeName0("UNNAMED");
+		}
+		m_nFSSectorsPerAU = ((vibmap[0x10] >> 4) & 0x0f) + 1;
+		m_nFSTotalSectors = Utilities.getInt16(vibmap, 0x0a) * m_nFSSectorsPerAU;		
 		
-		// Get the tracks, sectors, and sides
-		int ausize = ((Utilities.getInt16(vib, 0x10) >> 4) & 0x0f) + 1; 
-		m_nFSTotalSectors = Utilities.getInt16(vib, 0x0a) * ausize;
+		if ((m_nFSSectorsPerAU > 16) || (m_nFSTotalSectors < 360))
+			ret |= BAD_GEOMETRY;
 		
-		System.out.println("nTotal = " + m_nFSTotalSectors);
+		m_tCreation = new Time(vibmap, 0x12);
+
+		m_nFiles = vibmap[16] & 0xff;
+		m_nSubdirs = vibmap[17] & 0xff;
 		
-		m_nFSSectorsPerTrack = vib[0x0c] & 0xff;   // only HFDC
-		m_nFSHeads = (vib[0x10] & 0x0f) + 1;
-		m_nFSCylinders = (m_nFSTotalSectors / m_nFSSectorsPerTrack) / m_nFSHeads;
-	
+		m_nRootFD = Utilities.getInt16(vibmap, 0x18);
+		
+		m_allocMap = new AllocationMap(getTotalSectors()/getSectorsPerAU(), getSectorsPerAU(), false);
+		m_allocMap.setMapFromBitfield(vibmap, TFileSystem.SECTOR_LENGTH, 0);
+		
 		return ret;
-	}	
+	}
+	
+	public static String getFormatCheckText(int val) {
+		StringBuilder sb = new StringBuilder();
+		if ((val & NO_SIG)!=0) sb.append("no sig");
+		if ((val & SIZE_MISMATCH)!=0) {
+			if (sb.length() > 0) sb.append(", ");
+			sb.append("size mismatch");
+		}
+		if ((val & BAD_GEOMETRY)!=0) {
+			if (sb.length() > 0) sb.append(", ");
+			sb.append("bad geometry");
+		}
+		if (sb.length() > 0) return sb.toString();
+		return "good";
+	}
+		
+/*	protected void setupAllocationMap() throws ImageException, IOException {
+		byte[] allocMap = new byte[31*TFileSystem.SECTOR_LENGTH];
+		for (int i=1; i < 32; i++) {
+			Sector sect = readSector(i);
+			System.arraycopy(sect.getData(), 0, allocMap, (i-1) * TFileSystem.SECTOR_LENGTH, TFileSystem.SECTOR_LENGTH);
+		}
+		setupAllocationMap(allocMap);
+	} */	
 }

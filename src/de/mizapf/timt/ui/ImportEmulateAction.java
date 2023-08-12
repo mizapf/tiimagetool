@@ -32,6 +32,7 @@ import java.awt.Cursor;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.TIFiles;
+import de.mizapf.timt.util.NotImplementedException;
 
 public class ImportEmulateAction extends Activity {
 
@@ -91,7 +92,8 @@ public class ImportEmulateAction extends Activity {
 						vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
 						if (vol==null) {
 							ImageFormat image = ImageFormat.determineImageFormat(sAbsFile);
-							vol = new Volume(image);
+							if (true) throw new NotImplementedException("ImportEmulate");
+							vol = new Volume(image, null);
 						}
 					}
 					catch (MissingHeaderException mx) {

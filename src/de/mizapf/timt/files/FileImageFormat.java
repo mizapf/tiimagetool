@@ -33,7 +33,6 @@ public abstract class FileImageFormat extends ImageFormat {
 	int m_nCurrentFormatUnit;
 	boolean m_bInitial;
 	String m_sFileName;
-	protected int m_nVibCheck;
 
 	FormatParameters m_format;
 
@@ -61,20 +60,26 @@ public abstract class FileImageFormat extends ImageFormat {
 		if (funum < 0) throw new InternalException("Wrong format unit number: " + funum);
 		// Flush the current format unit to the image
 		if (m_nCurrentFormatUnit != funum) {
-			if (m_nCurrentFormatUnit != NONE && m_bDirty) {
-				try {
-					writeCurrentFormatUnit();
-				}
-				catch (ProtectedException px) {
-					System.err.println(TIImageTool.langstr("ImageFWP"));
-				}
+			if (m_nCurrentFormatUnit != NONE) {
+				if (m_bDirty) {
+					try {
+						// System.out.println("Write back format unit " + m_nCurrentFormatUnit);
+						writeCurrentFormatUnit();
+					}
+					catch (ProtectedException px) {
+						System.err.println(TIImageTool.langstr("ImageFWP"));
+					}
+				} /*
+				else {
+					System.out.println("Evict format unit " + m_nCurrentFormatUnit);
+				} */
 			}
-			
+
+			// System.out.println("Load format unit " + funum + " from file");
 			byte[] abyFU = new byte[getFormatUnitLength(funum)];
 			m_codec.setBuffer(abyFU);
 			m_nCurrentFormatUnit = funum;
 			m_bDirty = false;
-
 			if (m_bInitial) {
 				// System.out.println("Create FU " + funum);
 				m_codec.prepareNewFormatUnit(funum, getTrackParameters());
@@ -88,23 +93,33 @@ public abstract class FileImageFormat extends ImageFormat {
 		} /*
 		else {
 			System.out.println("Format unit " + funum + " in memory");
-		} */
+		}  */
 	}
 	
 	/** Reads a sector.
 		@throws ImageException if the sector cannot be found.
 	*/
 	public Sector readSector(int nSectorNumber) throws ImageException, IOException {
+		Sector sect = null;
+
+		// For very early accesses, in particular with RawHDFormat
+	/*	if ((nSectorNumber == 0) && (m_fs == null)) {
+			System.out.println("Read sector " + nSectorNumber + " early");
+			Thread.currentThread().dumpStack();
+			sect = readSector0();
+		}
+		if (sect != null) 
+			return sect;
+		*/
 		// If there is a write cache, try to get the sector from there
 		// MemoryImageFormats and FloppyImageFormats always have a write cache		
-		Sector sect = null;
 		if (m_writeCache != null) {
 			sect = m_writeCache.read(nSectorNumber);
 		}
 
 		if (sect == null) {
 			// Otherwise, determine the format unit of this sector
-			// System.out.println("nSecNum = " + nSectorNumber);
+			System.out.println("nSecNum = " + nSectorNumber);
 			int funum = getFUNumberFromSector(nSectorNumber); // throws ImageException
 			loadFormatUnit(funum);
 				
@@ -151,7 +166,7 @@ public abstract class FileImageFormat extends ImageFormat {
 	/** Saves all changed sectors to the image. No format change. */
 	public void saveImage() throws ImageException, IOException, ProtectedException {
 		reopenForWrite();
-		for (int i=0; i < m_fs.getTotalSectors(); i++) {
+		for (int i=0; i < getTotalSectors(); i++) {
 			Sector sect = m_writeCache.read(i);
 			if (sect != null) {
 				// System.out.println("Write back sector "  + sect.getNumber());  // #%
@@ -175,7 +190,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		try {
 			reopenForWrite();
 			// System.out.println("Write back " + m_fs.getTotalSectors() + " sectors");
-			for (int i=0; i < m_fs.getTotalSectors(); i++) {
+			for (int i=0; i < getTotalSectors(); i++) {
 				Sector sect = imgOld.readSector(i);
 				// System.out.println("Write back sector "  + sect.getNumber());  // #%
 				writeBack(sect);
@@ -218,10 +233,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		if (m_file != null) m_file.close();
 		m_file = new RandomAccessFile(m_sFileName, "r");		
 	}
-		
-	public int getFormatCheck() {
-		return m_nVibCheck;
-	}
+
 		
 	/** Gets the format unit number from the linear sector number. */
 	abstract int getFUNumberFromSector(int nSectorNumber) throws ImageException;	
@@ -247,5 +259,9 @@ public abstract class FileImageFormat extends ImageFormat {
 	@Override
 	public String getShortImageName() {
 		return m_sFileName.substring(m_sFileName.lastIndexOf(java.io.File.separator)+java.io.File.separator.length());
+	}
+	
+	Sector readSector0() throws IOException {
+		return null;
 	}
 }

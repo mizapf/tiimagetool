@@ -375,8 +375,6 @@ public class MameCHDFormat extends HarddiskImageFormat {
 		
 		// Get the contents of hunk 0; copy the first 512 bytes
 		checkFormat(readHunk(0));
-		
-		setupAllocationMap();
 	}
 
 	private int parseValue(byte[] aby, String sToken, int nEnd) {

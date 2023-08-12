@@ -56,7 +56,7 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 		byte[] abyNewVIB = new byte[SECTOR_LENGTH];
 		Utilities.setString(abyNewVIB, 0, getVolumeName(), 10);
 
-		Utilities.setInt16(abyNewVIB, 0x0a, m_nTotalSectors/m_nSectorsPerAU);
+		Utilities.setInt16(abyNewVIB, 0x0a, m_nFSTotalSectors/m_nFSSectorsPerAU);
 		abyNewVIB[0x0d] = (byte)((m_nReservedAUs>>6) & 0xff);
 		Utilities.setTime(abyNewVIB, 0x12, m_tCreation);
 		abyNewVIB[0x16] = (byte)(m_dirRoot.getFiles().length & 0xff);
@@ -79,5 +79,28 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 			j=j+2;
 		}
 		return abyNewVIB;
+	}
+	
+	SCSIFileSystem() {
+		m_nSectorsPerAU = -1;
+	}
+	
+	/** Try to load the VIB and get the logical geometry. 
+	*/
+	@Override
+	public int configure(byte[] vibmap) {
+		// System.out.println(Utilities.hexdump(vib));		
+		int ret = GOOD;
+		analyzeVIBCommon(vibmap);
+		
+		// Get the tracks, sectors, and sides
+		m_nFSSectorsPerAU = ((vibmap[0x10] >> 4) & 0x0f) + 1;
+		m_nFSTotalSectors = Utilities.getInt16(vibmap, 0x0a) * m_nFSSectorsPerAU;
+		
+		if ((m_nFSSectorsPerAU > 16) || (m_nFSTotalSectors < 360))
+			ret |= BAD_GEOMETRY;
+
+		System.out.println("nTotal = " + m_nFSTotalSectors + ", AU size = " + m_nFSSectorsPerAU);	
+		return ret;
 	}
 }

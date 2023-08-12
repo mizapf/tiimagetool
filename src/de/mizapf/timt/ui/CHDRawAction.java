@@ -59,7 +59,7 @@ public class CHDRawAction extends Activity {
 			else {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				MameCHDFormat source = expdialog.getCHD();
-				HarddiskFileSystem fsource = (HarddiskFileSystem)source.getFileSystem();
+				HarddiskFileSystem fsource = null;  //(HarddiskFileSystem)source.getFileSystem();
 				File fileTarget = expdialog.getTargetFile();	
 				
 				try {

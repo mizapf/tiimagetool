@@ -529,7 +529,7 @@ public class TFile extends Element {
 		int nRead = 0;
 		int nSector = 0;
 		Interval current = null;
-		System.out.println("File " + getName() + ", used: " + getUsedSectors());
+//		System.out.println("File " + getName() + ", used: " + getUsedSectors());
 		if (m_aCluster.length==0) {
 			throw new ImageException(String.format(TIImageTool.langstr("TFileNoContent"), getPathname()));
 		}
@@ -1175,6 +1175,7 @@ public class TFile extends Element {
 
 		try {
 			if (hasFixedRecordLength() && getRecordLength()==128 && !isProgram()) {
+				// System.out.println("Check file " + m_sName + " as Archive");
 				byte[] content = getRawContent();
 				
 				if (Archive.hasPlainArchiveFormat(content)) m_bArchive = true;

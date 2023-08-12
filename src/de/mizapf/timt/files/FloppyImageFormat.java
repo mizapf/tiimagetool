@@ -38,24 +38,10 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 
 	/** Sectors per track, determined from the file size or metadata. */
 	int m_nSectorsPerTrack;
-	
+		
 	/** Format index */
 	protected int m_nFormatIndex;	
 	
-	/** Used for new images. Creates the image file.  */
-/*	public static ImageFormat getImageFormat(String sFile, int type, TFileSystem fs) throws FileNotFoundException, IOException, ImageException {
-		
-		switch (type) {
-		case SECTORDUMP:
-			return new SectorDumpFormat(sFile);
-		case TRACKDUMP:
-			return new TrackDumpFormat(sFile);
-		case HFE:
-			return new HFEFormat(sFile);
-		}
-		return null;
-	}
-	*/
 	protected FloppyImageFormat(String sImageName) throws FileNotFoundException, IOException, ImageException {
 		super(sImageName);
 	}
@@ -63,10 +49,6 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 	protected FloppyImageFormat(String sImageName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
 		super(sImageName, params);
 	}
-	
-/*	int getCountedSectorsPerTrack() {
-		return m_nCountedSectors;
-	} */
 	
 	/** Must be overridden by formats like SectorDumpFormat which cannot rely on this. */
 	abstract int getSectorsPerTrack();
@@ -120,26 +102,6 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 		return loc;
 	}
 	
-	void setVolumeInformation() throws ImageException, IOException {
-		// System.out.println("setVolumeInfo");
-
-		// Use UNSET for the next accesses until we set the header
-		m_nVibCheck = FloppyFileSystem.UNSET;
-		
-		Sector sector0 = readSector(0);	
-		// System.out.println(Utilities.hexdump(sector0.getData()));
-		
-		try {
-			m_fs.setVolumeName(Utilities.getString10(sector0.getData(), 0));
-		}
-		catch (InvalidNameException inx) {
-			m_fs.setVolumeName0("UNNAMED");
-		}
-						
-		m_nVibCheck = setupGeometry(sector0.getData());
-		setupAllocationMap();
-	}
-	
 	int chsToLba(Location loc) {
 		// We assume the usual sector ordering on floppies
 		int lintrack;
@@ -180,12 +142,11 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 		return funum * getFormatUnitLength(funum);
 	}	
 	
-	protected int setupGeometry(byte[] sec0) {
-		return ((FloppyFileSystem)m_fs).deriveGeometryFromVIB(sec0);
-	}
-	
-	protected void setupAllocationMap() throws ImageException, IOException {
-		Sector sector0 = readSector(0);	
-		((FloppyFileSystem)m_fs).setupAllocationMap(sector0.getData());
+	public FloppyFileSystem getFileSystem(byte[] sector0) {
+		FloppyFileSystem fs = new FloppyFileSystem();
+		fs.setImage(this);
+		// System.out.println(Utilities.hexdump(sector0));
+		fs.configure(sector0);
+		return fs;
 	}
 }

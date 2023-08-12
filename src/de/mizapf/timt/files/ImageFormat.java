@@ -116,7 +116,6 @@ public abstract class ImageFormat  {
 	
 	FormatCodec m_codec; 
 	SectorCache m_writeCache;
-	TFileSystem m_fs;
 	
 	// Used by the type selection dialog
 	public final static int NOTYPE = -1;
@@ -144,6 +143,9 @@ public abstract class ImageFormat  {
 	protected static Settings m_Settings; 
 
 	protected byte[] m_fillPattern;
+	
+	/** Total sectors. */
+	protected int m_nTotalSectors;
 	
 	// Called from TIImageTool during startup
 	public static void setFormats(String formstr) {
@@ -307,6 +309,16 @@ public abstract class ImageFormat  {
 		return null;
 	}
 	
+	/** Load the contents of a sequence of sectors. */
+	public byte[] getContent(int nStart, int nEnd) throws IOException, ImageException {
+		byte[] content = new byte[(nEnd-nStart+1) * TFileSystem.SECTOR_LENGTH];
+		for (int i=nStart; i <= nEnd; i++) {
+			Sector sect = readSector(nStart);
+			System.arraycopy(sect.getData(), 0, content, (i-nStart)*TFileSystem.SECTOR_LENGTH, TFileSystem.SECTOR_LENGTH);
+		}	
+		return content;
+	}
+	
 	protected byte[] getFillPattern() {
 		return m_fillPattern;
 	}
@@ -317,15 +329,9 @@ public abstract class ImageFormat  {
 	protected ImageFormat() throws FileNotFoundException {
 		m_writeCache = new SectorCache();
 		setFillPattern(m_Settings.getPropertyString(TIImageTool.FILLPAT));
+		m_nTotalSectors = -1;
 	}
 	
-	public TFileSystem getFileSystem() {
-		return m_fs;
-	}
-		
-	public void setFileSystem(TFileSystem fs) {
-		m_fs = fs;
-	}
 	public abstract Sector readSector(int nSectorNumber) throws ImageException, IOException;
 	
 	public abstract void writeSector(Sector sect) throws ImageException, IOException, ProtectedException;
@@ -335,6 +341,14 @@ public abstract class ImageFormat  {
 		// Write back all sectors
 	}
 	
+	final int getTotalSectors() {
+		return m_nTotalSectors;
+	}
+	
+	final void setTotalSectors(int nTotal) {
+		m_nTotalSectors = nTotal;
+	}
+
 	boolean cacheHasUnsavedEntries() {
 		if (m_writeCache == null) return false;
 		return m_writeCache.hasUnsavedEntries();

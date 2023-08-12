@@ -52,19 +52,19 @@ import de.mizapf.timt.util.NotImplementedException;
 public class HFDCFileSystem extends HarddiskFileSystem {
 
 	// From the VIB
-	protected int m_nFSSectorsPerTrack;
-	protected int m_nFSStepSpeed;
-	protected int m_nFSReducedWriteCurrent;
-	protected int m_nFSWritePrecomp;
-	protected boolean m_bFSBufferedStep;
-	protected int m_nFSEmulate;
+	int m_nFSSectorsPerTrack;
+	int m_nFSStepSpeed;
+	int m_nFSReducedWriteCurrent;
+	int m_nFSWritePrecomp;
+	boolean m_bFSBufferedStep;
+	int m_nFSEmulate;
 	
 	@Override
 	byte[] createVIBContents() {
 		byte[] abyNewVIB = new byte[SECTOR_LENGTH];
 		Utilities.setString(abyNewVIB, 0, getVolumeName(), 10);
 
-		Utilities.setInt16(abyNewVIB, 0x0a, m_nTotalSectors/m_nSectorsPerAU);
+		Utilities.setInt16(abyNewVIB, 0x0a, m_nFSTotalSectors/m_nFSSectorsPerAU);
 		abyNewVIB[0x0d] = (byte)((m_nReservedAUs>>6) & 0xff);
 		Utilities.setTime(abyNewVIB, 0x12, m_tCreation);
 		abyNewVIB[0x16] = (byte)(m_dirRoot.getFiles().length & 0xff);
@@ -96,4 +96,26 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 		if (getAUEmulateSector()==nSector) m_nFSEmulate = 0;
 		else m_nFSEmulate = nSector / m_nSectorsPerAU;
 	}
+	
+	@Override
+	public int configure(byte[] vibmap) {		
+		int ret = GOOD;
+		analyzeVIBCommon(vibmap);
+
+		m_nFSSectorsPerTrack = vibmap[0x0c] & 0xff;
+		m_nFSHeads = (vibmap[0x10] & 0x0f) + 1;
+		m_nFSCylinders = (m_nFSTotalSectors / m_nFSSectorsPerTrack) / m_nFSHeads;
+		
+		m_nFSStepSpeed = vibmap[0x0e] & 0xff;
+		m_nFSReducedWriteCurrent = vibmap[0x0f] & 0xff;
+		m_nFSWritePrecomp = vibmap[0x11] & 0x7f;
+		m_bFSBufferedStep = (vibmap[0x11] & 0x80)!=0;
+		
+		m_nFSEmulate = Utilities.getInt16(vibmap, 0x1a);
+		
+		if ((m_nFSHeads < 2) || (m_nFSSectorsPerTrack < 18) || (m_nFSCylinders < 100))
+			ret |= BAD_GEOMETRY;
+		
+		return ret;
+	}	
 }

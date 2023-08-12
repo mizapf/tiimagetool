@@ -51,26 +51,6 @@ public class AllocationMap implements Cloneable {
 		cloneMap.setMapFromBitfield(m_abyMap, 0, 0);
 		return cloneMap;
 	}
-	
-	/** Constructor for an empty AM for floppies. */
-	public AllocationMap(int nSectors) {
-		int nAUSize = 1;
-		if (nSectors <= 1600) nAUSize = 1;
-		else {
-			if (nSectors <= 3200) nAUSize = 2;
-			else
-			{
-				if (nSectors <= 6400) nAUSize = 4;
-				else nAUSize = 8;
-			}
-		}
-		
-		int nAU = nSectors/nAUSize;
-		m_abyMap = new byte[(nAU + 7)/8];
-		m_nLength = nAU;
-		m_nAUSize = nAUSize;
-		m_bFloppy = true;		
-	}
 
 	// Note that the LSB represents the first AU, and the MSB is seven
 	// AUs later (going from right to left for each byte)

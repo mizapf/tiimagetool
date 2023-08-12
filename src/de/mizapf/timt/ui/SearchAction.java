@@ -30,6 +30,7 @@ import java.io.IOException;
 import de.mizapf.timt.files.*;
 import java.awt.Cursor;
 import java.util.regex.*;
+import de.mizapf.timt.util.NotImplementedException;
 
 public class SearchAction extends Activity {
 
@@ -148,7 +149,8 @@ public class SearchAction extends Activity {
 	private void search(File imagefile, ArrayList<SearchResult> list) {
 		try {
 			ImageFormat image = ImageFormat.determineImageFormat(imagefile.getAbsolutePath());
-			Volume vol = new Volume(image);
+			if (true) throw new NotImplementedException("Search");
+			Volume vol = new Volume(image, null);
 			// System.out.println("Searching image " + image.getAbsolutePath());
 			m_view.setFilename(imagefile.getAbsolutePath());
 			if (!m_view.stopRequested() && m_count < m_maxhits) {

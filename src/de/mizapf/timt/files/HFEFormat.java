@@ -432,8 +432,9 @@ public class HFEFormat extends FloppyImageFormat {
 						// System.out.println(Utilities.hexdump(abySector));
 						
 						Location loc = new Location(abyHeader);
-						ImageSector sect = new ImageSector(chsToLba(loc), abySector, (byte)mark, m_mfm, pos);
+						ImageSector sect = new ImageSector(chsToLba(loc), abySector, (byte)mark, m_mfm, 0);
 						sect.setLocation(loc);
+						sect.setPosition(pos);
 						// Check against the calculated value						
 						if (crcd != sect.getCRC()) System.out.println(String.format(TIImageTool.langstr("BadDataCRC"), chsToLba(loc), Utilities.toHex(sect.getCRC(),4), Utilities.toHex(crcd, 4)));
 						// else System.out.println("Good data CRC = " + Utilities.toHex(crcd, 4));
@@ -854,12 +855,6 @@ public class HFEFormat extends FloppyImageFormat {
 		m_file.readFully(m_abyBufferLUT);  // Read the LUT
 		
 		locateFormatUnits(m_header.number_of_track);
-
-		// We do not know the total sector count yet
-		m_fs = new FloppyFileSystem();
-		setVolumeInformation();
-		
-		System.out.println("total sectors = " + m_fs.getTotalSectors());
 	}
 
 	/** Create new format. */
@@ -911,8 +906,10 @@ public class HFEFormat extends FloppyImageFormat {
 	@Override
 	ImageSector findSector(int number) throws ImageException {
 		// Calculate the CHS location
-		if (number >= getTotalSectors()) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), getTotalSectors()));
-		if ((number != 0) && getSectorsPerTrack() < 8) throw new ImageException(String.format(TIImageTool.langstr("ImageUnknown")));
+		if (number != 0) {
+			if (number >= getTotalSectors()) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), getTotalSectors()));
+			if (getSectorsPerTrack() < 8) throw new ImageException(String.format(TIImageTool.langstr("ImageUnknown")));
+		}
 		Location loc = lbaToChs(number, getTracks(), getSectorsPerTrack());
 		
 		for (ImageSector is : m_codec.getDecodedSectors()) {
@@ -930,6 +927,8 @@ public class HFEFormat extends FloppyImageFormat {
 	int getFUNumberFromSector(int number) throws ImageException {
 		// System.out.println("funum(" + number + ") = " + lbaToChs(number).cylinder);
 		// System.out.println("total=" + getTotalSectors() + ", sect=" +number);
+		if (number == 0) return 0;
+		
 		if ((number != 0) && getSectorsPerTrack() < 8) throw new ImageException(String.format(TIImageTool.langstr("ImageUnknown")));
 
 		if (number >= getTotalSectors()) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), getTotalSectors()));
@@ -957,15 +956,6 @@ public class HFEFormat extends FloppyImageFormat {
 		return m_nSectorsPerTrack;
 	}
 	
-	int getTotalSectors() {
-		int ts = m_fs.getTotalSectors();
-		if (ts == -1) {
-			ts = getSectorsPerTrack() * getTracks() * 2;
-		}
-		if (ts == 0) return 99999;   // FIXME
-		return ts;
-	}
-
 	/** Prepare an empty image. Write a new header and create a lookup table. */
     @Override
 	void prepareNewImage(FormatParameters params) throws IOException, ImageException {

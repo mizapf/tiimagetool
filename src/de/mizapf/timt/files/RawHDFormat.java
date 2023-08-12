@@ -55,7 +55,6 @@ class RawHDFormat extends HarddiskImageFormat {
 	class RawHDCodec extends FormatCodec {
 		void decode() {
 			int count = m_formatUnit.length / TFileSystem.SECTOR_LENGTH;
-			
 			// The current FU number is member of ImageFormat
 			int startSector = m_nCurrentFormatUnit * getSectorsPerTrack();
 			for (int i = 0; i < count; i++) {
@@ -74,30 +73,25 @@ class RawHDFormat extends HarddiskImageFormat {
 	
 	public RawHDFormat(String sImageName) throws IOException, ImageException {
 		super(sImageName);
-		
-/*		m_file = new RandomAccessFile(sImageName, "r");
-		m_bInitial = false;
-		
-		// Read the first 512 bytes
-		byte[] sector0 = new byte[512];
-		m_file.seek(0);
-		m_file.readFully(sector0);
-		checkFormat(sector0);
-		*/
 		m_codec = new RawHDCodec();
-		// HIER: Geht so nicht, wir müssen erst den Typ herausfinden (SCSI, IDE, HFDC) 
-		// m_fs = new HarddiskFileSystem();   
-		setVolumeInformation();
 	}
 	
 	public String getFormatName() {
 		return TIImageTool.langstr("RAWType");
 	}
 	
-	@Override
 	int getSectorsPerTrack() {
-		// We have to get the sectors per track from the file system
-		return ((HarddiskFileSystem)m_fs).getSectorsPerTrack();
+		return m_nSectorsPerTrack;
+	}
+	
+	@Override
+	Sector readSector0() throws IOException {
+		// Read the first 256 bytes
+		byte[] sector0 = new byte[TFileSystem.SECTOR_LENGTH];
+		m_file.seek(0);
+		m_file.readFully(sector0);
+		
+		return new Sector(0, sector0);
 	}
 	
 	/** Find the image sector by the linear sector number. */
@@ -110,6 +104,7 @@ class RawHDFormat extends HarddiskImageFormat {
 	}
 	
 	int getFUNumberFromSector(int secnum) {
+		if (secnum == 0) return 0;
 		return secnum / getSectorsPerTrack();
 	}
 			

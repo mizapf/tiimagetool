@@ -94,12 +94,10 @@ class SectorDumpFormat extends FloppyImageFormat {
 			
 			int nFound = 0;
 			m_decodedSectors.clear();
-			byte[] content = new byte[TFileSystem.SECTOR_LENGTH];
 			
 			while ((nFound < count) && ((contpos+256) <= m_formatUnit.length)) {
-				System.arraycopy(m_formatUnit, contpos, content, 0, TFileSystem.SECTOR_LENGTH);
 				ImageSector is = new ImageSector(getLinearSectorNumber(headerpos), 
-					content, (byte)0xfb, mfm, contpos);
+					m_formatUnit, (byte)0xfb, mfm, contpos);
 				m_decodedSectors.add(is);
 				headerpos += increm;
 				contpos += increm;
@@ -165,10 +163,7 @@ class SectorDumpFormat extends FloppyImageFormat {
 		m_nSectorsPerTrack = sdfgeometry[m_nFormatIndex][3];
 		m_nTracks = sdfgeometry[m_nFormatIndex][2];
 		m_nSides = sdfgeometry[m_nFormatIndex][1];
-		int nTotalSectors =  (int)(nLength / TFileSystem.SECTOR_LENGTH);
-		
-		m_fs = new FloppyFileSystem(nTotalSectors);
-		setVolumeInformation();
+		m_nTotalSectors = (int)(nLength / TFileSystem.SECTOR_LENGTH);
 	}
 	
 	public SectorDumpFormat(String sFileName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
@@ -179,14 +174,8 @@ class SectorDumpFormat extends FloppyImageFormat {
 		m_format = params;
 	}
 	
-	@Override
 	int getSectorsPerTrack() {
-		// We have to get the sectors per track from the file system
-		if (m_nVibCheck == FloppyFileSystem.GOOD) {
-			return ((FloppyFileSystem)m_fs).getSectorsPerTrack();
-		}
-		else 
-			return m_nSectorsPerTrack;
+		return m_nSectorsPerTrack;
 	}
 	
 	public String getFormatName() {
@@ -216,6 +205,13 @@ class SectorDumpFormat extends FloppyImageFormat {
 	static String checkFormatCompatibility(FormatParameters params) {
 		if (params.sectors > 18) return TIImageTool.langstr("Format.unsupported");
 		return null; 
+	}
+	
+	Sector readSector0() throws IOException {
+		byte[] sect0 = new byte[TFileSystem.SECTOR_LENGTH];
+		m_file.seek(0);
+		m_file.readFully(sect0);
+		return new Sector(0, sect0);
 	}
 }
 

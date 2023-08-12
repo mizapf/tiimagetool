@@ -67,17 +67,49 @@ public class OpenImageAction extends Activity {
 				imagetool.addDirectoryView(vol.getRootDirectory());
 			}
 			else {
-				
 				try {
-					
 					// ============== Open the image			
 					ImageFormat image = ImageFormat.determineImageFormat(sAbsFile); // throws ImageExc if unknown
-							
+											
+					byte[] vibmap = null;
+					TFileSystem fs = null;	
+					
 					if (image instanceof FloppyImageFormat) {
-						int check = ((FloppyImageFormat)image).getFormatCheck();
+						vibmap = image.getContent(0, 0);
+						
+						int check = FloppyFileSystem.checkFormat(vibmap);
+						
 						System.out.println("Format check: " + FloppyFileSystem.getFormatCheckText(check));
-						if ((check & TFileSystem.NO_SIG)!=0) {
-							int doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageNoDSK"), TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
+						if (check != TFileSystem.GOOD) {
+							int doCheckSig = JOptionPane.YES_OPTION;
+							if ((check & TFileSystem.NO_SIG)!=0) {
+								doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageNoDSK") + ". " + TIImageTool.langstr("Ask.openanyway"),
+									TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
+							}
+							if ((check & TFileSystem.BAD_GEOMETRY)!=0) {
+								doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badgeometry") + ". " + TIImageTool.langstr("Ask.openanyway"), 
+									TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
+							}
+							if (doCheckSig == JOptionPane.NO_OPTION) {
+								continue;
+							}
+						}						
+						fs = ((FloppyImageFormat)image).getFileSystem(vibmap);
+						((FloppyFileSystem)fs).configure(vibmap);
+					}
+					
+					if (image instanceof HarddiskImageFormat) {
+						vibmap = image.getContent(0, 31);
+						fs = ((HarddiskImageFormat)image).getFileSystem(vibmap);
+						
+						int check = ((HarddiskFileSystem)fs).configure(vibmap);
+						System.out.println("Format check: " + HarddiskFileSystem.getFormatCheckText(check));
+						if (check != TFileSystem.GOOD) {
+							int doCheckSig = JOptionPane.YES_OPTION;
+							if ((check & TFileSystem.BAD_GEOMETRY)!=0) {
+								doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badgeometry") + ". " + TIImageTool.langstr("Ask.openanyway"), 
+									TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
+							}
 							if (doCheckSig == JOptionPane.NO_OPTION) {
 								continue;
 							}
@@ -92,17 +124,7 @@ public class OpenImageAction extends Activity {
 					}
 					
 					try {
-						vol = new Volume(image);					
-					}
-					catch (MissingHeaderException mx) {
-						// FIXME: Not used
-						// No DSK signature
-						int doCheck1 = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageNoDSK"), TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
-						if (doCheck1 == JOptionPane.YES_OPTION) {
-							vol = new Volume(image);
-						}
-						// Be graceful, do as much as possible
-						else continue;
+						vol = new Volume(image, fs);					
 					}
 					catch (ImageException ix) {
 						JOptionPane.showMessageDialog(m_parent, ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);

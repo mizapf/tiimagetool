@@ -123,7 +123,7 @@ public class ChangeCHDFormatAction extends Activity {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 		java.io.File fileTarget = null;
-		HarddiskFileSystem fsource = (HarddiskFileSystem)source.getFileSystem();
+		HarddiskFileSystem fsource = null; // (HarddiskFileSystem)source.getFileSystem();
 		
 		// FormatParameters parm = new FormatParameters(fsource.getCylinders(), fsource.getHeads(), fsource.getSectors(), fsource.getSectorLength(), nNewFormat);
 		try {

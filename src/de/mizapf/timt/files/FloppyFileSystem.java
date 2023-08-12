@@ -25,6 +25,8 @@ import de.mizapf.timt.TIImageTool;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import java.io.IOException;
+
 /** Represents a TI floppy disk file system. */	
 public class FloppyFileSystem extends TFileSystem {
 	
@@ -37,50 +39,19 @@ public class FloppyFileSystem extends TFileSystem {
 
 	// Floppy-specific
 	boolean		m_bProtection = false;
-	boolean		m_bCF7 = false;
 
 	// As read from the VIB
 	protected int m_nFSCylinders;
 	protected int m_nFSHeads;
 	protected int m_nFSSectorsPerTrack;
 	protected int m_nFSDensity;
-	protected int m_nFSTotalSectors;
 	
 	/** Values used in the VIB for the density options. */
 	public final static int[] densityCode = { 1, 2, 3, 4, 2 };
 	public final static int[] sectorsPerTrack = { 9, 18, 36, 72, 16 };
-	
-/*	public FloppyFileSystem() {
-		m_bCF7 = false;
-		m_nReservedAUs = 0x21;
-	} */
-
-/*	public FloppyFileSystem(FloppyImageFormat image) {
-		Sector sector0 = image.readSector(0);	
-		dirRoot = new Directory(this, sector0);
-		setRootDirectory(dirRoot);
-
-		// Read the allocation map
-		ByteArrayOutputStream baosAlloc = new ByteArrayOutputStream();
-		int allocStart = getAllocMapStart();
-		int allocEnd = getAllocMapEnd();
-
-		for (int sect = allocStart/SECTOR_LENGTH; sect <= allocEnd/SECTOR_LENGTH; sect++) {
-			baosAlloc.write(readSector(sect).getBytes());
-		}
-		byte[] abyAlloc = baosAlloc.toByteArray();	
-	
-
-	}
-*/	
-	public FloppyFileSystem(int nTotal) {
-		super(nTotal, 0x21);  
-		m_bCF7 = false;
-	}
 
 	public FloppyFileSystem() {
 		super(0x21);  
-		m_bCF7 = false;
 	}
 
 	/** Create a new empty file system */
@@ -93,11 +64,9 @@ public class FloppyFileSystem extends TFileSystem {
 		// Cause: NewFloppyImageDialog does not define the sector count
 		setGeometry(param.cylinders, param.heads, param.sectors);
 
-		m_allocMap = new AllocationMap(m_nTotalSectors);
+		m_allocMap = new AllocationMap(getTotalSectors() / getSectorsPerAU(), getSectorsPerAU(), true);
 		m_allocMap.allocate(0);
 		m_allocMap.allocate(1);
-		
-		m_bCF7 = false;
 	}
 	
 	@Override
@@ -131,7 +100,7 @@ public class FloppyFileSystem extends TFileSystem {
 		m_nFSCylinders = tracks;
 		m_nFSHeads = heads;
 		m_nFSSectorsPerTrack = sectors;
-		m_nTotalSectors = heads * tracks * sectors;
+		m_nFSTotalSectors = heads * tracks * sectors;
 		m_nFSDensity = getDensityFromSectors(sectors);
 	}
 
@@ -158,10 +127,6 @@ public class FloppyFileSystem extends TFileSystem {
 		sb.append("D");
 		return sb.toString();
 	}
-	
-	public boolean isCF7() {
-		return m_bCF7;
-	}
 
 	int getSectorsPerAU() {
 		int total = getTotalSectors();
@@ -174,49 +139,12 @@ public class FloppyFileSystem extends TFileSystem {
 			}
 		}
 	}
-
-	/** Try to load the VIB and get the logical geometry. 
-	*/
-	int deriveGeometryFromVIB(byte[] vib) {
-	
-		int ret = GOOD;
-
-		if (!FloppyFileSystem.hasFloppySignature(vib))
-			ret |= NO_SIG;
 		
-		// Get the tracks, sectors, and sides
-		m_nFSTotalSectors = Utilities.getInt16(vib, 0x0a);
-		
-		// Is the sector count correct?
-		if (m_nTotalSectors != -1 && m_nFSTotalSectors != m_nTotalSectors)
-			ret |= SIZE_MISMATCH;
-		
-		// System.out.println("nTotal = " + m_nTotalSectors + ", FStotal = " + m_nFSTotalSectors);
-		
-		m_nFSSectorsPerTrack = vib[0x0c] & 0xff;
-		m_nFSHeads = vib[0x12] & 0xff;
-		m_nFSCylinders = vib[0x11] & 0xff;
-		
-		if ((m_nFSSectorsPerTrack * m_nFSCylinders * m_nFSHeads) != m_nFSTotalSectors)
-			ret |= BAD_GEOMETRY;
-		
-		// What about density?
-		int nDensity = getDensityFromCode(vib[0x13] & 0xff, m_nFSSectorsPerTrack);		
-		m_nFSDensity = getDensityFromSectors(m_nFSSectorsPerTrack);
-		if (m_nFSDensity != nDensity) {
-			System.err.println("Wrong density value " + (vib[0x13] & 0xff) + " for sector count " + m_nFSSectorsPerTrack); 
-			ret |= WRONG_DENSITY;
-		}
-		return ret;
-	}
-		
-	@Override	
 	public int getTotalSectors() {
-		if (m_nTotalSectors == -1) return m_nFSTotalSectors;
-		return m_nTotalSectors;
+		return m_nFSTotalSectors;
 	}
 
-	private int getDensityFromCode(int code, int sectors) {
+	private static int getDensityFromCode(int code, int sectors) {
 		if (sectors==16) return DOUBLE_DENSITY_16;
 		for (int i=0; i < densityCode.length; i++) {
 			if (code == densityCode[i]) return i;
@@ -224,7 +152,7 @@ public class FloppyFileSystem extends TFileSystem {
 		return 0;	
 	}
 
-	private int getDensityFromSectors(int sectors) {
+	private static int getDensityFromSectors(int sectors) {
 		if (sectors==16) return DOUBLE_DENSITY_16;
 		if ((sectors % 9) != 0) {
 			System.err.println("Invalid sector count: " + sectors);
@@ -264,7 +192,7 @@ public class FloppyFileSystem extends TFileSystem {
 		abyNewVIB[0x12] = (byte)(m_nFSHeads & 0xff);
 		abyNewVIB[0x13] = (byte)(getDensityCode() & 0xff);
 		
-		if (!m_bCF7) {
+//		if (!m_bCF7) {
 			Directory[] dirs = m_dirRoot.getDirectories();
 			for (int i=0; i < 3; i++) {
 				if (i < dirs.length) {
@@ -277,11 +205,11 @@ public class FloppyFileSystem extends TFileSystem {
 					for (int j=0; j < 12; j++) abyNewVIB[0x14 + j + i*12] = (byte)0;
 				}
 			}
-		}
-		else {
+//		}
+/*		else {
 			// Clear the DIR area for CF7; there are no subdirectories
 			for (int i=0x14; i<0x38; i++) abyNewVIB[i] = (byte)0x00;
-		}
+		} */
 		byte[] map = m_allocMap.toBitField();
 		for (int j=0; j < map.length; j++) {
 			abyNewVIB[j+0x38] = map[j];
@@ -331,12 +259,6 @@ public class FloppyFileSystem extends TFileSystem {
 		return list;
 	}
 	
-	@Override
-	void setupAllocationMap(byte[] map) {
-		m_allocMap = new AllocationMap(getTotalSectors());
-		m_allocMap.setMapFromBitfield(map, 0x38, 0);
-	}
-	
 	public static String getFormatCheckText(int val) {
 		StringBuilder sb = new StringBuilder();
 		if ((val & NO_SIG)!=0) sb.append("no sig");
@@ -354,6 +276,85 @@ public class FloppyFileSystem extends TFileSystem {
 		}		
 		if (sb.length() > 0) return sb.toString();
 		return "good";
+	}
+	
+	public static int checkFormat(byte[] vib) throws IOException {
+		int ret = GOOD;
+		
+		if (!hasFloppySignature(vib))
+			ret |= NO_SIG;
+		
+		// Get the tracks, sectors, and sides
+		int nTotalSectors = Utilities.getInt16(vib, 0x0a);
+				
+		// System.out.println("nTotal = " + m_nTotalSectors + ", FStotal = " + m_nFSTotalSectors);
+		
+		int nSectorsPerTrack = vib[0x0c] & 0xff;
+		int nHeads = vib[0x12] & 0xff;
+		int nCylinders = vib[0x11] & 0xff;
+		
+		if ((nSectorsPerTrack * nHeads * nCylinders) != nTotalSectors)
+			ret |= BAD_GEOMETRY;
+		
+		// What about density?
+		int nDensity = getDensityFromCode(vib[0x13] & 0xff, nSectorsPerTrack);		
+		int nFSDensity = getDensityFromSectors(nSectorsPerTrack);
+		
+		if (nDensity != nFSDensity) {
+			System.err.println("Wrong density value " + (vib[0x13] & 0xff) + " for sector count " + nSectorsPerTrack); 
+			ret |= WRONG_DENSITY;
+		}
+		return ret;
+	}
+
+	public int configure(byte[] vib) {
+		int ret = GOOD;
+
+		if (!FloppyFileSystem.hasFloppySignature(vib))
+			ret |= NO_SIG;
+			
+		// Get the tracks, sectors, and sides
+		m_nFSTotalSectors = Utilities.getInt16(vib, 0x0a);
+		
+		// Is the sector count correct?
+		int nTotal = ((FloppyImageFormat)m_Image).getTotalSectors();
+		
+		if (nTotal != -1 && m_nFSTotalSectors != nTotal)
+			ret |= SIZE_MISMATCH;
+		
+		System.out.println("nTotal = " + nTotal + ", FStotal = " + m_nFSTotalSectors);
+		
+		if (nTotal == -1) {
+			System.out.println("Setting total sectors from file system");	
+			m_Image.setTotalSectors(m_nFSTotalSectors);
+		}
+		
+		m_nFSSectorsPerTrack = vib[0x0c] & 0xff;
+		m_nFSHeads = vib[0x12] & 0xff;
+		m_nFSCylinders = vib[0x11] & 0xff;
+		
+		if ((m_nFSSectorsPerTrack * m_nFSCylinders * m_nFSHeads) != m_nFSTotalSectors)
+			ret |= BAD_GEOMETRY;
+		
+		// What about density?
+		int nDensity = getDensityFromCode(vib[0x13] & 0xff, m_nFSSectorsPerTrack);		
+		m_nFSDensity = getDensityFromSectors(m_nFSSectorsPerTrack);
+		if (m_nFSDensity != nDensity) {
+			System.err.println("Wrong density value " + (vib[0x13] & 0xff) + " for sector count " + m_nFSSectorsPerTrack); 
+			ret |= WRONG_DENSITY;
+		}
+
+		try {
+			setVolumeName(Utilities.getString10(vib, 0));
+		}
+		catch (InvalidNameException inx) {
+			setVolumeName0("UNNAMED");
+		}
+							
+		m_allocMap = new AllocationMap(getTotalSectors() / getSectorsPerAU(), getSectorsPerAU(), true);
+		m_allocMap.setMapFromBitfield(vib, 0x38, 0);
+		
+		return ret;
 	}
 }
 

@@ -43,7 +43,7 @@ public class ImageSector extends Sector {
 	}
 	
 	ImageSector(int number, byte[] content, int offset) {
-		super(number, content);
+		super(number, content, offset);
 		setPosition(offset);
 	}
 	

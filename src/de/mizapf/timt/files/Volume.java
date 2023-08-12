@@ -49,47 +49,28 @@ public class Volume {
 	/** Create the volume from the given file name (existing file).
 		@param sFile File name of the image file.
 	*/
-	public Volume(ImageFormat image) throws FileNotFoundException, IOException, MissingHeaderException, ImageException {
+	public Volume(ImageFormat image, TFileSystem fs) throws FileNotFoundException, IOException, MissingHeaderException, ImageException {
 
 		m_Image = image;
 		m_bReadOnly = false;
-		
-		// Determine the file system; throws an ImageException when unknown
-		// if (image == null) m_Image = ImageFormat.determineImageFormat(sFile);
-
-/*		// When we are here, the format could be determined
-		if (m_Image instanceof FloppyImageFormat) {
-			m_FileSystem = new FloppyFileSystem(m_Image);
-		}
-		else {
-			if (m_Image instanceof HarddiskImageFormat) {
-				// SCSI or HFDC image?
-				switch (((HarddiskImageFormat)m_Image).getHDType()) {
-				case HarddiskImageFormat.SCSI:
-					m_FileSystem = new SCSIFileSystem(m_Image);
-					break;
-				case HarddiskImageFormat.HFDC:
-					m_FileSystem = new HFDCFileSystem(m_Image);
-					break;
-				default:
-					throw new NotImplementedException("Unsupported image type: " + m_Image.getClass().getName() + ", type " + ((HarddiskImageFormat)m_Image).getHDType());
-				}
-			}						
-			else
-				throw new NotImplementedException("Unsupported image type: " + m_Image.getClass().getName());
-		}
-		*/
-		
-		m_FileSystem = m_Image.getFileSystem();
+				
+		m_FileSystem = fs;
 		if (m_FileSystem == null) {
-			throw new ImageException("** FileSystem is null");
+			throw new InternalException("** FileSystem is null");
 		}
-		System.out.println(m_Image.getClass().getName());   // #%
-		System.out.println(m_FileSystem.getClass().getName());   // #%
 
-		Sector sector0 = readSector(0);
+		System.out.println(m_Image.getClass().getName());
+		System.out.println(m_FileSystem.getClass().getName());
+
+		Sector sector0 = image.readSector(0);
 		// System.out.println(Utilities.hexdump(sector0.getData()));
-		Directory dirRoot = new Directory(this, sector0);  // used for floppy
+		
+		Directory dirRoot = null; 
+		
+		if (m_FileSystem instanceof FloppyFileSystem) 
+			dirRoot = new Directory(this, sector0);  // used for floppy
+		else
+			dirRoot = new Directory(this, sector0, null);   // used for HD
 
 		m_FileSystem.setRootDirectory(dirRoot);
 		
@@ -237,8 +218,9 @@ public class Volume {
 	}
 	
 	public boolean isFloppyImage() {
-		if (!(m_FileSystem instanceof FloppyFileSystem)) return false;	
-		return !((FloppyFileSystem)m_FileSystem).isCF7();
+		// if (!(m_FileSystem instanceof FloppyFileSystem)) return false;	
+		// return !((FloppyFileSystem)m_FileSystem).isCF7();
+		return m_FileSystem instanceof FloppyFileSystem;
 	}
 	
 	public boolean isSCSIImage() {
@@ -250,8 +232,9 @@ public class Volume {
 	}
 	
 	public boolean isCF7Volume() {
-		if (!(m_FileSystem instanceof FloppyFileSystem)) return false;	
-		return ((FloppyFileSystem)m_FileSystem).isCF7();
+		// if (!(m_FileSystem instanceof FloppyFileSystem)) return false;	
+		// return ((FloppyFileSystem)m_FileSystem).isCF7();
+		return false;
 	}
 
 	public String getName() {
@@ -418,8 +401,9 @@ public class Volume {
 		// They are available via the FileSystem
 		
 		// Get the format (includes preparing the image) 
-		newImage.setFileSystem(m_FileSystem);
+		//newImage.setFileSystem(m_FileSystem);
 		newImage.saveImageFromOld(m_Image);
+		m_FileSystem.setImage(newImage);
 		
 		m_Image = newImage;
 		System.out.println(newImage.getClass().getName());
