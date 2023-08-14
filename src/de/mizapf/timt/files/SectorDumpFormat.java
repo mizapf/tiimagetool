@@ -94,7 +94,6 @@ class SectorDumpFormat extends FloppyImageFormat {
 			
 			int nFound = 0;
 			m_decodedSectors.clear();
-			
 			while ((nFound < count) && ((contpos+256) <= m_formatUnit.length)) {
 				ImageSector is = new ImageSector(getLinearSectorNumber(headerpos), 
 					m_formatUnit, (byte)0xfb, mfm, contpos);
@@ -149,29 +148,28 @@ class SectorDumpFormat extends FloppyImageFormat {
 		long nLength = m_file.length();
 		if (((nLength / 256) % 10)==3) nLength -= 768;
 
-		m_nFormatIndex = NONE;
+		int format = NONE;
 		for (int i=0; i < sdfgeometry.length; i++) {
 			if (nLength == sdfgeometry[i][0]) {
-				m_nFormatIndex = i;
+				format = i;
 				break;
 			}
 		}
 				
-		if (m_nFormatIndex==NONE) throw new ImageException(TIImageTool.langstr("SectorDumpInvLength") + ": " + nLength);
+		if (format==NONE) throw new ImageException(TIImageTool.langstr("SectorDumpInvLength") + ": " + nLength);
 					
 		// Sizes according to the image file (not VIB)
-		m_nSectorsPerTrack = sdfgeometry[m_nFormatIndex][3];
-		m_nTracks = sdfgeometry[m_nFormatIndex][2];
-		m_nSides = sdfgeometry[m_nFormatIndex][1];
+		m_nSectorsPerTrack = sdfgeometry[format][3];
+		m_nTracks = sdfgeometry[format][2];
+		m_nSides = sdfgeometry[format][1];
 		m_nTotalSectors = (int)(nLength / TFileSystem.SECTOR_LENGTH);
 	}
 	
 	public SectorDumpFormat(String sFileName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
 		super(sFileName, params);
-		prepareNewImage(params);
-
 		m_codec = new SectorDumpCodec();
 		m_format = params;
+		prepareNewImage(params);
 	}
 	
 	int getSectorsPerTrack() {

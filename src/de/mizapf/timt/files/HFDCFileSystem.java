@@ -74,7 +74,7 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 		abyNewVIB[0x0c] = (byte)m_nSectorsPerTrack;
 		abyNewVIB[0x0e] = (byte)m_nFSStepSpeed;
 		abyNewVIB[0x0f] = (byte)m_nFSReducedWriteCurrent;
-		abyNewVIB[0x10] = (byte)((((m_nSectorsPerAU-1)<<4)|(m_nHeads-1)) & 0xff);
+		abyNewVIB[0x10] = (byte)((((m_nFSSectorsPerAU-1)<<4)|(m_nHeads-1)) & 0xff);
 		abyNewVIB[0x11] = (byte)(((m_bFSBufferedStep? 0x80 : 0x00) | m_nFSWritePrecomp) & 0xff);
 		Utilities.setInt16(abyNewVIB, 0x1a, m_nFSEmulate);
 		
@@ -82,25 +82,29 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 		Directory[] dirs = m_dirRoot.getDirectories();
 		for (int i=0x1c; i < 0x100; i++) abyNewVIB[i] = (byte)0;
 		for (int i=0; i < dirs.length; i++) {
-			Utilities.setInt16(abyNewVIB, j, dirs[i].getDDRSector() / m_nSectorsPerAU);
+			Utilities.setInt16(abyNewVIB, j, dirs[i].getDDRSector() / m_nFSSectorsPerAU);
 			j=j+2;
 		}
 		return abyNewVIB;
 	}
 	
+	HFDCFileSystem() {
+		System.out.println("HFDC file system");
+	}
+	
 	int getAUEmulateSector() {
-		return m_nFSEmulate * m_nSectorsPerAU;
+		return m_nFSEmulate * m_nFSSectorsPerAU;
 	}
 	
 	void toggleEmulateFlag(int nSector) {
 		if (getAUEmulateSector()==nSector) m_nFSEmulate = 0;
-		else m_nFSEmulate = nSector / m_nSectorsPerAU;
+		else m_nFSEmulate = nSector / m_nFSSectorsPerAU;
 	}
 	
 	@Override
-	public int configure(byte[] vibmap) {		
-		int ret = GOOD;
-		analyzeVIBCommon(vibmap);
+	public void configure(byte[] vibmap) {		
+		// int ret = GOOD;
+		configureCommon(vibmap);
 
 		m_nFSSectorsPerTrack = vibmap[0x0c] & 0xff;
 		m_nFSHeads = (vibmap[0x10] & 0x0f) + 1;
@@ -113,9 +117,11 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 		
 		m_nFSEmulate = Utilities.getInt16(vibmap, 0x1a);
 		
-		if ((m_nFSHeads < 2) || (m_nFSSectorsPerTrack < 18) || (m_nFSCylinders < 100))
+		((HarddiskImageFormat)m_Image).setFormatUnitLength(m_nFSSectorsPerTrack * TFileSystem.SECTOR_LENGTH);
+		
+		/* if ((m_nFSHeads < 2) || (m_nFSSectorsPerTrack < 18) || (m_nFSCylinders < 100))
 			ret |= BAD_GEOMETRY;
 		
-		return ret;
+		return ret; */
 	}	
 }

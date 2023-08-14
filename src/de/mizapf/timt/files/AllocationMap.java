@@ -40,6 +40,7 @@ public class AllocationMap implements Cloneable {
 		@param bFloppy FLoppy allocation maps are little-endian
 	*/
 	public AllocationMap(int nAU, int nAUSize, boolean bFloppy) {
+		// System.out.println("New allocmap, size = " + (nAU+7)/8);
 		m_abyMap = new byte[(nAU+7)/8];
 		m_nLength = nAU;
 		m_nAUSize = nAUSize;
@@ -68,7 +69,7 @@ public class AllocationMap implements Cloneable {
 	public void setMapFromBitfield(byte[] aby, int nOffset, int nStartAU) {
 		int nLength = aby.length - nOffset;
 		if (nLength > (m_abyMap.length - nStartAU/8)) nLength = m_abyMap.length-nStartAU/8;
-		// System.out.println("aby.length = " + aby.length + ", nOffset = " + nOffset + ", nStartAU = " + nStartAU + ", map.length = " + m_abyMap.length + ", length = " + nLength);
+		System.out.println("aby.length = " + aby.length + ", nOffset = " + nOffset + ", nStartAU = " + nStartAU + ", map.length = " + m_abyMap.length + ", length = " + nLength);
 		System.arraycopy(aby, nOffset, m_abyMap, nStartAU/8, nLength);
 	}
 	

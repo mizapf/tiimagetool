@@ -91,7 +91,7 @@ public class ImportEmulateAction extends Activity {
 					try {
 						vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
 						if (vol==null) {
-							ImageFormat image = ImageFormat.determineImageFormat(sAbsFile);
+							ImageFormat image = ImageFormat.getImageFormat(sAbsFile);
 							if (true) throw new NotImplementedException("ImportEmulate");
 							vol = new Volume(image, null);
 						}

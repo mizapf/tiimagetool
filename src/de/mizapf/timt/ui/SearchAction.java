@@ -148,7 +148,7 @@ public class SearchAction extends Activity {
 	
 	private void search(File imagefile, ArrayList<SearchResult> list) {
 		try {
-			ImageFormat image = ImageFormat.determineImageFormat(imagefile.getAbsolutePath());
+			ImageFormat image = ImageFormat.getImageFormat(imagefile.getAbsolutePath());
 			if (true) throw new NotImplementedException("Search");
 			Volume vol = new Volume(image, null);
 			// System.out.println("Searching image " + image.getAbsolutePath());

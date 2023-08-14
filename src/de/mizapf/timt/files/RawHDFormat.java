@@ -35,6 +35,8 @@ import de.mizapf.timt.util.*;
 */
 class RawHDFormat extends HarddiskImageFormat {
 
+	int m_nFormatUnitLength;
+	
 	static int vote(String sFile) throws IOException, EOFException {
 		
 		File fl = new File(sFile);
@@ -54,34 +56,42 @@ class RawHDFormat extends HarddiskImageFormat {
 	/** Codec for the Sector Dump Format. Not much to do here. */
 	class RawHDCodec extends FormatCodec {
 		void decode() {
+			m_decodedSectors.clear();
 			int count = m_formatUnit.length / TFileSystem.SECTOR_LENGTH;
 			// The current FU number is member of ImageFormat
-			int startSector = m_nCurrentFormatUnit * getSectorsPerTrack();
+			int startSector = m_nCurrentFormatUnit * count;
 			for (int i = 0; i < count; i++) {
 				m_decodedSectors.add(new ImageSector(startSector + i, m_formatUnit, i * TFileSystem.SECTOR_LENGTH));
 			}
 		}
 		
 		void encode() {
-			throw new NotImplementedException("RawHDCodec");	
+			for (ImageSector sect : m_decodedSectors) {
+				System.arraycopy(sect.getData(), 0, m_formatUnit, sect.getPosition(), TFileSystem.SECTOR_LENGTH);  
+			}
 		}
 		
 		void prepareNewFormatUnit(int funum, TrackFormatParameters t) {
-			throw new NotImplementedException("RawHDCodec");	
+			// Only add the fill pattern
+			for (int i=0; i < t.sectors; i++) {
+				for (int j=0; j < TFileSystem.SECTOR_LENGTH; j++) {
+					int k = j % t.fillpattern.length;
+					m_formatUnit[i*TFileSystem.SECTOR_LENGTH + j] = t.fillpattern[k];
+				}
+			}
 		}
 	}
 	
 	public RawHDFormat(String sImageName) throws IOException, ImageException {
 		super(sImageName);
 		m_codec = new RawHDCodec();
+		m_nSectorsPerTrack = -1;
+		m_nFormatUnitLength = -1;
+		m_nTotalSectors = (int)(m_file.length() / TFileSystem.SECTOR_LENGTH);
 	}
 	
 	public String getFormatName() {
 		return TIImageTool.langstr("RAWType");
-	}
-	
-	int getSectorsPerTrack() {
-		return m_nSectorsPerTrack;
 	}
 	
 	@Override
@@ -94,18 +104,10 @@ class RawHDFormat extends HarddiskImageFormat {
 		return new Sector(0, sector0);
 	}
 	
-	/** Find the image sector by the linear sector number. */
-	@Override
-	ImageSector findSector(int number) throws ImageException {
-		for (ImageSector is : m_codec.getDecodedSectors()) {
-			if (is.getNumber() == number) return is;
-		}
-		return null;
-	}
-	
 	int getFUNumberFromSector(int secnum) {
 		if (secnum == 0) return 0;
-		return secnum / getSectorsPerTrack();
+		int count = m_nFormatUnitLength / TFileSystem.SECTOR_LENGTH;
+		return secnum / count;
 	}
 			
 	/** Format units are tracks in this format. */
@@ -114,7 +116,7 @@ class RawHDFormat extends HarddiskImageFormat {
 	}	
 	
 	int getFormatUnitLength(int funum) {
-		return getSectorsPerTrack() * TFileSystem.SECTOR_LENGTH; 
+		return m_nFormatUnitLength;
 	}
 
 	@Override
@@ -139,6 +141,11 @@ class RawHDFormat extends HarddiskImageFormat {
 		
 	static String checkFormatCompatibility(FormatParameters params) {
 		return null; 
+	}
+	
+	@Override
+	void setFormatUnitLength(int len) {
+		m_nFormatUnitLength = len; 
 	}
 }
 

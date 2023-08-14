@@ -136,6 +136,8 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		return fs;
 	}
 	
+	abstract void setFormatUnitLength(int len);
+	
 	public int getHDType() {
 		return m_nHDType;
 	}	

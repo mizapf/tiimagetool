@@ -83,7 +83,7 @@ public class RawCHDAction extends Activity {
 			boolean bOK = false;
 			int nHunkNumber = 0;
 			try {
-				MameCHDFormat target = (MameCHDFormat)ImageFormat.determineImageFormat(fileTarget.getAbsolutePath());
+				MameCHDFormat target = (MameCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath());
 				// target.reopenForWrite();
 				
 				// We have the allocation still from above

@@ -115,7 +115,7 @@ public class SaveAsImageAction extends Activity {
 				System.out.println("Save as " + selectedFile.getAbsolutePath());
 				
 				try {
-					newImage = (FileImageFormat)ImageFormat.getImageFormatInstance(selectedFile.getAbsolutePath(), sd.getImageType(), vol.getFormatParams());
+					newImage = (FileImageFormat)ImageFormat.getImageFormat(selectedFile.getAbsolutePath(), sd.getImageType(), vol.getFormatParams());
 					if (newImage == null) {
 						throw new InternalException(TIImageTool.langstr("ImageUnknown") + ": " + ImageFormat.suffix[sd.getImageType()]);
 					}

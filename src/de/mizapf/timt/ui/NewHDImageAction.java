@@ -443,7 +443,7 @@ public class NewHDImageAction extends Activity {
 									// Open it again 
 									ImageFormat ifsource = null;
 									try {
-										ifsource = ImageFormat.determineImageFormat(file.getAbsolutePath());
+										ifsource = ImageFormat.getImageFormat(file.getAbsolutePath());
 										if (!(ifsource instanceof MameCHDFormat)) {
 											JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);				
 											bValid = false;
@@ -472,7 +472,7 @@ public class NewHDImageAction extends Activity {
 									// source.initializeFileSystem(parm);
 																	
 									// Now open the newly created file system in a view
-									ImageFormat image = ImageFormat.determineImageFormat(file.getAbsolutePath());
+									ImageFormat image = ImageFormat.getImageFormat(file.getAbsolutePath());
 									if (true) throw new NotImplementedException("NewHD");
 									vol = new Volume(image, null);
 									Directory root = vol.getRootDirectory();					

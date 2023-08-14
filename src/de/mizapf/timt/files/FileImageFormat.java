@@ -54,6 +54,8 @@ public abstract class FileImageFormat extends ImageFormat {
 		m_nCurrentFormatUnit = NONE;
 		m_bInitial = true;
 		m_writeCache.setName(getShortImageName());
+		
+		m_nTotalSectors = param.cylinders * param.heads * param.sectors; 
 	}
 	
 	protected void loadFormatUnit(int funum) throws ImageException, IOException {
@@ -63,7 +65,7 @@ public abstract class FileImageFormat extends ImageFormat {
 			if (m_nCurrentFormatUnit != NONE) {
 				if (m_bDirty) {
 					try {
-						// System.out.println("Write back format unit " + m_nCurrentFormatUnit);
+						System.out.println("Write back format unit " + m_nCurrentFormatUnit);
 						writeCurrentFormatUnit();
 					}
 					catch (ProtectedException px) {
@@ -75,7 +77,7 @@ public abstract class FileImageFormat extends ImageFormat {
 				} */
 			}
 
-			// System.out.println("Load format unit " + funum + " from file");
+			System.out.println("Load format unit " + funum + " from file");
 			byte[] abyFU = new byte[getFormatUnitLength(funum)];
 			m_codec.setBuffer(abyFU);
 			m_nCurrentFormatUnit = funum;
@@ -85,8 +87,13 @@ public abstract class FileImageFormat extends ImageFormat {
 				m_codec.prepareNewFormatUnit(funum, getTrackParameters());
 			}
 			else {
-				m_file.seek(getFormatUnitPosition(funum));
-				m_file.readFully(abyFU);
+				long pos = getFormatUnitPosition(funum);
+				if (pos >= 0) {
+					m_file.seek(pos);
+					m_file.readFully(abyFU);
+				}
+				else 
+					m_codec.loadEmptyFormatUnit();
 				// System.out.println(Utilities.hexdump(abyFU));
 			}
 			m_codec.decode();
@@ -101,16 +108,15 @@ public abstract class FileImageFormat extends ImageFormat {
 	*/
 	public Sector readSector(int nSectorNumber) throws ImageException, IOException {
 		Sector sect = null;
-
+		System.out.println("read Sector " + nSectorNumber);
 		// For very early accesses, in particular with RawHDFormat
-	/*	if ((nSectorNumber == 0) && (m_fs == null)) {
-			System.out.println("Read sector " + nSectorNumber + " early");
-			Thread.currentThread().dumpStack();
+		if ((nSectorNumber == 0) && (getFormatUnitLength(0)<=0)) {
+			// System.out.println("Read sector " + nSectorNumber + " early");
 			sect = readSector0();
 		}
 		if (sect != null) 
 			return sect;
-		*/
+
 		// If there is a write cache, try to get the sector from there
 		// MemoryImageFormats and FloppyImageFormats always have a write cache		
 		if (m_writeCache != null) {
@@ -119,7 +125,7 @@ public abstract class FileImageFormat extends ImageFormat {
 
 		if (sect == null) {
 			// Otherwise, determine the format unit of this sector
-			System.out.println("nSecNum = " + nSectorNumber);
+			// System.out.println("nSecNum = " + nSectorNumber);
 			int funum = getFUNumberFromSector(nSectorNumber); // throws ImageException
 			loadFormatUnit(funum);
 				
@@ -154,7 +160,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		int secnum = sect.getNumber();
 		int funum = getFUNumberFromSector(secnum); // throws ImageException
 		loadFormatUnit(funum);
-		// System.out.println("writeBack " + secnum);
+		System.out.println("writeBack " + secnum);
 
 		m_nCurrentFormatUnit = funum;		
 		ImageSector isect = findSector(secnum);
@@ -189,10 +195,10 @@ public abstract class FileImageFormat extends ImageFormat {
 		m_nCurrentFormatUnit = NONE;
 		try {
 			reopenForWrite();
-			// System.out.println("Write back " + m_fs.getTotalSectors() + " sectors");
+			System.out.println("Write back " + getTotalSectors() + " sectors");
 			for (int i=0; i < getTotalSectors(); i++) {
 				Sector sect = imgOld.readSector(i);
-				// System.out.println("Write back sector "  + sect.getNumber());  // #%
+				System.out.println("Write back sector "  + sect.getNumber());  // #%
 				writeBack(sect);
 			}
 			// Write back the last format unit, which has not yet been committed 
@@ -211,12 +217,21 @@ public abstract class FileImageFormat extends ImageFormat {
 	/** Writes back the current format unit. */
 	void writeCurrentFormatUnit() throws IOException, ProtectedException {
 		m_codec.encode();
+		prepareFormatUnitWrite();
+		
 		long offset = getFormatUnitPosition(m_nCurrentFormatUnit);
-		// System.out.println("write format unit " + m_nCurrentFormatUnit + " at position " + offset);  // #%
-		// reopenForWrite();
-		m_file.seek(offset);
-		m_file.write(m_codec.getFormatUnitBuffer());
-		// reopenForRead();
+		if (offset >= 0) {
+			System.out.println("write format unit " + m_nCurrentFormatUnit + " at position " + offset);  // #%
+			// reopenForWrite();
+			m_file.seek(offset);
+			m_file.write(m_codec.getFormatUnitBuffer());
+			System.out.println(Utilities.hexdump(0, 0, m_codec.getFormatUnitBuffer(), 256, false));
+			// reopenForRead();
+		}
+		else {
+			// Maybe the format unit was filled with zeros, and nothing has changed
+			System.out.println("Not writing format unit " + m_nCurrentFormatUnit);
+		}
 	}
 	
 	public void reopenForWrite() throws IOException, ProtectedException {
@@ -233,8 +248,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		if (m_file != null) m_file.close();
 		m_file = new RandomAccessFile(m_sFileName, "r");		
 	}
-
-		
+	
 	/** Gets the format unit number from the linear sector number. */
 	abstract int getFUNumberFromSector(int nSectorNumber) throws ImageException;	
 
@@ -245,7 +259,17 @@ public abstract class FileImageFormat extends ImageFormat {
 	abstract int getFormatUnitLength(int number);
 
 	/** Finds the sector in the format unit. */
-	abstract ImageSector findSector(int number) throws ImageException;
+	// Each FIB is read twice: for the file name, and for the file contents
+	ImageSector findSector(int number) throws ImageException {
+		// System.out.println("find " + number);
+		for (ImageSector is : m_codec.getDecodedSectors()) {
+			// System.out.println("- number " + is.getNumber());
+			if (is.getNumber() == number) {
+				return is;
+			}
+		}
+		return null;
+	}
 	
 	abstract void prepareNewImage(FormatParameters param) throws IOException, ImageException;
 	
@@ -263,5 +287,9 @@ public abstract class FileImageFormat extends ImageFormat {
 	
 	Sector readSector0() throws IOException {
 		return null;
+	}
+	
+	void prepareFormatUnitWrite() throws IOException {
+		// Do nothing by default
 	}
 }

@@ -72,7 +72,7 @@ public class ChangeCHDFormatAction extends Activity {
 		ImageFormat ifsource = null;
 		MameCHDFormat source = null;
 		try {
-			ifsource = ImageFormat.determineImageFormat(selectedfile.getAbsolutePath());
+			ifsource = ImageFormat.getImageFormat(selectedfile.getAbsolutePath());
 			if (!(ifsource instanceof MameCHDFormat)) {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotCHD"), TIImageTool.langstr("InvalidFormat"), JOptionPane.ERROR_MESSAGE);				
 				return;
@@ -170,7 +170,7 @@ public class ChangeCHDFormatAction extends Activity {
 		// and for each hunk read in the source, write the hunk into the target
 		boolean bOK = false;
 		try {
-			MameCHDFormat target = (MameCHDFormat)ImageFormat.determineImageFormat(fileTarget.getAbsolutePath());
+			MameCHDFormat target = (MameCHDFormat)ImageFormat.getImageFormat(fileTarget.getAbsolutePath());
 			// System.out.println("Hunks = " + source.getHunkCount());
 			for (int i=0; i < source.getHunkCount(); i++) {
 				// System.out.println("copy hunk " + i);

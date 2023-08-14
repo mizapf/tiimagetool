@@ -69,17 +69,17 @@ public class OpenImageAction extends Activity {
 			else {
 				try {
 					// ============== Open the image			
-					ImageFormat image = ImageFormat.determineImageFormat(sAbsFile); // throws ImageExc if unknown
+					ImageFormat image = ImageFormat.getImageFormat(sAbsFile); // throws ImageExc if unknown
 											
 					byte[] vibmap = null;
 					TFileSystem fs = null;	
 					
 					if (image instanceof FloppyImageFormat) {
-						vibmap = image.getContent(0, 0);
+						vibmap = image.readSector(0).getData();
 						
 						int check = FloppyFileSystem.checkFormat(vibmap);
 						
-						System.out.println("Format check: " + FloppyFileSystem.getFormatCheckText(check));
+						System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
 						if (check != TFileSystem.GOOD) {
 							int doCheckSig = JOptionPane.YES_OPTION;
 							if ((check & TFileSystem.NO_SIG)!=0) {
@@ -96,24 +96,32 @@ public class OpenImageAction extends Activity {
 						}						
 						fs = ((FloppyImageFormat)image).getFileSystem(vibmap);
 						((FloppyFileSystem)fs).configure(vibmap);
+						((FloppyFileSystem)fs).setupAllocationMap(vibmap);
 					}
 					
 					if (image instanceof HarddiskImageFormat) {
-						vibmap = image.getContent(0, 31);
-						fs = ((HarddiskImageFormat)image).getFileSystem(vibmap);
+						vibmap = image.readSector(0).getData();						
+						int check = HarddiskFileSystem.checkFormat(vibmap);
 						
-						int check = ((HarddiskFileSystem)fs).configure(vibmap);
-						System.out.println("Format check: " + HarddiskFileSystem.getFormatCheckText(check));
+						System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
 						if (check != TFileSystem.GOOD) {
 							int doCheckSig = JOptionPane.YES_OPTION;
 							if ((check & TFileSystem.BAD_GEOMETRY)!=0) {
 								doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badgeometry") + ". " + TIImageTool.langstr("Ask.openanyway"), 
 									TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
 							}
+							if ((check & TFileSystem.BAD_AUCOUNT)!=0) {
+								doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badaucount") + ". " + TIImageTool.langstr("Ask.openanyway"), 
+									TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
+							}
 							if (doCheckSig == JOptionPane.NO_OPTION) {
 								continue;
 							}
 						}
+						fs = ((HarddiskImageFormat)image).getFileSystem(vibmap);
+
+						((HarddiskFileSystem)fs).configure(vibmap);
+						((HarddiskFileSystem)fs).setupAllocationMap(image.getContent(0, 31));
 					}
 					
 					// Do we have a partitioned image?

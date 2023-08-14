@@ -66,7 +66,7 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 		abyNewVIB[0x0c] = (byte)0;
 		abyNewVIB[0x0e] = (byte)0;
 		abyNewVIB[0x0f] = (byte)0;
-		abyNewVIB[0x10] = (byte)(((m_nSectorsPerAU-1)<<4) & 0xff);
+		abyNewVIB[0x10] = (byte)(((m_nFSSectorsPerAU-1)<<4) & 0xff);
 		abyNewVIB[0x11] = (byte)0;
 		abyNewVIB[0x1a] = (byte)0;
 		abyNewVIB[0x1b] = (byte)0;
@@ -75,32 +75,32 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 		Directory[] dirs = m_dirRoot.getDirectories();
 		for (int i=0x1c; i < 0x100; i++) abyNewVIB[i] = (byte)0;
 		for (int i=0; i < dirs.length; i++) {
-			Utilities.setInt16(abyNewVIB, j, dirs[i].getDDRSector() / m_nSectorsPerAU);
+			Utilities.setInt16(abyNewVIB, j, dirs[i].getDDRSector() / m_nFSSectorsPerAU);
 			j=j+2;
 		}
 		return abyNewVIB;
 	}
 	
 	SCSIFileSystem() {
-		m_nSectorsPerAU = -1;
+		System.out.println("SCSI file system");
 	}
 	
 	/** Try to load the VIB and get the logical geometry. 
 	*/
 	@Override
-	public int configure(byte[] vibmap) {
+	public void configure(byte[] vibmap) {
 		// System.out.println(Utilities.hexdump(vib));		
-		int ret = GOOD;
-		analyzeVIBCommon(vibmap);
+		configureCommon(vibmap);
 		
 		// Get the tracks, sectors, and sides
 		m_nFSSectorsPerAU = ((vibmap[0x10] >> 4) & 0x0f) + 1;
 		m_nFSTotalSectors = Utilities.getInt16(vibmap, 0x0a) * m_nFSSectorsPerAU;
 		
-		if ((m_nFSSectorsPerAU > 16) || (m_nFSTotalSectors < 360))
-			ret |= BAD_GEOMETRY;
+		// SCSI does not define "tracks" but only linear sector numbers
+		// We define the format units as 32 sectors (for the RawHDFormat; the
+		// MameCHDFormat has its own notion of format units)
+		((HarddiskImageFormat)m_Image).setFormatUnitLength(32 * TFileSystem.SECTOR_LENGTH);
 
-		System.out.println("nTotal = " + m_nFSTotalSectors + ", AU size = " + m_nFSSectorsPerAU);	
-		return ret;
+		// System.out.println("nTotal = " + m_nFSTotalSectors + ", AU size = " + m_nFSSectorsPerAU);	
 	}
 }

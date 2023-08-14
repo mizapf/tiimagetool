@@ -234,7 +234,7 @@ public class CommandShell {
 	}
 	
 	private ImageFormat getImage(String sFile) throws FileNotFoundException, IOException, ImageException {
-		ImageFormat image = ImageFormat.determineImageFormat(sFile);
+		ImageFormat image = ImageFormat.getImageFormat(sFile);
 		return image;
 	}
 	

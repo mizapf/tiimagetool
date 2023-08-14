@@ -38,9 +38,6 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 
 	/** Sectors per track, determined from the file size or metadata. */
 	int m_nSectorsPerTrack;
-		
-	/** Format index */
-	protected int m_nFormatIndex;	
 	
 	protected FloppyImageFormat(String sImageName) throws FileNotFoundException, IOException, ImageException {
 		super(sImageName);
@@ -48,6 +45,9 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 	
 	protected FloppyImageFormat(String sImageName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
 		super(sImageName, params);
+		m_nSectorsPerTrack = params.sectors;
+		m_nTracks = params.cylinders;		
+		m_nSides = params.heads;		
 	}
 	
 	/** Must be overridden by formats like SectorDumpFormat which cannot rely on this. */
@@ -122,21 +122,7 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 	static int trackToHead(int totalcyl, int track) {
 		return (track < totalcyl)? 0 : 1;
 	}
-	
-	/** Find the image sector by the linear sector number. */
-	// Each FIB is read twice: for the file name, and for the file contents
-	@Override
-	ImageSector findSector(int number) throws ImageException {
-		// System.out.println("find " + number);
-		for (ImageSector is : m_codec.getDecodedSectors()) {
-			// System.out.println("- number " + is.getNumber());
-			if (is.getNumber() == number) {
-				return is;
-			}
-		}
-		return null;
-	}
-	
+
 	/** Format units are tracks in this format. */
 	long getFormatUnitPosition(int funum) {
 		return funum * getFormatUnitLength(funum);

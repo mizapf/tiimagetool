@@ -201,7 +201,7 @@ public abstract class ImageFormat  {
 	}
 	
 	/** Determine the image format. */
-	public static ImageFormat determineImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
+	public static ImageFormat getImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
 		
 		File fl = new File(sFile);
 		long nLength = fl.length();
@@ -250,7 +250,7 @@ public abstract class ImageFormat  {
 		return m_formatClass[nFormat];
 	}
 	
-	public static ImageFormat getImageFormatInstance(String sFileName, int nFormat, FormatParameters param) throws FileNotFoundException, IOException, ImageException {
+	public static ImageFormat getImageFormat(String sFileName, int nFormat, FormatParameters param) throws FileNotFoundException, IOException, ImageException {
 		ImageFormat ifmt = null;
 		Class<?> cls = null;
 		try {
@@ -313,7 +313,7 @@ public abstract class ImageFormat  {
 	public byte[] getContent(int nStart, int nEnd) throws IOException, ImageException {
 		byte[] content = new byte[(nEnd-nStart+1) * TFileSystem.SECTOR_LENGTH];
 		for (int i=nStart; i <= nEnd; i++) {
-			Sector sect = readSector(nStart);
+			Sector sect = readSector(i);
 			System.arraycopy(sect.getData(), 0, content, (i-nStart)*TFileSystem.SECTOR_LENGTH, TFileSystem.SECTOR_LENGTH);
 		}	
 		return content;
@@ -366,10 +366,6 @@ public abstract class ImageFormat  {
 	public void previousGeneration() {
 		m_writeCache.previousGeneration();
 	}
-	
-/*	public int getTotalSectors() {
-		return m_nTotalSectors;
-	} */
 	
 	public void setCheckpoint() {
 		m_writeCache.setCheckpoint();

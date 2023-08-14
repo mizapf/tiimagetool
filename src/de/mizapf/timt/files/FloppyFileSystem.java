@@ -258,26 +258,7 @@ public class FloppyFileSystem extends TFileSystem {
 		list[0] = new Sector(0, createVIBContents());
 		return list;
 	}
-	
-	public static String getFormatCheckText(int val) {
-		StringBuilder sb = new StringBuilder();
-		if ((val & NO_SIG)!=0) sb.append("no sig");
-		if ((val & SIZE_MISMATCH)!=0) {
-			if (sb.length() > 0) sb.append(", ");
-			sb.append("size mismatch");
-		}
-		if ((val & BAD_GEOMETRY)!=0) {
-			if (sb.length() > 0) sb.append(", ");
-			sb.append("bad geometry");
-		}
-		if ((val & WRONG_DENSITY)!=0) {
-			if (sb.length() > 0) sb.append(", ");
-			sb.append("wrong density");
-		}		
-		if (sb.length() > 0) return sb.toString();
-		return "good";
-	}
-	
+		
 	public static int checkFormat(byte[] vib) throws IOException {
 		int ret = GOOD;
 		
@@ -307,22 +288,15 @@ public class FloppyFileSystem extends TFileSystem {
 		return ret;
 	}
 
-	public int configure(byte[] vib) {
-		int ret = GOOD;
+	public void configure(byte[] vib) {
 
-		if (!FloppyFileSystem.hasFloppySignature(vib))
-			ret |= NO_SIG;
-			
 		// Get the tracks, sectors, and sides
 		m_nFSTotalSectors = Utilities.getInt16(vib, 0x0a);
 		
 		// Is the sector count correct?
 		int nTotal = ((FloppyImageFormat)m_Image).getTotalSectors();
 		
-		if (nTotal != -1 && m_nFSTotalSectors != nTotal)
-			ret |= SIZE_MISMATCH;
-		
-		System.out.println("nTotal = " + nTotal + ", FStotal = " + m_nFSTotalSectors);
+		// System.out.println("nTotal = " + nTotal + ", FStotal = " + m_nFSTotalSectors);
 		
 		if (nTotal == -1) {
 			System.out.println("Setting total sectors from file system");	
@@ -332,17 +306,7 @@ public class FloppyFileSystem extends TFileSystem {
 		m_nFSSectorsPerTrack = vib[0x0c] & 0xff;
 		m_nFSHeads = vib[0x12] & 0xff;
 		m_nFSCylinders = vib[0x11] & 0xff;
-		
-		if ((m_nFSSectorsPerTrack * m_nFSCylinders * m_nFSHeads) != m_nFSTotalSectors)
-			ret |= BAD_GEOMETRY;
-		
-		// What about density?
-		int nDensity = getDensityFromCode(vib[0x13] & 0xff, m_nFSSectorsPerTrack);		
 		m_nFSDensity = getDensityFromSectors(m_nFSSectorsPerTrack);
-		if (m_nFSDensity != nDensity) {
-			System.err.println("Wrong density value " + (vib[0x13] & 0xff) + " for sector count " + m_nFSSectorsPerTrack); 
-			ret |= WRONG_DENSITY;
-		}
 
 		try {
 			setVolumeName(Utilities.getString10(vib, 0));
@@ -350,42 +314,11 @@ public class FloppyFileSystem extends TFileSystem {
 		catch (InvalidNameException inx) {
 			setVolumeName0("UNNAMED");
 		}
-							
-		m_allocMap = new AllocationMap(getTotalSectors() / getSectorsPerAU(), getSectorsPerAU(), true);
-		m_allocMap.setMapFromBitfield(vib, 0x38, 0);
-		
-		return ret;
 	}
+	
+	@Override
+	public void setupAllocationMap(byte[] vibmap) {
+		m_allocMap = new AllocationMap(getTotalSectors() / getSectorsPerAU(), getSectorsPerAU(), true);
+		m_allocMap.setMapFromBitfield(vibmap, 0x38, 0);
+	}	
 }
-
-/*
-	Wer weiß über die Geometrie Bescheid? Das Dateisystem oder das ImageFormat?
-	SectorDumpFormat: muss sich beim Dateisystem erkundigen
-	TrackDumpFormat: ok
-	MemoryImageFormat: ok
-	MameCHDFormat: ok (CHS)
-	RawHDFormat: muss sich beim Dateisystem erkundigen
-	CF7VolumeFormat: ok
-	CF7ImageFormat: ok
-	
-	-----
-	
-	ImageFormat:
-	    * Accesses the file in terms of format units
-	    * Reads the format unit that contains the requested sector
-	    * Knows how to translate a sector number to a format unit number
-	    
-	
-	FormatCodec:
-	    * Decodes one format unit, providing the sectors in this FU, holds the
-	      raw FU
-	    * Encodes one format unit from the list of ImageSectors, providing the 
-	      byte[] for writing 
-	    
-	
-	TFileSystem:
-	
-	
-	
-	
-*/

@@ -63,6 +63,9 @@ class TrackDumpFormat extends FloppyImageFormat {
 	int mfm18param[] = { 0, 40, 22, 24, 712, 0x4e, 0x4e, 12, 10 };
 	int mfm36param[] = { 0, 40, 22, 24, 264, 0x4e, 0x4e, 12, 10 };
 	Object param[] = { fm9param, mfm16param, mfm18param, mfm36param };		
+
+	/** Format index */
+	private int m_nFormatIndex;	
 	
 	static int vote(String sFile) throws IOException {
 
@@ -333,7 +336,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 		
 		// Set the geometry from the format
 		m_nTracks = tdfgeometry[m_nFormatIndex][2]; // we need this for chsToLba
-
+		
 		// We do not need to set a new file system because the old one will
 		// be copied here
 		prepareNewImage(params);

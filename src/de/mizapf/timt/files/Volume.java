@@ -209,7 +209,7 @@ public class Volume {
 		
 		// For floppy file systems, this rewrites the VIB
 		for (Sector sect : alloc) {
-			writeSector(sect);
+			if (sect != null) writeSector(sect);
 		}
 	}
 	
@@ -362,6 +362,7 @@ public class Volume {
 	
 	public void updateVIB() throws IOException, ImageException, ProtectedException {
 		// Write the VIB
+		// System.out.println("updateVIB");
 		writeSector(new Sector(0, m_FileSystem.createVIBContents()));
 	}
 	
@@ -395,11 +396,6 @@ public class Volume {
 	
 	/** Write all sectors to the new image. */
 	public void saveNewImage(FileImageFormat newImage) throws FileNotFoundException, IOException, ImageException {
-		// We have a memory image or an existing file-based image
-		
-		// We have to retrieve the format parameters here
-		// They are available via the FileSystem
-		
 		// Get the format (includes preparing the image) 
 		//newImage.setFileSystem(m_FileSystem);
 		newImage.saveImageFromOld(m_Image);

@@ -209,6 +209,9 @@ public class HFEFormat extends FloppyImageFormat {
 	int mfm18param[] = { 80, 50, 22, 50, 206, 0x4e, 0, 12, 0 };
 	Object param[] = { fm9param, mfm16param, mfm18param };		
 	
+	/** Format index */
+	private int m_nFormatIndex;	
+	
 	class EndOfTrackException extends Exception {
 	}
 	
@@ -325,9 +328,6 @@ public class HFEFormat extends FloppyImageFormat {
 			track0s0_encoding = bytes[23] & 0xff;
 			track0s1_altencoding = (bytes[24]==((byte)0x00));
 			track0s1_encoding = bytes[25] & 0xff;
-			
-			// TODO: Check this?
-			// m_nHeads = number_of_side;
 		}		
 		
 		public byte[] getBytes() {

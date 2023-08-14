@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.LinkedList;
 
+import de.mizapf.timt.util.InternalException;
+
 
 /** The FormatCodec buffers a set of sectors read from the image or to 
 	be written to the image. Subclasses may contain a lookup table for
@@ -43,7 +45,7 @@ abstract class FormatCodec {
 
 	/** The sectors in this buffer as appearing on the medium. */
 	protected List<ImageSector> m_decodedSectors;
-	
+		
 	FormatCodec() {
 		m_formatUnit = null;
 		m_decodedSectors = new LinkedList<ImageSector>();
@@ -69,4 +71,9 @@ abstract class FormatCodec {
 	
 	/** Creates a new format unit from scratch. m_formatUnit must have been allocated. */
 	abstract void prepareNewFormatUnit(int funum, TrackFormatParameters param);
+	
+	/** Provides an empty format unit, which occurs for the MAME CHD format. */
+	void loadEmptyFormatUnit() {
+		throw new InternalException("Format does not support empty format units"); 
+	}
 }	

@@ -52,6 +52,7 @@ public abstract class TFileSystem {
 	public final static int SIZE_MISMATCH = 2;
 	public final static int BAD_GEOMETRY = 4;
 	public final static int WRONG_DENSITY = 8;
+	public final static int BAD_AUCOUNT = 16;
 	public final static int UNSET = 65535;
 	
 	/** Volume name. */
@@ -279,9 +280,34 @@ public abstract class TFileSystem {
 		m_allocMap.deallocate(intv);
 	} 
 	
-	abstract int configure(byte[] vib);
+	abstract void configure(byte[] vib);
 	
 	int getVibCheck() {
 		return m_nVibCheck;
 	}
+	
+	public static String getFormatCheckText(int val) {
+		StringBuilder sb = new StringBuilder();
+		if ((val & NO_SIG)!=0) sb.append("no sig");
+		if ((val & SIZE_MISMATCH)!=0) {
+			if (sb.length() > 0) sb.append(", ");
+			sb.append("size mismatch");
+		}
+		if ((val & BAD_GEOMETRY)!=0) {
+			if (sb.length() > 0) sb.append(", ");
+			sb.append("bad geometry");
+		}
+		if ((val & WRONG_DENSITY)!=0) {
+			if (sb.length() > 0) sb.append(", ");
+			sb.append("wrong density");
+		}		
+		if ((val & BAD_AUCOUNT)!=0) {
+			if (sb.length() > 0) sb.append(", ");
+			sb.append("bad AU count");
+		}		
+		if (sb.length() > 0) return sb.toString();
+		return "good";
+	}
+	
+	abstract public void setupAllocationMap(byte[] vibmap);
 }
