@@ -71,10 +71,10 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 		abyNewVIB[0x17] = (byte)(m_dirRoot.getDirectories().length & 0xff);
 		Utilities.setInt16(abyNewVIB, 0x18, getAUNumber(m_dirRoot.getFileIndexSector()));
 		
-		abyNewVIB[0x0c] = (byte)m_nSectorsPerTrack;
+		abyNewVIB[0x0c] = (byte)m_nFSSectorsPerTrack;
 		abyNewVIB[0x0e] = (byte)m_nFSStepSpeed;
 		abyNewVIB[0x0f] = (byte)m_nFSReducedWriteCurrent;
-		abyNewVIB[0x10] = (byte)((((m_nFSSectorsPerAU-1)<<4)|(m_nHeads-1)) & 0xff);
+		abyNewVIB[0x10] = (byte)((((m_nFSSectorsPerAU-1)<<4)|(m_nFSHeads-1)) & 0xff);
 		abyNewVIB[0x11] = (byte)(((m_bFSBufferedStep? 0x80 : 0x00) | m_nFSWritePrecomp) & 0xff);
 		Utilities.setInt16(abyNewVIB, 0x1a, m_nFSEmulate);
 		
@@ -124,4 +124,12 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 		
 		return ret; */
 	}	
+	
+	@Override
+	FormatParameters getParams() {
+		FormatParameters param = new FormatParameters(m_sName, null, false);
+		param.setCHS(m_nFSCylinders, m_nFSHeads, m_nFSSectorsPerTrack);
+		param.setMFM(m_nFSStepSpeed, m_nFSReducedWriteCurrent, m_nFSWritePrecomp, m_bFSBufferedStep);
+		return param;
+	}
 }

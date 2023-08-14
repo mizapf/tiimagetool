@@ -110,13 +110,13 @@ class SectorDumpFormat extends FloppyImageFormat {
 			}
 		}
 		
-		void prepareNewFormatUnit(int funum, TrackFormatParameters t) {
+		void prepareNewFormatUnit(int funum, FormatUnitParameters t) {
 			// Only add the fill pattern
-			for (int i=0; i < t.sectors; i++) {
-				for (int j=0; j < TFileSystem.SECTOR_LENGTH; j++) {
-					int k = j % t.fillpattern.length;
-					m_formatUnit[i*TFileSystem.SECTOR_LENGTH + j] = t.fillpattern[k];
-				}
+			int k = 0;
+			int m = t.fillpattern.length;
+			for (int i=0; i < m_formatUnit.length; i++) {
+				m_formatUnit[i] = t.fillpattern[k % m];
+				k = (k+1) % TFileSystem.SECTOR_LENGTH;
 			}
 		}
 		
@@ -189,9 +189,8 @@ class SectorDumpFormat extends FloppyImageFormat {
 		return getSectorsPerTrack() * FloppyFileSystem.SECTOR_LENGTH;
 	}
 	
-	TrackFormatParameters getTrackParameters() {
-		int[] params = new int[9];
-		return new TrackFormatParameters(params, getSectorsPerTrack(), getFillPattern());
+	FormatUnitParameters getFormatUnitParameters() {
+		return new FormatUnitParameters(getSectorsPerTrack(), getFillPattern());
 	}
 	
 	/** Prepare an empty image. The SectorDumpFormat has no additional data

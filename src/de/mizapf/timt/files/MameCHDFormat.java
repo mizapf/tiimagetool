@@ -241,6 +241,8 @@ public class MameCHDFormat extends HarddiskImageFormat {
 
 		long m_nAppendOffset;
 		
+		byte[] m_abyFull;
+		
 		final static int MAPENTRYSIZEv4 = 16;	
 		final static int MAPENTRYSIZEv5 = 4;	
 		
@@ -301,46 +303,60 @@ public class MameCHDFormat extends HarddiskImageFormat {
 		}
 		
 		/** Create a new CHD header */ 
-		CHDHeader(FormatParameters parm) throws IOException, IllegalOperationException {
-			if (parm.chdVersion != 5)
-				throw new IllegalOperationException(TIImageTool.langstr("MameCHDVersion"));
+		CHDHeader(FormatParameters parm) throws IOException, ImageException {
+//			if (parm.chdVersion != 5)
+//				throw new ImageException(TIImageTool.langstr("MameCHDVersion"));
 			
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			DataOutputStream dos = new DataOutputStream(baos);
+			int nPhysSectorLength = (parm.isHFDC())? 256:512;
+			int nSectorLength = TFileSystem.SECTOR_LENGTH;
+
 			dos.writeBytes("MComprHD");
+
 			int nHeaderLength = 0x7c;
-			int nSectorLength = (parm.type==HFDC)? 256:512;
 			
-			long nLogicalSize = parm.cylinders * parm.heads * parm.sectors * nSectorLength; 
-			
-			long nHunkCount = nLogicalSize / HUNKLENGTH;
+			m_nLogicalSize = parm.getTotalSectors() * nSectorLength; 
+
+			m_nVersion = 5;
+			m_nHunkLength = HUNKLENGTH;
+
+			// Hunks are always 4096 bytes long 
+			m_nHunkCount = (int)(m_nLogicalSize / m_nHunkLength);
+						
 			// Round up
-			if ((nLogicalSize % HUNKLENGTH)!=0) nHunkCount++;
+			if ((m_nLogicalSize % m_nHunkLength)!=0) m_nHunkCount++;
 			
-			int nMapEntrySize = 0;
-			long nMapOffset = 0;
-			long nMetaOffset = 0;
+			int nMapEntrySize = MAPENTRYSIZEv5;
+			m_nMapOffset = (long)nHeaderLength;
+			m_nMetaOffset = 0;
+			m_nCompression = 0;
 			
 			dos.writeInt(nHeaderLength);
-			dos.writeInt(parm.chdVersion);
-			int nCompressors = 0;
-			for (int j=0; j < 4; j++) dos.writeInt(nCompressors);
+			dos.writeInt(m_nVersion);
+
+			for (int j=0; j < 4; j++) 
+				dos.writeInt(m_nCompression);
 			
-			dos.writeLong(nLogicalSize);
-			nMapOffset = (long)nHeaderLength;
-			dos.writeLong((long)nMapOffset);
-			// Hunks are always 4096 bytes long 
+			dos.writeLong(m_nLogicalSize);
+			dos.writeLong((long)m_nMapOffset);
 			
-			nMapEntrySize = MAPENTRYSIZEv5;
-			nMetaOffset = nMapOffset + nHunkCount * MAPENTRYSIZEv5;
-			dos.writeLong(nMetaOffset);
+			m_nMetaOffset = m_nMapOffset + m_nHunkCount * MAPENTRYSIZEv5;
+			dos.writeLong(m_nMetaOffset);
 			dos.writeInt(HUNKLENGTH);
-			dos.writeInt(nSectorLength);
+			dos.writeInt(nPhysSectorLength);
+			
 			// clean the hash values, not going to use them 
 			for (int i=0; i < 60; i++) dos.write(0x00);
 			
+			// Header bytes
+			m_header = baos.toByteArray();
+			
 			// Map: All hunks are filled with zeros
-			for (int i=0; i < nHunkCount; i++) dos.writeInt(0x00000000);
+			m_hunkmap = new byte[m_nHunkCount * nMapEntrySize];  // initialized to 0
+			for (int i=0; i < m_nHunkCount; i++) {
+				dos.writeInt(0x00000000);
+			}
 			
 			int wpcom = parm.writePrecompensation;
 			int rwc = parm.reducedWriteCurrent;
@@ -381,23 +397,32 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			
 			byte[] abyMetaEntry1 = createMetaEntry("GDDD", sb.toString());
 			
-			linkMetaEntry(abyMetaEntry1, nMetaOffset + abyMetaEntry1.length);
-			linkMetaEntry(abyMetaEntry2, nMetaOffset + abyMetaEntry1.length + abyMetaEntry2.length);
-			linkMetaEntry(abyMetaEntry3, 0);
+			long nMetaEnd = 0;
 			
-			dos.write(abyMetaEntry1);
-			dos.write(abyMetaEntry2);
-			dos.write(abyMetaEntry3);
+			if (parm.isHFDC()) {
+				linkMetaEntry(abyMetaEntry1, m_nMetaOffset + abyMetaEntry1.length);
+				linkMetaEntry(abyMetaEntry2, m_nMetaOffset + abyMetaEntry1.length + abyMetaEntry2.length);
+				linkMetaEntry(abyMetaEntry3, 0);
 			
-			long nMetaEnd = nMetaOffset + abyMetaEntry1.length + abyMetaEntry2.length + abyMetaEntry3.length;
-			
+				dos.write(abyMetaEntry1);
+				dos.write(abyMetaEntry2);
+				dos.write(abyMetaEntry3);
+				
+				nMetaEnd = m_nMetaOffset + abyMetaEntry1.length + abyMetaEntry2.length + abyMetaEntry3.length; 
+			}
+			else {
+				linkMetaEntry(abyMetaEntry1, 0);
+				dos.write(abyMetaEntry1);
+				nMetaEnd = m_nMetaOffset + abyMetaEntry1.length; 
+			}
+						
 			while ((nMetaEnd % HUNKLENGTH)!=0) {
 				// We have to pad
 				dos.write(0);
 				nMetaEnd++;
 			}
 			
-			m_header = baos.toByteArray();
+			m_abyFull = baos.toByteArray();
 		}
 
 		private void linkMetaEntry(byte[] entry, long pos) {
@@ -426,8 +451,8 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			return baos.toByteArray();
 		}
 		
-		byte[] getHeaderBytes() {
-			return m_header;
+		byte[] getFullBytes() {
+			return m_abyFull;
 		}
 		
 		int getVersion() {
@@ -614,8 +639,14 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			}	
 		}
 		
-		void prepareNewFormatUnit(int funum, TrackFormatParameters t) {
-			throw new NotImplementedException("CHDCodec");	
+		void prepareNewFormatUnit(int funum, FormatUnitParameters t) {
+			// Only add the fill pattern
+			int k = 0;
+			int m = t.fillpattern.length;
+			for (int i=0; i < m_formatUnit.length; i++) {
+				m_formatUnit[i] = t.fillpattern[k % m];
+				k = (k+1) % TFileSystem.SECTOR_LENGTH;
+			}
 		}
 	}
 
@@ -645,17 +676,18 @@ public class MameCHDFormat extends HarddiskImageFormat {
 		// when SCSI drives have 512 byte sectors (physical sectors vs. logical sectors)
 		m_nTotalSectors = m_header.getTotalSectors() * (m_header.getSectorSize() / TFileSystem.SECTOR_LENGTH);		
 	}
+	
+	public MameCHDFormat(String sImageName, FormatParameters params) throws IOException, ImageException {
+		super(sImageName, params);
+		m_codec = new CHDCodec();
+		m_format = params;
+		prepareNewImage(params);
+	}
 
 	public String getFormatName() {
 		return TIImageTool.langstr("CHDImageType");
 	}
 
-	/** Create a new CHD image. */
-	public byte[] createNewCHDImage(FormatParameters parm) throws IllegalOperationException, IOException {
-		CHDHeader newhead = new CHDHeader(parm);
-		return newhead.getHeaderBytes();
-	}
-	
 	public static byte[] createEmptyCHDImage(FormatParameters parm) throws IllegalOperationException, IOException  {
 		throw new NotImplementedException("createEmptyCHDImage");
 	}
@@ -694,13 +726,15 @@ public class MameCHDFormat extends HarddiskImageFormat {
 
 	/** Prepare an empty image.  */
     @Override
-	void prepareNewImage(FormatParameters params) {
-		throw new NotImplementedException("prepareNewImage");
+	void prepareNewImage(FormatParameters params) throws IOException, ImageException {
+		m_header = new CHDHeader(params);
+		m_file.seek(0);
+		m_file.write(m_header.getFullBytes());
 	}
 	
 	@Override
-	TrackFormatParameters getTrackParameters() {
-		throw new NotImplementedException("getTrackParameters");
+	FormatUnitParameters getFormatUnitParameters() {
+		return new FormatUnitParameters(getFormatUnitLength(0)/TFileSystem.SECTOR_LENGTH, getFillPattern());
 	}
 
 	static String checkFormatCompatibility(FormatParameters params) {

@@ -115,7 +115,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 		*/
 		void decode() {
 			// System.out.println("m_nFormatIndex=" + m_nFormatIndex);
-			TrackFormatParameters t = getTrackParameters();
+			TrackFormatParameters t = (TrackFormatParameters)getFormatUnitParameters();
 			int headerpos = getFirstHeaderPos(t);
 			int contpos = getFirstContentPos(t);
 			int increm = getIncrement(t);
@@ -187,7 +187,10 @@ class TrackDumpFormat extends FloppyImageFormat {
 			GAP4:      FF (231)               4E (712)    (206, DSDD16)
 
 		*/
-		void prepareNewFormatUnit(int number, TrackFormatParameters t) {
+		void prepareNewFormatUnit(int number, FormatUnitParameters fu) {
+			
+			TrackFormatParameters t = (TrackFormatParameters)fu;
+
 			int start = 0;			
 			boolean mfm = true;
 			// System.out.println("prepareNewFU(" + number + ")");
@@ -378,7 +381,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 	}
 	
 	@Override
-	TrackFormatParameters getTrackParameters() {
+	FormatUnitParameters getFormatUnitParameters() {
 		return new TrackFormatParameters((int[])param[m_nFormatIndex], getSectorsPerTrack(), getFillPattern());
 	}
 	

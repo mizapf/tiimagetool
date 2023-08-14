@@ -21,29 +21,12 @@
 
 package de.mizapf.timt.files;
 
-public class TrackFormatParameters extends FormatUnitParameters {
-	boolean mfm;
-	int gap0;
-	int gap1;
-	int gap2;
-	int gap3;
-	int gap4;
-	int gapbyte;
-	int gap1byte;
-	int sync;
-	int sync1;
+public class FormatUnitParameters {
+	int sectors;
+	byte[] fillpattern;
 	
-	TrackFormatParameters(int[] param, int sec, byte[] fill) {
-		super(sec, fill);
-		mfm = (sec > 9);
-		gap0 = param[0];
-		gap1 = param[1];
-		gap2 = param[2];
-		gap3 = param[3];
-		gap4 = param[4];
-		gapbyte = param[5];
-		gap1byte = param[6];
-		sync = param[7];
-		sync1 = param[8];
+	FormatUnitParameters(int sec, byte[] fill) {
+		sectors = sec;
+		fillpattern = fill;
 	}
 }

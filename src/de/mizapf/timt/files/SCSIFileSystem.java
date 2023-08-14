@@ -103,4 +103,12 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 
 		// System.out.println("nTotal = " + m_nFSTotalSectors + ", AU size = " + m_nFSSectorsPerAU);	
 	}
+	
+	@Override
+	FormatParameters getParams() {
+		FormatParameters param = new FormatParameters(m_sName, null, false);
+		param.setTotal(m_nFSTotalSectors);
+		param.setFormatUnitSectors(32);
+		return param;
+	}
 }

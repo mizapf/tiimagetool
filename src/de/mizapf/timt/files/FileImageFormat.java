@@ -54,8 +54,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		m_nCurrentFormatUnit = NONE;
 		m_bInitial = true;
 		m_writeCache.setName(getShortImageName());
-		
-		m_nTotalSectors = param.cylinders * param.heads * param.sectors; 
+		m_nTotalSectors = param.getTotalSectors();
 	}
 	
 	protected void loadFormatUnit(int funum) throws ImageException, IOException {
@@ -83,8 +82,8 @@ public abstract class FileImageFormat extends ImageFormat {
 			m_nCurrentFormatUnit = funum;
 			m_bDirty = false;
 			if (m_bInitial) {
-				// System.out.println("Create FU " + funum);
-				m_codec.prepareNewFormatUnit(funum, getTrackParameters());
+				System.out.println("Create FU " + funum);
+				m_codec.prepareNewFormatUnit(funum, getFormatUnitParameters());
 			}
 			else {
 				long pos = getFormatUnitPosition(funum);
@@ -108,7 +107,7 @@ public abstract class FileImageFormat extends ImageFormat {
 	*/
 	public Sector readSector(int nSectorNumber) throws ImageException, IOException {
 		Sector sect = null;
-		System.out.println("read Sector " + nSectorNumber);
+		// System.out.println("read Sector " + nSectorNumber);
 		// For very early accesses, in particular with RawHDFormat
 		if ((nSectorNumber == 0) && (getFormatUnitLength(0)<=0)) {
 			// System.out.println("Read sector " + nSectorNumber + " early");
@@ -160,8 +159,6 @@ public abstract class FileImageFormat extends ImageFormat {
 		int secnum = sect.getNumber();
 		int funum = getFUNumberFromSector(secnum); // throws ImageException
 		loadFormatUnit(funum);
-		System.out.println("writeBack " + secnum);
-
 		m_nCurrentFormatUnit = funum;		
 		ImageSector isect = findSector(secnum);
 		if (isect == null) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), secnum));
@@ -198,7 +195,7 @@ public abstract class FileImageFormat extends ImageFormat {
 			System.out.println("Write back " + getTotalSectors() + " sectors");
 			for (int i=0; i < getTotalSectors(); i++) {
 				Sector sect = imgOld.readSector(i);
-				System.out.println("Write back sector "  + sect.getNumber());  // #%
+				// System.out.println("Write back sector "  + sect.getNumber());  // #%
 				writeBack(sect);
 			}
 			// Write back the last format unit, which has not yet been committed 
@@ -273,7 +270,7 @@ public abstract class FileImageFormat extends ImageFormat {
 	
 	abstract void prepareNewImage(FormatParameters param) throws IOException, ImageException;
 	
-	abstract TrackFormatParameters getTrackParameters();
+	abstract FormatUnitParameters getFormatUnitParameters();
 	
 	@Override
 	public String getImageName() {
@@ -290,6 +287,11 @@ public abstract class FileImageFormat extends ImageFormat {
 	}
 	
 	void prepareFormatUnitWrite() throws IOException {
+		// Do nothing by default
+	}
+	
+	/** May be overridden by subclasses. */
+	void setFormatUnitLength(int len) {
 		// Do nothing by default
 	}
 }

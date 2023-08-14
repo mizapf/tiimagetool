@@ -70,7 +70,7 @@ abstract class FormatCodec {
 	abstract void encode();
 	
 	/** Creates a new format unit from scratch. m_formatUnit must have been allocated. */
-	abstract void prepareNewFormatUnit(int funum, TrackFormatParameters param);
+	abstract void prepareNewFormatUnit(int funum, FormatUnitParameters param);
 	
 	/** Provides an empty format unit, which occurs for the MAME CHD format. */
 	void loadEmptyFormatUnit() {

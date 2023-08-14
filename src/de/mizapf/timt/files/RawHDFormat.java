@@ -71,13 +71,13 @@ class RawHDFormat extends HarddiskImageFormat {
 			}
 		}
 		
-		void prepareNewFormatUnit(int funum, TrackFormatParameters t) {
+		void prepareNewFormatUnit(int funum, FormatUnitParameters t) {
 			// Only add the fill pattern
-			for (int i=0; i < t.sectors; i++) {
-				for (int j=0; j < TFileSystem.SECTOR_LENGTH; j++) {
-					int k = j % t.fillpattern.length;
-					m_formatUnit[i*TFileSystem.SECTOR_LENGTH + j] = t.fillpattern[k];
-				}
+			int k = 0;
+			int m = t.fillpattern.length;
+			for (int i=0; i < m_formatUnit.length; i++) {
+				m_formatUnit[i] = t.fillpattern[k % m];
+				k = (k+1) % TFileSystem.SECTOR_LENGTH;
 			}
 		}
 	}
@@ -90,6 +90,15 @@ class RawHDFormat extends HarddiskImageFormat {
 		m_nTotalSectors = (int)(m_file.length() / TFileSystem.SECTOR_LENGTH);
 	}
 	
+
+	public RawHDFormat(String sImageName, FormatParameters params) throws IOException, ImageException {
+		super(sImageName, params);
+		m_codec = new RawHDCodec();
+		m_format = params;
+		setFormatUnitLength(params.getFormatUnitLength());
+		prepareNewImage(params);
+	}
+
 	public String getFormatName() {
 		return TIImageTool.langstr("RAWType");
 	}
@@ -128,15 +137,16 @@ class RawHDFormat extends HarddiskImageFormat {
 		return RAWHD;
 	}
 
-	/** Prepare an empty image.  */
+	/** Prepare an empty image. The raw HD format does not store anything outside
+		of its format units. */
     @Override
 	void prepareNewImage(FormatParameters params) {
-		throw new NotImplementedException("RawHDFormat");
 	}
 		
 	@Override
-	TrackFormatParameters getTrackParameters() {
-		throw new NotImplementedException("RawHDFormat");
+	FormatUnitParameters getFormatUnitParameters() {
+		// System.out.println("FU param: sectors = " + getFormatUnitLength(0)/TFileSystem.SECTOR_LENGTH);
+		return new FormatUnitParameters(getFormatUnitLength(0)/TFileSystem.SECTOR_LENGTH, getFillPattern());
 	}
 		
 	static String checkFormatCompatibility(FormatParameters params) {

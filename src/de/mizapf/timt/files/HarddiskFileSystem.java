@@ -86,13 +86,13 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		return null;
 	}
 	
-	public int getCylinders() {
+/*	public int getCylinders() {
 		if (m_nCylinders != -1) 
 			return m_nCylinders;
 		else 
 			return m_nFSCylinders;
 	}
-	
+
 	public int getHeads() {
 		if (m_nHeads != -1) 
 			return m_nHeads;
@@ -106,20 +106,18 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		else 
 			return m_nFSSectorsPerTrack;
 	}
-	
-	public int getSectorLength() {
+	*/
+
+
+/*	public int getSectorLength() {
 		return getSectors();
 	}
-
-	int getSectorsPerTrack() {
+*/
+/*	int getSectorsPerTrack() {
 		return m_nSectorsPerTrack;
 	}
+*/
 
-	@Override
-	FormatParameters getParams() {
-		throw new NotImplementedException("getParams");
-	}
-	
 	@Override
 	int getSectorsPerAU() {
 		return m_nFSSectorsPerAU;

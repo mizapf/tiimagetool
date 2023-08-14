@@ -610,7 +610,7 @@ public class HFEFormat extends FloppyImageFormat {
 			}
 		}
 		
-		void prepareNewFormatUnit(int funum, TrackFormatParameters t) {
+		void prepareNewFormatUnit(int funum, FormatUnitParameters t) {
 			try {
 				formatTrack(funum, 0, t);
 			}
@@ -699,9 +699,11 @@ public class HFEFormat extends FloppyImageFormat {
 			m_currentSampleNumber++;
 		}
 		
-		private void formatTrack(int cylinder, int head, TrackFormatParameters t) throws EndOfTrackException {
+		private void formatTrack(int cylinder, int head, FormatUnitParameters fu) throws EndOfTrackException {
 			// System.out.println("Creating new track on cylinder " + cylinder + ", head " + head);
 						
+			TrackFormatParameters t = (TrackFormatParameters)fu;
+			
 			// Init track position
 			m_currentSampleNumber = 0;
 			m_currentHead = head;
@@ -1000,7 +1002,7 @@ public class HFEFormat extends FloppyImageFormat {
 		}
 	}
 		
-	TrackFormatParameters getTrackParameters() {
+	FormatUnitParameters getFormatUnitParameters() {
 		// System.out.println("Index = " + m_nFormatIndex);
 		return new TrackFormatParameters((int[])param[m_nFormatIndex], getSectorsPerTrack(), getFillPattern());
 	}

@@ -35,6 +35,11 @@ public class SaveAsImageDialog  extends ToolDialog {
 	
 	JRadioButton[] m_rbt;
 	int m_nProposedType;
+	boolean m_bFloppy;
+
+	int[] m_types = null;
+	int[] floppytypes = { ImageFormat.SECTORDUMP, ImageFormat.TRACKDUMP, ImageFormat.HFE };
+	int[] hdtypes = { ImageFormat.CHD, ImageFormat.RAWHD }; 
 	
 /*
         | Save floppy image                            |
@@ -48,188 +53,58 @@ public class SaveAsImageDialog  extends ToolDialog {
 				+-------+           +-----------+
 */	
 	
-	SaveAsImageDialog(JFrame owner, int nProposedType) {
+	SaveAsImageDialog(JFrame owner, int nProposedType, boolean bFloppy) {
 		super(owner, TIImageTool.langstr("Save"));
 		m_nProposedType = nProposedType;
+		m_bFloppy = bFloppy;
 	}
 	
 	public void createGui(Font font) {
 		prepareGui();	
 		int nColumnWidth = determineFieldWidth(TIImageTool.langstr("ImageType"));
 
-		String[] asFor = new String[3];
+		String[] asFor;
 		JRadioButton[] arb = null;
-
-		asFor[0] = TIImageTool.langstr("SectorDump");
-		asFor[1] = TIImageTool.langstr("TrackDump");
-		asFor[2] = TIImageTool.langstr("HFEImage");
-		m_rbt = putRadioButtons(this, TIImageTool.langstr("ImageType"), nColumnWidth, asFor, null, 1);
-			
 		int index = 0;
+		
+		if (m_bFloppy) {
+			asFor = new String[3];
+			asFor[0] = TIImageTool.langstr("SectorDump");
+			asFor[1] = TIImageTool.langstr("TrackDump");
+			asFor[2] = TIImageTool.langstr("HFEImage");
+			m_rbt = putRadioButtons(this, TIImageTool.langstr("ImageType"), nColumnWidth, asFor, null, 1);
+			m_types = floppytypes;
+		}
+		else {
+			asFor = new String[2];
+			asFor[0] = TIImageTool.langstr("CHDImageType");
+			asFor[1] = TIImageTool.langstr("RAWType");			
+			m_rbt = putRadioButtons(this, TIImageTool.langstr("ImageType"), nColumnWidth, asFor, null, 1);
+			m_types = hdtypes;
+		}
+			
 		if (m_nProposedType != -1) {
-			// System.out.println("Proposed type: " + m_nProposedType);
-			// Map to options
-			switch (m_nProposedType) {
-			case ImageFormat.SECTORDUMP: 
-				index = 0; 
-				break;
-			case ImageFormat.TRACKDUMP: 
-				index = 1; 
-				break;
-			case ImageFormat.HFE: 
-				index = 2; 
-				break;
-			default: 
+			for (index = 0; index < asFor.length; index++) {
+				if (m_types[index] == m_nProposedType) break;
+			}
+			if (index == asFor.length) {				
 				index = 0;
 				System.out.println("Invalid type proposed: " + m_nProposedType);
-				break;
 			}
 		}
 		else {
 			System.out.println("New image, no proposed type");
 		}
+	
 		m_rbt[index].setSelected(true);
 		add(Box.createVerticalGlue());
 		addButtons();	
 	}
 	
 	int getImageType() {
-		int itype[] = { ImageFormat.SECTORDUMP, ImageFormat.TRACKDUMP, ImageFormat.HFE };
-		for (int i=0; i < 3; i++)
-			if (m_rbt[i].isSelected()) return itype[i];
+		for (int i=0; i < m_types.length; i++)
+			if (m_rbt[i].isSelected()) return m_types[i];
 		return -1;
 	}
-	
-	/* FormatParameters getParams() {
-		return null;
-	} */
-	
-	/*	
-	JTextField 		m_tfName;
-	JComboBox<String> 		m_jcType;
-	JButton m_btnFileChooser;
-	JTextField m_tfPath;
-	File m_selectedFile;
-	TIImageTool imagetool;
-	JFrame m_parent;
-	String m_sProposedName;
-	
-	public final static String[] suffix = { ".dsk", ".dtk", ".hfe" };
-	
-	SaveAsImageDialog(JFrame owner, TIImageTool timt, String sProposedName) {
-		super(owner, TIImageTool.langstr("Save"));
-		imagetool = timt;
-		m_parent = owner;
-		m_sProposedName = sProposedName;
-	}
-	
-	public void createGui(Font font) {
-		prepareGui();	
-		//
-		int nColumnWidth = getColumnWidth(25);
-
-		String[] asFormat = { TIImageTool.langstr("SectorDump"), TIImageTool.langstr("TrackDump"), TIImageTool.langstr("HFEImage") };
-		m_jcType = putComboBox(this, TIImageTool.langstr("ImageType"), asFormat, 0, nColumnWidth);
-		
-		JComponent[] comp = new JComponent[2];
-		Box pathSelect = createPathSelectBox(comp, TIImageTool.langstr("FileName"), 
-										getSuffixedName(m_sProposedName), nColumnWidth); 
-
-		m_btnFileChooser = (JButton)comp[0];
-		m_tfPath = (JTextField)comp[1];
-		m_btnFileChooser.addActionListener(this);
-		add(pathSelect);
-		
-		add(Box.createVerticalGlue());
-
-		addButtons();		
-	}
-
-	@Override
-	public void actionPerformed(ActionEvent ae) {
-		if (ae.getSource()==m_btnOK) {
-			m_bSet = true;
-			dispose();
-		}
-		if (ae.getSource()==m_btnCancel) {
-			m_bSet = false;
-			dispose();
-		}
-		if (ae.getSource()==m_btnFileChooser) {
-			JFileChooser jfc = null;
-			if (imagetool.getSourceDirectory("image")!=null) {
-				jfc = new JFileChooser(imagetool.getSourceDirectory("image"));
-			}
-			else jfc = new JFileChooser();
-			jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
-			jfc.setMultiSelectionEnabled(false);
-
-			ImageFileFilter im = new ImageFileFilter();
-			jfc.addChoosableFileFilter(im);
-			jfc.setFileFilter(im);	
-			
-			Dimension dim = imagetool.getPropertyDim(TIImageTool.FILEDIALOG);
-			if (dim!=null) jfc.setPreferredSize(dim);
-			
-			int nReturn = jfc.showOpenDialog(m_parent);
-			
-			if (nReturn == JFileChooser.APPROVE_OPTION) {
-				File select = jfc.getSelectedFile();
-				if (select != null) {
-					m_selectedFile = new File(getSuffixedName(select.getAbsolutePath()));
-					m_tfPath.setText(m_selectedFile.getAbsolutePath());
-				}
-				else {
-					m_tfPath.setText("");
-				}
-			}
-			else {
-				m_selectedFile = null;
-			}
-		}
-
-	}
-	
-	String getImageTypeSuffix() {
-		return suffix[m_jcType.getSelectedIndex()];
-	}
-	
-	File getSelectedFile() {
-		if (m_selectedFile == null) {
-			m_selectedFile = new File(getSuffixedName(m_sProposedName));
-		}
-		return m_selectedFile;
-	}
-	
-	String getSuffixedName(String sName) {
-		int nSuffixPos = sName.indexOf(".");
-		if (nSuffixPos==-1 || nSuffixPos == sName.length()-1) {
-			if (!sName.endsWith(getImageTypeSuffix())) {
-				sName = sName + getImageTypeSuffix();
-			}
-		}
-		return sName;
-	}
-	
-	int getImageType() {
-		switch (m_jcType.getSelectedIndex()) {
-			case 0: return ImageFormat.SECTORDUMP;
-			case 1: return ImageFormat.TRACKDUMP;
-			case 2: return ImageFormat.HFE;
-		}
-		return -1;	
-	}
-	*/
 }
-
-/*
-        | Save floppy image                            |
-        
-			Image type			|v Sector Dump|
-			File name           [icon] [ path/empty1.dsk ]
-			
-				+-------+			+-----------+
-				|	OK	|			|	Cancel	|
-				+-------+           +-----------+
-*/	
 

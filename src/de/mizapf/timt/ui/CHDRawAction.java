@@ -64,7 +64,9 @@ public class CHDRawAction extends Activity {
 				
 				try {
 					DataOutputStream dos = new DataOutputStream(new FileOutputStream(fileTarget));
-					int nBytes = fsource.getCylinders() * fsource.getHeads() * fsource.getSectors() * fsource.getSectorLength();
+					// int nBytes = fsource.getCylinders() * fsource.getHeads() * fsource.getSectors() * fsource.getSectorLength();
+					int nBytes = fsource.getTotalSectors() * TFileSystem.SECTOR_LENGTH;
+					
 					int nLength = 0;
 					// System.out.println("Hunks = " + source.getHunkCount());
 					for (int i=0; i < source.getHunkCount(); i++) {

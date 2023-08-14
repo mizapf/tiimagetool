@@ -50,6 +50,13 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		super(sImageName);
 	}
 
+	protected HarddiskImageFormat(String sImageName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
+		super(sImageName, params);
+		m_nSectorsPerTrack = params.sectors;
+		m_nCylinders = params.cylinders;		
+		m_nHeads = params.heads;
+	}
+
 	/** May be overridden by formats like RawHDFormat which cannot rely on this. */
 	int getSectorsPerTrack() {
 		return m_nSectorsPerTrack;
@@ -135,8 +142,6 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		fs.configure(vibmap);
 		return fs;
 	}
-	
-	abstract void setFormatUnitLength(int len);
 	
 	public int getHDType() {
 		return m_nHDType;

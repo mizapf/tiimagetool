@@ -51,7 +51,7 @@ public class SaveAsImageAction extends Activity {
 
 		// Query the image type
 		// Preset the last type
-		SaveAsImageDialog sd = new SaveAsImageDialog(m_parent, vol.getImageType());
+		SaveAsImageDialog sd = new SaveAsImageDialog(m_parent, vol.getImageType(), vol.isFloppyImage());
 
 		sd.createGui(imagetool.boldFont);
 		sd.setVisible(true);
@@ -119,7 +119,7 @@ public class SaveAsImageAction extends Activity {
 					if (newImage == null) {
 						throw new InternalException(TIImageTool.langstr("ImageUnknown") + ": " + ImageFormat.suffix[sd.getImageType()]);
 					}
-
+					
 					vol.saveNewImage(newImage);
 					imagetool.addRecent(selectedFile.getAbsolutePath());
 					imagetool.refreshAllViews();
@@ -131,7 +131,8 @@ public class SaveAsImageAction extends Activity {
 					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InternalError") + ": " + e.getMessage(), TIImageTool.langstr("InternalError"), JOptionPane.ERROR_MESSAGE);
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);				
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
+					iox.printStackTrace();
 				}
 				catch (ImageException ix) {
 					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ImageError"), JOptionPane.ERROR_MESSAGE);				

@@ -34,14 +34,15 @@ public class AllocationMap implements Cloneable {
 	static final int EVENLONGER = -1; 
 	static final int NOTFOUND = -1; 
 	
-	/** Creates a new allocation map.
+	/** Creates a new allocation map. 
 		@param nAU Number of allocation units
 		@param nAUSize Length of AU
 		@param bFloppy FLoppy allocation maps are little-endian
 	*/
 	public AllocationMap(int nAU, int nAUSize, boolean bFloppy) {
 		// System.out.println("New allocmap, size = " + (nAU+7)/8);
-		m_abyMap = new byte[(nAU+7)/8];
+		int nSectors = (nAU+2047)/2048;
+		m_abyMap = new byte[nSectors * TFileSystem.SECTOR_LENGTH];
 		m_nLength = nAU;
 		m_nAUSize = nAUSize;
 		m_bFloppy = bFloppy;

@@ -93,6 +93,7 @@ public class Volume {
 		Directory dirRoot = new Directory(this);
 		m_FileSystem.setRootDirectory(dirRoot);
 
+	// FIXME: Move this to NewFloppyImageAction and unite with constructor above
 		m_Image = new MemoryImageFormat("unsaved", number);
 		
 		Sector[] initsec = fs.createInitSectors();
@@ -158,14 +159,14 @@ public class Volume {
 		return m_Image.getImageName();
 	} 
 
-	public int getHeads() {
+/*	public int getHeads() {
 		if (m_FileSystem instanceof HarddiskFileSystem)
 			return ((HarddiskFileSystem)m_FileSystem).getHeads();
 		if (m_FileSystem instanceof FloppyFileSystem)
 			return ((FloppyFileSystem)m_FileSystem).getSides();
 		return 0;
 	}
-	
+	*/
 	public int getImageType() {
 		if (m_Image == null) return ImageFormat.MEMORY;
 		System.out.println("git: " + m_Image.getClass().getName() + ", type = " + m_Image.getImageType());
@@ -187,7 +188,7 @@ public class Volume {
 	public int getAUSize() {
 		return m_FileSystem.getSectorsPerAU();
 	}
-
+	
 	public int getReservedAUs() {
 		return m_FileSystem.getReservedAUs();
 	}
@@ -398,6 +399,7 @@ public class Volume {
 	public void saveNewImage(FileImageFormat newImage) throws FileNotFoundException, IOException, ImageException {
 		// Get the format (includes preparing the image) 
 		//newImage.setFileSystem(m_FileSystem);
+		// System.out.println("Save new image");
 		newImage.saveImageFromOld(m_Image);
 		m_FileSystem.setImage(newImage);
 		

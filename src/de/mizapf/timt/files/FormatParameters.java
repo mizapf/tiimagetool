@@ -37,24 +37,38 @@ public class FormatParameters {
 	public 	boolean format;
 	public  int type;
 	public  int chdVersion; 
+	public  int totalsectors;
+	public  int formatUnitSectors;
+	public  boolean hfdc;
 	
 	public FormatParameters(String sVolumeName, String sFormatClass, boolean bFormat) {
 		name = sVolumeName;
 		formatclass = sFormatClass;
 		format = bFormat;
+		hfdc = false;
 	}
 	
 	public void setCHS(int nCylinders, int nHeads, int nSectorsPerTrack) {
 		cylinders = nCylinders;
 		heads = nHeads;
 		sectors = nSectorsPerTrack;	
+		hfdc = false;
 	}
 	
+	public void setTotal(int nTotal) {
+		totalsectors = nTotal;
+	}
+	
+	public void setFormatUnitSectors(int nFU) {
+		formatUnitSectors = nFU;
+	}
+
 	public void setMFM(int nStepRate, int nReducedWriteCurrent, int nWritePrecompensation, boolean bBuffered) {
 		stepRate = nStepRate;
 		reducedWriteCurrent = nReducedWriteCurrent;
 		writePrecompensation = nWritePrecompensation;
 		bufferedStep = bBuffered;
+		hfdc = true;
 	}
 	
 	public void setHD(Time tCreated, int nAUSize, int nReserved, int nCHDFormat, int nType) {
@@ -63,5 +77,19 @@ public class FormatParameters {
 		reservedAUs = nReserved;
 		chdVersion = nCHDFormat;
 		type = nType;
+	}
+	
+	int getTotalSectors() {
+		if (totalsectors != 0) return totalsectors;
+		return cylinders * heads * sectors;
+	}
+	
+	int getFormatUnitLength() {
+		if (formatUnitSectors != 0) return formatUnitSectors * TFileSystem.SECTOR_LENGTH;
+		return sectors * TFileSystem.SECTOR_LENGTH;
+	}
+	
+	boolean isHFDC() {
+		return hfdc;
 	}
 }
