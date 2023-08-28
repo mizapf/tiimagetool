@@ -53,6 +53,9 @@ import java.io.IOException;
 */	
 public abstract class HarddiskFileSystem extends TFileSystem {
 
+	public static final int SCSI = 0;
+	public static final int MFM = 1;
+	
 	// HD-specific
 	Time m_tCreation;
 

@@ -39,20 +39,17 @@ public class FormatParameters {
 	public  int chdVersion; 
 	public  int totalsectors;
 	public  int formatUnitSectors;
-	public  boolean hfdc;
 	
 	public FormatParameters(String sVolumeName, String sFormatClass, boolean bFormat) {
 		name = sVolumeName;
 		formatclass = sFormatClass;
 		format = bFormat;
-		hfdc = false;
 	}
 	
 	public void setCHS(int nCylinders, int nHeads, int nSectorsPerTrack) {
 		cylinders = nCylinders;
 		heads = nHeads;
 		sectors = nSectorsPerTrack;	
-		hfdc = false;
 	}
 	
 	public void setTotal(int nTotal) {
@@ -68,14 +65,12 @@ public class FormatParameters {
 		reducedWriteCurrent = nReducedWriteCurrent;
 		writePrecompensation = nWritePrecompensation;
 		bufferedStep = bBuffered;
-		hfdc = true;
 	}
 	
-	public void setHD(Time tCreated, int nAUSize, int nReserved, int nCHDFormat, int nType) {
+	public void setHD(Time tCreated, int nAUSize, int nReserved, int nType) {
 		time = tCreated;
 		auSize = nAUSize;
 		reservedAUs = nReserved;
-		chdVersion = nCHDFormat;
 		type = nType;
 	}
 	
@@ -90,6 +85,6 @@ public class FormatParameters {
 	}
 	
 	boolean isHFDC() {
-		return hfdc;
+		return (type==HarddiskFileSystem.MFM);
 	}
 }

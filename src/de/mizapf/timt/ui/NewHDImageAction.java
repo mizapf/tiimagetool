@@ -284,8 +284,17 @@ public class NewHDImageAction extends Activity {
 	}
 	
 	public void go() {
-		boolean bValid = false;
+		NewHDImageDialog newimagedialog = new NewHDImageDialog(m_parent);
+		newimagedialog.createGui(imagetool.boldFont);
+		newimagedialog.setVisible(true);
+		if (newimagedialog.confirmed()) {
+			System.out.println("Dialog confirmed");
+			FormatParameters parm = newimagedialog.getParameters();
+			// ...
+		}
 		
+/*
+		boolean bValid = false;
 		while (!bValid) {
 			NewHDImageDialog newimagedialog = new NewHDImageDialog(m_parent, HarddiskImageFormat.HFDC);
 			try {
@@ -495,6 +504,6 @@ public class NewHDImageAction extends Activity {
 					}
 				}
 			}
-		}
+		}  */
 	}
 }
