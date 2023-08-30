@@ -92,6 +92,10 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 		System.out.println("HFDC file system");
 	}
 	
+	HFDCFileSystem(FormatParameters param) {
+		System.out.println("HFDC file system");
+	}
+	
 	int getAUEmulateSector() {
 		return m_nFSEmulate * m_nFSSectorsPerAU;
 	}

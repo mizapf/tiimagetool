@@ -20,6 +20,9 @@
 ****************************************************************************/
 
 package de.mizapf.timt.files;
+
+import java.util.Arrays;
+
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.NotImplementedException;
@@ -85,41 +88,25 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		m_nReservedAUs = 2048; // if new
 	}
 	
+	public HarddiskFileSystem(FormatParameters param) {
+		m_allocMap = new AllocationMap(param.getTotalSectors() / param.auSize, param.auSize, false);
+		m_allocMap.allocate(new Interval(0,31));
+		m_allocMap.allocate(new Interval(32,63));   // Backup
+		m_allocMap.allocate(64);   // FDIR
+	}
+	
 	Sector[] getInitSectors(FormatParameters param) {
 		return null;
 	}
 	
-/*	public int getCylinders() {
-		if (m_nCylinders != -1) 
-			return m_nCylinders;
-		else 
-			return m_nFSCylinders;
+	public static HarddiskFileSystem getInstance(FormatParameters parm) {
+		if (parm.isHFDC()) {
+			return new HFDCFileSystem();
+		}
+		else {
+			return new SCSIFileSystem();
+		}
 	}
-
-	public int getHeads() {
-		if (m_nHeads != -1) 
-			return m_nHeads;
-		else 
-			return m_nFSHeads;
-	}
-	
-	public int getSectors() {
-		if (m_nSectorsPerTrack != -1) 
-			return m_nSectorsPerTrack;
-		else 
-			return m_nFSSectorsPerTrack;
-	}
-	*/
-
-
-/*	public int getSectorLength() {
-		return getSectors();
-	}
-*/
-/*	int getSectorsPerTrack() {
-		return m_nSectorsPerTrack;
-	}
-*/
 
 	@Override
 	int getSectorsPerAU() {
@@ -166,7 +153,7 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	@Override
 	Sector[] createInitSectors() {
 		byte[] vib = createVIBContents();
-		Sector[] slist = new Sector[64];   // original data in 0-31, backup in 32-63
+		Sector[] slist = new Sector[65];   // original data in 0-31, backup in 32-63, FDIR in 64
 		Sector[] allsec = createAllocationMapSectors();
 
 		slist[0] = new Sector(0, createVIBContents());
@@ -180,6 +167,12 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 			if (slist[i] != null) 
 				slist[i + slist.length/2] = (Sector)slist[i].clone();
 		}
+		
+		// Sector 64 (FDIR) is empty
+		byte[] empty = new byte[SECTOR_LENGTH];
+		Arrays.fill(empty, 0, SECTOR_LENGTH, (byte)0x00);
+
+		slist[64] = new Sector(64, empty);
 		
 		return slist;
 	}

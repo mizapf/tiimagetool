@@ -284,66 +284,64 @@ public class NewHDImageAction extends Activity {
 	}
 	
 	public void go() {
-		NewHDImageDialog newimagedialog = new NewHDImageDialog(m_parent);
-		newimagedialog.createGui(imagetool.boldFont);
-		newimagedialog.setVisible(true);
-		if (newimagedialog.confirmed()) {
-			System.out.println("Dialog confirmed");
-			FormatParameters parm = newimagedialog.getParameters();
-			// ...
-		}
-		
-/*
 		boolean bValid = false;
 		while (!bValid) {
-			NewHDImageDialog newimagedialog = new NewHDImageDialog(m_parent, HarddiskImageFormat.HFDC);
-			try {
-				newimagedialog.createGui(imagetool.boldFont);
-			}
-			catch (Exception e) {
-				e.printStackTrace();
-				return;
-			}
+			NewHDImageDialog newimagedialog = new NewHDImageDialog(m_parent);
+			newimagedialog.createGui(imagetool.boldFont);
 			newimagedialog.setVisible(true);
-			
-			bValid = true;
-			
 			if (newimagedialog.confirmed()) {
-				FormatParameters parm = newimagedialog.getFormatParameters();
-								
-				boolean bError = false;
-				StringBuilder sb = new StringBuilder();
-								
-				if (parm.cylinders <= 40 || parm.cylinders > 2048) {
-					sb.append(TIImageTool.langstr("NewHDInvalidCylinderCount"));
-					bError = true;
+				FormatParameters parm = newimagedialog.getParameters();
+				if (parm.isHFDC()) {
+					if (parm.cylinders < 100 || parm.cylinders > 2048) {
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.NewHD.InvalidCylinderCount"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+						continue;
+					}
+					if (parm.heads < 1 || parm.heads > 16) {
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.NewHD.InvalidHeadCount"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+						continue;
+					}
+					
+					if (parm.sectors <= 8 || parm.sectors > 256) {
+						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.NewHD.InvalidSectorCount"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+						continue;
+					}
 				}
-				
-				if (parm.heads <= 0 || parm.heads > 16) {
-					if (sb.length()>0) sb.append("\n");
-					sb.append(TIImageTool.langstr("NewHDInvalidHeadCount"));
-					bError = true;
+				int size = 0;
+				if (parm.isHFDC()) {
+					size = (parm.cylinders * parm.heads * parm.sectors)/4096;  
 				}
-
-				if (parm.sectors <= 8 || parm.sectors > 256) {
-					if (sb.length()>0) sb.append("\n");
-					sb.append(TIImageTool.langstr("NewHDInvalidSectorCount"));
-					bError = true;
+				else {
+					size = newimagedialog.getCapacity();
 				}
-		
-				if (bError) {
-					bValid = false;
-					JOptionPane.showMessageDialog(m_parent, sb.toString(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+				if (size > 248) {
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.NewHD.TooBig"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 					continue;
 				}
+				bValid = true;
+
+				HarddiskFileSystem hfs = HarddiskFileSystem.getInstance(parm);
+				Volume newVolume = null;
+			
+				try {
+					newVolume = new Volume(hfs, imagetool.nextUnnamedIndex());
+					Directory root = newVolume.getRootDirectory();					
+					imagetool.addDirectoryView(root);
+					newVolume.nextGeneration();
+				}
+				catch (IOException iox) {
+					iox.printStackTrace();
+				}
+				catch (ImageException ix) {
+					ix.printStackTrace();
+				}			
 				
-				// No error and user is certain about creating the image
-				int nSectorSize = (parm.type==HarddiskImageFormat.HFDC)? 256 : 512;
-				
-				int nSectors = parm.cylinders * parm.heads * parm.sectors;
-				int nCapacity = nSectors * nSectorSize;
-				parm.auSize = 1;
-				while ((parm.auSize < 16) && (nSectors / parm.auSize > 0xf800)) parm.auSize = parm.auSize*2;
+			}
+			else break;
+		}
+		
+		
+		
+/*
 	
 				String head1 = "<html><body style='width: 500px'>";
 				String foot = "</body></html>";

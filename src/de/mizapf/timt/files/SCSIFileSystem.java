@@ -85,6 +85,11 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 		System.out.println("SCSI file system");
 	}
 	
+	SCSIFileSystem(FormatParameters param) {
+		super(param);
+		System.out.println("SCSI file system");
+	}
+
 	/** Try to load the VIB and get the logical geometry. 
 	*/
 	@Override

@@ -74,7 +74,7 @@ public class FormatParameters {
 		type = nType;
 	}
 	
-	int getTotalSectors() {
+	public int getTotalSectors() {
 		if (totalsectors != 0) return totalsectors;
 		return cylinders * heads * sectors;
 	}
@@ -84,7 +84,7 @@ public class FormatParameters {
 		return sectors * TFileSystem.SECTOR_LENGTH;
 	}
 	
-	boolean isHFDC() {
+	public boolean isHFDC() {
 		return (type==HarddiskFileSystem.MFM);
 	}
 }

@@ -339,13 +339,16 @@ class NewHDImageDialog extends ToolDialog implements ActionListener, FocusListen
 	}
 	
 	int getAUSize() {
-		int nTotalSize = Integer.parseInt(m_tfSize.getText());
-		int nAUSize = (nTotalSize*2)/31;
+		int nAUSize = (getCapacity()*2)/31;
 		if (nAUSize > 8) return 16;
 		if (nAUSize > 4) return 8;
 		if (nAUSize > 2) return 4;
 		if (nAUSize > 1) return 2;
 		return 1;
+	}
+	
+	int getCapacity() {
+		return Integer.parseInt(m_tfSize.getText());
 	}
 	
 	int getReserved() {

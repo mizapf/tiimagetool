@@ -211,6 +211,7 @@ public class FloppyFileSystem extends TFileSystem {
 			for (int i=0x14; i<0x38; i++) abyNewVIB[i] = (byte)0x00;
 		} */
 		byte[] map = m_allocMap.toBitField();
+		System.out.println("Map length = " + map.length);
 		for (int j=0; j < map.length; j++) {
 			abyNewVIB[j+0x38] = map[j];
 		}
