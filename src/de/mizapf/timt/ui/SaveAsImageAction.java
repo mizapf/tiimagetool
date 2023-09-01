@@ -55,6 +55,7 @@ public class SaveAsImageAction extends Activity {
 
 		sd.createGui(imagetool.boldFont);
 		sd.setVisible(true);
+		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 		
 		if (sd.confirmed()) {		
 			String sWarn = ImageFormat.checkFormatCompatibility(vol.getFormatParams(), sd.getImageType());
@@ -107,7 +108,10 @@ public class SaveAsImageAction extends Activity {
 				// Overwrite?
 				if (selectedFile.exists()) {		
 					int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ExistsOverwrite"), TIImageTool.langstr("NewImageTitle"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-					if (nRet == JOptionPane.NO_OPTION) return;
+					if (nRet == JOptionPane.NO_OPTION) {
+						m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+						return;
+					}
 					selectedFile.delete();
 				}
 				
@@ -131,14 +135,15 @@ public class SaveAsImageAction extends Activity {
 					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InternalError") + ": " + e.getMessage(), TIImageTool.langstr("InternalError"), JOptionPane.ERROR_MESSAGE);
 				}
 				catch (IOException iox) {
-					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 					iox.printStackTrace();
+					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
 				}
 				catch (ImageException ix) {
 					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("ImageError"), JOptionPane.ERROR_MESSAGE);				
 				}
 			}
 		}
+		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		// else we cancelled the save after the type selection		
 	}
 	

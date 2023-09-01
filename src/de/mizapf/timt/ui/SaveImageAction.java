@@ -21,6 +21,7 @@
 package de.mizapf.timt.ui;
 
 import java.io.IOException;
+import java.awt.Cursor;
 import javax.swing.*;
 import java.awt.event.KeyEvent;
 import de.mizapf.timt.TIImageTool;
@@ -55,8 +56,10 @@ public class SaveImageAction extends Activity {
 				saia.saveAs(vol);
 			}
 			else {
+				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 				vol.saveImage();
 				imagetool.refreshAllViews();
+				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			}
 		}
 		catch (ProtectedException px) {

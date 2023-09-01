@@ -73,9 +73,9 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 		
 		abyNewVIB[0x0c] = (byte)m_nFSSectorsPerTrack;
 		abyNewVIB[0x0e] = (byte)m_nFSStepSpeed;
-		abyNewVIB[0x0f] = (byte)m_nFSReducedWriteCurrent;
+		abyNewVIB[0x0f] = (byte)(m_nFSReducedWriteCurrent>>3);
 		abyNewVIB[0x10] = (byte)((((m_nFSSectorsPerAU-1)<<4)|(m_nFSHeads-1)) & 0xff);
-		abyNewVIB[0x11] = (byte)(((m_bFSBufferedStep? 0x80 : 0x00) | m_nFSWritePrecomp) & 0xff);
+		abyNewVIB[0x11] = (byte)(((m_bFSBufferedStep? 0x80 : 0x00) | (m_nFSWritePrecomp>>4)) & 0xff);
 		Utilities.setInt16(abyNewVIB, 0x1a, m_nFSEmulate);
 		
 		int j=0x1c;
@@ -85,7 +85,23 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 			Utilities.setInt16(abyNewVIB, j, dirs[i].getDDRSector() / m_nFSSectorsPerAU);
 			j=j+2;
 		}
+
 		return abyNewVIB;
+	}
+	
+	void setGeometry(FormatParameters param) {
+		m_nFSTotalSectors = param.getTotalSectors();
+		m_nFSSectorsPerAU = param.auSize;
+		m_nReservedAUs = param.reservedAUs;
+		m_tCreation = param.time;
+		m_nFSSectorsPerTrack = param.sectors;
+		m_nFSStepSpeed = param.stepRate;
+		m_nFSReducedWriteCurrent = param.reducedWriteCurrent;
+		m_nFSCylinders = param.cylinders;
+		m_nFSHeads = param.heads;
+		m_bFSBufferedStep = param.bufferedStep;
+		m_nFSWritePrecomp = param.writePrecompensation;
+		m_nFSEmulate = 0;
 	}
 	
 	HFDCFileSystem() {
@@ -93,6 +109,7 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 	}
 	
 	HFDCFileSystem(FormatParameters param) {
+		super(param);
 		System.out.println("HFDC file system");
 	}
 	
@@ -107,33 +124,35 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 	
 	@Override
 	public void configure(byte[] vibmap) {		
-		// int ret = GOOD;
 		configureCommon(vibmap);
 
 		m_nFSSectorsPerTrack = vibmap[0x0c] & 0xff;
 		m_nFSHeads = (vibmap[0x10] & 0x0f) + 1;
 		m_nFSCylinders = (m_nFSTotalSectors / m_nFSSectorsPerTrack) / m_nFSHeads;
-		
-		m_nFSStepSpeed = vibmap[0x0e] & 0xff;
-		m_nFSReducedWriteCurrent = vibmap[0x0f] & 0xff;
-		m_nFSWritePrecomp = vibmap[0x11] & 0x7f;
+
+		m_nFSWritePrecomp = (vibmap[0x11] & 0x7f)<<4;
 		m_bFSBufferedStep = (vibmap[0x11] & 0x80)!=0;
 		
+		if ((vibmap[13] != 'W') || (vibmap[14] != 'I') || (vibmap[15] != 'N')) {
+			m_nFSStepSpeed = vibmap[0x0e] & 0xff;
+			m_nFSReducedWriteCurrent = (vibmap[0x0f] & 0xff)<<3 ;
+		}
+		else {
+			m_nFSStepSpeed = 1;
+			m_nFSReducedWriteCurrent = m_nFSWritePrecomp;
+		}
+				
 		m_nFSEmulate = Utilities.getInt16(vibmap, 0x1a);
 		
 		((HarddiskImageFormat)m_Image).setFormatUnitLength(m_nFSSectorsPerTrack * TFileSystem.SECTOR_LENGTH);
-		
-		/* if ((m_nFSHeads < 2) || (m_nFSSectorsPerTrack < 18) || (m_nFSCylinders < 100))
-			ret |= BAD_GEOMETRY;
-		
-		return ret; */
 	}	
 	
 	@Override
 	FormatParameters getParams() {
-		FormatParameters param = new FormatParameters(m_sName, null, false);
+		FormatParameters param = new FormatParameters(m_sName, false);
 		param.setCHS(m_nFSCylinders, m_nFSHeads, m_nFSSectorsPerTrack);
 		param.setMFM(m_nFSStepSpeed, m_nFSReducedWriteCurrent, m_nFSWritePrecomp, m_bFSBufferedStep);
+		param.setHD(m_tCreation, m_nFSSectorsPerAU, m_nReservedAUs, HarddiskFileSystem.MFM);
 		return param;
 	}
 }

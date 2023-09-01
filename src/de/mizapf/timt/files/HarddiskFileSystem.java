@@ -78,36 +78,32 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	protected int m_nHeads;
 	protected int m_nSectorsPerTrack;
 	
-	public HarddiskFileSystem(int nTotal, byte[] vibmap) {
-		super(0x21);
-		m_nReservedAUs = 2048; // if new
-	}
-
 	public HarddiskFileSystem() {
-		super(0x21);
-		m_nReservedAUs = 2048; // if new
 	}
 	
 	public HarddiskFileSystem(FormatParameters param) {
+		m_sName = param.name;
+		System.out.println(m_sName);
+		setGeometry(param);
+		System.out.println("total sectors = " + param.getTotalSectors());
+		System.out.println("AU size = " + param.auSize);
 		m_allocMap = new AllocationMap(param.getTotalSectors() / param.auSize, param.auSize, false);
 		m_allocMap.allocate(new Interval(0,31));
 		m_allocMap.allocate(new Interval(32,63));   // Backup
-		m_allocMap.allocate(64);   // FDIR
-	}
-	
-	Sector[] getInitSectors(FormatParameters param) {
-		return null;
+		m_allocMap.allocate(64 / param.auSize);   // FDIR (AU)
 	}
 	
 	public static HarddiskFileSystem getInstance(FormatParameters parm) {
 		if (parm.isHFDC()) {
-			return new HFDCFileSystem();
+			return new HFDCFileSystem(parm);
 		}
 		else {
-			return new SCSIFileSystem();
+			return new SCSIFileSystem(parm);
 		}
 	}
 
+	abstract void setGeometry(FormatParameters param);
+	
 	@Override
 	int getSectorsPerAU() {
 		return m_nFSSectorsPerAU;
@@ -131,6 +127,11 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	}
 	
 	@Override
+	int getRootFDIR() {
+		return 64;
+	}
+	
+	@Override
 	Sector[] createAllocationMapSectors() {
 		// System.out.println("alloc end = " + getAllocMapEnd() + ", alloc start = " + getAllocMapStart());
 		Sector[] list = new Sector[(getAllocMapEnd()+1-getAllocMapStart())/SECTOR_LENGTH];
@@ -142,11 +143,12 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		int pos = 0;
 		int i = 0;
 		while (pos < bitmap.length) {
-			System.out.println("sector = " + secno);
+			// System.out.println("sector = " + secno);
 			System.arraycopy(bitmap, pos, sectorcont, 0, SECTOR_LENGTH);
 			list[i++] = new Sector(secno++, sectorcont);
 			pos += SECTOR_LENGTH;
 		}
+		System.out.println("allocation map = " + list.length + " sectors");
 		return list;
 	}
 	
@@ -158,20 +160,23 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 
 		slist[0] = new Sector(0, createVIBContents());
 		
-		for (int i=1; i < allsec.length; i++) {
-			slist[i] = (Sector)allsec[i].clone();
-		}
-		
-		// Backup
-		for (int i=0; i < slist.length/2; i++) {
-			if (slist[i] != null) 
-				slist[i + slist.length/2] = (Sector)slist[i].clone();
-		}
-		
-		// Sector 64 (FDIR) is empty
 		byte[] empty = new byte[SECTOR_LENGTH];
 		Arrays.fill(empty, 0, SECTOR_LENGTH, (byte)0x00);
 
+		for (int i=0; i < allsec.length; i++) {
+			if (allsec[i] != null)
+				slist[i+1] = (Sector)allsec[i].clone();
+			else
+				slist[i+1] = new Sector(i+1, empty);
+		}
+		
+		// Backup
+		for (int i=0; i < 32; i++) {
+			if (slist[i] != null) 
+				slist[i + 32] = new Sector(i+32, slist[i].getData());
+		}
+		
+		// Sector 64 (FDIR) is empty
 		slist[64] = new Sector(64, empty);
 		
 		return slist;
@@ -180,7 +185,16 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	public int getTotalSectors() {
 		return m_nFSTotalSectors;
 	}
-
+	
+	/** For a harddisk file system, sectors 0-64 are allocated for the file 
+	    system (0: VIB, 1-31: Alloc, 32: VIB(copy), 33-63: Alloc(copy), 64: FDIR(root))
+	*/
+	@Override
+	int getSysAllocated() {
+		int ausize = getSectorsPerAU();
+		return (65 + (ausize-1))/ausize * ausize;  // round up
+	}
+	
 	abstract byte[] createVIBContents();
 	
 	/** Try to load the VIB and get the logical geometry. 
@@ -218,6 +232,16 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		m_nSubdirs = vibmap[17] & 0xff;
 		
 		m_nRootFD = Utilities.getInt16(vibmap, 0x18);
+		
+		// If there is a "WIN" signature, guess the number of reserved AUs
+		if ((vibmap[13] != 'W') || (vibmap[14] != 'I') || (vibmap[15] != 'N')) {
+			m_nReservedAUs = (vibmap[13] & 0xff) << 6;
+		}
+		else {
+			m_nReservedAUs = (m_nFSTotalSectors / 96) & 0xffc0;
+			if (m_nReservedAUs > 16320) m_nReservedAUs = 16320;
+			if (m_nReservedAUs < 512) m_nReservedAUs = 512;
+		}
 	}
 		
 	@Override

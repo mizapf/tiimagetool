@@ -89,6 +89,13 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 		super(param);
 		System.out.println("SCSI file system");
 	}
+	
+	void setGeometry(FormatParameters param) {
+		m_nFSTotalSectors = param.getTotalSectors();
+		m_nFSSectorsPerAU = param.auSize;
+		m_nReservedAUs = param.reservedAUs;
+		m_tCreation = param.time;
+	}
 
 	/** Try to load the VIB and get the logical geometry. 
 	*/
@@ -111,9 +118,11 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 	
 	@Override
 	FormatParameters getParams() {
-		FormatParameters param = new FormatParameters(m_sName, null, false);
+		FormatParameters param = new FormatParameters(m_sName, false);
 		param.setTotal(m_nFSTotalSectors);
 		param.setFormatUnitSectors(32);
+		param.setHD(m_tCreation, m_nFSSectorsPerAU, m_nReservedAUs, HarddiskFileSystem.SCSI);
+
 		return param;
 	}
 }

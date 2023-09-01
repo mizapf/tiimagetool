@@ -322,19 +322,10 @@ public class NewHDImageAction extends Activity {
 				HarddiskFileSystem hfs = HarddiskFileSystem.getInstance(parm);
 				Volume newVolume = null;
 			
-				try {
-					newVolume = new Volume(hfs, imagetool.nextUnnamedIndex());
-					Directory root = newVolume.getRootDirectory();					
-					imagetool.addDirectoryView(root);
-					newVolume.nextGeneration();
-				}
-				catch (IOException iox) {
-					iox.printStackTrace();
-				}
-				catch (ImageException ix) {
-					ix.printStackTrace();
-				}			
-				
+				newVolume = new Volume(hfs, imagetool.nextUnnamedIndex());
+				Directory root = newVolume.getRootDirectory();					
+				imagetool.addDirectoryView(root);
+				newVolume.nextGeneration();
 			}
 			else break;
 		}

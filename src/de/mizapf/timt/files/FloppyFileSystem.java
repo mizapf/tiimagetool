@@ -51,22 +51,22 @@ public class FloppyFileSystem extends TFileSystem {
 	public final static int[] sectorsPerTrack = { 9, 18, 36, 72, 16 };
 
 	public FloppyFileSystem() {
-		super(0x21);  
 	}
-
+	
 	/** Create a new empty file system */
 	public FloppyFileSystem(FormatParameters param) {
 		// Floppy parameters
 		m_bProtection = false;
 		m_sName = param.name;
-				
+		m_nReservedAUs = 0x21;
+
 		// SectorsPerTrack is unset (-1) when creating a new image
 		// Cause: NewFloppyImageDialog does not define the sector count
 		setGeometry(param.cylinders, param.heads, param.sectors);
 
 		m_allocMap = new AllocationMap(getTotalSectors() / getSectorsPerAU(), getSectorsPerAU(), true);
 		m_allocMap.allocate(0);
-		m_allocMap.allocate(1);
+		if (getSectorsPerAU() < 2) m_allocMap.allocate(1);
 	}
 	
 	@Override
@@ -90,8 +90,19 @@ public class FloppyFileSystem extends TFileSystem {
 		return m_nFSDensity;
 	}
 	
+	/** For a floppy file system, sectors 0 and 1 are allocated for the file
+	    system. If the AU size is greater than 1, both are located in the same
+	    AU. We have to deliver the sector count.
+	*/
+	@Override
+	int getSysAllocated() {
+		int ausize = getSectorsPerAU();
+		if (ausize > 1) return ausize;   // only one AU
+		return 2;   // Two AUs of size 1
+	}
+	
 	FormatParameters getParams() {
-		FormatParameters param = new FormatParameters(m_sName, null, false);
+		FormatParameters param = new FormatParameters(m_sName, false);
 		param.setCHS(m_nFSCylinders, m_nFSHeads, m_nFSSectorsPerTrack);
 		return param;
 	}
@@ -152,6 +163,11 @@ public class FloppyFileSystem extends TFileSystem {
 		return 0;	
 	}
 
+	@Override
+	int getRootFDIR() {
+		return 1;
+	}
+	
 	private static int getDensityFromSectors(int sectors) {
 		if (sectors==16) return DOUBLE_DENSITY_16;
 		if ((sectors % 9) != 0) {
@@ -303,12 +319,14 @@ public class FloppyFileSystem extends TFileSystem {
 			System.out.println("Setting total sectors from file system");	
 			m_Image.setTotalSectors(m_nFSTotalSectors);
 		}
-		
+
 		m_nFSSectorsPerTrack = vib[0x0c] & 0xff;
 		m_nFSHeads = vib[0x12] & 0xff;
 		m_nFSCylinders = vib[0x11] & 0xff;
 		m_nFSDensity = getDensityFromSectors(m_nFSSectorsPerTrack);
 
+		m_nReservedAUs = 0x21;
+		
 		try {
 			setVolumeName(Utilities.getString10(vib, 0));
 		}

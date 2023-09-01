@@ -75,15 +75,6 @@ public abstract class TFileSystem {
 	
 	public TFileSystem() {
 	}
-
-	public TFileSystem(int reserved) {
-		this(-1, reserved);
-	}
-
-	private TFileSystem(int total, int reserved) {
-		// m_nTotalSectors = total;
-		m_nReservedAUs = reserved;
-	}
 	
 	protected void setVolumeName(String newName) throws InvalidNameException {
 		if (newName == null || newName.length()==0 || newName.length()>10) throw new InvalidNameException(TIImageTool.langstr("VolumeNameConstr"));
@@ -133,6 +124,10 @@ public abstract class TFileSystem {
 	abstract int getAllocMapStart();
 	abstract int getAllocMapEnd();
 		
+	abstract int getRootFDIR();
+
+	abstract int getSysAllocated();
+	
 	/* 
 		Allocation handling
 	*/

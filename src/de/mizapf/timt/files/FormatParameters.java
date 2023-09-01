@@ -40,9 +40,8 @@ public class FormatParameters {
 	public  int totalsectors;
 	public  int formatUnitSectors;
 	
-	public FormatParameters(String sVolumeName, String sFormatClass, boolean bFormat) {
+	public FormatParameters(String sVolumeName, boolean bFormat) {
 		name = sVolumeName;
-		formatclass = sFormatClass;
 		format = bFormat;
 	}
 	

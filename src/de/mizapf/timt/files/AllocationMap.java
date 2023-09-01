@@ -22,6 +22,7 @@
 package de.mizapf.timt.files;
 import java.util.ArrayList;
 
+import de.mizapf.timt.util.InternalException;
 import de.mizapf.timt.TIImageTool;
 
 public class AllocationMap implements Cloneable {
@@ -41,8 +42,16 @@ public class AllocationMap implements Cloneable {
 	*/
 	public AllocationMap(int nAU, int nAUSize, boolean bFloppy) {
 		// System.out.println("New allocmap, size = " + (nAU+7)/8);
-		int nSectors = (nAU+2047)/2048;
-		m_abyMap = new byte[nSectors * TFileSystem.SECTOR_LENGTH];
+		if (bFloppy) {
+			m_abyMap = new byte[(nAU+7)/8];
+		}
+		else {
+			// Allocate full sectors (256*8 bits)
+			if (nAU > 0xf800) throw new InternalException("Excess AU number: " + nAU);
+			int nSectors = (nAU+2047)/2048;
+			m_abyMap = new byte[nSectors * TFileSystem.SECTOR_LENGTH];
+			System.out.println("Allocation map size = " + nSectors + " sectors");
+		}
 		m_nLength = nAU;
 		m_nAUSize = nAUSize;
 		m_bFloppy = bFloppy;
@@ -94,7 +103,7 @@ public class AllocationMap implements Cloneable {
 		else {
 			m_abyMap[nUnit/8] |= ((0x80 >> (nUnit%8))&0xff);		
 		}
-		// System.out.println("Allocate " + nUnit);
+//		System.out.println("Allocate " + nUnit);
 	}
 	
 	/** Allocates the smallest set of AUs to contain the interval. 

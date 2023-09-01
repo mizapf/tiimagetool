@@ -496,7 +496,7 @@ public class CheckFSAction extends Activity {
 			if (nRet == JOptionPane.OK_OPTION) {
 //				if (vol.isFloppyImage()) {
 					try {
-						vol.reopenForWrite();
+						// vol.reopenForWrite();
 						if (bChangedSector0) vol.updateVIB(); 
 						if (bChangedAlloc) vol.saveAllocationMap();
 						if (changedL3) {
@@ -506,7 +506,7 @@ public class CheckFSAction extends Activity {
 								f.rewriteFIB();
 							}
 						}
-						vol.reopenForRead();
+						// vol.reopenForRead();
 					}
 					catch (FileNotFoundException fnfx) {
 						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE); 

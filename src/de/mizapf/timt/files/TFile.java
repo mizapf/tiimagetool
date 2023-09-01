@@ -369,7 +369,7 @@ public class TFile extends Element {
 	}
 	
 	/** Called from Directory.moveinFile/insertFile/renameFile. */
-	byte[] createFIB(int nSectorNumber, int nFDIRSector) throws ProtectedException, IOException, ImageException {
+	byte[] createFIB(int nSectorNumber, int nFDIRSector) throws ProtectedException, ImageException {
 		byte[] aFibNew = new byte[256];
 
 		Volume vol = getVolume();

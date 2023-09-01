@@ -392,8 +392,19 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			byte[] abyMetaEntry2 = createMetaEntry("GDDI", sb.toString());
 			
 			sb = new StringBuilder();
-			sb.append("CYLS:").append(parm.cylinders).append(",HEADS:").append(parm.heads);
-			sb.append(",SECS:").append(parm.sectors).append(",BPS:").append(nSectorLength);
+			
+			if (parm.isHFDC()) {
+				sb.append("CYLS:").append(parm.cylinders).append(",HEADS:").append(parm.heads);
+				sb.append(",SECS:").append(parm.sectors).append(",BPS:").append(nSectorLength);
+			}
+			else {
+				// Guess a geometry. 
+				int heads = 16;
+				int sectors = 32;
+				long cyl = m_nLogicalSize / nPhysSectorLength / heads / sectors;
+				sb.append("CYLS:").append(cyl).append(",HEADS:").append(heads);
+				sb.append(",SECS:").append(sectors).append(",BPS:").append(nPhysSectorLength);
+			}
 			
 			byte[] abyMetaEntry1 = createMetaEntry("GDDD", sb.toString());
 			

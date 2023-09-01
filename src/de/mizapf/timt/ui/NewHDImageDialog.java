@@ -325,11 +325,14 @@ class NewHDImageDialog extends ToolDialog implements ActionListener, FocusListen
 	}
 	
 	FormatParameters getParameters() {
-		FormatParameters params = new FormatParameters(getDiskName(), "className", true);
+		FormatParameters params = new FormatParameters(getDiskName(), true);
 		params.setHD(Time.createNow(), getAUSize(), getReserved(), getDriveType());
 		if (getDriveType()==HarddiskFileSystem.MFM) {
 			params.setCHS(getCylinders(), getHeads(), getSectors());
 			params.setMFM(getStepRate(), getReduced(), getPrecomp(), getBuffered());
+		}
+		else {
+			params.setTotal(getCapacity() * 4096);
 		}
 		return params;
 	}
@@ -339,7 +342,12 @@ class NewHDImageDialog extends ToolDialog implements ActionListener, FocusListen
 	}
 	
 	int getAUSize() {
-		int nAUSize = (getCapacity()*2)/31;
+		// Max AU = 63488 = 31 * 2048
+		// Sectors = cap * 4096
+		
+		// AU size = sectors / max = cap * 4096 / (31 * 2048)
+		//          = cap * 2 / 31
+		double nAUSize = (getCapacity()*2)/31.0;
 		if (nAUSize > 8) return 16;
 		if (nAUSize > 4) return 8;
 		if (nAUSize > 2) return 4;

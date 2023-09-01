@@ -72,6 +72,8 @@ public class Directory extends Element {
 
 		if (dirParent != null) m_sName = Utilities.getString10(vibddr.getData(), 0);
 		m_nFileIndexSector = Utilities.getInt16(vibddr.getData(), 0x18) * vol.getAUSize();
+		if (m_nFileIndexSector == 0) throw new ImageException(TIImageTool.langstr("ImageUnknown"));
+		
 		m_nDDRSector = vibddr.getNumber();
 		m_tCreation = new Time(vibddr.getData(), 0x12);
 		m_dirParent = dirParent;
@@ -174,22 +176,21 @@ public class Directory extends Element {
 		files.toArray(m_Files);		
 	}
 
-	
-	/** Builds a new empty floppy root directory. Called from Volume.const.
+	/** Builds a new empty harddisk root directory. Called from Volume.const.
 		@param vol Volume where this directory is located
+		@param inx Sector number of FDIR
 	*/
-	Directory(Volume vol) {
+	Directory(Volume vol, int idx) {
 		m_Volume = vol;
 		m_dirParent = null;
 		setContainingDirectory(null);
 		
 		// Floppy root directory
-		m_nFileIndexSector = 1;
+		m_nFileIndexSector = idx;
 		
 		m_Subdirs = new Directory[0];
 		m_Files = new TFile[0];
 	}
-	
 	
 	/** Builds a new floppy subdirectory. Called from Directory.const.
 		@param vol Volume which contains this directory
@@ -406,7 +407,7 @@ public class Directory extends Element {
 		return insertFile(abyTif, sNewFilename, bReopen, false);
 	}
 	
-	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen, boolean bOverwrite) throws InvalidNameException, ImageFullException, ProtectedException, ImageException, IOException {
+	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen, boolean bOverwrite) throws InvalidNameException, ImageFullException, ProtectedException, ImageException, FileNotFoundException {
 
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 
@@ -518,7 +519,7 @@ public class Directory extends Element {
 		fileNew.setClusters(aint);
 		
 		// Create and write new FIB
-		if (bReopen) m_Volume.reopenForWrite();
+		// if (bReopen) m_Volume.reopenForWrite();
 		byte[] aFibNew = fileNew.createFIB(aFIB[0].start, getFileIndexSector());  // FDIR sector only for HD
 		m_Volume.writeSector(new Sector(aFIB[0].start, aFibNew));
 		
@@ -545,13 +546,13 @@ public class Directory extends Element {
 			m_Volume.updateAlloc();
 		}
 		*/
-		if (bReopen) m_Volume.reopenForRead();
+		//if (bReopen) m_Volume.reopenForRead();
 		// m_Volume.nextGeneration();
 
 		return fileNew;
 	}
 	
-	private void writeFileContents(Volume vol, Interval[] aCluster, byte[] abyFile) throws ProtectedException, IOException, ImageException {
+	private void writeFileContents(Volume vol, Interval[] aCluster, byte[] abyFile) throws ProtectedException, ImageException {
 		int offset = 0;
 		
 		int nNetLength = abyFile.length - 128;
@@ -586,7 +587,7 @@ public class Directory extends Element {
 	/** Removes a file.
 		@param bRemoveFromList if false, keeps the list unchanged. This is important when an outer loop iterates over the list.
 	*/
-	public void deleteFile(TFile file, boolean bRemoveFromList) throws FileNotFoundException, IOException, ImageException, ProtectedException {
+	public void deleteFile(TFile file, boolean bRemoveFromList) throws FileNotFoundException, ImageException, ProtectedException {
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (!containsInList(file)) throw new FileNotFoundException(file.getName());
 		// Release FIBs (only if at start of AU)
@@ -713,7 +714,7 @@ public class Directory extends Element {
 		}
 
 		addToList(dirNew);
-		if (bReopen) m_Volume.reopenForWrite();
+		// if (bReopen) m_Volume.reopenForWrite();
 		
 		// Create the file index for the new directory
 		dirNew.writeFDIR();
@@ -738,7 +739,7 @@ public class Directory extends Element {
 			m_Volume.updateAlloc();
 		}
 
-		if (bReopen) m_Volume.reopenForRead();
+		// if (bReopen) m_Volume.reopenForRead();
 		return dirNew;
 	}
 	
@@ -854,7 +855,7 @@ public class Directory extends Element {
 	
 	public void renameElement(Element el, String sName) throws FileExistsException, InvalidNameException, IOException, ImageException, ProtectedException {
 		sName = sName.trim();
-		m_Volume.reopenForWrite();
+		// m_Volume.reopenForWrite();
 		if (el instanceof TFile) {
 			if (!TFile.validName(sName)) throw new InvalidNameException(sName);
 			TFile file = (TFile)el;
@@ -896,7 +897,7 @@ public class Directory extends Element {
 				writeDDR();
 			}
 		}
-		m_Volume.reopenForRead();
+		// m_Volume.reopenForRead();
 	}
 
 	// =========================================================================

@@ -465,7 +465,7 @@ public class Archive extends Directory {
 	@Override
 	public void renameElement(Element el, String sName) throws FileExistsException, InvalidNameException, IOException, ImageException, ProtectedException {
 		sName = sName.trim();
-		m_Volume.reopenForWrite();
+		// m_Volume.reopenForWrite();
 		if (!TFile.validName(sName)) throw new InvalidNameException(sName);
 		
 		for (int i=0; i < m_Files.length; i++) {
@@ -479,7 +479,7 @@ public class Archive extends Directory {
 		addToList(file);
 		commit(false);
 		
-		m_Volume.reopenForRead();
+		// m_Volume.reopenForRead();
 	}
 	
 	/** Called from PasteAction. */

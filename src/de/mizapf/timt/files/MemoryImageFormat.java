@@ -39,7 +39,7 @@ public class MemoryImageFormat extends ImageFormat {
 	// Empty sector
 	byte[] m_empty;
 
-	MemoryImageFormat(String sImageName, int number) throws FileNotFoundException {
+	MemoryImageFormat(String sImageName, int number) {
 		// super(sImageName);
 		m_empty = new byte[TFileSystem.SECTOR_LENGTH];
 		m_nUnnamedIndex = number;

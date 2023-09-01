@@ -65,7 +65,7 @@ public class CreateArchiveAction extends Activity {
 		Archive ark = null;
 
 		if (ad.confirmed()) {
-			try {
+/*			try {
 				vol.reopenForWrite();
 			}
 			catch (ProtectedException px) {
@@ -78,7 +78,7 @@ public class CreateArchiveAction extends Activity {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
-
+*/
 			// Create an empty archive
 			byte flags = ad.useCompression()? TFile.INTERNAL : (byte)0x00;
 			byte[] abyEmpty = Archive.createEmptyArchive(ad.useCompression());
@@ -141,12 +141,13 @@ public class CreateArchiveAction extends Activity {
 				ix.printStackTrace();
 			}
 
-			try {
+/*			try {
 				vol.reopenForRead();
 			}
 			catch (IOException iox) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen") + ": " + iox.getMessage(), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE); 				
 			}
+			*/
 			imagetool.refreshPanel(vol);			
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

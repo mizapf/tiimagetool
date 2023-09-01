@@ -65,7 +65,7 @@ public class ImportBinaryAction extends Activity {
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 			Volume volTarget = dirCurrent.getVolume();
 
-			try {
+/*			try {
 				volTarget.reopenForWrite();
 			}
 			catch (ProtectedException px) {
@@ -73,13 +73,12 @@ public class ImportBinaryAction extends Activity {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
-
 			catch (IOException iox) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
-
+*/
 			boolean bGuess = false; 
 			for (java.io.File iofile:afile) {
 				try {
@@ -120,12 +119,13 @@ public class ImportBinaryAction extends Activity {
 					break;
 				}
 			}
-			try {
+/*			try {
 				volTarget.reopenForRead();
 			}
 			catch (IOException iox) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
-			}			
+			}
+			*/
 			imagetool.refreshPanel(volTarget);			
 			if (bOK && afile.length>1) JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("Import")), TIImageTool.langstr("ImpBinary"), JOptionPane.INFORMATION_MESSAGE);
 

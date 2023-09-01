@@ -156,11 +156,11 @@ public abstract class ImageFormat  {
 			Object[] ao = new Object[0];
 			try {
 				Class<?> fmt = Class.forName("de.mizapf.timt.files." + formats[i]);
-				System.out.print(formats[i] + ": ");
+				// System.out.print(formats[i] + ": ");
 				Method type = fmt.getDeclaredMethod("getImageTypeStatic");
 				Integer typeval = (Integer)type.invoke(null, ao);
 				int index = typeval.intValue();
-				System.out.println(index);
+				// System.out.println(index);
 				if (m_formatClass[index] == null) {
 					m_formatClass[index] = fmt;
 				}
@@ -326,7 +326,7 @@ public abstract class ImageFormat  {
 	// Static methods cannot be overridden
 	abstract int getImageType();
 	
-	protected ImageFormat() throws FileNotFoundException {
+	protected ImageFormat() {
 		m_writeCache = new SectorCache();
 		setFillPattern(m_Settings.getPropertyString(TIImageTool.FILLPAT));
 		m_nTotalSectors = -1;
@@ -334,7 +334,7 @@ public abstract class ImageFormat  {
 	
 	public abstract Sector readSector(int nSectorNumber) throws ImageException, IOException;
 	
-	public abstract void writeSector(Sector sect) throws ImageException, IOException, ProtectedException;
+	public abstract void writeSector(Sector sect);
 		
 	void close() throws IOException {
 		// TODO

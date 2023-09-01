@@ -173,7 +173,6 @@ public class PasteAction extends Activity {
 				// Moving in the same image
 				boolean bReload = false;
 				try {
-					volTarget.reopenForWrite();
 					for (Element el : list) {
 						System.out.println("Element " + el);
 
@@ -219,9 +218,7 @@ public class PasteAction extends Activity {
 					dirSource.commit(false);
 					// SectorCache.sameGen();
 					System.out.println("commit target");
-					dirTarget.commit(false);
-					volTarget.reopenForRead();
-					
+					dirTarget.commit(false);					
 					// Should the generation better be static?
 				}
 				catch (FileNotFoundException fnfx) {
@@ -348,8 +345,6 @@ public class PasteAction extends Activity {
 			if (sError == null) {
 				try {
 					boolean bAbort = false;
-					volTarget.reopenForWrite();
-					if (bMove) volSource.reopenForWrite();
 					String sImportName = null;
 
 					for (Element el : list) {
@@ -497,8 +492,6 @@ public class PasteAction extends Activity {
 					System.out.println("commit target");
 					dirTarget.commit(false);
 					System.out.println("commit done");
-					volTarget.reopenForRead();
-					volSource.reopenForRead();
 				}
 				catch (ImageException ix) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);					

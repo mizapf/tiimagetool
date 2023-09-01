@@ -113,6 +113,7 @@ public class SectorCache {
 	*/
 	void write(Sector sect) {
 
+		// System.out.println("Write sector " + sect.getNumber());
 		boolean bNew = true;
 		
 		// Set the generation
@@ -125,7 +126,7 @@ public class SectorCache {
 			// No history yet
 			secversions = new LinkedList<Sector>();
 			m_cache.put(sect.getNumber(), secversions);
-			System.out.println("Creating new history for sector " + sect.getNumber());
+			// System.out.println("Creating new history for sector " + sect.getNumber());
 		}
 		else {
 			Sector lsect = getRecentVersion(secversions);
@@ -139,7 +140,7 @@ public class SectorCache {
 		if (bNew) {
 			// Append new generation
 			secversions.add((Sector)sect.clone());
-			System.out.println("Caching a new version (" + m_generation + ") of sector " + sect.getNumber());
+			// System.out.println("Caching a new version (" + m_generation + ") of sector " + sect.getNumber());
 		}
 	}
 	
@@ -152,6 +153,7 @@ public class SectorCache {
 	}
 
 	public void nextGeneration() {
+//		Thread.currentThread().dumpStack();
 		System.out.println("+ nextgen(" + m_sName + ")");
 		m_generation++;
 	}

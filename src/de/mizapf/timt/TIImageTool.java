@@ -371,7 +371,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	/** Used for invokeLater. */
 	class CreateGui implements Runnable {
 		public void run() {		
-			System.err.println("Create GUI");
 			//		m_fm = m_frmMain.getFontMetrics(Font.decode(FONT));
 			//		System.out.println("width = " + m_fm.stringWidth("FILENAME") + ", height = " + m_fm.getHeight());
 			
@@ -546,12 +545,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_iChangeCHDFormat = createMenuItem(new ChangeCHDFormatAction());
 			m_mUtility.add(m_iChangeCHDFormat);
 			
-			m_iCHDToRaw = createMenuItem(new CHDRawAction());
+/*			m_iCHDToRaw = createMenuItem(new CHDRawAction());
 			m_mUtility.add(m_iCHDToRaw);
 			
 			m_iRawToCHD = createMenuItem(new RawCHDAction());
 			m_mUtility.add(m_iRawToCHD);
-			
+*/			
 			m_mUtility.addSeparator();
 			m_iSerialBridge = createMenuItem(new SerialBridgeAction());
 			m_mUtility.add(m_iSerialBridge);

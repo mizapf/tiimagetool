@@ -40,10 +40,10 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 	protected int m_nPartitions;
 	protected int m_nActivePartition;
 	
-	public final static int HFDC = 1;	// ss=256
+/*	public final static int HFDC = 1;	// ss=256
 	public final static int SCSI = 2;	// ss=512, no partitions
 	public final static int IDE = 3;	// ss=512, may have partitions
-	
+	*/
 	private int m_nHDType;
 	
 	protected HarddiskImageFormat(String sImageName) throws FileNotFoundException, IOException, ImageException {
@@ -96,7 +96,7 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		
 		Undefined partition: offset = 0
 	*/
-	void checkFormat(byte[] sector0) {
+/*	void checkFormat(byte[] sector0) {
 		m_sector0 = sector0;
 		m_nPartitions = 0;
 		
@@ -120,7 +120,7 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 				m_nHDType = SCSI;
 		}
 	}
-	
+	*/
 	public HarddiskFileSystem getFileSystem(byte[] vibmap) {
 		int nHDType = 0;
 		HarddiskFileSystem fs = null;

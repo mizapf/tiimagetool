@@ -76,25 +76,24 @@ public class Volume {
 		
 		// Check whether the image is read-only
 		try {
-			reopenForWrite();
+			image.reopenForWrite();
 		}
 		catch (ProtectedException px) {
 			System.err.println("Volume is read-only");
 			m_bReadOnly = true;
 		}
-		reopenForRead();
-		m_Image.setStartGeneration();
+		image.reopenForRead();
+		image.setStartGeneration();
 	}
 	
 	/** Newly created volume. */
-	public Volume(TFileSystem fs, int number) throws IOException, ImageException {
+	public Volume(TFileSystem fs, int unnamedNumber) {
 		m_FileSystem = fs;
 		
-		Directory dirRoot = new Directory(this);
-		m_FileSystem.setRootDirectory(dirRoot);
+		Directory dirRoot = new Directory(this, fs.getRootFDIR());
+		fs.setRootDirectory(dirRoot);
 
-	// FIXME: Move this to NewFloppyImageAction and unite with constructor above
-		m_Image = new MemoryImageFormat("unsaved", number);
+		m_Image = new MemoryImageFormat("unsaved", unnamedNumber);
 		
 		Sector[] initsec = fs.createInitSectors();
 		try {
@@ -103,7 +102,7 @@ public class Volume {
 			}
 		}
 		catch (ProtectedException px) {
-			System.err.println("Internal error: Volume is write-protected");
+			System.err.println("Internal error: Volume is write-protected, although it is a memory image");
 		}	
 	}
 	
@@ -121,19 +120,19 @@ public class Volume {
 	}
 		
 	// Called from Directory, TFile, this
-	void writeSector(Sector sect) throws ProtectedException, IOException, ImageException {
+	void writeSector(Sector sect) throws ProtectedException {
 		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		m_Image.writeSector(sect);
 	}
 		
-	public void reopenForWrite() throws IOException, ProtectedException {
+/*	public void reopenForWrite() throws IOException, ProtectedException {
 		m_Image.reopenForWrite();
 	}
 	
 	public void reopenForRead() throws IOException {
 		m_Image.reopenForRead();
 	}
-
+*/
 	public void close() throws IOException {
 		// If there is no image file, changes may be lost
 		if (m_Image != null) m_Image.close();
@@ -205,7 +204,7 @@ public class Volume {
 		return m_FileSystem.getAUNumber(nSectorNumber);
 	}
 
-	public void saveAllocationMap() throws IOException, ImageException, ProtectedException {
+	public void saveAllocationMap() throws ProtectedException {
 		Sector[] alloc = m_FileSystem.createAllocationMapSectors();
 		
 		// For floppy file systems, this rewrites the VIB
@@ -338,7 +337,7 @@ public class Volume {
 	}
 	
 	// From ToggleEmulateAction
-	public void toggleEmulateFlag(int nSector) throws IOException, ImageException, ProtectedException {
+	public void toggleEmulateFlag(int nSector) throws ImageException, ProtectedException {
 		((HFDCFileSystem)m_FileSystem).toggleEmulateFlag(nSector);
 		updateVIB();
 	}
@@ -361,7 +360,7 @@ public class Volume {
 		updateVIB();
 	}
 	
-	public void updateVIB() throws IOException, ImageException, ProtectedException {
+	public void updateVIB() throws ProtectedException {
 		// Write the VIB
 		// System.out.println("updateVIB");
 		writeSector(new Sector(0, m_FileSystem.createVIBContents()));
@@ -421,6 +420,12 @@ public class Volume {
 	
 	public FormatParameters getFormatParams() {
 		return m_FileSystem.getParams();
+	}
+	
+	/** Returns the number of sectors that are allocated to maintain the
+	 	file system. */
+	public int getSysAllocated() {
+		return m_FileSystem.getSysAllocated();
 	}
 	
 /*	public String getProposedName() {

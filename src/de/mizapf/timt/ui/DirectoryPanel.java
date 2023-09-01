@@ -237,11 +237,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		
 		//		nFileTotal += m_vol.getAllRequiredSectors(m_vol.getAUSize());
 		
-		int res = 0;
-		if (vol.getAUSize()==1) res = 2;
-		else res = vol.getAUSize();
-		
-		if (nFileTotal != (vol.getAllocatedSectorCount() - res)) {
+		if (nFileTotal != (vol.getAllocatedSectorCount() - vol.getSysAllocated())) {
 			sb.append(", ").append(String.format(TIImageTool.langstr("PanelInThisDir"), nFileTotal));
 		}
 

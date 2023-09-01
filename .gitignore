@@ -5,3 +5,5 @@
 *.zip
 build/
 dist/
+ext/
+src/META-INF

@@ -57,7 +57,7 @@ public class RawCHDAction extends Activity {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
-			FormatParameters parm = new FormatParameters("name", "unknownClass", true);
+			FormatParameters parm = new FormatParameters("name", true);
 			
 			try {
 				fileTarget = dialog.getTargetCHD();

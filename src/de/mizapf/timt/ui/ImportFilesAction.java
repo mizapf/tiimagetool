@@ -101,7 +101,7 @@ public class ImportFilesAction extends Activity {
 		Directory dirCurrent = dvCurrent.getDirectory();
 		Volume volTarget = dirCurrent.getVolume();
 
-		try {
+/*		try {
 			volTarget.reopenForWrite();
 		}
 		catch (ProtectedException px) {
@@ -109,13 +109,12 @@ public class ImportFilesAction extends Activity {
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			return;
 		}
-
 		catch (IOException iox) {
 			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 			return;
 		}
-
+*/
 		for (java.io.File iofile:afile) {
 			try {
 				if (iofile.isDirectory()) {
@@ -195,12 +194,12 @@ public class ImportFilesAction extends Activity {
 				break;
 			}		
 		}
-		try {
+/*		try {
 			volTarget.reopenForRead();
 		}
 		catch (IOException iox) {
 			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
-		}			
+		} */			
 		imagetool.refreshPanel(volTarget);			
 		//			if (bOK && afile.length>1) JOptionPane.showMessageDialog(dvCurrent.getFrame(), "Import completed sucessfully", "Import files", JOptionPane.INFORMATION_MESSAGE);
 	}

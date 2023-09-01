@@ -88,9 +88,6 @@ public class DeleteAction extends Activity {
 					catch (FileNotFoundException fnfx) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("DeleteNotFound"), fnfx.getMessage()), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
 					}
-					catch (IOException iox) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("IOErrorDelete"), selected.getName()), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
-					}
 					catch (ImageException ix) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImageErrorDelete"), selected.getName()), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
 					}

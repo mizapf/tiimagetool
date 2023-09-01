@@ -113,9 +113,9 @@ public class ImportRemoteAction extends Activity {
 			
 			// Now insert abyTif as done with "Insert File"
 			try {
-				volTarget.reopenForWrite();
+//				volTarget.reopenForWrite();
 				imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, "UNNAMED");
-				volTarget.reopenForRead();
+//				volTarget.reopenForRead();
 			}
 			catch (java.io.FileNotFoundException fnfx) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);

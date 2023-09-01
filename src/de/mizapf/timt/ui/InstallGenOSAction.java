@@ -67,7 +67,7 @@ public class InstallGenOSAction extends Activity {
 			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
 			Volume volTarget = dirCurrent.getVolume();
-			try {
+/*			try {
 				volTarget.reopenForWrite();
 			}
 			catch (ProtectedException px) {
@@ -80,7 +80,7 @@ public class InstallGenOSAction extends Activity {
 				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 				return;
 			}
-			
+*/			
 						
 			try {
 				// SYSTEM/SYS
@@ -121,13 +121,13 @@ public class InstallGenOSAction extends Activity {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			
-			try {
+/*			try {
 				volTarget.reopenForRead();
 			}
 			catch (IOException iox) {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotReopen"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 				
 			}
-			
+*/			
 			try {
 				imagetool.reloadVolume(vol);
 				imagetool.refreshPanel(vol);

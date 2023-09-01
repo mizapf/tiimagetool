@@ -47,18 +47,14 @@ public class ToggleEmulateAction extends Activity {
 		try {
 			if (elFirst instanceof TFile) {
 				Volume vol = dvCurrent.getVolume();
-				vol.reopenForWrite();		
+//				vol.reopenForWrite();		
 				vol.toggleEmulateFlag(((TFile)elFirst).getFIBLocation());
-				vol.reopenForRead();
+//				vol.reopenForRead();
 			}
 			else {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ToggleEmulateBug") + ": " + elFirst.getName(), TIImageTool.langstr("InternalError"), JOptionPane.ERROR_MESSAGE); 		
 			}
 			dvCurrent.refreshAll();
-		}
-		catch (IOException iox) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-			iox.printStackTrace();
 		}
 		catch (ProtectedException px) {
 			JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);

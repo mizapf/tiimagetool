@@ -158,6 +158,7 @@ public class OpenImageAction extends Activity {
 				}
 				catch (EOFException eofx) {
 					// TODO: Close open image
+					eofx.printStackTrace();
 					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageDefect") + ": " + eofx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 				}
 				catch (FileNotFoundException fnfx) {

@@ -64,7 +64,7 @@ public abstract class FileImageFormat extends ImageFormat {
 			if (m_nCurrentFormatUnit != NONE) {
 				if (m_bDirty) {
 					try {
-						System.out.println("Write back format unit " + m_nCurrentFormatUnit);
+						// System.out.println("Write back format unit " + m_nCurrentFormatUnit + " on " + m_sFileName);
 						writeCurrentFormatUnit();
 					}
 					catch (ProtectedException px) {
@@ -75,14 +75,12 @@ public abstract class FileImageFormat extends ImageFormat {
 					System.out.println("Evict format unit " + m_nCurrentFormatUnit);
 				} */
 			}
-
-			System.out.println("Load format unit " + funum + " from file");
+			// System.out.println("Load format unit " + funum + " from file");
 			byte[] abyFU = new byte[getFormatUnitLength(funum)];
 			m_codec.setBuffer(abyFU);
 			m_nCurrentFormatUnit = funum;
-			m_bDirty = false;
 			if (m_bInitial) {
-				System.out.println("Create FU " + funum);
+				// System.out.println("Create FU " + funum);
 				m_codec.prepareNewFormatUnit(funum, getFormatUnitParameters());
 			}
 			else {
@@ -138,15 +136,8 @@ public abstract class FileImageFormat extends ImageFormat {
 	
 	/** Writes a sector.
 	*/
-	public void writeSector(Sector sect) throws ImageException, IOException, ProtectedException {
-		// If there is a write cache, write the sector to the write cache.
-		if (m_writeCache != null) {
-			m_writeCache.write(sect);
-		}
-		else {
-			// Otherwise, write on image
-			writeBack(sect);
-		}
+	public void writeSector(Sector sect) {
+		m_writeCache.write(sect);
 	}	
 	
 	/** Write back the sector. This means to load the respective format unit,
@@ -163,6 +154,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		ImageSector isect = findSector(secnum);
 		if (isect == null) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), secnum));
 		isect.modify(sect.getData());	
+		// if (!m_bDirty) System.out.println("Set dirty on " + m_sFileName + ", FU " + m_nCurrentFormatUnit);
 		m_bDirty = true;
 	}
 	
@@ -177,9 +169,11 @@ public abstract class FileImageFormat extends ImageFormat {
 			}
 		}
 		// Write back the last format unit, which has not yet been committed 
+		// System.out.println("Write back current format unit at end");
 		writeCurrentFormatUnit();
 		
 		m_writeCache.setCheckpoint();
+		m_writeCache.nextGeneration();
 		reopenForRead();
 	}
 	
@@ -202,8 +196,8 @@ public abstract class FileImageFormat extends ImageFormat {
 			writeCurrentFormatUnit();
 			
 			m_writeCache.setCheckpoint();
+			m_writeCache.nextGeneration();
 			m_bInitial = false;
-			m_bDirty = false;
 			reopenForRead();
 		}
 		catch (ProtectedException px) {
@@ -218,22 +212,25 @@ public abstract class FileImageFormat extends ImageFormat {
 		
 		long offset = getFormatUnitPosition(m_nCurrentFormatUnit);
 		if (offset >= 0) {
-			System.out.println("write format unit " + m_nCurrentFormatUnit + " at position " + offset);  // #%
+			// System.out.println("write format unit " + m_nCurrentFormatUnit + " at position " + offset);  // #%
 			// reopenForWrite();
 			m_file.seek(offset);
 			m_file.write(m_codec.getFormatUnitBuffer());
-			System.out.println(Utilities.hexdump(0, 0, m_codec.getFormatUnitBuffer(), 256, false));
+			// System.out.println(Utilities.hexdump(0, 0, m_codec.getFormatUnitBuffer(), 256, false));
 			// reopenForRead();
 		}
 		else {
 			// Maybe the format unit was filled with zeros, and nothing has changed
 			System.out.println("Not writing format unit " + m_nCurrentFormatUnit);
 		}
+		// if (m_bDirty) System.out.println("Clean dirty on " + m_sFileName + ", FU " + m_nCurrentFormatUnit);
+		m_bDirty = false;
 	}
 	
 	public void reopenForWrite() throws IOException, ProtectedException {
 		try {
 			if (m_file != null) m_file.close();
+			// System.out.println("reopenForWrite(" + m_sFileName + ")");
 			m_file = new RandomAccessFile(m_sFileName, "rw");
 		}
 		catch (FileNotFoundException fnfx) {
@@ -243,6 +240,7 @@ public abstract class FileImageFormat extends ImageFormat {
 	
 	public void reopenForRead() throws IOException {
 		if (m_file != null) m_file.close();
+		// System.out.println("reopenForRead(" + m_sFileName + ")");
 		m_file = new RandomAccessFile(m_sFileName, "r");		
 	}
 	
