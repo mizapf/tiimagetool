@@ -36,18 +36,20 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 	protected int m_nHeads;
 	protected int m_nSectorsPerTrack;
 	protected int m_nSectorSize;
-	
-	protected int m_nPartitions;
-	protected int m_nActivePartition;
-	
+		
 /*	public final static int HFDC = 1;	// ss=256
 	public final static int SCSI = 2;	// ss=512, no partitions
 	public final static int IDE = 3;	// ss=512, may have partitions
 	*/
 	private int m_nHDType;
 	
+	private int m_nActivePartition;
+	
+	Partition[] m_partition;
+	
 	protected HarddiskImageFormat(String sImageName) throws FileNotFoundException, IOException, ImageException {
 		super(sImageName);
+		m_nActivePartition = -1;
 	}
 
 	protected HarddiskImageFormat(String sImageName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
@@ -55,6 +57,7 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		m_nSectorsPerTrack = params.sectors;
 		m_nCylinders = params.cylinders;		
 		m_nHeads = params.heads;
+		m_nActivePartition = -1;
 	}
 
 	/** May be overridden by formats like RawHDFormat which cannot rely on this. */
@@ -72,63 +75,19 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		return m_nHeads;
 	}
 
-	/** SCSI and IDE have 512 bytes. */
+	/** SCSI and IDE have 512 bytes physically, but the TI file system always sees
+		256 byte sectors. */
 	int getSectorSize() {
 		return m_nSectorSize;
 	}
 
-	/*
-		00-09: Disk name (default: *TI99FSPT*)
-		0a-0b: Total number of AUs                             FFFF
-		0c-0d: 0000
-		0e-0f: "PT"
-		10-13: 0000 0000                                       (sectors 512 bytes)
-		14-17: Total #sectors (4 bytes)                        000b4000 = 360 MiB
-		18-1b: Offset 1st partition       (sectors@512)        00000001
-		1c-1f: #sectors 1st partition                          0002e000 = 92 MiB
-		20-23: Offset 2nd partition                            0002e001
-		24-27: #sectors 2nd partition                          0002e000 = 92 MiB
-		28-2b: Offset 3rd partition                            0005c001
-		2c-2f: #sectors 3rd partition                          0002e000 = 92 MiB
-		30-33: Offset 4th partition                            0008a001
-		34-37: #sectors 4th partition                          00029fff = 84 MiB
-		fe-ff: 5AA5
-		
-		Undefined partition: offset = 0
-	*/
-/*	void checkFormat(byte[] sector0) {
-		m_sector0 = sector0;
-		m_nPartitions = 0;
-		
-		if (sector0[14] == 'P' && sector0[15] == 'T' 
-			&& sector0[254] == (byte)0x5a && sector0[255] == (byte)0xa5) {
-			// We have a partitioned IDE image
-			m_nHDType = IDE;
-			
-			// Count the partitions
-			for (int i=0; i < 4; i++) {
-				if (Utilities.getInt32be(sector0, 0x18 + i*8)!=0)
-					m_nPartitions++;
-			}
-			
-		}
-		else {
-			if (getSectorSize()==256)
-				m_nHDType = HFDC;
-			else
-				// There is no difference between SCSI and unpartitioned IDE
-				m_nHDType = SCSI;
-		}
-	}
-	*/
 	public HarddiskFileSystem getFileSystem(byte[] vibmap) {
 		int nHDType = 0;
 		HarddiskFileSystem fs = null;
 		
-		if (vibmap[14] == 'P' && vibmap[15] == 'T' 
-			&& vibmap[254] == (byte)0x5a && vibmap[255] == (byte)0xa5) {
+		if (m_partition != null) {
 			// We have a partitioned IDE image
-			throw new NotImplementedException("IDE");			
+			fs = new IDEFileSystem();
 		}
 		else {
 			// Sectors/track or write precomp == 0 and heads == 1 -> SCSI
@@ -147,16 +106,65 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		return m_nHDType;
 	}	
 	
-	public int partitionCount() {
-		return m_nPartitions;
+	protected int getPartitionSectorOffset() {
+		if (m_nActivePartition == -1) return 0;
+		return m_partition[m_nActivePartition].offset;
 	}
 	
 	public void setPartition(int part) {
+		System.out.println("Selected partition " + (part+1));
 		m_nActivePartition = part;
+		m_nCurrentFormatUnit = NONE;
 	}
 		
 	public String getPartitionName(int part) {
-		if (part > m_nPartitions) return null;
-		return "FIXME";	
+		if (m_partition[part] != null) 
+			return m_partition[part].name;
+		return null;
 	}
+	
+	public int getActivePartition() {
+		return m_nActivePartition;
+	}
+	
+	/*
+	    18-1b: Offset 1st partition
+	    1c-1f: #sectors 1st partition
+	    20-23: Offset 2nd partition
+	    24-27: #sectors 2nd partition
+	    28-2b: Offset 3rd partition
+	    2c-2f: #sectors 3rd partition
+	    30-33: Offset 4th partition
+	    34-37: #sectors 4th partition
+	    
+	    offset = 0 -> unused
+	    
+    */
+    // Der Partitionsoffset muss vor jedem readSector/writeSector addiert werden
+    // Er darf nicht erst in getFUNumberFromSector addiert werden, sonst wird
+    // der erwartete Sektor nicht gefunden
+    
+	public void setupPartitionTable() throws ImageException, IOException {
+		m_partition = new Partition[4];
+		setFormatUnitLength(32 * TFileSystem.SECTOR_LENGTH);
+		byte[] sect0 = readSector(0).getData();
+		
+		for (int i=0; i < 4; i++) {
+			int partsect = Utilities.getInt32be(sect0, 0x18 + i*8) * 2;
+			int lensect = Utilities.getInt32be(sect0, 0x20 + i*8) * 2;
+			System.out.println(i + ": partsect=" + partsect);
+
+			if (partsect != 0) {
+				Sector vib = readSector(partsect);
+				String sName = Utilities.getString10(vib.getData(), 0);
+			//	System.out.println(sName);
+				m_partition[i] = new Partition(i, partsect, lensect, sName); 
+			}
+		}
+	}
+	
+	public Partition[] getPartitionTable() {
+		return m_partition;
+	}
+	
 }

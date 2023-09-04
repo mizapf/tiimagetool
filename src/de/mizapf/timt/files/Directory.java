@@ -66,7 +66,7 @@ public class Directory extends Element {
 	/** Called by recursion and by Volume.const#HD. */
 	Directory(Volume vol, Sector vibddr, Directory dirParent) throws IOException, ImageException {
 		m_Volume = vol;
-
+		// System.out.println(Utilities.hexdump(vibddr.getData()));
 		TreeSet<TFile> files = new TreeSet<TFile>();
 		TreeSet<Directory> subdirs = new TreeSet<Directory>();
 
@@ -103,6 +103,11 @@ public class Directory extends Element {
 				}
 			}
 		}
+		
+		int fcount = vibddr.getData()[0x16] & 0xff;
+		if (files.size() != fcount)
+			System.out.println("Warning (" + m_sName + "): File count = " + fcount + ", but found " + files.size() + " files"); 
+		
 		// if (m_dirParent == null) System.out.println("| " + System.currentTimeMillis());
 		// Create directories
 		for (int nDir : getDirPointers(vibddr, vol.getAUSize())) {
@@ -116,7 +121,11 @@ public class Directory extends Element {
 		
 		m_Subdirs = new Directory[subdirs.size()];
 		subdirs.toArray(m_Subdirs);
-		
+
+		int dcount = vibddr.getData()[0x17] & 0xff;
+		if (subdirs.size() != dcount)
+			System.out.println("Warning (" + m_sName + "): Dir count = " + dcount + ", but found " + subdirs.size() + " subdirs"); 
+
 		m_Files = new TFile[files.size()];
 		files.toArray(m_Files);
 		// if (m_dirParent == null) System.out.println("< " + System.currentTimeMillis());
@@ -250,7 +259,7 @@ public class Directory extends Element {
 	}
 		
 	/** If negative, errors were found. Called from OpenImageAction#SCSI */
-	public static int checkDIB(Directory dir, boolean bWrite) throws IOException, ImageException, ProtectedException  {
+/*	public static int checkDIB(Directory dir, boolean bWrite) throws IOException, ImageException, ProtectedException  {
 		boolean bFound = false;
 		int nCount = 1;
 		if (dir.hasInvalidAUCount()) {
@@ -269,7 +278,7 @@ public class Directory extends Element {
 		if (bFound) nCount = -nCount;
 		return nCount;
 	}
-	
+	*/
 	public static boolean validName(String sName) {
 		if (sName==null) return false;
 		if (sName.length()>10) return false;
@@ -660,7 +669,7 @@ public class Directory extends Element {
 	}
 	
 	// Called by Actions
-	public void commit(boolean bReopen) throws IOException, ImageException, ProtectedException {
+	public void commit(boolean bNextGen) throws IOException, ImageException, ProtectedException {
 		// Update directory descriptor record
 		writeDDR();
 		writeFDIR();
@@ -668,8 +677,14 @@ public class Directory extends Element {
 			m_Volume.updateVIB();
 		}
 		m_Volume.updateAlloc();
-		m_Volume.nextGeneration();
-		System.out.println("Commit done");
+		System.out.print("Commit done(");
+		if (bNextGen) {
+			m_Volume.nextGeneration();
+			System.out.println("next gen)");
+		}
+		else {
+			System.out.println("same gen)");
+		}
 	}
 	
 	/** Creates a new subdirectory. 
@@ -954,7 +969,7 @@ public class Directory extends Element {
 	
 	/** Writes a new directory descriptor record. */
 	// TODO: Move to Volume, then to FileSystem
-	private void writeDDR() throws IOException, ImageException, ProtectedException {
+	private void writeDDR() throws ImageException, ProtectedException {
 		byte[] aDDRNew = null;
 		int nSector = 0;
 		
@@ -996,6 +1011,7 @@ public class Directory extends Element {
 			// Number of files and subdirectories
 			aDDRNew[0x16] = (byte)m_Files.length;
 			aDDRNew[0x17] = (byte)m_Subdirs.length;
+			System.out.println("(" + getName() + ") files = " + m_Files.length);
 			
 			// Subdirectories
 			Arrays.fill(aDDRNew, 0x1c, 0x100, (byte)0);

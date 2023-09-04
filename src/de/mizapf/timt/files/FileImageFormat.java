@@ -94,10 +94,10 @@ public abstract class FileImageFormat extends ImageFormat {
 				// System.out.println(Utilities.hexdump(abyFU));
 			}
 			m_codec.decode();
-		} /*
+		} 
 		else {
-			System.out.println("Format unit " + funum + " in memory");
-		}  */
+			// System.out.println("Format unit " + funum + " in memory");
+		} 
 	}
 	
 	/** Reads a sector.
@@ -108,18 +108,14 @@ public abstract class FileImageFormat extends ImageFormat {
 		// System.out.println("read Sector " + nSectorNumber);
 		// For very early accesses, in particular with RawHDFormat
 		if ((nSectorNumber == 0) && (getFormatUnitLength(0)<=0)) {
-			// System.out.println("Read sector " + nSectorNumber + " early");
+			// System.out.println("Read sector 0 directly");
 			sect = readSector0();
 		}
 		if (sect != null) 
 			return sect;
 
-		// If there is a write cache, try to get the sector from there
-		// MemoryImageFormats and FloppyImageFormats always have a write cache		
-		if (m_writeCache != null) {
-			sect = m_writeCache.read(nSectorNumber);
-		}
-
+		sect = m_writeCache.read(nSectorNumber);
+		
 		if (sect == null) {
 			// Otherwise, determine the format unit of this sector
 			// System.out.println("nSecNum = " + nSectorNumber);

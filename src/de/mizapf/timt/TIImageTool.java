@@ -202,6 +202,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenu m_mNew;
 	JMenuItem m_iNewFloppy;
 	JMenuItem m_iNewHD;
+	JMenuItem m_iNewIDE;
 	JMenuItem m_iNewCF7Vol;
 	JMenuItem m_iNewCF7Img;
 	JMenuItem m_iOpen;
@@ -447,10 +448,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			m_iNewFloppy = createMenuItem(new NewFloppyImageAction());
 			m_iNewHD = createMenuItem(new NewHDImageAction());
+			m_iNewIDE = createMenuItem(new NewIDEImageAction());
 			m_iNewCF7Vol = createMenuItem(new NewCF7VolumeAction());
 			m_iNewCF7Img = createMenuItem(new NewCF7ImageAction());
 			m_mNew.add(m_iNewFloppy);
 			m_mNew.add(m_iNewHD);
+			m_mNew.add(m_iNewIDE);
 			m_mNew.add(m_iNewCF7Vol);
 			m_mNew.add(m_iNewCF7Img);
 			m_iOpen = createMenuItem(new OpenImageAction());
@@ -2206,6 +2209,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		
 		m_iNewFloppy.setEnabled(bAlways);
 		m_iNewHD.setEnabled(bAlways);
+		m_iNewIDE.setEnabled(bAlways);
 		m_iOpen.setEnabled(bAlways);
 		m_iClose.setEnabled(bOpenImage);
 		m_iCloseAll.setEnabled(bOpenImage);

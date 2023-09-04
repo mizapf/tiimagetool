@@ -633,7 +633,8 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			m_decodedSectors.clear();
 			int count = m_formatUnit.length / TFileSystem.SECTOR_LENGTH;
 			// The current FU number is member of ImageFormat
-			int startSector = m_nCurrentFormatUnit * count;
+			int startSector = m_nCurrentFormatUnit * count - getPartitionSectorOffset();
+			// System.out.println("partition sector offset = " + getPartitionSectorOffset());
 			for (int i = 0; i < count; i++) {
 				m_decodedSectors.add(new ImageSector(startSector + i, m_formatUnit, i * TFileSystem.SECTOR_LENGTH));
 			}
@@ -719,6 +720,7 @@ public class MameCHDFormat extends HarddiskImageFormat {
 	/** Format units are hunks in this format. Sectors are arranged linearly 
 	    from 0 to the maximum number. */
 	int getFUNumberFromSector(int number) throws ImageException {
+		number += getPartitionSectorOffset();
 		return number * TFileSystem.SECTOR_LENGTH / getFormatUnitLength(number);
 	}	
 	

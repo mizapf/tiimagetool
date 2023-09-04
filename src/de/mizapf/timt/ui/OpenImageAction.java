@@ -61,76 +61,109 @@ public class OpenImageAction extends Activity {
 			String sAbsFile = null;
 			sAbsFile = imagefile.getAbsolutePath();
 			Volume vol = null;
-			// Do we already have that image?
-			if (imagetool.hasAlreadyOpenedVolume(sAbsFile)) {
-				vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
-				imagetool.addDirectoryView(vol.getRootDirectory());
-			}
-			else {
-				try {
-					// ============== Open the image			
-					ImageFormat image = ImageFormat.getImageFormat(sAbsFile); // throws ImageExc if unknown
-											
-					byte[] vibmap = null;
-					TFileSystem fs = null;	
+			try {
+				// ============== Open the image			
+				ImageFormat image = ImageFormat.getImageFormat(sAbsFile); // throws ImageExc if unknown
+				
+				byte[] vibmap = null;
+				TFileSystem fs = null;	
+				
+				if (image instanceof FloppyImageFormat) {
+					vibmap = image.readSector(0).getData();
 					
-					if (image instanceof FloppyImageFormat) {
-						vibmap = image.readSector(0).getData();
-						
-						int check = FloppyFileSystem.checkFormat(vibmap);
-						
-						System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
-						if (check != TFileSystem.GOOD) {
-							int doCheckSig = JOptionPane.YES_OPTION;
-							if ((check & TFileSystem.NO_SIG)!=0) {
-								doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageNoDSK") + ". " + TIImageTool.langstr("Ask.openanyway"),
-									TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
-							}
-							if ((check & TFileSystem.BAD_GEOMETRY)!=0) {
-								doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badgeometry") + ". " + TIImageTool.langstr("Ask.openanyway"), 
-									TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
-							}
-							if (doCheckSig == JOptionPane.NO_OPTION) {
-								continue;
-							}
-						}						
-						fs = ((FloppyImageFormat)image).getFileSystem(vibmap);
-						((FloppyFileSystem)fs).configure(vibmap);
-						((FloppyFileSystem)fs).setupAllocationMap(vibmap);
-					}
+					int check = FloppyFileSystem.checkFormat(vibmap);
 					
-					if (image instanceof HarddiskImageFormat) {
-						vibmap = image.readSector(0).getData();						
-						int check = HarddiskFileSystem.checkFormat(vibmap);
-						
-						System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
-						if (check != TFileSystem.GOOD) {
-							int doCheckSig = JOptionPane.YES_OPTION;
-							if ((check & TFileSystem.BAD_GEOMETRY)!=0) {
-								doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badgeometry") + ". " + TIImageTool.langstr("Ask.openanyway"), 
-									TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
-							}
-							if ((check & TFileSystem.BAD_AUCOUNT)!=0) {
-								doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badaucount") + ". " + TIImageTool.langstr("Ask.openanyway"), 
-									TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
-							}
-							if (doCheckSig == JOptionPane.NO_OPTION) {
-								continue;
-							}
+					System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
+					if (check != TFileSystem.GOOD) {
+						int doCheckSig = JOptionPane.YES_OPTION;
+						if ((check & TFileSystem.NO_SIG)!=0) {
+							doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("OpenImageNoDSK") + ". " + TIImageTool.langstr("Ask.openanyway"),
+								TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
 						}
-						fs = ((HarddiskImageFormat)image).getFileSystem(vibmap);
-
-						((HarddiskFileSystem)fs).configure(vibmap);
-						((HarddiskFileSystem)fs).setupAllocationMap(image.getContent(0, 31));
+						if ((check & TFileSystem.BAD_GEOMETRY)!=0) {
+							doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badgeometry") + ". " + TIImageTool.langstr("Ask.openanyway"), 
+								TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
+						}
+						if (doCheckSig == JOptionPane.NO_OPTION) {
+							continue;
+						}
+					}						
+					fs = ((FloppyImageFormat)image).getFileSystem(vibmap);
+					((FloppyFileSystem)fs).configure(vibmap);
+					((FloppyFileSystem)fs).setupAllocationMap(vibmap);
+				}
+				
+				if (image instanceof HarddiskImageFormat) {
+					HarddiskImageFormat hif = (HarddiskImageFormat)image;
+					vibmap = image.readSector(0).getData();						
+					int check = HarddiskFileSystem.checkFormat(vibmap);
+					
+					System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
+					if (check != TFileSystem.GOOD) {
+						// When we have partitions, open the partition selection
+						if ((check & TFileSystem.PARTITIONED)!=0) {
+							hif.setupPartitionTable();
+							PartitionSelectionDialog psd = new PartitionSelectionDialog(m_parent, hif.getPartitionTable());
+							psd.createGui(imagetool.boldFont);
+							psd.setVisible(true);
+							if (psd.confirmed()) {
+								int selPart = psd.getSelectedNumber()-1;
+								hif.setPartition(selPart);
+								// Do not open the partition if another partition of 
+								// the same image is open! This needs further investigation,
+								// especially for CHD (see sector cache)
+								
+								// Sectors are relative inside partitions, i.e. sector 0
+								// in partition 1 is in another format unit than sector 0
+								// in partition 2.
+								
+								// Although the sectors in the partitions do not overlap,
+								// the hunk map is shared. When two partitions have
+								// updates that create new hunks, this may lead to a race condition.
+								
+								// This means that the same sector cache must be used
+								
+								// However, this in turn means that saving the cache would
+								// commit the changes of all open partitions: Two tabs
+								// opened with two different partitions, both modified;
+								// doing a Save would require all changes of both partitions
+								// to be written.
+								if (imagetool.hasAlreadyOpenedVolume(sAbsFile)) {
+									Volume vol1 = imagetool.getAlreadyOpenedVolume(sAbsFile);
+									if (vol1.getPartitionNumber() != selPart) {
+										JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.OtherPartitionOpen"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+										continue;
+									}
+								}
+								// Have to read the VIB from the selected partition
+								vibmap = image.readSector(0).getData();
+							}
+							else continue;
+						}
+						int doCheckSig = JOptionPane.YES_OPTION;
+						if ((check & TFileSystem.BAD_GEOMETRY)!=0) {
+							doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badgeometry") + ". " + TIImageTool.langstr("Ask.openanyway"), 
+								TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
+						}
+						if ((check & TFileSystem.BAD_AUCOUNT)!=0) {
+							doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badaucount") + ". " + TIImageTool.langstr("Ask.openanyway"), 
+								TIImageTool.langstr("Warning"), JOptionPane.YES_NO_OPTION);
+						}
+						if (doCheckSig == JOptionPane.NO_OPTION) {
+							continue;
+						}
 					}
 					
-					// Do we have a partitioned image?
-					if (image instanceof PartitionedStorage) {
-						if (((PartitionedStorage)image).partitionCount()>0)
-							throw new NotImplementedException("PartitionedStorage");
-						// Check CF7 inconsistency
-					}
-					
+					fs = hif.getFileSystem(vibmap);
+					((HarddiskFileSystem)fs).setupAllocationMap(image.getContent(0, 31));
+				}
+				
+				if (imagetool.hasAlreadyOpenedVolume(sAbsFile)) {
+					System.out.println("Already open");
+					vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
+					imagetool.addDirectoryView(vol.getRootDirectory());
+				}
+				else {
 					try {
 						vol = new Volume(image, fs);					
 					}
@@ -153,21 +186,25 @@ public class OpenImageAction extends Activity {
 					image.setCheckpoint();
 					vol.nextGeneration();
 				}
-				catch (ImageException ix) {
-					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-				}
-				catch (EOFException eofx) {
-					// TODO: Close open image
-					eofx.printStackTrace();
-					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageDefect") + ": " + eofx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-				}
-				catch (FileNotFoundException fnfx) {
-					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileNotFound") + ": "  + fnfx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
-				}
-				catch (IOException iox) {
-					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName() + " (" + iox.getMessage() + ")", TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-					iox.printStackTrace();
-				}				
+			}
+			catch (ImageException ix) {
+				ix.printStackTrace();
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+			}
+			catch (EOFException eofx) {
+				// TODO: Close open image
+				eofx.printStackTrace();
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("OpenImageDefect") + ": " + eofx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+			}
+			catch (FileNotFoundException fnfx) {
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("FileNotFound") + ": "  + fnfx.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
+			}
+			catch (IOException iox) {
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName() + " (" + iox.getMessage() + ")", TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+				iox.printStackTrace();
+			}
+			catch (NumberFormatException nfx) {
+				JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("ParseError"), nfx.getMessage()), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

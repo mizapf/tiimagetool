@@ -214,11 +214,8 @@ public class PasteAction extends Activity {
 					}
 					System.out.println("paste done");
 					// Commit after the loop
-					System.out.println("commit source");
 					dirSource.commit(false);
-					// SectorCache.sameGen();
-					System.out.println("commit target");
-					dirTarget.commit(false);					
+					dirTarget.commit(true);					
 					// Should the generation better be static?
 				}
 				catch (FileNotFoundException fnfx) {
@@ -414,57 +411,24 @@ public class PasteAction extends Activity {
 								sImportName = null;
 								boolean bRetry = false;
 								do {
+									boolean bNewName = false;
 									try {
 										copyDir((Directory)el, sImportName, dirTarget, dvCurrent);
 										if (bMove) dirSource.delDir((Directory)el, true);
 										bRetry = false;
 									}
 									catch (FileExistsException fxx) {
-										bRetry = true;
-										sImportName = getAlternativeName(false, el.getName(), dvCurrent.getFrame());
-										if (sImportName.equals(NAME_SKIP)) {
-											bRetry = false; // skip
-											sImportName = null;
-										}
-										else {
-											if (sImportName.equals(NAME_ABORT)) {
-												bAbort = true; 
-												sImportName = null;
-											}
-										}
+										bNewName = true;
+									}
+									catch (InvalidNameException inx) {
+										bNewName = true;
+									}
+									catch (FormatException fx) {
+										bNewName = true;
 									}
 									catch (ProtectedException px) {
 										JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE); 
 										bAbort = true;
-									}
-									catch (InvalidNameException inx) {
-										bRetry = true;
-										sImportName = getAlternativeName(false, el.getName(), dvCurrent.getFrame());
-										if (sImportName.equals(NAME_SKIP)) {
-											bRetry = false; // skip
-											sImportName = null;
-										}
-										else {
-											if (sImportName.equals(NAME_ABORT)) {
-												bAbort = true;
-												sImportName = null;
-											}
-										}
-									}
-									catch (FormatException fx) {
-										// Invalid name
-										bRetry = true;
-										sImportName = getAlternativeName(false, el.getName(), dvCurrent.getFrame());
-										if (sImportName.equals(NAME_SKIP)) {
-											bRetry = false; // skip
-											sImportName = null;
-										}
-										else {
-											if (sImportName.equals(NAME_ABORT)) {
-												bAbort = true;
-												sImportName = null;
-											}
-										}
 									}
 									catch (ImageFullException ifx) {
 										if (ifx.getCode()==ImageFullException.DIREXC) {
@@ -480,18 +444,30 @@ public class PasteAction extends Activity {
 											bAbort = true;
 										}
 									}
+									
+									if (bNewName) {
+										bRetry = true;
+										sImportName = getAlternativeName(false, el.getName(), dvCurrent.getFrame());
+										if (sImportName.equals(NAME_SKIP)) {
+											bRetry = false; // skip
+											sImportName = null;
+										}
+										else {
+											if (sImportName.equals(NAME_ABORT)) {
+												bAbort = true; 
+												sImportName = null;
+											}
+										}
+									}
+
 								} while (bRetry && !bAbort);
 							}
 							if (bAbort) break;
 						}
 					}
 					// Save also if aborted
-					System.out.println("paste1 done");
-					System.out.println("commit source");
-					if (bMove) dirSource.commit(false);
-					System.out.println("commit target");
-					dirTarget.commit(false);
-					System.out.println("commit done");
+					if (bMove) dirSource.commit(true);
+					dirTarget.commit(true);
 				}
 				catch (ImageException ix) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);					
@@ -537,8 +513,15 @@ public class PasteAction extends Activity {
 	private void copyDir(Directory dir, String sUseThisName, Directory dirTarget, DirectoryView dvTarget) throws ProtectedException, InvalidNameException, FileExistsException, ImageFullException, ImageException, IOException, IllegalOperationException {
 		Volume volSource = dir.getVolume();
 		String sName = (sUseThisName!=null)? sUseThisName : dir.getName();
-		Directory dirNew = dirTarget.createSubdirectory(sName, false);
+
+		// Sanity checks
+		if (dirTarget.getVolume().isCF7Volume()) throw new IllegalOperationException(TIImageTool.langstr("PasteNotDirIntoCF7"));
+
+		Directory[] dirs = dir.getDirectories();
+		if (dirs.length !=0 && dirTarget.getVolume().isFloppyImage()) throw new IllegalOperationException(TIImageTool.langstr("PasteNotFloppyDir"));
 		
+		Directory dirNew = dirTarget.createSubdirectory(sName, false);
+
 		// All files from dir
 		TFile[] files = dir.getFiles();
 		boolean bAbort = false;
@@ -548,11 +531,18 @@ public class PasteAction extends Activity {
 			String sImportName = null;
 			boolean bRetry = false;
 			do {
+				boolean bNewName = false;
 				try {
 					dirNew.insertFile(tif.toByteArray(), sImportName, false);
 					bRetry = false;
 				}
-				catch (FileExistsException fxx) {
+				catch (FileExistsException fex) {
+					bNewName = true;
+				}
+				catch (InvalidNameException fex) {
+					bNewName = true;
+				}
+				if (bNewName) {
 					bRetry = true;
 					sImportName = getAlternativeName(true, file.getName(), dvTarget.getFrame());
 					if (sImportName.equals(NAME_SKIP)) {
@@ -566,32 +556,18 @@ public class PasteAction extends Activity {
 						}
 					}
 				}
-				catch (InvalidNameException ix) {
-					bRetry = true;
-					sImportName = getAlternativeName(true, file.getName(), dvTarget.getFrame());
-					if (sImportName.equals(NAME_SKIP)) {
-						bRetry = false; // skip
-						sImportName = null;
-					}
-					else {
-						if (sImportName.equals(".")) {
-							bAbort = true;
-							sImportName = null;
-						}
-					}
-				}
 			} while (bRetry && !bAbort);
 		}
+		dirNew.commit(false);
 		
-		Directory[] dirs = dir.getDirectories();
-		
-		if (dirTarget.getVolume().isCF7Volume()) throw new IllegalOperationException(TIImageTool.langstr("PasteNotDirIntoCF7"));
-		if (dirs.length !=0 && dirTarget.getVolume().isFloppyImage()) throw new IllegalOperationException(TIImageTool.langstr("PasteNotFloppyDir"));
 		// Now recurse. We cannot have any more FileExistsException here
 		// if the source file system is correct (even if not, the sets will
 		// not allow for multiple occurances of the same name)
 		for (int i=0; i < dirs.length; i++) {
 			copyDir(dirs[i], null, dirNew, dvTarget);
 		}
+		
+		// FIXME: writeDDR and writeFDIR!
+		
 	}
 }

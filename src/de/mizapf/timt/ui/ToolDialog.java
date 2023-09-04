@@ -214,6 +214,14 @@ public class ToolDialog extends JDialog implements ActionListener {
 		return fm.stringWidth(s);
 	}
 	
+	protected int determineMaxWidth(Font fnt, String s1, String s2) {
+		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(fnt);
+		int col1 = fm.stringWidth(s1);
+		int col2 = fm.stringWidth(s2);
+		if (col1 > col2) return col1;
+		return col2;
+	}
+	
 	protected void addLine(String sLabel) {
 		Box box1 = new Box(BoxLayout.X_AXIS);
 		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));

@@ -73,22 +73,3 @@ public class Sector implements Cloneable {
 		return m_generation;
 	}
 }
-
-/*
-SCSI sectors: physical size = 512 bytes
-              logical size = 256 bytes
-              File sectors in VIB are counted as 256 bytes per sector
-              Hunks are 4K size = 8*512 = 16*256
-              
-              
-IDE (Nouspikel): not supported
-                 Too complicated, contains DSR in first sector, then
-                 a sequence of DSK files with 360K each, where subdirectories
-                 are defined as pointing to another virtual floppy disk
-                 
-IDE (Kaal): Partitioned
-			not supported yet
-			
-CF7: Partitioned
-		              
-*/

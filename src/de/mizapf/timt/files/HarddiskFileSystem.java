@@ -56,8 +56,9 @@ import java.io.IOException;
 */	
 public abstract class HarddiskFileSystem extends TFileSystem {
 
-	public static final int SCSI = 0;
-	public static final int MFM = 1;
+	public static final int MFM = 0;
+	public static final int SCSI = 1;
+	public static final int IDE = 2;
 	
 	// HD-specific
 	Time m_tCreation;
@@ -201,6 +202,28 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	*/
 	public abstract void configure(byte[] vib); 
 
+	/*
+		Partitioned:
+		
+		00-09: Disk name (default: *TI99FSPT*)
+		0a-0b: Total number of AUs                             FFFF
+		0c-0d: 0000
+		0e-0f: "PT"
+		10-13: 0000 0000                                       (sectors 512 bytes)
+		14-17: Total #sectors (4 bytes)                        000b4000 = 360 MiB
+		18-1b: Offset 1st partition       (sectors@512)        00000001
+		1c-1f: #sectors 1st partition                          0002e000 = 92 MiB
+		20-23: Offset 2nd partition                            0002e001
+		24-27: #sectors 2nd partition                          0002e000 = 92 MiB
+		28-2b: Offset 3rd partition                            0005c001
+		2c-2f: #sectors 3rd partition                          0002e000 = 92 MiB
+		30-33: Offset 4th partition                            0008a001
+		34-37: #sectors 4th partition                          00029fff = 84 MiB
+		fe-ff: 5AA5
+		
+		Undefined partition: offset = 0
+	*/
+	
 	public static int checkFormat(byte[] vib) throws IOException {
 		int ret = GOOD;
 		
@@ -212,6 +235,11 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		
 		if ((nFSTotalSectors / nFSSectorsPerAU) > 0xF800)
 			ret |= BAD_AUCOUNT;
+		
+		if (vib[0x0e] == 'P' && vib[0x0f] == 'T' && vib[0x0a] == (byte)0xff && vib[0x0b] == (byte)0xff) {
+			// We have a partitioned IDE image; the other values are irrelevant
+			ret = PARTITIONED;		
+		}
 		
 		return ret;
 	}

@@ -59,7 +59,8 @@ class RawHDFormat extends HarddiskImageFormat {
 			m_decodedSectors.clear();
 			int count = m_formatUnit.length / TFileSystem.SECTOR_LENGTH;
 			// The current FU number is member of ImageFormat
-			int startSector = m_nCurrentFormatUnit * count;
+			int startSector = m_nCurrentFormatUnit * count - getPartitionSectorOffset();
+			// System.out.println("partition sector offset = " + getPartitionSectorOffset());
 			for (int i = 0; i < count; i++) {
 				m_decodedSectors.add(new ImageSector(startSector + i, m_formatUnit, i * TFileSystem.SECTOR_LENGTH));
 			}
@@ -114,6 +115,7 @@ class RawHDFormat extends HarddiskImageFormat {
 	}
 	
 	int getFUNumberFromSector(int secnum) {
+		secnum += getPartitionSectorOffset();
 		if (secnum == 0) return 0;
 		int count = m_nFormatUnitLength / TFileSystem.SECTOR_LENGTH;
 		return secnum / count;

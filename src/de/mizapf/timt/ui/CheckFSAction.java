@@ -442,11 +442,13 @@ public class CheckFSAction extends Activity {
 		/* Part 5. CRC check. */
 		int badcrc = -1;
 		
-		try {
-			badcrc = ImageCheck.findCRCErrors(vol, false, false);
-		}
-		catch (IOException iox) {
-			iox.printStackTrace();
+		if (!vol.isHarddiskImage()) {
+			try {
+				badcrc = ImageCheck.findCRCErrors(vol, false, false);
+			}
+			catch (IOException iox) {
+				iox.printStackTrace();
+			}
 		}
 		
 		if (badcrc != -1) {

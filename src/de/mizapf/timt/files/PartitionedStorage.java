@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2021 Michael Zapf
+    Copyright 2023 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
@@ -125,8 +125,8 @@ import java.io.IOException;
 
 public interface PartitionedStorage {
 	
-	int partitionCount();
 	void setPartition(int part);
-	
 	String getPartitionName(int part);
+	void setupPartitionTable() throws ImageException, IOException;
+	int getActivePartition();
 }

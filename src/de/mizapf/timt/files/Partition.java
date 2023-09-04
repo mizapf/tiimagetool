@@ -14,52 +14,28 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2016 Michael Zapf
+    Copyright 2023 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
 
 package de.mizapf.timt.files;
 
-import java.io.RandomAccessFile;
-// import java.io.FileOutputStream;
-// import java.io.EOFException;
-import java.io.IOException;
-// import java.io.FileNotFoundException;
-// import java.util.ArrayList;
-// import java.io.File;
-import de.mizapf.timt.TIImageTool;
-
-public class CF7ImageFormat extends SectorDumpFormat implements PartitionedStorage {
+public class Partition {
 	
-	int m_nPartitions;
-	int m_nActivePartition;
+	int number;
+	int offset;
+	int length;
+	String name;
 	
-	static int vote(String sFile) throws IOException {
-		return 0;
+	Partition(int num, int off, int len, String nam) {
+		number = num;
+		offset = off;
+		length = len;
+		name = nam;
 	}
 	
-	public CF7ImageFormat(String sImageName) throws IOException, ImageException {
-		super(sImageName);
-	}
-	
-	public String getFormatName() {
-		return TIImageTool.langstr("CF7ImageType");
-	}
-	
-	public void setPartition(int part) {
-		m_nActivePartition = part;
-	}
-	
-	public String getPartitionName(int part) {
-		return "FIXME";
-	}
-	
-	public void setupPartitionTable() {
-	}
-	
-	public int getActivePartition() {
-		return -1;
+	public String getName() {
+		return name;
 	}
 }
-

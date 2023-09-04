@@ -158,6 +158,15 @@ public class Volume {
 		return m_Image.getImageName();
 	} 
 
+	public int getPartitionNumber() {
+		if (m_Image != null) {
+			if (isHarddiskImage()) {
+				return ((HarddiskImageFormat)m_Image).getActivePartition();
+			}
+		}
+		return -1;
+	}
+	
 /*	public int getHeads() {
 		if (m_FileSystem instanceof HarddiskFileSystem)
 			return ((HarddiskFileSystem)m_FileSystem).getHeads();
@@ -168,7 +177,7 @@ public class Volume {
 	*/
 	public int getImageType() {
 		if (m_Image == null) return ImageFormat.MEMORY;
-		System.out.println("git: " + m_Image.getClass().getName() + ", type = " + m_Image.getImageType());
+		// System.out.println("git: " + m_Image.getClass().getName() + ", type = " + m_Image.getImageType());
 		return m_Image.getImageType();
 	}
 		
@@ -244,9 +253,14 @@ public class Volume {
 	public String getDeviceName() {
 		if (m_FileSystem instanceof FloppyFileSystem) return "DSK1";
 		else {
-			if (m_FileSystem instanceof SCSIFileSystem) return "SCS1";
-			// TODO: IDE
-			else return "HDS1";
+			if (m_FileSystem instanceof IDEFileSystem) {
+				int part = ((HarddiskImageFormat)m_Image).getActivePartition() + 1;
+				return "IDE" + part;
+			}
+			else { 
+				if (m_FileSystem instanceof SCSIFileSystem) return "SCS1";
+				else return "HDS1";
+			}
 		}
 	}
 	

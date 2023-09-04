@@ -53,6 +53,7 @@ public abstract class TFileSystem {
 	public final static int BAD_GEOMETRY = 4;
 	public final static int WRONG_DENSITY = 8;
 	public final static int BAD_AUCOUNT = 16;
+	public final static int PARTITIONED = 32;
 	public final static int UNSET = 65535;
 	
 	/** Volume name. */
@@ -299,7 +300,11 @@ public abstract class TFileSystem {
 		if ((val & BAD_AUCOUNT)!=0) {
 			if (sb.length() > 0) sb.append(", ");
 			sb.append("bad AU count");
-		}		
+		}
+		if ((val & PARTITIONED)!=0) {
+			if (sb.length() > 0) sb.append(", ");
+			sb.append("partitioned");
+		}
 		if (sb.length() > 0) return sb.toString();
 		return "good";
 	}

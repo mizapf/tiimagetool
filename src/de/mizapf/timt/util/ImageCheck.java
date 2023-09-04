@@ -258,7 +258,7 @@ public class ImageCheck {
 	public static void findAllocationFaults(Volume image, AllocationMap allocMap, ArrayList<AllocationDomain> list, PrintStream ps) {
 		boolean bLittle = image.isFloppyImage() || image.isCF7Volume();
 		int nMin = 2;
-		if (!image.isFloppyImage() && !image.isCF7Volume()) nMin = 32;
+		if (image.isHarddiskImage()) nMin = 64;
 //		System.out.println("total AUs = " + image.getVib().getTotalNumberOfAUs());
 		for (int au=nMin; au < allocMap.getMaxAU(); au++) { 
 			if (allocMap.hasAllocated(au)) {
