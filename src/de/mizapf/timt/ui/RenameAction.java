@@ -24,6 +24,7 @@ import java.awt.Cursor;
 import java.awt.event.KeyEvent;
 import javax.swing.JOptionPane;
 import java.io.IOException;
+import java.io.FileNotFoundException;
 import de.mizapf.timt.files.*;
 
 import de.mizapf.timt.TIImageTool;
@@ -87,7 +88,21 @@ public class RenameAction extends Activity {
 			}
 			if (bDone) break;
 		}
-		imagetool.refreshPanel(volCurrent);
+		try {
+			// System.out.println("Commit after delete");
+			dirCurrent.commit(true);
+		}
+		catch (IOException iox) {
+			System.err.println(String.format(TIImageTool.langstr("IOErrorUpdate"), dirCurrent.getName()));
+		}
+		catch (ImageException ix) {
+			System.err.println(String.format(TIImageTool.langstr("ImageErrorUpdate"), dirCurrent.getName()));
+		}
+		catch (ProtectedException px) {
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(),  TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
+			imagetool.closeCurrentView();
+		}
+		dvCurrent.refreshAll();			
 	//	m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 }

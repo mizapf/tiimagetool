@@ -69,7 +69,7 @@ public class PasteAction extends Activity {
 	public void paste(DirectoryView dvCurrent, Directory dirTarget) {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
-		System.out.println("Paste action");
+		// System.out.println("Paste action");
 		imagetool.setClipboardLoaded(false);
 		
 		DirectoryPanel dp = dvCurrent.getPanel();
@@ -174,7 +174,7 @@ public class PasteAction extends Activity {
 				boolean bReload = false;
 				try {
 					for (Element el : list) {
-						System.out.println("Element " + el);
+						// System.out.println("Element " + el);
 
 						if (el instanceof TFile) {
 							TFile file = (TFile)el;
@@ -212,7 +212,7 @@ public class PasteAction extends Activity {
 							dirSource.moveoutDir(dir);
 						}
 					}
-					System.out.println("paste done");
+					// System.out.println("paste done");
 					// Commit after the loop
 					dirSource.commit(false);
 					dirTarget.commit(true);					
@@ -345,7 +345,7 @@ public class PasteAction extends Activity {
 					String sImportName = null;
 
 					for (Element el : list) {
-						System.out.println("Element1 " + el);
+						// System.out.println("Element1 " + el);
 
 						// System.out.println("el = " + el);
 						// File copy

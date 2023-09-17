@@ -385,4 +385,15 @@ public abstract class ImageFormat  {
 	public abstract void reopenForWrite() throws IOException, ProtectedException;
 	
 	public abstract void reopenForRead() throws IOException;
+	
+	public static String getSuffixedName(String sName, int nType) {
+		int nSuffixPos = sName.indexOf(".");
+		if (nSuffixPos==-1) {
+			String sSuffix = "." + suffix[nType];
+			if (!sName.endsWith(sSuffix)) {
+				sName = sName + sSuffix;
+			}
+		}
+		return sName;
+	}
 }

@@ -88,7 +88,7 @@ public class RawCHDAction extends Activity {
 				
 				// We have the allocation still from above
 				AllocationMap alloc = new AllocationMap(dialog.getTotalAU(), dialog.getAUSize(), false);
-				alloc.setMapFromBitfield(dialog.getHeader(), 256, 0);
+				alloc.setMapFromBitfield(dialog.getHeader());
 					
 				DataInputStream dis = new DataInputStream(new FileInputStream(dialog.getRawFile()));
 				byte[] hunk = new byte[4096]; // hunk size

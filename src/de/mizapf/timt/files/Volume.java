@@ -59,8 +59,8 @@ public class Volume {
 			throw new InternalException("** FileSystem is null");
 		}
 
-		System.out.println(m_Image.getClass().getName());
-		System.out.println(m_FileSystem.getClass().getName());
+		// System.out.println(m_Image.getClass().getName());
+		// System.out.println(m_FileSystem.getClass().getName());
 
 		Sector sector0 = image.readSector(0);
 		// System.out.println(Utilities.hexdump(sector0.getData()));
@@ -239,6 +239,10 @@ public class Volume {
 	public boolean isHFDCImage() {
 		return (m_FileSystem instanceof HFDCFileSystem);
 	}
+
+	public boolean isIDEImage() {
+		return (m_FileSystem instanceof IDEFileSystem);
+	}
 	
 	public boolean isCF7Volume() {
 		// if (!(m_FileSystem instanceof FloppyFileSystem)) return false;	
@@ -380,7 +384,7 @@ public class Volume {
 		writeSector(new Sector(0, m_FileSystem.createVIBContents()));
 	}
 	
-	public void updateAlloc() throws IOException, ImageException, ProtectedException {
+	public void updateAlloc() throws ImageException, ProtectedException {
 		// Write the allocation map
 		saveAllocationMap();
 	}

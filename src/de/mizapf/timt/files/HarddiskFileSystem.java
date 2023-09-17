@@ -84,10 +84,10 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	
 	public HarddiskFileSystem(FormatParameters param) {
 		m_sName = param.name;
-		System.out.println(m_sName);
+		// System.out.println(m_sName);
 		setGeometry(param);
-		System.out.println("total sectors = " + param.getTotalSectors());
-		System.out.println("AU size = " + param.auSize);
+		// System.out.println("total sectors = " + param.getTotalSectors());
+		// System.out.println("AU size = " + param.auSize);
 		m_allocMap = new AllocationMap(param.getTotalSectors() / param.auSize, param.auSize, false);
 		m_allocMap.allocate(new Interval(0,31));
 		m_allocMap.allocate(new Interval(32,63));   // Backup
@@ -137,7 +137,7 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		// System.out.println("alloc end = " + getAllocMapEnd() + ", alloc start = " + getAllocMapStart());
 		Sector[] list = new Sector[(getAllocMapEnd()+1-getAllocMapStart())/SECTOR_LENGTH];
 		byte[] bitmap = m_allocMap.toBitField();
-		System.out.println("bitmap.length = " + bitmap.length);
+		// System.out.println("bitmap.length = " + bitmap.length);
 		byte[] sectorcont = new byte[SECTOR_LENGTH];
 		
 		int secno = getAllocMapStart() / SECTOR_LENGTH;   // Sector 1
@@ -149,7 +149,7 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 			list[i++] = new Sector(secno++, sectorcont);
 			pos += SECTOR_LENGTH;
 		}
-		System.out.println("allocation map = " + list.length + " sectors");
+		// System.out.println("allocation map = " + list.length + " sectors");
 		return list;
 	}
 	
@@ -183,6 +183,15 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		return slist;
 	}
 
+	public byte[] createInitArray() {
+		Sector[] sect = createInitSectors();
+		byte[] initarray = new byte[65 * TFileSystem.SECTOR_LENGTH];
+		for (int i=0; i < sect.length; i++) {
+			System.arraycopy(sect[i].getData(), 0, initarray, i*TFileSystem.SECTOR_LENGTH, TFileSystem.SECTOR_LENGTH);
+		}
+		return initarray;
+	}
+	
 	public int getTotalSectors() {
 		return m_nFSTotalSectors;
 	}
@@ -202,28 +211,6 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	*/
 	public abstract void configure(byte[] vib); 
 
-	/*
-		Partitioned:
-		
-		00-09: Disk name (default: *TI99FSPT*)
-		0a-0b: Total number of AUs                             FFFF
-		0c-0d: 0000
-		0e-0f: "PT"
-		10-13: 0000 0000                                       (sectors 512 bytes)
-		14-17: Total #sectors (4 bytes)                        000b4000 = 360 MiB
-		18-1b: Offset 1st partition       (sectors@512)        00000001
-		1c-1f: #sectors 1st partition                          0002e000 = 92 MiB
-		20-23: Offset 2nd partition                            0002e001
-		24-27: #sectors 2nd partition                          0002e000 = 92 MiB
-		28-2b: Offset 3rd partition                            0005c001
-		2c-2f: #sectors 3rd partition                          0002e000 = 92 MiB
-		30-33: Offset 4th partition                            0008a001
-		34-37: #sectors 4th partition                          00029fff = 84 MiB
-		fe-ff: 5AA5
-		
-		Undefined partition: offset = 0
-	*/
-	
 	public static int checkFormat(byte[] vib) throws IOException {
 		int ret = GOOD;
 		
@@ -275,6 +262,6 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	@Override
 	public void setupAllocationMap(byte[] vibmap) {
 		m_allocMap = new AllocationMap(getTotalSectors()/getSectorsPerAU(), getSectorsPerAU(), false);
-		m_allocMap.setMapFromBitfield(vibmap, TFileSystem.SECTOR_LENGTH, 0);
+		m_allocMap.setMapFromBitfield(vibmap);
 	}
 }

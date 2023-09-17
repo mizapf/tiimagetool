@@ -217,7 +217,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		}
 		else {
 			// Maybe the format unit was filled with zeros, and nothing has changed
-			System.out.println("Not writing format unit " + m_nCurrentFormatUnit);
+			// System.out.println("Not writing format unit " + m_nCurrentFormatUnit);
 		}
 		// if (m_bDirty) System.out.println("Clean dirty on " + m_sFileName + ", FU " + m_nCurrentFormatUnit);
 		m_bDirty = false;

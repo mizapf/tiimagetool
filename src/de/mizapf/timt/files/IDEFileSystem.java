@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2020 Michael Zapf
+    Copyright 2023 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
@@ -47,15 +47,17 @@ import de.mizapf.timt.util.NotImplementedException;
     1a-1b: AU of DSK1 emulation file                       0000
     1C-FF: subdirs
     100..: Allocation table                                111111111100...  
-
+   
 */	
 public class IDEFileSystem extends SCSIFileSystem {
+	
+	// FIXME: IDE supports DSK(1) emulation on IDE1
 	
 	IDEFileSystem() {
 		System.out.println("IDE file system");
 	}
 	
-	IDEFileSystem(FormatParameters param) {
+	public IDEFileSystem(FormatParameters param) {
 		super(param);
 		System.out.println("IDE file system");
 	}

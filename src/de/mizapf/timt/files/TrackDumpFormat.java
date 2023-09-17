@@ -305,7 +305,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 		}
 		
 		if (m_nFormatIndex==NONE) throw new ImageException(TIImageTool.langstr("InvalidFormat"));		
-		System.out.println("TDF / FormatIndex = " + m_nFormatIndex);
+		// System.out.println("TDF / FormatIndex = " + m_nFormatIndex);
 		
 		m_nTotalSectors = tdfgeometry[m_nFormatIndex][1] 
 						* tdfgeometry[m_nFormatIndex][2]
@@ -349,7 +349,7 @@ class TrackDumpFormat extends FloppyImageFormat {
 		outside of its format units. */
     @Override
 	void prepareNewImage(FormatParameters params) {
-		System.out.println("Prepare new image; nothing to do for TrackDumpFormat");
+		// System.out.println("Prepare new image; nothing to do for TrackDumpFormat");
 	}
 		
 	public String getFormatName() {

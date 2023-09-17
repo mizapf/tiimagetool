@@ -82,7 +82,7 @@ public class DeleteAction extends Activity {
 			for (Element selected: dvCurrent.getSelectedEntries()) {
 				if (selected instanceof TFile) {
 					try {
-						System.out.println("Delete " + selected);
+						// System.out.println("Delete " + selected);
 						dirCurrent.deleteFile((TFile)selected, true);
 					}
 					catch (FileNotFoundException fnfx) {
@@ -120,7 +120,7 @@ public class DeleteAction extends Activity {
 				}
 			}
 			try {
-				System.out.println("Commit after delete");
+				// System.out.println("Commit after delete");
 				dirCurrent.commit(true);
 			}
 			catch (FileNotFoundException fnfx) {

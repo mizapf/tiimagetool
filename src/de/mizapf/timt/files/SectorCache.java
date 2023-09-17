@@ -75,11 +75,11 @@ public class SectorCache {
 	
 	private Sector getRecentVersion(LinkedList<Sector> seclist) {
 		Iterator<Sector> backit = seclist.descendingIterator();
-		System.out.println("Version list length: " + seclist.size() + ", gen = " + m_generation);
+		// System.out.println("Version list length: " + seclist.size() + ", gen = " + m_generation);
 		Sector sect = null;
 		while (backit.hasNext()) {
 			Sector sec = backit.next();
-			System.out.println("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + ")");
+			// System.out.println("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + ")");
 			if (sec.getGeneration() <= m_generation && sect == null) {
 				sect = sec;
 			}
@@ -133,7 +133,7 @@ public class SectorCache {
 			if (lsect.getGeneration() == m_generation) {
 				// Same generation; overwrite the sector contents
 				lsect.modify(sect.getData());
-				System.out.println("Replacing the contents of sector " + sect.getNumber() + " in generation " + m_generation);
+				// System.out.println("Replacing the contents of sector " + sect.getNumber() + " in generation " + m_generation);
 				bNew = false;
 			}
 		}

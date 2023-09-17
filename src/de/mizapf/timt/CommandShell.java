@@ -467,9 +467,6 @@ public class CommandShell {
 					catch (FileExistsException fx) {
 						System.err.println(iofile.getName() + " already exists");
 					}
-					catch (EOFException ex) {
-						System.err.println(iofile.getName() + ": unexpected EOF");
-					}
 				}
 			}
 		}

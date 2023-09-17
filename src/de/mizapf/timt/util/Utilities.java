@@ -292,6 +292,13 @@ public class Utilities {
 			   | ((aby[nOffset+0]<<56)&0xff00000000000000l)); 
 	}
 
+	public static void setInt32be(byte[] aby, int nOffset, int num) {
+		aby[nOffset] = (byte)((num >> 24) & 0xff);
+		aby[nOffset+1] = (byte)((num >> 16) & 0xff);
+		aby[nOffset+2] = (byte)((num >> 8) & 0xff);
+		aby[nOffset+3] = (byte)(num & 0xff);
+	}
+	
 	public static String buildString(String s, int nCount) {
 		StringBuilder sb = new StringBuilder(s.length() * nCount);
 		for (int i=0; i < nCount; i++) sb.append(s);

@@ -320,7 +320,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		Volume vol = getVolume();
 		
 		if (vol != null) {
-			System.out.println("refresh");
+			// System.out.println("refresh");
 			setSaveOptions(vol.isModified());
 			if (m_frmOwn != null) {
 				m_frmOwn.setTitle(vol.getModShortImageName());

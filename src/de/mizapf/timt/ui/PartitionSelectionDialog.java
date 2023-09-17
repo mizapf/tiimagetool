@@ -95,7 +95,7 @@ class PartitionSelectionDialog extends ToolDialog {
 
 		for (int i=0; i < m_partition.length; i++) {
 			if (m_partition[i] != null) {
-				System.out.println(m_partition[i].getName());
+				// System.out.println(m_partition[i].getName());
 				Box b1 = addEntry(i+1, nLabelWidth, m_partition[i].getName());
 				b1.setOpaque(true);
 				b1.setBackground(color[i&1]);

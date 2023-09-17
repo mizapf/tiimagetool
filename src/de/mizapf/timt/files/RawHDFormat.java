@@ -30,7 +30,7 @@ import java.io.File;
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.*;
 
-/** Format for hard disk images. May be partitioned. Later. 
+/** Format for hard disk images. May be partitioned. 
 	Format units are tracks (like SectorDumpFormat).
 */
 class RawHDFormat extends HarddiskImageFormat {
@@ -76,6 +76,8 @@ class RawHDFormat extends HarddiskImageFormat {
 			// Only add the fill pattern
 			int k = 0;
 			int m = t.fillpattern.length;
+			if (m_formatUnit.length == 0)
+				throw new InternalException("Format unit length = 0");
 			for (int i=0; i < m_formatUnit.length; i++) {
 				m_formatUnit[i] = t.fillpattern[k % m];
 				k = (k+1) % TFileSystem.SECTOR_LENGTH;

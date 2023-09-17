@@ -39,12 +39,17 @@ public class MemoryImageFormat extends ImageFormat {
 	// Empty sector
 	byte[] m_empty;
 
-	MemoryImageFormat(String sImageName, int number) {
+	public MemoryImageFormat(String sImageName, int number) {
 		// super(sImageName);
 		m_empty = new byte[TFileSystem.SECTOR_LENGTH];
 		m_nUnnamedIndex = number;
 		m_writeCache.setName(sImageName + number);
 		byte[] fillpat = getFillPattern();
+
+		if (fillpat == null) {
+			fillpat = new byte[1];
+			fillpat[0] = (byte)0x00;
+		}
 		
 		for (int j=0; j < TFileSystem.SECTOR_LENGTH; j++) {
 			m_empty[j] = fillpat[j % fillpat.length];

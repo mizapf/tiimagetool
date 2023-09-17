@@ -27,6 +27,7 @@ import java.util.*;
 
 import de.mizapf.timt.util.Utilities;
 import de.mizapf.timt.util.TIFiles;
+import de.mizapf.timt.util.InternalException;
 
 import de.mizapf.timt.TIImageTool;
 
@@ -412,11 +413,11 @@ public class Directory extends Element {
 		return String.format(sPattern, getName(), m_Volume.getAUSize(), "Dir", m_Volume.getAUSize()*256, getCreationTime().toString());
 	}
 	
-	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen) throws InvalidNameException, ImageFullException, ProtectedException, ImageException, IOException {
+	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen) throws InvalidNameException, ImageFullException, ProtectedException, ImageException {
 		return insertFile(abyTif, sNewFilename, bReopen, false);
 	}
 	
-	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen, boolean bOverwrite) throws InvalidNameException, ImageFullException, ProtectedException, ImageException, FileNotFoundException {
+	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen, boolean bOverwrite) throws InvalidNameException, ImageFullException, ProtectedException, ImageException {
 
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 
@@ -464,7 +465,13 @@ public class Directory extends Element {
 				if (!bOverwrite)
 					throw new FileExistsException(sContName);
 				else {
-					deleteFile(file, true);
+					try {
+						deleteFile(file, true);
+					}
+					catch (FileNotFoundException fnfx) {
+						fnfx.printStackTrace();
+						throw new InternalException("File disappeared during delete in insertFile");
+					}
 				}
 			}
 		}
@@ -668,8 +675,8 @@ public class Directory extends Element {
 		dir.setContainingDirectory(this);
 	}
 	
-	// Called by Actions
-	public void commit(boolean bNextGen) throws IOException, ImageException, ProtectedException {
+	// Called by Actions. Only the Archive.commit may throw an IOException
+	public void commit(boolean bNextGen) throws ImageException, IOException, ProtectedException {
 		// Update directory descriptor record
 		writeDDR();
 		writeFDIR();
@@ -758,7 +765,7 @@ public class Directory extends Element {
 		return dirNew;
 	}
 	
-	protected void deleteDirectory(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
+	protected void deleteDirectory(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, FormatException, ImageException, IllegalOperationException {
 //		System.out.println("Deleting directory " + dir.getName());
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 
@@ -884,7 +891,6 @@ public class Directory extends Element {
 			// Change the file's FIB
 			byte[] aFibNew = file.createFIB(file.getFIBLocation(), getFileIndexSector());
 			m_Volume.writeSector(new Sector(file.getFIBLocation(), aFibNew));
-			
 			// Write the new file index record (order may have changed)
 			writeFDIR();
 		}
@@ -923,9 +929,8 @@ public class Directory extends Element {
 		If the new version is too big, inserts the old version again.
 		TODO: Remove this reinsert.
 	*/
-	protected TFile updateFile(TFile file, byte[] abySectorContent, int nNewL3, boolean bReopen) throws IOException, ImageException, InvalidNameException, ProtectedException {
+	protected TFile updateFile(TFile file, byte[] abySectorContent, int nNewL3, boolean bReopen) throws ImageException, IOException, InvalidNameException, ProtectedException {
 		// Keep the old file as a TIFiles image
-		TIFiles tfiOld = TIFiles.createFromFile(file);
 		byte[] abyTfiNew = TIFiles.createTfi(abySectorContent, file.getName(), file.getFlags(), file.getRecordLength(), nNewL3);
 
 		// This should not change the FDIR (same name)
@@ -936,6 +941,8 @@ public class Directory extends Element {
 		}
 		catch (ImageFullException ifx) {
 			// Restore old version
+			// FIXME: This is not needed anymore
+			TIFiles tfiOld = TIFiles.createFromFile(file);  // throws IOX
 			fNew = insertFile(tfiOld.toByteArray(), null, bReopen);
 			throw ifx;
 		}
@@ -948,7 +955,7 @@ public class Directory extends Element {
 		It is sector 1 on floppy disks for the root directory.
 	*/
 	// TODO: Move to Volume, then to FileSystem
-	private void writeFDIR() throws IOException, ImageException, ProtectedException {
+	private void writeFDIR() throws ImageException, ProtectedException {
 		byte[] abyNew = new byte[256];
 		Arrays.fill(abyNew, 0, 0x100, (byte)0x00);
 

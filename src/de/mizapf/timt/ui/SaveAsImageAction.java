@@ -69,6 +69,10 @@ public class SaveAsImageAction extends Activity {
 				}
 			}
 			
+			if (vol.isIDEImage()) {
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.IDE.SaveAs"), TIImageTool.langstr("Warning"), JOptionPane.WARNING_MESSAGE);
+			}
+
 			JFileChooser jfc = null;
 			if (imagetool.getSourceDirectory("image")!=null) {
 				jfc = new JFileChooser(imagetool.getSourceDirectory("image"));
@@ -94,7 +98,7 @@ public class SaveAsImageAction extends Activity {
 			if (nReturn == JFileChooser.APPROVE_OPTION) {
 				File select = jfc.getSelectedFile();
 				if (select != null) {
-					selectedFile = new File(getSuffixedName(select.getAbsolutePath(), sd.getImageType()));
+					selectedFile = new File(ImageFormat.getSuffixedName(select.getAbsolutePath(), sd.getImageType()));
 				}
 			}
 			else {
@@ -146,18 +150,9 @@ public class SaveAsImageAction extends Activity {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 		// else we cancelled the save after the type selection		
 	}
-	
-	String getSuffixedName(String sName, int nType) {
-		int nSuffixPos = sName.indexOf(".");
-		if (nSuffixPos==-1) {
-			String sSuffix = "." + ImageFormat.suffix[nType];
-			if (!sName.endsWith(sSuffix)) {
-				sName = sName + sSuffix;
-			}
-		}
-		return sName;
-	}
 }
+
+// FIXME: Only saves the open IDE partition as a single image. Or not FIXME?
 
 /*
 		

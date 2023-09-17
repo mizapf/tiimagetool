@@ -59,10 +59,7 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 		Utilities.setInt16(abyNewVIB, 0x0a, m_nFSTotalSectors/m_nFSSectorsPerAU);
 		abyNewVIB[0x0d] = (byte)((m_nReservedAUs>>6) & 0xff);
 		Utilities.setTime(abyNewVIB, 0x12, m_tCreation);
-		abyNewVIB[0x16] = (byte)(m_dirRoot.getFiles().length & 0xff);
-		abyNewVIB[0x17] = (byte)(m_dirRoot.getDirectories().length & 0xff);
-		Utilities.setInt16(abyNewVIB, 0x18, getAUNumber(m_dirRoot.getFileIndexSector()));
-		
+
 		abyNewVIB[0x0c] = (byte)0;
 		abyNewVIB[0x0e] = (byte)0;
 		abyNewVIB[0x0f] = (byte)0;
@@ -70,14 +67,24 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 		abyNewVIB[0x11] = (byte)0;
 		abyNewVIB[0x1a] = (byte)0;
 		abyNewVIB[0x1b] = (byte)0;
-		
-		int j=0x1c;
-		Directory[] dirs = m_dirRoot.getDirectories();
 		for (int i=0x1c; i < 0x100; i++) abyNewVIB[i] = (byte)0;
-		for (int i=0; i < dirs.length; i++) {
-			Utilities.setInt16(abyNewVIB, j, dirs[i].getDDRSector() / m_nFSSectorsPerAU);
-			j=j+2;
+
+		if (m_dirRoot == null) {
+			abyNewVIB[0x16] = (byte)0;
+			abyNewVIB[0x17] = (byte)0;
+			Utilities.setInt16(abyNewVIB, 0x18, getAUNumber(64));
 		}
+		else {		
+			abyNewVIB[0x16] = (byte)(m_dirRoot.getFiles().length & 0xff);
+			abyNewVIB[0x17] = (byte)(m_dirRoot.getDirectories().length & 0xff);
+			Utilities.setInt16(abyNewVIB, 0x18, getAUNumber(m_dirRoot.getFileIndexSector()));
+			int j=0x1c;
+			Directory[] dirs = m_dirRoot.getDirectories();
+			for (int i=0; i < dirs.length; i++) {
+				Utilities.setInt16(abyNewVIB, j, dirs[i].getDDRSector() / m_nFSSectorsPerAU);
+				j=j+2;
+			}
+		}		
 		return abyNewVIB;
 	}
 	

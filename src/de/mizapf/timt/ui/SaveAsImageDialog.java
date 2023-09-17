@@ -89,7 +89,7 @@ public class SaveAsImageDialog  extends ToolDialog {
 			}
 			if (index == asFor.length) {				
 				index = 0;
-				System.out.println("Invalid type proposed: " + m_nProposedType);
+				// System.out.println("Invalid type proposed: " + m_nProposedType);
 			}
 		}
 		else {

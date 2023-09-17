@@ -112,7 +112,7 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 	}
 	
 	public void setPartition(int part) {
-		System.out.println("Selected partition " + (part+1));
+		// System.out.println("Selected partition " + (part+1));
 		m_nActivePartition = part;
 		m_nCurrentFormatUnit = NONE;
 	}
@@ -152,7 +152,7 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		for (int i=0; i < 4; i++) {
 			int partsect = Utilities.getInt32be(sect0, 0x18 + i*8) * 2;
 			int lensect = Utilities.getInt32be(sect0, 0x20 + i*8) * 2;
-			System.out.println(i + ": partsect=" + partsect);
+			// System.out.println(i + ": partsect=" + partsect);
 
 			if (partsect != 0) {
 				Sector vib = readSector(partsect);

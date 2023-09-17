@@ -442,14 +442,15 @@ public class CheckFSAction extends Activity {
 		/* Part 5. CRC check. */
 		int badcrc = -1;
 		
-		if (!vol.isHarddiskImage()) {
+		// FIXME: CRC check
+		/* if (!vol.isHarddiskImage()) {
 			try {
 				badcrc = ImageCheck.findCRCErrors(vol, false, false);
 			}
 			catch (IOException iox) {
 				iox.printStackTrace();
 			}
-		}
+		} */
 		
 		if (badcrc != -1) {
 			ps.println("===========  " + TIImageTool.langstr("CheckCRC") +  " ===========\n");
@@ -508,6 +509,7 @@ public class CheckFSAction extends Activity {
 								f.rewriteFIB();
 							}
 						}
+						vol.nextGeneration();
 						// vol.reopenForRead();
 					}
 					catch (FileNotFoundException fnfx) {

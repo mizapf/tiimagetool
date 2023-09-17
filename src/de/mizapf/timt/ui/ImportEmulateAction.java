@@ -134,10 +134,10 @@ public class ImportEmulateAction extends Activity {
 					catch (FileExistsException fx) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}
-					catch (EOFException ex) {
+/*					catch (EOFException ex) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ex.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 						ex.printStackTrace();
-					}
+					}  */
 					catch (InvalidNameException ix) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 					}

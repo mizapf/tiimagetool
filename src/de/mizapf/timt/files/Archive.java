@@ -259,7 +259,7 @@ public class Archive extends Directory {
 	}
 	
 	@Override
-	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen) throws ProtectedException, IOException, InvalidNameException, ImageFullException, ImageException, FileExistsException {
+	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen) throws ProtectedException, InvalidNameException, ImageFullException, ImageException, FileExistsException {
 		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("ArchiveProtected"));
 
 		if (m_Files.length>=127) {
@@ -400,30 +400,33 @@ public class Archive extends Directory {
 	}
 
 	@Override
-	public void commit(boolean bReopen) throws IOException, ImageException, ProtectedException {
+	public void commit(boolean bNextGen) throws ImageException, IOException, ProtectedException {
 		// For archives, we now have to rebuild the byte array
-		System.out.println("Archive commit");
+		// System.out.println("Archive commit");
 		m_abyOldContent = m_abyContent;
 		Directory dirParent = getContainingDirectory();
-		System.out.println("Rebuild");
+		// System.out.println("Rebuild");
 		m_abyContent = rebuild();
 
 		// System.out.println(Utilities.hexdump(0, 0, m_abyContent, m_abyContent.length, false));
 		try {
-			System.out.println("Update file");
-			m_fBase = dirParent.updateFile(m_fBase, m_abyContent, (m_abyContent.length/256)*2, bReopen);
+			// System.out.println("Update file");
+			m_fBase = dirParent.updateFile(m_fBase, m_abyContent, (m_abyContent.length/256)*2, bNextGen);
 			
-			// From Directory.commit
-			// if (bReopen) m_Volume.reopenForWrite();
-			// writeDDR();
-		
-			// Update file index
-			// writeFDIR();
+			// FIXME: Check whether Archive.commit still works
+			// FIXME: Allocation broken after changing Archive contents
+			// create: OK
+			// delete file: OK, overallocation on reopen
+			
+			System.out.print("Commit done(");
+			if (bNextGen) {
+				m_Volume.nextGeneration();
+				System.out.println("next gen)");
+			}
+			else {
+				System.out.println("same gen)");
+			}
 
-			// m_Volume.updateVIB();
-			// m_Volume.updateAlloc();
-			// if (bReopen) m_Volume.reopenForRead();
-//			m_Volume.nextGeneration();
 		}
 		catch (ImageFullException ifx) {
 			// Image is full; revert to previous state
@@ -434,7 +437,7 @@ public class Archive extends Directory {
 			inx.printStackTrace();
 			throw new ImageException(TIImageTool.langstr("ArchiveUnexp"));
 		}
-		System.out.println("Archive commit done");
+		// System.out.println("Archive commit done");
 	}
 
 	/** Called from PasteAction, only for sourceVol == targetVol. Moving out of an archive always means to 
@@ -500,7 +503,7 @@ public class Archive extends Directory {
 	}
 
 	@Override
-	protected void deleteDirectory(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
+	protected void deleteDirectory(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, ImageException, FormatException, IllegalOperationException {
 		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotDelDir"));
 	}
 	

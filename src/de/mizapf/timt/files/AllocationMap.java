@@ -43,14 +43,30 @@ public class AllocationMap implements Cloneable {
 	public AllocationMap(int nAU, int nAUSize, boolean bFloppy) {
 		// System.out.println("New allocmap, size = " + (nAU+7)/8);
 		if (bFloppy) {
-			m_abyMap = new byte[(nAU+7)/8];
+			// m_abyMap = new byte[(nAU+7)/8];
+			m_abyMap = new byte[200];
+
+			// Fill bits with 1 after the last allocatable AU
+			m_abyMap[nAU/8] = (byte)((0xff << (nAU%8)) & 0xff);
+			for (int i = nAU/8+1; i < m_abyMap.length; i++) {
+				m_abyMap[i] = (byte)0xff;
+			}
 		}
 		else {
 			// Allocate full sectors (256*8 bits)
 			if (nAU > 0xf800) throw new InternalException("Excess AU number: " + nAU);
-			int nSectors = (nAU+2047)/2048;
-			m_abyMap = new byte[nSectors * TFileSystem.SECTOR_LENGTH];
-			System.out.println("Allocation map size = " + nSectors + " sectors");
+			// int nSectors = (nAU+2047)/2048;
+			// m_abyMap = new byte[nSectors * TFileSystem.SECTOR_LENGTH];
+			m_abyMap = new byte[31 * TFileSystem.SECTOR_LENGTH];
+			
+			// Fill bits with 1 after the last allocatable AU
+			if (nAU < 0xf800) {
+				m_abyMap[nAU/8] = (byte)((0xff >> (nAU%8)) & 0xff);
+				for (int i = nAU/8+1; i < m_abyMap.length; i++) {
+					m_abyMap[i] = (byte)0xff;
+				}
+			}
+			// System.out.println("Allocation map size = 31 sectors");
 		}
 		m_nLength = nAU;
 		m_nAUSize = nAUSize;
@@ -58,9 +74,16 @@ public class AllocationMap implements Cloneable {
 	}
 
 	public Object clone() {
-		AllocationMap cloneMap = new AllocationMap(m_nLength, m_nAUSize, m_bFloppy);
-		cloneMap.setMapFromBitfield(m_abyMap, 0, 0);
-		return cloneMap;
+		try {
+			// System.out.println("Cloning allocmap");
+			AllocationMap clonedMap = (AllocationMap)super.clone();
+			System.arraycopy(m_abyMap, 0, clonedMap.m_abyMap, 0, m_abyMap.length);
+			return clonedMap;
+		}
+		catch (CloneNotSupportedException cnsx) {
+			cnsx.printStackTrace();
+			return null;
+		}
 	}
 
 	// Note that the LSB represents the first AU, and the MSB is seven
@@ -74,13 +97,15 @@ public class AllocationMap implements Cloneable {
 	//
 
 	/** Sets the allocation map.
-		@param nStartAU Where this bitfield is located in the complete map. Must be multiple of 8.
+		@param vibmap VIB and allocation map
 	*/
-	public void setMapFromBitfield(byte[] aby, int nOffset, int nStartAU) {
-		int nLength = aby.length - nOffset;
-		if (nLength > (m_abyMap.length - nStartAU/8)) nLength = m_abyMap.length-nStartAU/8;
-		System.out.println("aby.length = " + aby.length + ", nOffset = " + nOffset + ", nStartAU = " + nStartAU + ", map.length = " + m_abyMap.length + ", length = " + nLength);
-		System.arraycopy(aby, nOffset, m_abyMap, nStartAU/8, nLength);
+	public void setMapFromBitfield(byte[] vibmap) {
+		int nStartAU = 0;
+		int nOffset = m_bFloppy? 0x38 : TFileSystem.SECTOR_LENGTH;  // Start at byte 0x38 for floppies and at sector 1 for hard disks
+		int nLength = vibmap.length - nOffset;
+		if (nLength > m_abyMap.length) nLength = m_abyMap.length;
+		System.out.println("aby.length = " + vibmap.length + ", nOffset = " + nOffset + ", map.length = " + m_abyMap.length + ", length = " + nLength);
+		System.arraycopy(vibmap, nOffset, m_abyMap, 0, nLength);
 	}
 	
 	public byte[] toBitField() {
@@ -96,14 +121,17 @@ public class AllocationMap implements Cloneable {
 	}
 		
 	public void allocate(int nUnit) {
-		if (nUnit/8 > m_abyMap.length) throw new IndexOutOfBoundsException(String.valueOf(nUnit));
-		if (m_bFloppy) {
-			m_abyMap[nUnit/8] |= (1 << (nUnit%8));			
+		if (nUnit < m_nLength) {
+			if (m_bFloppy) {
+				m_abyMap[nUnit/8] |= (1 << (nUnit%8));			
+			}
+			else {
+				m_abyMap[nUnit/8] |= ((0x80 >> (nUnit%8))&0xff);		
+			}
+			//		System.out.println("Allocate " + nUnit);
 		}
-		else {
-			m_abyMap[nUnit/8] |= ((0x80 >> (nUnit%8))&0xff);		
-		}
-//		System.out.println("Allocate " + nUnit);
+		else 
+			throw new IndexOutOfBoundsException(String.valueOf(nUnit));
 	}
 	
 	/** Allocates the smallest set of AUs to contain the interval. 
@@ -117,13 +145,16 @@ public class AllocationMap implements Cloneable {
 	}
 	
 	public void deallocate(int nUnit) throws IndexOutOfBoundsException {
-		if (nUnit/8 > m_abyMap.length) throw new IndexOutOfBoundsException(String.valueOf(nUnit));
-		if (m_bFloppy) {
-			m_abyMap[nUnit/8] &= ~(1<<(nUnit%8));	
+		if (nUnit < m_nLength) {
+			if (m_bFloppy) {
+				m_abyMap[nUnit/8] &= ~(1<<(nUnit%8));	
+			}
+			else {
+				m_abyMap[nUnit/8] &= ~((0x80 >> (nUnit%8))&0xff);		
+			}
 		}
-		else {
-			m_abyMap[nUnit/8] &= ~((0x80 >> (nUnit%8))&0xff);		
-		}
+		else  
+			throw new IndexOutOfBoundsException(String.valueOf(nUnit));
 	}
 
 	/** Deallocates the smallest set of AUs to contain the interval. 
@@ -136,15 +167,18 @@ public class AllocationMap implements Cloneable {
 	}
 	
 	public boolean hasAllocated(int nUnit) {
-		if (nUnit/8 >= m_abyMap.length) throw new IndexOutOfBoundsException(TIImageTool.langstr("AllocMapInvalidAU") + ": " + String.valueOf(nUnit));
-		if (m_bFloppy) {
-			return ((m_abyMap[nUnit/8] & (1<<(nUnit%8)))!=0);
+		if (nUnit < m_nLength) {
+			if (m_bFloppy) {
+				return ((m_abyMap[nUnit/8] & (1<<(nUnit%8)))!=0);
+			}
+			else {
+				//			System.out.println("nUnit = " + nUnit + ", 0x80>>= " + ((0x80>>(nUnit%8))&0xff) + ", m_abyMap[nUnit/8] = " + m_abyMap[nUnit/8]);
+				//			System.exit(1);
+				return ((m_abyMap[nUnit/8] & ((0x80>>(nUnit%8))&0xff)) !=0);
+			}
 		}
-		else {
-//			System.out.println("nUnit = " + nUnit + ", 0x80>>= " + ((0x80>>(nUnit%8))&0xff) + ", m_abyMap[nUnit/8] = " + m_abyMap[nUnit/8]);
-//			System.exit(1);
-			return ((m_abyMap[nUnit/8] & ((0x80>>(nUnit%8))&0xff)) !=0);
-		}
+		else
+			throw new IndexOutOfBoundsException(TIImageTool.langstr("AllocMapInvalidAU") + ": " + String.valueOf(nUnit));
 	}
 	
 	int getNextFreeAUAfter(int nAU) {

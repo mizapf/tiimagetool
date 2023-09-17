@@ -310,20 +310,20 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			DataOutputStream dos = new DataOutputStream(baos);
 			int nPhysSectorLength = (parm.isHFDC())? 256:512;
-			int nSectorLength = TFileSystem.SECTOR_LENGTH;
 
 			dos.writeBytes("MComprHD");
 
 			int nHeaderLength = 0x7c;
 			
-			m_nLogicalSize = parm.getTotalSectors() * nSectorLength; 
+			// getTotalSectors is always the logical count (256 bytes long)
+			m_nLogicalSize = parm.getTotalSectors() * TFileSystem.SECTOR_LENGTH; 
 
 			m_nVersion = 5;
 			m_nHunkLength = HUNKLENGTH;
 
 			// Hunks are always 4096 bytes long 
 			m_nHunkCount = (int)(m_nLogicalSize / m_nHunkLength);
-						
+			
 			// Round up
 			if ((m_nLogicalSize % m_nHunkLength)!=0) m_nHunkCount++;
 			
@@ -395,7 +395,7 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			
 			if (parm.isHFDC()) {
 				sb.append("CYLS:").append(parm.cylinders).append(",HEADS:").append(parm.heads);
-				sb.append(",SECS:").append(parm.sectors).append(",BPS:").append(nSectorLength);
+				sb.append(",SECS:").append(parm.sectors).append(",BPS:").append(nPhysSectorLength);
 			}
 			else {
 				// Guess a geometry. 
@@ -496,7 +496,7 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			
 			// Find GDDD entry
 			while (!bFound && nOffset!=0) {
-				System.out.println("Looking for metadata at " + Utilities.toHex((int)nOffset, 8));
+				// System.out.println("Looking for metadata at " + Utilities.toHex((int)nOffset, 8));
 				file.seek(nOffset);
 				file.readFully(abyMeta);
 				int nMetaTag = Utilities.getInt32be(abyMeta, 0);
@@ -535,10 +535,10 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			m_nAppendOffset = 1; 
 			byte[] abyMeta = new byte[METALENGTH];
 			
-			System.out.println("MetaOffset = " + Utilities.toHex((int)m_nMetaOffset, 8));	
+			// System.out.println("MetaOffset = " + Utilities.toHex((int)m_nMetaOffset, 8));	
 			
 			while (nextOffset != 0 && nextOffset < m_nLogicalSize) {
-				System.out.println(Utilities.toHex((int)nextOffset, 8));
+				// System.out.println(Utilities.toHex((int)nextOffset, 8));
 				file.seek(nextOffset);
 				file.readFully(abyMeta);
 				
@@ -773,7 +773,7 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			}
 			
 			if (bNotNull) {
-				System.out.println("Hunk " + m_nCurrentFormatUnit + " was empty before, have to append after end of CHD image");
+				// System.out.println("Hunk " + m_nCurrentFormatUnit + " was empty before, have to append after end of CHD image");
 				m_header.appendNewHunk(m_file, m_nCurrentFormatUnit);
 			}
 		}

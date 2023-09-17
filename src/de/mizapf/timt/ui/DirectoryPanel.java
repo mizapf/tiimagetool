@@ -108,7 +108,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		}
 		
 		public void changed() {
-			System.out.println("contents changed");
+			// System.out.println("contents changed");
 			fireContentsChanged(this, 0, getSize()-1);
 		}
 	}

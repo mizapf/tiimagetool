@@ -52,7 +52,7 @@ public class FormatParameters {
 	}
 	
 	public void setTotal(int nTotal) {
-		totalsectors = nTotal;
+		totalsectors = nTotal;     // always 256 bytes long
 	}
 	
 	public void setFormatUnitSectors(int nFU) {
@@ -75,7 +75,8 @@ public class FormatParameters {
 	
 	public int getTotalSectors() {
 		if (totalsectors != 0) return totalsectors;
-		return cylinders * heads * sectors;
+		if (isHFDC()) return cylinders * heads * sectors;
+		else return cylinders * heads * sectors / 2;   // 512 bytes
 	}
 	
 	int getFormatUnitLength() {

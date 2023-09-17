@@ -227,14 +227,15 @@ public class FloppyFileSystem extends TFileSystem {
 			for (int i=0x14; i<0x38; i++) abyNewVIB[i] = (byte)0x00;
 		} */
 		byte[] map = m_allocMap.toBitField();
-		System.out.println("Map length = " + map.length);
+		// System.out.println("Map length = " + map.length);
 		for (int j=0; j < map.length; j++) {
 			abyNewVIB[j+0x38] = map[j];
 		}
+
 		// Fill the rest with ff (required by TIFDC and BWG)
-		for (int j=map.length; j < (256-0x38); j++) {
+		/* for (int j=map.length; j < (256-0x38); j++) {
 			abyNewVIB[j+0x38] = (byte)0xff;
-		}	
+		}	*/
 		return abyNewVIB;
 	}
 	
@@ -316,7 +317,7 @@ public class FloppyFileSystem extends TFileSystem {
 		// System.out.println("nTotal = " + nTotal + ", FStotal = " + m_nFSTotalSectors);
 		
 		if (nTotal == -1) {
-			System.out.println("Setting total sectors from file system");	
+			// System.out.println("Setting total sectors from file system");	
 			m_Image.setTotalSectors(m_nFSTotalSectors);
 		}
 
@@ -338,6 +339,6 @@ public class FloppyFileSystem extends TFileSystem {
 	@Override
 	public void setupAllocationMap(byte[] vibmap) {
 		m_allocMap = new AllocationMap(getTotalSectors() / getSectorsPerAU(), getSectorsPerAU(), true);
-		m_allocMap.setMapFromBitfield(vibmap, 0x38, 0);
+		m_allocMap.setMapFromBitfield(vibmap);
 	}	
 }
