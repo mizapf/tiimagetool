@@ -413,12 +413,11 @@ public class Directory extends Element {
 		return String.format(sPattern, getName(), m_Volume.getAUSize(), "Dir", m_Volume.getAUSize()*256, getCreationTime().toString());
 	}
 	
-	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen) throws InvalidNameException, ImageFullException, ProtectedException, ImageException {
-		return insertFile(abyTif, sNewFilename, bReopen, false);
+	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bNextGen) throws InvalidNameException, ImageFullException, ProtectedException, ImageException {
+		return insertFile(abyTif, sNewFilename, bNextGen, false);
 	}
 	
-	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bReopen, boolean bOverwrite) throws InvalidNameException, ImageFullException, ProtectedException, ImageException {
-
+	public TFile insertFile(byte[] abyTif, String sNewFilename, boolean bNextGen, boolean bOverwrite) throws InvalidNameException, ImageFullException, ProtectedException, ImageException {
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 
 		if (m_Files.length>=127) {
@@ -457,6 +456,7 @@ public class Directory extends Element {
 				throw new ImageException(TIImageTool.langstr("MissingNameInTFI"));
 			}
 		}
+		System.out.println("Directory.insertFile(" + sContName + ")");
 
 		// Already there?
 		sContName = sContName.trim();
@@ -535,7 +535,7 @@ public class Directory extends Element {
 		fileNew.setClusters(aint);
 		
 		// Create and write new FIB
-		// if (bReopen) m_Volume.reopenForWrite();
+		// if (bNextGen) m_Volume.reopenForWrite();
 		byte[] aFibNew = fileNew.createFIB(aFIB[0].start, getFileIndexSector());  // FDIR sector only for HD
 		m_Volume.writeSector(new Sector(aFIB[0].start, aFibNew));
 		
@@ -544,27 +544,7 @@ public class Directory extends Element {
 
 		// Add the file to this directory; gets sorted automatically
 		addToList(fileNew);
-
-		fileNew.checkArchiveFormat();
 		
-		/*
-		// Write the new file index record (new file entry)
-		writeFDIR();
-
-		if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
-			// Write the allocation map
-			m_Volume.updateVIB();	
-		}
-		else {
-			// Update the directory entry on the image (changed number of files)
-			writeDDR();
-			// Write the allocation map
-			m_Volume.updateAlloc();
-		}
-		*/
-		//if (bReopen) m_Volume.reopenForRead();
-		// m_Volume.nextGeneration();
-
 		return fileNew;
 	}
 	
@@ -676,27 +656,25 @@ public class Directory extends Element {
 	}
 	
 	// Called by Actions. Only the Archive.commit may throw an IOException
-	public void commit(boolean bNextGen) throws ImageException, IOException, ProtectedException {
+	public void commit(boolean bFinal) throws ImageException, IOException, ProtectedException {
 		// Update directory descriptor record
+		System.out.println("Directory " + getName() + " commit: final=" + bFinal);
+		// Thread.currentThread().dumpStack();
 		writeDDR();
 		writeFDIR();
-		if (m_Volume.isHarddiskImage()) {
+		if (m_Volume.isHarddiskImage() && isRootDirectory()) {
 			m_Volume.updateVIB();
 		}
-		m_Volume.updateAlloc();
-		System.out.print("Commit done(");
-		if (bNextGen) {
+		m_Volume.writeAllocationMap();  // Commit on the source may change its allocation (move), but should not advance the generation
+		if (bFinal) {
 			m_Volume.nextGeneration();
-			System.out.println("next gen)");
 		}
-		else {
-			System.out.println("same gen)");
-		}
+		System.out.println("Directory commit done");
 	}
 	
 	/** Creates a new subdirectory. 
 	*/
-	public Directory createSubdirectory(String sName, boolean bReopen) throws ProtectedException, InvalidNameException, FileExistsException, ImageFullException, ImageException, IOException, IllegalOperationException {
+	public Directory createSubdirectory(String sName, boolean bNextGen) throws ProtectedException, InvalidNameException, FileExistsException, ImageFullException, ImageException, IOException, IllegalOperationException {
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (!validName(sName)) throw new InvalidNameException(sName);
 		
@@ -736,32 +714,32 @@ public class Directory extends Element {
 		}
 
 		addToList(dirNew);
-		// if (bReopen) m_Volume.reopenForWrite();
+		// if (bNextGen) m_Volume.reopenForWrite();
 		
 		// Create the file index for the new directory
 		dirNew.writeFDIR();
+
+		// Create new DDR (no effect for floppies)
+		dirNew.writeDDR();
 		
 		if (m_Volume.isFloppyImage() || m_Volume.isCF7Volume()) {
 			// Update the VIB (new dir entry and allocation map)
 			m_Volume.updateVIB();
 		}
 		else {
-			// Create new DDR
-			dirNew.writeDDR();
-
 			// Rewrite this directory's DDR (new dir entry)
 			if (isRootDirectory()) {
 				// The VIB is the DDR of the root directory
 				m_Volume.updateVIB();
 			}
-			else {
-				writeDDR();
-			}
+			
+			writeDDR(); // no effect for root dir
+
 			// Update the allocation map
-			m_Volume.updateAlloc();
+			m_Volume.writeAllocationMap();
 		}
 
-		// if (bReopen) m_Volume.reopenForRead();
+		// if (bNextGen) m_Volume.reopenForRead();
 		return dirNew;
 	}
 	
@@ -929,21 +907,24 @@ public class Directory extends Element {
 		If the new version is too big, inserts the old version again.
 		TODO: Remove this reinsert.
 	*/
-	protected TFile updateFile(TFile file, byte[] abySectorContent, int nNewL3, boolean bReopen) throws ImageException, IOException, InvalidNameException, ProtectedException {
+	protected TFile updateFile(TFile file, byte[] abySectorContent, int nNewL3, boolean bNextGen) throws ImageException, IOException, InvalidNameException, ProtectedException {
 		// Keep the old file as a TIFiles image
 		byte[] abyTfiNew = TIFiles.createTfi(abySectorContent, file.getName(), file.getFlags(), file.getRecordLength(), nNewL3);
 
 		// This should not change the FDIR (same name)
-		System.out.println("Overwriting file " + file.getName());
+		System.out.print("Overwriting file " + file.getName());
+		if (isRootDirectory()) System.out.println(" in root directory");
+		else System.out.println(" in " + getName() + ", class " + getClass().getName());
 		TFile fNew = null;
 		try {
-			fNew = insertFile(abyTfiNew, null, bReopen, true);
+			fNew = insertFile(abyTfiNew, null, bNextGen, true);
+			commit(bNextGen);  // may recurse
 		}
 		catch (ImageFullException ifx) {
 			// Restore old version
-			// FIXME: This is not needed anymore
+			// FIXME: This is not needed anymore. However, needs a proper Undo implementation.
 			TIFiles tfiOld = TIFiles.createFromFile(file);  // throws IOX
-			fNew = insertFile(tfiOld.toByteArray(), null, bReopen);
+			fNew = insertFile(tfiOld.toByteArray(), null, bNextGen);
 			throw ifx;
 		}
 		return fNew;

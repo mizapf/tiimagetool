@@ -237,7 +237,7 @@ public class SerialBridge implements Runnable, SerialPortEventListener {
 	}
 		
 	private void setSerialSpeed(int nSpeed) {
-		// FIXME: RXTX fails for rates above 19200. Maybe there is a fix; 
+		// NOTE: RXTX fails for rates above 19200. Maybe there is a fix; 
 		// have to check
 		// if (nSpeed > 19200) nSpeed = 19200;
 		m_nSpeed = nSpeed;

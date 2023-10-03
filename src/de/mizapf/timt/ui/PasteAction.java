@@ -134,11 +134,10 @@ public class PasteAction extends Activity {
 
 			// if (sameDirectory) error(Cannot move in same directory)
 			if (dirTarget.equals(dirSource)) {
-				// TODO: Implement "equals" for Element
-				// Required when we allow to open an image multiple times
 				sError = TIImageTool.langstr("PasteNotToSelf");
 			}
 
+			// TODO: Replace sError by Exception
 			if (sError == null) {
 				// if (element is dir and target is a childDirectory) error(Cannot move parent into child)
 				it = list.iterator();
@@ -345,7 +344,7 @@ public class PasteAction extends Activity {
 					String sImportName = null;
 
 					for (Element el : list) {
-						// System.out.println("Element1 " + el);
+						System.out.println("Element " + el);
 
 						// System.out.println("el = " + el);
 						// File copy
@@ -565,9 +564,6 @@ public class PasteAction extends Activity {
 		// not allow for multiple occurances of the same name)
 		for (int i=0; i < dirs.length; i++) {
 			copyDir(dirs[i], null, dirNew, dvTarget);
-		}
-		
-		// FIXME: writeDDR and writeFDIR!
-		
+		}		
 	}
 }

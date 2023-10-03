@@ -213,7 +213,10 @@ public class Volume {
 		return m_FileSystem.getAUNumber(nSectorNumber);
 	}
 
-	public void saveAllocationMap() throws ProtectedException {
+	public void writeAllocationMap() throws ProtectedException {
+		System.out.println("Write allocation map");
+		// Thread.currentThread().dumpStack();
+
 		Sector[] alloc = m_FileSystem.createAllocationMapSectors();
 		
 		// For floppy file systems, this rewrites the VIB
@@ -384,11 +387,6 @@ public class Volume {
 		writeSector(new Sector(0, m_FileSystem.createVIBContents()));
 	}
 	
-	public void updateAlloc() throws ImageException, ProtectedException {
-		// Write the allocation map
-		saveAllocationMap();
-	}
-	
 	public void fixCF7Geometry() {
 		((FloppyFileSystem)m_FileSystem).setGeometry(40, 2, 20);
 	}
@@ -444,6 +442,10 @@ public class Volume {
 	 	file system. */
 	public int getSysAllocated() {
 		return m_FileSystem.getSysAllocated();
+	}
+	
+	public void revertChanges() {
+		m_Image.revertChanges();
 	}
 	
 /*	public String getProposedName() {

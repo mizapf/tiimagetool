@@ -30,6 +30,10 @@ public class TIFiles {
 	public static final String NOHEADER = ".NOHEADER";
 	public static final String NONAME = ".NONAME";
 	
+	public final static byte PROGRAM = (byte)0x01;
+	public final static byte INTERNAL = (byte)0x02;
+	public final static byte VARIABLE = (byte)0x80;
+
 	byte[] m_abyTFContent;
 
 	// For creating a new file
@@ -170,10 +174,22 @@ public class TIFiles {
 		return Utilities.getInt16(abyContent, 0x08);
 	}
 
+	public boolean isProgram() {
+		return (getFlags() & PROGRAM)!=0;
+	}
+	
 	public byte getFlags() {
 		return m_abyTFContent[0x0a];
 	}
-	
+
+	public boolean isDisplay() {
+		return ((getFlags() & INTERNAL)==0);
+	}
+
+	public boolean hasFixedRecordLength() {
+		return ((getFlags() & VARIABLE)==0) && !isProgram();
+	}
+
 	public int getRecordsPerSector() {
 		return (int)(m_abyTFContent[0x0b]) & 0xff;
 	}
@@ -456,5 +472,45 @@ public class TIFiles {
 			sContName = TIFiles.NOHEADER;
 		}
 		return sContName;
+	}
+	
+	public boolean checkIfArchive() {
+		boolean bArchive = false;
+
+		if (hasFixedRecordLength() && getRecordLength()==128 && !isProgram()) {
+			// System.out.println("Check file " + m_sName + " as Archive");
+			
+			if (m_abyTFContent.length > 0x80) {
+				if (!isDisplay()) {
+					if (m_abyTFContent[0x80] == (byte)0x80) bArchive = true;
+				}
+				else {
+					
+					// Archive format has
+					// - an even number of records
+					// - a string "END!" at a position 0xfc + n*(0x100) with 0x00000000 at
+					// all previous 0xfc + m*(0x100)
+					// With 127 files at most, n < 10
+					
+					for (int i=0; i < 10; i++) {
+						int endVal = Utilities.getInt32be(m_abyTFContent, i*256 + 0xfc + 0x80);
+						if (endVal == 0x454e4421) { // "END!"
+							bArchive = true;
+							break;
+						}
+						if (endVal != 0x00000000) { 
+							bArchive = false;
+							break;
+						}
+					}
+				}
+			}
+		}
+		return bArchive;
+	}
+	
+	public static boolean checkIfArchive(byte[] abyTif) {
+		TIFiles tif = new TIFiles(abyTif);
+		return tif.checkIfArchive();
 	}
 }

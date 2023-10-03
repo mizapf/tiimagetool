@@ -25,6 +25,7 @@ import java.util.TreeMap;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.Iterator;
+import java.util.Set;
 
 /** Caches new sector contents. It contains only new contents and delivers
     them in place of the sector content in the image file.
@@ -113,7 +114,6 @@ public class SectorCache {
 	*/
 	void write(Sector sect) {
 
-		// System.out.println("Write sector " + sect.getNumber());
 		boolean bNew = true;
 		
 		// Set the generation
@@ -126,7 +126,7 @@ public class SectorCache {
 			// No history yet
 			secversions = new LinkedList<Sector>();
 			m_cache.put(sect.getNumber(), secversions);
-			// System.out.println("Creating new history for sector " + sect.getNumber());
+			System.out.println("Creating new history for sector " + sect.getNumber());
 		}
 		else {
 			Sector lsect = getRecentVersion(secversions);
@@ -141,6 +141,25 @@ public class SectorCache {
 			// Append new generation
 			secversions.add((Sector)sect.clone());
 			// System.out.println("Caching a new version (" + m_generation + ") of sector " + sect.getNumber());
+		}
+		System.out.println("Write sector " + sect.getNumber() + ", gen " + m_generation);
+	}
+	
+	/** Revert all entries for the current generation. */
+	void revert() {
+		Iterator<Integer> iterKey = m_cache.keySet().iterator();
+		while (iterKey.hasNext()) {
+			Integer key = iterKey.next();
+			LinkedList<Sector> secList = m_cache.get(key);
+			Sector sect = secList.getLast();
+			if (sect.getGeneration() == m_generation) {
+				secList.removeLast();
+				System.out.println("Removed entry for sector " + sect.getNumber());
+			}
+			if (secList.size()==0) {
+				iterKey.remove();
+				System.out.println("Removed history for sector " + sect.getNumber());
+			}
 		}
 	}
 	

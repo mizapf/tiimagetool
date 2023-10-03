@@ -501,7 +501,7 @@ public class CheckFSAction extends Activity {
 					try {
 						// vol.reopenForWrite();
 						if (bChangedSector0) vol.updateVIB(); 
-						if (bChangedAlloc) vol.saveAllocationMap();
+						if (bChangedAlloc) vol.writeAllocationMap();
 						if (changedL3) {
 							// Write all affected sectors
 							for (TFile f : fixL3) {

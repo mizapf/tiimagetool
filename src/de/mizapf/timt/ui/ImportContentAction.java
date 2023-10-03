@@ -240,6 +240,7 @@ public class ImportContentAction extends Activity {
 			/* Insert it into the image */
 			try {
 				dirCurrent.insertFile(abyTif, impdia.getFileName(), bReopen);
+				// FIXME: Check reopen
 				dirCurrent.commit(bReopen);
 			}
 			catch (ProtectedException px) {

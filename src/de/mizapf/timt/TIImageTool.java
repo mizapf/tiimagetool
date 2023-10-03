@@ -24,9 +24,9 @@
 	-------------
     
     Images
-	[ ] SCSI/IDE harddisk (512 bytes/sector)
-	[ ] IDE harddisk support (incl. partitions)
-	[ ] Add default hard disk format selection ("Seagate ST-225 | ... | maxAU8 | maxAU16 | user-defined")
+	[x] SCSI/IDE harddisk (512 bytes/sector)
+	[x] IDE harddisk support (incl. partitions)
+	[x] Add default hard disk format selection ("Seagate ST-225 | ... | maxAU8 | maxAU16 | user-defined")
 	[ ] Add check for CF card read (check for newly created image file)
 	[ ] Search for CF7 card and for dd / chown automatically.
 	[ ] Check for CF7 open issues in Windows
@@ -42,7 +42,7 @@
 	    - Change CHD version (file name is truncated)
 	    - Serial bridge
 	    - Search dialog
-	[ ] Paste error: If last entry is dir, object will be pasted there
+	[?] Paste error: If last entry is dir, object will be pasted there
 	[ ] Safe area for right-click outside of file
     [x] Periods appear doubled in XB file listing -> appears when . is used as escape character       [ ] Add note in documentation to avoid "~" or "." as escape character
 	[?] Recent files need escaping for semicolon in file name    
@@ -72,8 +72,9 @@
     [x] Save As is active after closing all open images
     [ ] Complete undo/redo
     [x] Restore all floppy formats
-    [ ] Restore all hd formats
+    [x] Restore all hd formats
   	[x] Unformatted image (998dd.dsk) can be opened without warning
+  	[ ] Abort copy/move should not touch the destination image
 
 */
 
@@ -1748,6 +1749,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return lst;
 	}
 	
+	// FIXME: Move this into Directory
 	public void putTIFileIntoImage(Directory dir, DirectoryView dvCurrent, byte[] abyTif, String sDefaultFilename) throws ProtectedException, InvalidNameException, FileNotFoundException, ImageException, IOException {
 
 		String sName = createValidInputFileName(sDefaultFilename);
@@ -1810,6 +1812,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 	}
 
+	// FIXME: Move this into Directory
 	public boolean putBinaryFileIntoImage(Directory dir, byte[] abyTif, String sDefaultFilename, boolean bMulti, boolean bGuess) throws ProtectedException, InvalidNameException, FileNotFoundException, ImageException, IOException {
 		String sName = createValidInputFileName(sDefaultFilename);
 		ImportDialog impdia = new ImportDialog(m_frmMain, sName, bMulti, ImportDialog.BINARY);

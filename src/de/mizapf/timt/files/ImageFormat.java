@@ -396,4 +396,8 @@ public abstract class ImageFormat  {
 		}
 		return sName;
 	}
+	
+	void revertChanges() {
+		m_writeCache.revert();
+	}
 }

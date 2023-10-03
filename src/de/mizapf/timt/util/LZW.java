@@ -127,9 +127,9 @@ public class LZW {
 			if (nBytePos >= m_abyBuffer.length - 3) {
 				// Increase by 25%
 				byte[] abyNew = new byte[(int)(m_abyBuffer.length * 1.25)];
-				if (DEBUG>0) System.arraycopy(m_abyBuffer, 0, abyNew, 0, m_abyBuffer.length);
+				System.arraycopy(m_abyBuffer, 0, abyNew, 0, m_abyBuffer.length);
 				m_abyBuffer = abyNew;
-//				System.out.println("Increase buffer to " + abyNew.length);
+				if (DEBUG>0) System.out.println("Increase buffer to " + abyNew.length);
 			}
 			
 			while (nRem > 0) {

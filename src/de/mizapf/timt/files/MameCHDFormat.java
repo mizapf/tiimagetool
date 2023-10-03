@@ -546,7 +546,7 @@ public class MameCHDFormat extends HarddiskImageFormat {
 				m_nAppendOffset = ((nextOffset + (m_nHunkLength - 1)) / m_nHunkLength) * m_nHunkLength;
 				nextOffset = Utilities.getInt64be(abyMeta, 8);
 			}
-			System.out.println("AppendOffset = " + Utilities.toHex((int)m_nAppendOffset, 8));
+			// System.out.println("AppendOffset = " + Utilities.toHex((int)m_nAppendOffset, 8));
 		}
 		
 		long getAppendOffset() {

@@ -100,14 +100,14 @@ public class CreateArchiveAction extends Activity {
 				forArc.toArray(aforarc);			
 				
 				// then add the archive
-				// System.out.println("Add the empty archive file " + ad.getArchiveName() + " to the current directory");
+				System.out.println("Add the empty archive file " + ad.getArchiveName() + " to the current directory");
 				arkf = dirCurrent.insertFile(abyTfi, null, false);
 				ark = arkf.unpackArchive();
 				// vol.sameGeneration();
-				// System.out.println("Add all selected files to the archive");
+				System.out.println("Add all selected files to the archive");
 				ark.insertFiles(aforarc, null, false);
 				dirCurrent.commit(true);
-				// System.out.println("done");
+				System.out.println("Create archive done");
 			// FIXME: Element selection must be improved (select/deselect) 
 			}
 			catch (InvalidNameException inx) {
@@ -140,14 +140,6 @@ public class CreateArchiveAction extends Activity {
 			catch (IllegalOperationException ix) {
 				ix.printStackTrace();
 			}
-
-/*			try {
-				vol.reopenForRead();
-			}
-			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen") + ": " + iox.getMessage(), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE); 				
-			}
-			*/
 			imagetool.refreshPanel(vol);			
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

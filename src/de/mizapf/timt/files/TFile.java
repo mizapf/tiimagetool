@@ -47,8 +47,11 @@ public class TFile extends Element {
 	protected boolean		m_bL3Swapped;
 	protected boolean		m_bL3Bad;
 	
-	protected boolean		m_bArchiveChecked;
-	protected boolean		m_bArchive;
+	private final static int UNKNOWN = 0;
+	private final static int YES = 1;
+	private final static int NO = 2;
+	
+	private int			m_nIsArchive;
 	
 	public final static byte VARIABLE = (byte)0x80;
 	public final static byte EMULATE = (byte)0x20;
@@ -91,8 +94,7 @@ public class TFile extends Element {
 		checkL3();		
 		m_dirParent = null;
 		m_bProtected = false;
-		m_bArchive = false;
-		m_bArchiveChecked = false;
+		setArchive(TIFiles.checkIfArchive(abyTif));
 	}
 		
 	TFile(Volume vol, Sector sectFIB, Directory dirParent) throws IOException, ImageException {
@@ -116,7 +118,7 @@ public class TFile extends Element {
 		m_dirParent = dirParent;
 		m_bProtected = false;
 		checkL3();		
-		checkArchiveFormat();
+		checkIfArchive();
 	}
 	
 	/** Used for archive files. */
@@ -330,8 +332,8 @@ public class TFile extends Element {
 	public boolean hasArchiveFormat() {
 		// We need to postpone the archive check when an Archive is inserted
 		// into an Archive
-		if (!m_bArchiveChecked) checkArchiveFormat();
-		return m_bArchive;
+		if (m_nIsArchive == UNKNOWN) checkIfArchive();
+		return m_nIsArchive==YES;
 	}
 	
 	public static boolean validName(String sName) {
@@ -1168,20 +1170,20 @@ public class TFile extends Element {
 			(content[1] == (byte)0xff || content[1] == (byte)0x00 || content[1] == (byte)0x09 || content[1] == (byte)0x0a));
 	}
 	
-	/** Check for Archive format. */
-	public void checkArchiveFormat() {
-		m_bArchive = false;
-		m_bArchiveChecked = true;
+	/** Check for Archive format from this defined TFile. */
+	public void checkIfArchive() {
+		m_nIsArchive = NO;
+		// Thread.currentThread().dumpStack();
 
 		try {
 			if (hasFixedRecordLength() && getRecordLength()==128 && !isProgram()) {
-				// System.out.println("Check file " + m_sName + " as Archive");
+				System.out.println("Check file " + m_sName + " as Archive");
 				byte[] content = getRawContent();
 				
-				if (Archive.hasPlainArchiveFormat(content)) m_bArchive = true;
+				if (Archive.hasPlainArchiveFormat(content)) m_nIsArchive = YES;
 				else {
 					if (!isDisplay() && content.length>0) {
-						if (content[0] == (byte)0x80) m_bArchive = true;
+						if (content[0] == (byte)0x80) m_nIsArchive = YES;
 					}
 				}
 			}
@@ -1196,9 +1198,13 @@ public class TFile extends Element {
 			ix.printStackTrace();
 		}
 	}
+
+	public void setArchive(boolean bArchive) {
+		m_nIsArchive = bArchive? YES : NO;
+	}
 	
 	public Archive unpackArchive() throws IllegalOperationException, FormatException, IOException, ImageException {
-		if (!m_bArchive) throw new IllegalOperationException(TIImageTool.langstr("ArchiveNot"));
+		if (m_nIsArchive==NO) throw new IllegalOperationException(TIImageTool.langstr("ArchiveNot"));
 		boolean bCompressed = false;
 		
 		byte[] content = getRawContent();
