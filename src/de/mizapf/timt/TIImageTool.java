@@ -75,6 +75,7 @@
     [x] Restore all hd formats
   	[x] Unformatted image (998dd.dsk) can be opened without warning
   	[ ] Abort copy/move should not touch the destination image
+  	[ ] Finding files
 
 */
 

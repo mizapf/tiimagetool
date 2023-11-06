@@ -122,13 +122,14 @@ public abstract class ImageFormat  {
 	public final static int MEMORY = 0;
 	public final static int SECTORDUMP = 1;
 	public final static int TRACKDUMP = 2;
-	public final static int HFE = 3;
-	public final static int CHD = 4;
-	public final static int RAWHD = 5;
+	public final static int CF7 = 3;
+	public final static int HFE = 4;
+	public final static int CHD = 5;
+	public final static int RAWHD = 6;
 	
 	public final static int NONE = -1;
 
-	public final static String[] suffix = { "", "dsk", "dtk", "hfe", "hd", "raw" };
+	public final static String[] suffix = { "", "dsk", "dtk", "hfe", "hd", "raw", "cf7" };
 
 	// Independent of the file system, a physical property
 	// int m_nTotalSectors;
@@ -151,7 +152,7 @@ public abstract class ImageFormat  {
 	public static void setFormats(String formstr) {
 		formatline = formstr;
 		String[] formats = formatline.split(",\\s*");
-		m_formatClass = new Class[6];
+		m_formatClass = new Class[7];
 		for (int i=0; i < formats.length; i++) {
 			Object[] ao = new Object[0];
 			try {

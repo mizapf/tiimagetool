@@ -49,7 +49,6 @@ class RawHDFormat extends HarddiskImageFormat {
 		
 		// We should have a multiple of the sector size
 		if ((fl.length() % 256) != 0) return 10;
-		
 		return 100;		
 	}
 		

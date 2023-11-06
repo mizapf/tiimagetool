@@ -158,7 +158,11 @@ public class SearchAction extends Activity {
 			}
 			vol.close();
 		}
-		catch (Exception ix) {
+		catch (IOException iox) {
+			iox.printStackTrace();
+		}
+		catch (ImageException ix) {
+			ix.printStackTrace();
 		}
 	}
 	
