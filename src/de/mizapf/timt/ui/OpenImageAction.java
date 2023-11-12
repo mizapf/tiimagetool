@@ -62,9 +62,9 @@ public class OpenImageAction extends Activity {
 			sAbsFile = imagefile.getAbsolutePath();
 			Volume vol = null;
 			try {
-				// ============== Open the image			
-				ImageFormat image = ImageFormat.getImageFormat(sAbsFile); // throws ImageExc if unknown
-				
+				// ============== Open the image	
+				FileImageFormat image = (FileImageFormat)ImageFormat.getImageFormat(sAbsFile); // throws ImageExc if unknown
+								
 				byte[] vibmap = null;
 				TFileSystem fs = null;	
 				
@@ -93,53 +93,59 @@ public class OpenImageAction extends Activity {
 					((FloppyFileSystem)fs).setupAllocationMap(vibmap);
 				}
 				
+				if (image.isPartitioned()) {
+					PartitionSelectionDialog psd = new PartitionSelectionDialog(m_parent, image.getPartitionTable());
+					psd.createGui(imagetool.boldFont);
+					psd.setVisible(true);
+					if (psd.confirmed()) {
+						int selPart = psd.getSelectedNumber()-1;
+						image.setPartition(selPart);
+						// Do not open the partition if another partition of 
+						// the same image is open! This needs further investigation,
+						// especially for CHD (see sector cache)
+						
+						// Sectors are relative inside partitions, i.e. sector 0
+						// in partition 1 is in another format unit than sector 0
+						// in partition 2.
+						
+						// Although the sectors in the partitions do not overlap,
+						// the hunk map is shared. When two partitions have
+						// updates that create new hunks, this may lead to a race condition.
+						
+						// This means that the same sector cache must be used
+						
+						// However, this in turn means that saving the cache would
+						// commit the changes of all open partitions: Two tabs
+						// opened with two different partitions, both modified;
+						// doing a Save would require all changes of both partitions
+						// to be written.
+						if (imagetool.hasAlreadyOpenedVolume(sAbsFile)) {
+							Volume vol1 = imagetool.getAlreadyOpenedVolume(sAbsFile);
+							if (vol1.getPartitionNumber() != selPart) {
+								JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.OtherPartitionOpen"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+								continue;
+							}
+						}
+						if (image instanceof CF7ImageFormat) {
+							vibmap = image.readSector(0).getData();
+							fs = ((CF7ImageFormat)image).getFileSystem(vibmap);
+							((CF7VolumeFileSystem)fs).configure(vibmap);
+							((CF7VolumeFileSystem)fs).setupAllocationMap(vibmap);
+						}
+					}
+					else continue;
+				}		
+				
 				if (image instanceof HarddiskImageFormat) {
 					HarddiskImageFormat hif = (HarddiskImageFormat)image;
+										
 					vibmap = image.readSector(0).getData();						
 					int check = HarddiskFileSystem.checkFormat(vibmap);
 					
 					System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
 					if (check != TFileSystem.GOOD) {
 						// When we have partitions, open the partition selection
-						if ((check & TFileSystem.PARTITIONED)!=0) {
-							hif.setupPartitionTable();
-							PartitionSelectionDialog psd = new PartitionSelectionDialog(m_parent, hif.getPartitionTable());
-							psd.createGui(imagetool.boldFont);
-							psd.setVisible(true);
-							if (psd.confirmed()) {
-								int selPart = psd.getSelectedNumber()-1;
-								hif.setPartition(selPart);
-								// Do not open the partition if another partition of 
-								// the same image is open! This needs further investigation,
-								// especially for CHD (see sector cache)
-								
-								// Sectors are relative inside partitions, i.e. sector 0
-								// in partition 1 is in another format unit than sector 0
-								// in partition 2.
-								
-								// Although the sectors in the partitions do not overlap,
-								// the hunk map is shared. When two partitions have
-								// updates that create new hunks, this may lead to a race condition.
-								
-								// This means that the same sector cache must be used
-								
-								// However, this in turn means that saving the cache would
-								// commit the changes of all open partitions: Two tabs
-								// opened with two different partitions, both modified;
-								// doing a Save would require all changes of both partitions
-								// to be written.
-								if (imagetool.hasAlreadyOpenedVolume(sAbsFile)) {
-									Volume vol1 = imagetool.getAlreadyOpenedVolume(sAbsFile);
-									if (vol1.getPartitionNumber() != selPart) {
-										JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.OtherPartitionOpen"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-										continue;
-									}
-								}
-								// Have to read the VIB from the selected partition
-								vibmap = image.readSector(0).getData();
-							}
-							else continue;
-						}
+						
 						int doCheckSig = JOptionPane.YES_OPTION;
 						if ((check & TFileSystem.BAD_GEOMETRY)!=0) {
 							doCheckSig = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("Format.badgeometry") + ". " + TIImageTool.langstr("Ask.openanyway"), 

@@ -42,11 +42,7 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 	public final static int IDE = 3;	// ss=512, may have partitions
 	*/
 	private int m_nHDType;
-	
-	private int m_nActivePartition;
-	
-	Partition[] m_partition;
-	
+		
 	protected HarddiskImageFormat(String sImageName) throws FileNotFoundException, IOException, ImageException {
 		super(sImageName);
 		m_nActivePartition = -1;
@@ -58,6 +54,7 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		m_nCylinders = params.cylinders;		
 		m_nHeads = params.heads;
 		m_nActivePartition = -1;
+		System.out.println("hier2");
 	}
 
 	/** May be overridden by formats like RawHDFormat which cannot rely on this. */
@@ -111,22 +108,12 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		return m_partition[m_nActivePartition].offset;
 	}
 	
-	public void setPartition(int part) {
-		// System.out.println("Selected partition " + (part+1));
-		m_nActivePartition = part;
-		m_nCurrentFormatUnit = NONE;
-	}
-		
 	public String getPartitionName(int part) {
 		if (m_partition[part] != null) 
 			return m_partition[part].name;
 		return null;
 	}
-	
-	public int getActivePartition() {
-		return m_nActivePartition;
-	}
-	
+		
 	/*
 	    18-1b: Offset 1st partition
 	    1c-1f: #sectors 1st partition
@@ -146,7 +133,6 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
     
 	public void setupPartitionTable() throws ImageException, IOException {
 		m_partition = new Partition[4];
-		setFormatUnitLength(32 * TFileSystem.SECTOR_LENGTH);
 		byte[] sect0 = readSector(0).getData();
 		
 		for (int i=0; i < 4; i++) {
@@ -163,8 +149,11 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		}
 	}
 	
-	public Partition[] getPartitionTable() {
-		return m_partition;
+	public boolean isPartitioned() throws ImageException, IOException {
+		if (m_partition != null) return true;
+		
+		byte[] vib = readSector(0).getData();
+		System.out.println(Utilities.hexdump(vib));
+		return (vib[0x0e] == 'P' && vib[0x0f] == 'T' && vib[0x0a] == (byte)0xff && vib[0x0b] == (byte)0xff);
 	}
-	
 }

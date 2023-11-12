@@ -223,11 +223,6 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		if ((nFSTotalSectors / nFSSectorsPerAU) > 0xF800)
 			ret |= BAD_AUCOUNT;
 		
-		if (vib[0x0e] == 'P' && vib[0x0f] == 'T' && vib[0x0a] == (byte)0xff && vib[0x0b] == (byte)0xff) {
-			// We have a partitioned IDE image; the other values are irrelevant
-			ret = PARTITIONED;		
-		}
-		
 		return ret;
 	}
 	

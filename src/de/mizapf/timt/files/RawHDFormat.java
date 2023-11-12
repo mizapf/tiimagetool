@@ -88,8 +88,10 @@ class RawHDFormat extends HarddiskImageFormat {
 		super(sImageName);
 		m_codec = new RawHDCodec();
 		m_nSectorsPerTrack = -1;
-		m_nFormatUnitLength = -1;
+		m_nFormatUnitLength = 32 * TFileSystem.SECTOR_LENGTH;
+
 		m_nTotalSectors = (int)(m_file.length() / TFileSystem.SECTOR_LENGTH);
+		if (isPartitioned()) setupPartitionTable();
 	}
 	
 

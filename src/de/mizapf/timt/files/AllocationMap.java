@@ -47,7 +47,9 @@ public class AllocationMap implements Cloneable {
 			m_abyMap = new byte[200];
 
 			// Fill bits with 1 after the last allocatable AU
-			m_abyMap[nAU/8] = (byte)((0xff << (nAU%8)) & 0xff);
+			if (nAU < 1600) {
+				m_abyMap[nAU/8] = (byte)((0xff << (nAU%8)) & 0xff);
+			}
 			for (int i = nAU/8+1; i < m_abyMap.length; i++) {
 				m_abyMap[i] = (byte)0xff;
 			}

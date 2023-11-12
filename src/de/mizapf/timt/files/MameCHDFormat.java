@@ -686,7 +686,9 @@ public class MameCHDFormat extends HarddiskImageFormat {
 		
 		// Set the geometry. Note that the sectors are always 256 bytes, even
 		// when SCSI drives have 512 byte sectors (physical sectors vs. logical sectors)
-		m_nTotalSectors = m_header.getTotalSectors() * (m_header.getSectorSize() / TFileSystem.SECTOR_LENGTH);		
+		m_nTotalSectors = m_header.getTotalSectors() * (m_header.getSectorSize() / TFileSystem.SECTOR_LENGTH);
+		
+		if (isPartitioned()) setupPartitionTable();
 	}
 	
 	public MameCHDFormat(String sImageName, FormatParameters params) throws IOException, ImageException {

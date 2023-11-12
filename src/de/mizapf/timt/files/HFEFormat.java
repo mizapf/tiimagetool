@@ -1013,4 +1013,9 @@ public class HFEFormat extends FloppyImageFormat {
 		
 		return null; 
 	}
+
+	public boolean isPartitioned() {
+		return false;
+	}
+
 }

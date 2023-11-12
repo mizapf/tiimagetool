@@ -145,8 +145,8 @@ class SectorDumpFormat extends FloppyImageFormat {
 		
 		m_codec = new SectorDumpCodec();
 		
-		long nLength = m_file.length();
-		if (((nLength / 256) % 10)==3) nLength -= 768;
+		long nLength = m_nLength;
+		if (((m_nLength / 256) % 10)==3) nLength -= 768;
 
 		int format = NONE;
 		for (int i=0; i < sdfgeometry.length; i++) {
@@ -209,6 +209,10 @@ class SectorDumpFormat extends FloppyImageFormat {
 		m_file.seek(0);
 		m_file.readFully(sect0);
 		return new Sector(0, sect0);
+	}
+	
+	public boolean isPartitioned() {
+		return false;
 	}
 }
 
