@@ -28,7 +28,6 @@ import java.io.EOFException;
 import java.util.*;
 import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
-import java.io.FileInputStream;
 import java.io.DataInputStream;
 import java.io.PrintStream;
 import de.mizapf.timt.files.*;

@@ -24,4 +24,5 @@ verbose=output:b:Output completo sulla console
 fontsize=output:s:Dimensione del font
 uifont=output:s:Font per l'interfaccia utente
 asmtool=misc:s:Assembler invocation
-fillpat=misc:s:Fill empty floppy sectors with
+fillpat=misc:s:Riempi i settori floppy vuoti con
+imgsuf=misc:s:Suffissi dei file immagine 

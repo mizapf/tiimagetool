@@ -126,7 +126,6 @@ import java.io.IOException;
 public interface PartitionedStorage {
 	
 	void setPartition(int part);
-	String getPartitionName(int part);
 	void setupPartitionTable() throws ImageException, IOException;
 	int getActivePartition();
 }

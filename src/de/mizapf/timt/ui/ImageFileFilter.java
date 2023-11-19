@@ -27,36 +27,30 @@ import de.mizapf.timt.TIImageTool;
 
 public class ImageFileFilter extends FileFilter {
 	
-	boolean m_bOnlyHD = false;
+	String[] m_asSuffix;
+	
+	ImageFileFilter(String sSuffixes) {
+		m_asSuffix = sSuffixes.split(" |,");
+	}
 	
 	public String getDescription() {
-		if (m_bOnlyHD) {
-			return TIImageTool.langstr("FilterHD");
-		}
-		else {
-			return TIImageTool.langstr("FilterImg");
-		}
+		return TIImageTool.langstr("FilterImg");
 	}
 
-	public void setOnlyHD() {
-		m_bOnlyHD = true;
-	}
-	
 	public boolean accept(File f) {
+		if (f.isDirectory()) return true;
+		
 		String sName = f.getName().toLowerCase();
-		if (m_bOnlyHD) {
-			return sName.endsWith(".hd") || sName.endsWith(".chd") ||f.isDirectory();
+		int sufpnt = sName.lastIndexOf(".") + 1;
+		// - stands for no suffix
+		String suffix;
+		if (sufpnt == 0) suffix = "-";
+		else suffix = sName.substring(sufpnt);
+	
+		for (String s : m_asSuffix) {
+			if (s.equalsIgnoreCase(suffix)) return true;
 		}
-		else {
-			return sName.endsWith(".dsk") 
-				|| sName.endsWith(".dtk") 
-				|| sName.endsWith(".hfe") 
-				|| sName.endsWith(".raw") 
-				|| sName.endsWith(".hd") 
-				|| sName.endsWith(".chd") 
-				|| sName.endsWith(".cf7") 
-				|| f.isDirectory();
-		}
+		return false;
 	}
 }
 

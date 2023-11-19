@@ -21,7 +21,6 @@
 package de.mizapf.timt.ui;
 
 import javax.swing.*;
-import java.io.FileInputStream;
 import java.io.DataInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;

@@ -31,6 +31,7 @@
 	[ ] Search for CF7 card and for dd / chown automatically.
 	[ ] Check for CF7 open issues in Windows
 	[x] "Please wait" window for CF7
+	[x] Define suffixes for images
 
 	Disassembler
 	[ ] Disassembler problem in symbolic mode; see disassembler file
@@ -193,6 +194,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String UIFONT = "uifont";
 	public final static String FILLPAT = "fillpat";
 	public final static String IMGFORM = "imgform";
+	public final static String IMGSUF = "imgsuf";
 	
 	Properties m_propNames;
 	

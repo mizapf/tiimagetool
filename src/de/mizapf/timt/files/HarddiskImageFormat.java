@@ -108,12 +108,6 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		return m_partition[m_nActivePartition].offset;
 	}
 	
-	public String getPartitionName(int part) {
-		if (m_partition[part] != null) 
-			return m_partition[part].name;
-		return null;
-	}
-		
 	/*
 	    18-1b: Offset 1st partition
 	    1c-1f: #sectors 1st partition

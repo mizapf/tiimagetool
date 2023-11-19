@@ -25,3 +25,4 @@ fontsize=output:s:Font size
 uifont=output:s:Font for user interface
 asmtool=misc:s:Assembler invocation
 fillpat=misc:s:Fill empty floppy sectors with
+imgsuf=misc:s:Suffixes for image files

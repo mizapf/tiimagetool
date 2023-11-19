@@ -132,7 +132,8 @@ public class NewIDEImageAction extends Activity {
 				jfc.setFileSelectionMode(JFileChooser.FILES_ONLY);
 				jfc.setMultiSelectionEnabled(false);
 				
-				ImageFileFilter im = new ImageFileFilter();
+				ImageFileFilter im = new ImageFileFilter(settings.getPropertyString(imagetool.IMGSUF));
+
 				jfc.addChoosableFileFilter(im);
 				jfc.setFileFilter(im);	
 				

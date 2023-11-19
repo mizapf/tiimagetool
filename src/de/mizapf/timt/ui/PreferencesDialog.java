@@ -65,8 +65,19 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 
-		// Sample text
-		m_nColumnWidth = fm.stringWidth(TIImageTool.langstr("PreferencesColumn"));
+		// Find the best column width
+		java.util.List<String> prefs = m_app.getPreferences("");
+		int nColLength = 0;
+		String sColMaxString = "";
+		
+		for (String s : prefs) {
+			int n = m_app.getPreferenceLabel(s).length();
+			if (n > nColLength) {
+				nColLength = n;
+				sColMaxString = m_app.getPreferenceLabel(s);
+			}
+		}
+		m_nColumnWidth = fm.stringWidth(sColMaxString);
 		
 		// Sample text
 		m_fieldWidth = fm.stringWidth("javax.swing.plaf.metal.MetalLookAndFeel");

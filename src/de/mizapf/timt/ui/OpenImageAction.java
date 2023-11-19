@@ -128,6 +128,9 @@ public class OpenImageAction extends Activity {
 						}
 						if (image instanceof CF7ImageFormat) {
 							vibmap = image.readSector(0).getData();
+							// int check = CF7bla.checkFormat(vibmap);
+							// FIXME
+							
 							fs = ((CF7ImageFormat)image).getFileSystem(vibmap);
 							((CF7VolumeFileSystem)fs).configure(vibmap);
 							((CF7VolumeFileSystem)fs).setupAllocationMap(vibmap);
@@ -228,7 +231,7 @@ public class OpenImageAction extends Activity {
 		
 		Dimension dim = settings.getPropertyDim(imagetool.FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
-		ImageFileFilter im = new ImageFileFilter();
+		ImageFileFilter im = new ImageFileFilter(settings.getPropertyString(imagetool.IMGSUF));
 		jfc.addChoosableFileFilter(im);
 		jfc.setFileFilter(im);
 		jfc.setMultiSelectionEnabled(true);

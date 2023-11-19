@@ -27,6 +27,8 @@ import java.util.LinkedList;
 import java.util.Iterator;
 import java.util.Set;
 
+import de.mizapf.timt.util.Utilities;
+
 /** Caches new sector contents. It contains only new contents and delivers
     them in place of the sector content in the image file.
     
@@ -143,6 +145,7 @@ public class SectorCache {
 			// System.out.println("Caching a new version (" + m_generation + ") of sector " + sect.getNumber());
 		}
 		System.out.println("Write sector " + sect.getNumber() + ", gen " + m_generation);
+		// System.out.println(Utilities.hexdump(sect.getData()));
 	}
 	
 	/** Revert all entries for the current generation. */

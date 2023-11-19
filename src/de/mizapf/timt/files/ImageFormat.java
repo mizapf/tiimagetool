@@ -25,7 +25,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.util.Arrays;
 import java.lang.reflect.*;
 import de.mizapf.timt.util.Utilities;
@@ -211,6 +210,7 @@ public abstract class ImageFormat  {
 		for (Class<?> cls : m_formatClass) {
 			try {
 				if (cls != null) {
+					System.out.println("Trying " + cls.getName()); 
 					Method vote = cls.getDeclaredMethod("vote", String.class);
 					if (((Integer)vote.invoke(null, sFile)).intValue() > 50) { 
 						Constructor<?> cons = cls.getConstructor(String.class);

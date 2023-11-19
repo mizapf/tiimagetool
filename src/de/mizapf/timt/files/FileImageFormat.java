@@ -220,7 +220,7 @@ public abstract class FileImageFormat extends ImageFormat {
 			// reopenForWrite();
 			m_file.seek(offset);
 			m_file.write(m_codec.getFormatUnitBuffer());
-			// System.out.println(Utilities.hexdump(0, 0, m_codec.getFormatUnitBuffer(), 256, false));
+			// System.out.println(Utilities.hexdump(m_codec.getFormatUnitBuffer()));
 			// reopenForRead();
 		}
 		else {

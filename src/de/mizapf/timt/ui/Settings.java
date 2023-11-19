@@ -148,6 +148,7 @@ public class Settings {
 		getPropertyString(TIImageTool.UIFONT, "SansSerif");
 		getPropertyString(TIImageTool.FILLPAT, "E5");
 		getPropertyString(TIImageTool.IMGFORM, "CF7VolumeFormat,CF7ImageFormat,SectorDumpFormat,TrackDumpFormat,HFEFormat,RawHDFormat,MameCHDFormat");
+		getPropertyString(TIImageTool.IMGSUF, "dsk,dtk,hfe,cf7,hd,chd,raw,bin,-");
 	}
 	
 	private void checkProperties() {

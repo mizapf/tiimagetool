@@ -29,6 +29,7 @@ package de.mizapf.timt.files;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 
 import java.util.List;
@@ -61,22 +62,14 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 
 		// Test whether we have a DSK signature in at least one of the first
 		// three partitions
-		FileInputStream fis = new FileInputStream(sFile);
-		int nReadlen = (nLength < 2457600)? (int)nLength : 2457600;
+		int nReadBytes = (nLength < 2457600)? (int)nLength : 2457600;
 		
-		byte[] aby = new byte[nReadlen];
+		byte[] aby = new byte[nReadBytes];
 		
 		// Read the beginning
-		int nReadBytes = 0;
-		for (int i=0; i < nReadlen; i++) {
-			int ch = fis.read();
-			if (ch == -1) {
-				break;
-			}
-			nReadBytes++;
-			aby[i] = (byte)ch;
-		}
-		fis.close();
+		DataInputStream dis = new DataInputStream(new FileInputStream(sFile));
+		dis.readFully(aby);
+		dis.close();
 		
 		boolean bFound = false;
 		for (int i=0; i < 3; i++)  {
@@ -127,11 +120,21 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 					m_decodedSectors.add(is);
 					j = 0;
 					number++;
+					pos = i+2;
 				}
 			}
 		}
 		
 		void encode() {
+			for (ImageSector sect : m_decodedSectors) {
+				System.out.println("DecSec = " + sect.getNumber() +", pos = " + sect.getPosition());
+				byte[] content = sect.getData();
+				int pos = sect.getPosition();
+				for (int j=0; j < TFileSystem.SECTOR_LENGTH; j++) {
+					m_formatUnit[pos] = content[j];
+					pos += 2;
+				}
+			}
 		}				
 		
 		void prepareNewFormatUnit(int funum, FormatUnitParameters t) {
@@ -151,11 +154,7 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 	public void setPartition(int part) {
 		m_nActivePartition = part;
 	}
-	
-	public String getPartitionName(int part) {
-		return "FIXME";
-	}
-	
+		
 	/** Find partitions. Each partition is exactly 400 KiB long (1600 sectors).
 	    We only consider those partitions that have a DSK signature.
 	*/
@@ -176,12 +175,13 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 			try {
 				Sector vib = readSector(partsect);
 				byte[] abyVib = vib.getData();
+				System.out.println(Utilities.hexdump(abyVib));
 				String sName = Utilities.getString10(abyVib, 0);
 				boolean bValid = false;
 				
 				// Check whether there is a name or a DSK signature
 				// If not, skip that partition
-				if (sName.trim().length()==0) sName = String.format("NONAME%04d", nNoName++);
+				if (sName.trim().length()==0) sName = "UNNAMED";
 				if ((abyVib[13] == 'D') && (abyVib[13] == 'S') && (abyVib[13] == 'K')) {
 					bValid = true;
 				}
@@ -276,23 +276,107 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 }
 
 /*
-00000000: 5600 4f00 4c00 3100 2000 2000 2000 2000  V.O.L.1. . . . .
-00000010: 2000 2000 0600 4000 1400 4400 5300 4b00   . ...@...D.S.K.
-00000020: 2000 2800 0200 0200 0000 0000 0000 0000   .(.............
-00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
-00000040: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 
 repeated every 0x64000
 
 00-09  Name
-0a-0b  1600
-0c     20
+0a-0b  tot sect: 0x0640 = 1600
+0c     sect/track: 0x20 = 32
 0d-0f  "DSK"
-10     " " / "P"
-11     40
-12     2
-13     2
+10     prot: " " / "P"
+11     tracks/side: 0x28 = 40
+12     sides: 2
+13     density: 2 (double)
 14-    00
+
+1600 sect, 40/1/32 SD
+
+000000: 56 4f 4c 31 20 20 20 20 20 20 06 40 20 44 53 4b     VOL1      .@ DSK
+000010: 20 28 01 01 aa 03 00 06 00 02 00 03 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
+
+720 sect, 40/2/9 SD
+
+000000: 46 31 38 41 44 45 4d 4f 53 20 02 d0 09 44 53 4b     F18ADEMOS ...DSK
+000010: 20 28 02 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
+
+1600 sect, 40/1/9 SD 
+
+000000: 20 20 20 20 20 20 20 20 20 20 06 40 09 44 53 4b               .@.DSK
+000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 ff ff ff 01 fc ff ff ff     ................
+
+1600 sect, 40/1/9 SD
+
+000000: 20 20 20 20 20 20 20 20 20 20 06 40 09 44 53 4b               .@.DSK
+000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 0f 00 00 00 fc ff ff ff     ................
+
+1600 sect, 40/1/9 SD
+
+000000: 20 20 20 20 20 20 20 20 20 20 06 40 09 44 53 4b               .@.DSK
+000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 0f 00 00 00 fc ff ff ff     ................
+
+1600 sect, 40/1/9 SD
+
+000000: 20 20 20 20 20 20 20 20 20 20 06 40 09 44 53 4b               .@.DSK
+000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 07 00 00 00 fc ff ff 1f     ................
+
+
+MeineCF (alles mit dsk2cf.exe in WinXP erzeugt):
+
+1600 sect, 40/2/18 DD
+
+000000: 44 49 53 4b 30 32 20 20 20 20 06 40 12 44 53 4b     DISK02    .@.DSK
+000010: 20 28 02 02 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
+
+1600 sect, 40/2/18 DD
+
+000000: 44 49 53 4b 30 31 20 20 20 20 06 40 12 44 53 4b     DISK01    .@.DSK
+000010: 20 28 02 02 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
+
+1600 sect, 40/1/9 SD
+
+000000: 44 49 53 4b 30 31 2f 53 31 20 06 40 09 44 53 4b     DISK01/S1 .@.DSK
+000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
+
+1600 sect, 40/1/9 SD 
+
+000000: 44 49 53 4b 30 31 2f 53 32 20 06 40 09 44 53 4b     DISK01/S2 .@.DSK
+000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
+
+1600 sect, 40/2/9 SD 
+
+000000: 49 44 45 44 52 53 31 35 20 20 06 40 09 44 53 4b     IDEDRS15  .@.DSK
+000010: 20 28 02 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 ff ff ff 00 fc ff ff ff     ................
+
+1600 sect, 40/2/9 SD 
+
+000000: 4d 4d 4f 55 53 45 20 20 20 20 06 40 09 44 53 4b     MMOUSE    .@.DSK
+000010: 20 28 02 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
+000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
+000030: 00 00 00 00 00 00 00 00 ff 03 00 00 fc ff ff ff     ................
+
+-> Geometrie wird nicht angepasst, ist bedeutungslos
 
 */
 

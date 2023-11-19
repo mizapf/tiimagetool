@@ -52,8 +52,7 @@ public class ChangeCHDFormatAction extends Activity {
 		
 		Dimension dim = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 		if (dim!=null) jfc.setPreferredSize(dim);
-		ImageFileFilter im = new ImageFileFilter();
-		im.setOnlyHD();
+		ImageFileFilter im = new ImageFileFilter(settings.getPropertyString(imagetool.IMGSUF));
 		jfc.addChoosableFileFilter(im);
 		jfc.setFileFilter(im);
 		jfc.setMultiSelectionEnabled(false);
@@ -133,7 +132,7 @@ public class ChangeCHDFormatAction extends Activity {
 			Dimension dim1 = settings.getPropertyDim(TIImageTool.FILEDIALOG);
 			if (dim1!=null) jfc1.setPreferredSize(dim1);
 			
-			ImageFileFilter im1 = new ImageFileFilter();
+			ImageFileFilter im1 = new ImageFileFilter(settings.getPropertyString(imagetool.IMGSUF));
 			jfc1.addChoosableFileFilter(im1);
 			jfc1.setFileFilter(im1);
 			

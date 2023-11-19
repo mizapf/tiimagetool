@@ -59,7 +59,8 @@ public class ExportEmulateAction extends Activity {
 					Dimension dim = settings.getPropertyDim(imagetool.FILEDIALOG);
 					if (dim!=null) jfc.setPreferredSize(dim);
 					
-					ImageFileFilter im = new ImageFileFilter();
+					ImageFileFilter im = new ImageFileFilter(settings.getPropertyString(imagetool.IMGSUF));
+
 					jfc.addChoosableFileFilter(im);
 					jfc.setFileFilter(im);
 					
