@@ -32,6 +32,7 @@ class PartitionSelectionDialog extends ToolDialog {
 
 	Partition[] m_partition;
 	JTextField m_tfPartitionNumber;
+	boolean m_volumes;
 
 	class ClickListener implements MouseListener {
 		// ===================================================================
@@ -60,9 +61,10 @@ class PartitionSelectionDialog extends ToolDialog {
 		}		
 	}	
 
-	PartitionSelectionDialog(JFrame owner, Partition[] part) {
-		super(owner, TIImageTool.langstr("Title.SelectPartition"));
+	PartitionSelectionDialog(JFrame owner, Partition[] part, boolean volumes) {
+		super(owner, volumes? TIImageTool.langstr("SelectVolume") : TIImageTool.langstr("Title.SelectPartition"));
 		m_partition = part;
+		m_volumes = volumes;
 	}
 	
 /*
@@ -84,7 +86,9 @@ class PartitionSelectionDialog extends ToolDialog {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 		
-		int nLabelWidth = determineFieldWidth(TIImageTool.langstr("Image.PartitionNumber"));
+		String label = m_volumes? "VolumeNumber" : "Image.PartitionNumber";
+		
+		int nLabelWidth = determineFieldWidth(TIImageTool.langstr(label));
 		
 		JPanel jpSelection = new JPanel();
 		jpSelection.setLayout(new BoxLayout(jpSelection, BoxLayout.Y_AXIS));
@@ -108,7 +112,7 @@ class PartitionSelectionDialog extends ToolDialog {
 		add(scp);
 		add(Box.createVerticalStrut(10));
 		
-		m_tfPartitionNumber = putTextField(this, TIImageTool.langstr("Image.PartitionNumber"), "", nLabelWidth, 0);
+		m_tfPartitionNumber = putTextField(this, TIImageTool.langstr(label), "", nLabelWidth, 0);
 		m_tfPartitionNumber.setText("1");
 
 		addButtons();	

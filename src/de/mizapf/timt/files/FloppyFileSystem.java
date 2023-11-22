@@ -288,6 +288,10 @@ public class FloppyFileSystem extends TFileSystem {
 				
 		// System.out.println("nTotal = " + m_nTotalSectors + ", FStotal = " + m_nFSTotalSectors);
 		
+		// No checks for CF7 volumes
+		if (nTotalSectors == 1600)
+			return ret;
+		
 		int nSectorsPerTrack = vib[0x0c] & 0xff;
 		int nHeads = vib[0x12] & 0xff;
 		int nCylinders = vib[0x11] & 0xff;

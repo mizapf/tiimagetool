@@ -129,7 +129,13 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 	}	
 	
 	public FloppyFileSystem getFileSystem(byte[] sector0) {
-		FloppyFileSystem fs = new FloppyFileSystem();
+		FloppyFileSystem fs = null; 
+		if ((sector0[10] == 0x06) && (sector0[11] == 0x40)) {
+			fs = new CF7VolumeFileSystem();
+		}
+		else
+			fs = new FloppyFileSystem();
+		
 		fs.setImage(this);
 		// System.out.println(Utilities.hexdump(sector0));
 		fs.configure(sector0);

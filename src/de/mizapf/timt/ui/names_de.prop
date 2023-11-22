@@ -26,3 +26,4 @@ uifont=output:s:Zeichensatz für Oberfläche
 asmtool=misc:s:Assembler-Befehlszeile
 fillpat=misc:s:Füllung für leere Diskettensektoren
 imgsuf=misc:s:Dateinamenanhänge für Images
+imgform=misc:s:Unterstützte Imageformate

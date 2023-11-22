@@ -26,3 +26,4 @@ uifont=output:s:Font per l'interfaccia utente
 asmtool=misc:s:Assembler invocation
 fillpat=misc:s:Riempi i settori floppy vuoti con
 imgsuf=misc:s:Suffissi dei file immagine 
+imgform=misc:s:Formati immagine supportati

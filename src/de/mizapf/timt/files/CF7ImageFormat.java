@@ -37,6 +37,7 @@ import java.util.LinkedList;
 
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.util.NotImplementedException;
 
 public class CF7ImageFormat extends FileImageFormat implements PartitionedStorage {
 		
@@ -126,6 +127,7 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 		}
 		
 		void encode() {
+			System.out.println("Current format unit = " + m_nCurrentFormatUnit);
 			for (ImageSector sect : m_decodedSectors) {
 				System.out.println("DecSec = " + sect.getNumber() +", pos = " + sect.getPosition());
 				byte[] content = sect.getData();
@@ -138,12 +140,14 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 		}				
 		
 		void prepareNewFormatUnit(int funum, FormatUnitParameters t) {
+			throw new NotImplementedException("CF7Codec.newFormat");
 		}
 	}
 	
 	public CF7ImageFormat(String sImageName) throws IOException, ImageException {
 		super(sImageName);
 		m_codec = new CF7Codec();
+		m_nTotalSectors = (int)(m_file.length() / TFileSystem.SECTOR_LENGTH);
 		setupPartitionTable();
 	}
 	

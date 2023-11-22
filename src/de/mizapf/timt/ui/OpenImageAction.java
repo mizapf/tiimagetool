@@ -94,7 +94,7 @@ public class OpenImageAction extends Activity {
 				}
 				
 				if (image.isPartitioned()) {
-					PartitionSelectionDialog psd = new PartitionSelectionDialog(m_parent, image.getPartitionTable());
+					PartitionSelectionDialog psd = new PartitionSelectionDialog(m_parent, image.getPartitionTable(), image instanceof CF7ImageFormat);
 					psd.createGui(imagetool.boldFont);
 					psd.setVisible(true);
 					if (psd.confirmed()) {
