@@ -32,6 +32,8 @@
 	[ ] Check for CF7 open issues in Windows
 	[x] "Please wait" window for CF7
 	[x] Define suffixes for images
+	[ ] Add Edit CF7 to utilities (add/del/rename volumes)
+	[ ] Allow for up to 8 IDE partitions (new Nov 2023)
 
 	Disassembler
 	[ ] Disassembler problem in symbolic mode; see disassembler file
@@ -48,6 +50,7 @@
     [x] Periods appear doubled in XB file listing -> appears when . is used as escape character       [ ] Add note in documentation to avoid "~" or "." as escape character
 	[?] Recent files need escaping for semicolon in file name    
     [-] Right-click on another file does not deselect the previously marked file → javax.swing.ListSelectionModel
+    [x] Keep dimension of text output window
 	
     Files
 	[x] Create archive in newly created image (not loaded) triggers Exception (java.lang.IndexOutOfBoundsException: Index: -1
@@ -149,7 +152,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JFrame m_frmMain;
 
 	public final static String VERSION = "3.0.0";
-	public final static String MONTH = "April";
+	public final static String MONTH = "November";
 	public final static String YEAR = "2023";
 	
 	private static final String TITLE = "TIImageTool";
@@ -166,6 +169,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String LOOKANDFEEL = "lookandfeel";
 	public final static String TEMPDIR = "tempdir";
 	public final static String WINDOWSIZE = "windowsize";
+	public final static String CONTSIZE = "contentsize";
 	public final static String FILEDIALOG = "fdialogsize";
 	public final static String SOURCEDIR = "sourcedir";
 	public final static String EXPLOWER = "lower";
@@ -207,7 +211,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenuItem m_iNewFloppy;
 	JMenuItem m_iNewHD;
 	JMenuItem m_iNewIDE;
-	JMenuItem m_iNewCF7Vol;
+//	JMenuItem m_iNewCF7Vol;
 	JMenuItem m_iNewCF7Img;
 	JMenuItem m_iOpen;
 	JMenu     m_mOpenRecent;
@@ -453,12 +457,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_iNewFloppy = createMenuItem(new NewFloppyImageAction());
 			m_iNewHD = createMenuItem(new NewHDImageAction());
 			m_iNewIDE = createMenuItem(new NewIDEImageAction());
-			m_iNewCF7Vol = createMenuItem(new NewCF7VolumeAction());
+//			m_iNewCF7Vol = createMenuItem(new NewCF7VolumeAction());
 			m_iNewCF7Img = createMenuItem(new NewCF7ImageAction());
 			m_mNew.add(m_iNewFloppy);
 			m_mNew.add(m_iNewHD);
 			m_mNew.add(m_iNewIDE);
-			m_mNew.add(m_iNewCF7Vol);
+//			m_mNew.add(m_iNewCF7Vol);
 			m_mNew.add(m_iNewCF7Img);
 			m_iOpen = createMenuItem(new OpenImageAction());
 			m_mFile.add(m_iOpen);
@@ -762,6 +766,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_content.setLocationByPlatform(true);
 			m_content.setVisible(true);
 			if (withUpdate) m_logger.register(m_content);
+			Dimension dim = m_Settings.getPropertyDim(CONTSIZE);
+			if (dim==null) dim = new Dimension(800,600);
+			m_content.setPreferredSize(dim);
 			m_content.pack();
 		}
 	}
@@ -2120,6 +2127,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_Settings.put(RECENT, sb.toString());
 		
 		if (i > 0) m_mOpenRecent.setEnabled(true);   
+	}
+	
+	public void saveContentFrameDimension(int width, int height) {
+		m_Settings.put(CONTSIZE, width + "x" + height);
 	}
 	
 	// ===============================================================

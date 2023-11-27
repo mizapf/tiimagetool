@@ -40,7 +40,10 @@ public class NewCF7VolumeAction extends Activity {
 	}
 	
 	public void go() {
-		NewCF7Dialog newimagedia = new NewCF7Dialog(m_parent, false);
+	}
+}
+/*
+	NewCF7Dialog newimagedia = new NewCF7Dialog(m_parent, false);
 
 		try {
 			newimagedia.createGui(imagetool.boldFont);
@@ -94,15 +97,7 @@ public class NewCF7VolumeAction extends Activity {
 					
 					imagetool.setSourceDirectory(file.getParentFile(), "image");
 					
-					throw new NotImplementedException("create CF7 volume");
-/*					ImageFormat.createFloppyImage(file, 
-									newimagedia.getDiskName(),
-									ImageFormat.CF7VOLUME,
-									2, 
-									FloppyFileSystem.DOUBLE_DENSITY,
-									40,
-									true);
-*/				
+					throw new NotImplementedException("create CF7 volume");	
 				}
 				// Open it when it is initialized
 				if (file != null) {
@@ -124,4 +119,4 @@ public class NewCF7VolumeAction extends Activity {
 			}
 		}
 	}
-}
+	*/

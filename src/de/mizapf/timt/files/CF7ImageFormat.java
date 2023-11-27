@@ -37,6 +37,7 @@ import java.util.LinkedList;
 
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.Utilities;
+import de.mizapf.timt.util.InternalException;
 import de.mizapf.timt.util.NotImplementedException;
 
 public class CF7ImageFormat extends FileImageFormat implements PartitionedStorage {
@@ -81,10 +82,10 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 			}
 		}
 		if (bFound){
-			System.out.println("is a CF7 image");
+			// System.out.println("is a CF7 image");
 			return 100;
 		}
-		System.out.println("is not a CF7 image");		
+		// System.out.println("is not a CF7 image");		
 		return 0;			
 	}
 	
@@ -140,7 +141,7 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 		}				
 		
 		void prepareNewFormatUnit(int funum, FormatUnitParameters t) {
-			throw new NotImplementedException("CF7Codec.newFormat");
+			throw new InternalException("prepareNewFU should not be called for CF7");
 		}
 	}
 	
@@ -293,94 +294,22 @@ repeated every 0x64000
 13     density: 2 (double)
 14-    00
 
-1600 sect, 40/1/32 SD
 
-000000: 56 4f 4c 31 20 20 20 20 20 20 06 40 20 44 53 4b     VOL1      .@ DSK
-000010: 20 28 01 01 aa 03 00 06 00 02 00 03 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
+Newly formatted volume 
+00000000: 5600 4f00 4c00 3100 2000 2000 2000 2000  V.O.L.1. . . . .
+00000010: 2000 2000 0600 4000 2000 4400 5300 4b00   . ...@. .D.S.K.
+00000020: 2000 2800 0100 0100 0000 0000 0000 0000   .(.............
+00000030: 0000 0000 0000 0000 0000 0000 0000 0000  ................
 
-720 sect, 40/2/9 SD
+0x0640 sectors
+0x20   sect/tr
+0x28   tra/sid
+0x01   sides
+0x01   density
+inconsistent: 32*40 = 1280 != 1600
 
-000000: 46 31 38 41 44 45 4d 4f 53 20 02 d0 09 44 53 4b     F18ADEMOS ...DSK
-000010: 20 28 02 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
-
-1600 sect, 40/1/9 SD 
-
-000000: 20 20 20 20 20 20 20 20 20 20 06 40 09 44 53 4b               .@.DSK
-000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 ff ff ff 01 fc ff ff ff     ................
-
-1600 sect, 40/1/9 SD
-
-000000: 20 20 20 20 20 20 20 20 20 20 06 40 09 44 53 4b               .@.DSK
-000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 0f 00 00 00 fc ff ff ff     ................
-
-1600 sect, 40/1/9 SD
-
-000000: 20 20 20 20 20 20 20 20 20 20 06 40 09 44 53 4b               .@.DSK
-000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 0f 00 00 00 fc ff ff ff     ................
-
-1600 sect, 40/1/9 SD
-
-000000: 20 20 20 20 20 20 20 20 20 20 06 40 09 44 53 4b               .@.DSK
-000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 07 00 00 00 fc ff ff 1f     ................
-
-
-MeineCF (alles mit dsk2cf.exe in WinXP erzeugt):
-
-1600 sect, 40/2/18 DD
-
-000000: 44 49 53 4b 30 32 20 20 20 20 06 40 12 44 53 4b     DISK02    .@.DSK
-000010: 20 28 02 02 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
-
-1600 sect, 40/2/18 DD
-
-000000: 44 49 53 4b 30 31 20 20 20 20 06 40 12 44 53 4b     DISK01    .@.DSK
-000010: 20 28 02 02 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
-
-1600 sect, 40/1/9 SD
-
-000000: 44 49 53 4b 30 31 2f 53 31 20 06 40 09 44 53 4b     DISK01/S1 .@.DSK
-000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
-
-1600 sect, 40/1/9 SD 
-
-000000: 44 49 53 4b 30 31 2f 53 32 20 06 40 09 44 53 4b     DISK01/S2 .@.DSK
-000010: 20 28 01 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 ff ff ff ff ff ff ff ff     ................
-
-1600 sect, 40/2/9 SD 
-
-000000: 49 44 45 44 52 53 31 35 20 20 06 40 09 44 53 4b     IDEDRS15  .@.DSK
-000010: 20 28 02 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 ff ff ff 00 fc ff ff ff     ................
-
-1600 sect, 40/2/9 SD 
-
-000000: 4d 4d 4f 55 53 45 20 20 20 20 06 40 09 44 53 4b     MMOUSE    .@.DSK
-000010: 20 28 02 01 00 00 00 00 00 00 00 00 00 00 00 00      (..............
-000020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00     ................
-000030: 00 00 00 00 00 00 00 00 ff 03 00 00 fc ff ff ff     ................
-
--> Geometrie wird nicht angepasst, ist bedeutungslos
+When an image is imported, the image is automatically expanded to 1600 sectors.
+However, the geometry is not adapted.
 
 */
 

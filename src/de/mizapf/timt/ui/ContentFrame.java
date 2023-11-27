@@ -28,7 +28,7 @@ import java.io.*;
 
 import de.mizapf.timt.TIImageTool;
 
-public class ContentFrame extends JFrame implements ActionListener {
+public class ContentFrame extends JFrame implements ActionListener, ComponentListener {
 
 	JMenuBar m_mbar; 
 	JMenu m_mFile;
@@ -89,13 +89,15 @@ public class ContentFrame extends JFrame implements ActionListener {
 		m_jep.setFont(contFont);
 		JScrollPane jp = new JScrollPane(m_jep);
 		cntEditor.add(jp);
-		cntEditor.setPreferredSize(new Dimension(800,600));
+		// cntEditor.setPreferredSize(new Dimension(800,600));
 		m_jep.setCaretPosition(0);
 		
 		int scrollMode = JViewport.SIMPLE_SCROLL_MODE;
 //		int scrollMode = JViewport.BACKINGSTORE_SCROLL_MODE;
 //		int scrollMode = JViewport.BLIT_SCROLL_MODE;      // default, distorts output
 		jp.getViewport().setScrollMode(scrollMode);
+		
+		getRootPane().addComponentListener(this);
 	}
 	
 	void terminate() {
@@ -137,4 +139,18 @@ public class ContentFrame extends JFrame implements ActionListener {
 			}
 		}
 	}
+	
+	public void componentHidden(ComponentEvent e) {
+	}
+	
+	public void componentMoved(ComponentEvent e) {
+	}
+	
+	public void componentResized(ComponentEvent e) {
+		// System.out.println("Component resized to " + getWidth() + "x" + getHeight());
+		m_app.saveContentFrameDimension(getWidth(), getHeight());
+	}
+	
+	public void componentShown(ComponentEvent e) {
+	}	
 }
