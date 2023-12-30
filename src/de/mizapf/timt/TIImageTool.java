@@ -32,7 +32,7 @@
 	[ ] Check for CF7 open issues in Windows
 	[x] "Please wait" window for CF7
 	[x] Define suffixes for images
-	[ ] Add Edit CF7 to utilities (add/del/rename volumes)
+	[x] Add Edit CF7 to utilities (add/del/rename volumes)
 	[ ] Allow for up to 8 IDE partitions (new Nov 2023)
 
 	Disassembler
@@ -41,10 +41,10 @@
     [ ] IDT label in Disassembler
 
     Display
-	[ ] Fix font size:
-	    - Change CHD version (file name is truncated)
-	    - Serial bridge
-	    - Search dialog
+	    Fix font size:
+	[x] - Change CHD version (file name is truncated)
+	[ ] - Serial bridge
+	[x] - Search dialog
 	[?] Paste error: If last entry is dir, object will be pasted there
 	[ ] Safe area for right-click outside of file
     [x] Periods appear doubled in XB file listing -> appears when . is used as escape character       [ ] Add note in documentation to avoid "~" or "." as escape character
@@ -79,8 +79,8 @@
     [x] Restore all hd formats
   	[x] Unformatted image (998dd.dsk) can be opened without warning
   	[ ] Abort copy/move should not touch the destination image
-  	[ ] Finding files
-
+  	[x] Search function
+  	[ ] Rebuild image tree (-> undo/redo)
 */
 
 package de.mizapf.timt;
@@ -237,7 +237,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenuItem m_iChangeCHDFormat;
 	JMenuItem m_iReadCF;
 	JMenuItem m_iWriteCF;
-	JMenuItem m_iFormatCF;
+	JMenuItem m_iEditCF;
 	JMenuItem m_iCHDToRaw;
 	JMenuItem m_iRawToCHD;
 	JMenuItem m_iInstallGenOS;
@@ -543,8 +543,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_mUtility.add(m_iReadCF);	
 			m_iWriteCF = createMenuItem(new WriteCFCardAction());
 			m_mUtility.add(m_iWriteCF);	
-			m_iFormatCF = createMenuItem(new FormatCFCardAction());
-			m_mUtility.add(m_iFormatCF);
+			m_iEditCF = createMenuItem(new EditCF7Action());
+			m_mUtility.add(m_iEditCF);
 
 			m_mUtility.addSeparator();
 			m_iToHfdc = createMenuItem(new ConvertToHFDCAction());
@@ -786,7 +786,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		
 		public void run() {
 			m_content = new SearchResultFrame(name, TIImageTool.this);
-			m_content.createGui(content, contentFont);
+			m_content.createGui(content, contentFont, m_Settings.getPropertyDim(CONTSIZE));
 			Point loc = m_frmMain.getLocationOnScreen();		
 			m_content.setLocation(loc.x+20, loc.y+20);
 			m_content.setLocationByPlatform(true);
@@ -1961,6 +1961,13 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			if (dva.getVolume().isModified()) bMod = true;
 		}
 		// m_iSaveAll.setEnabled(bMod);
+	}
+	
+	public int getColumnWidth(int count) {
+		StringBuilder sb = new StringBuilder();
+		while (count-- > 0) sb.append("X");
+		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.dialogFont);
+		return fm.stringWidth(sb.toString());
 	}
 	
 	// ================= View handling ========================================

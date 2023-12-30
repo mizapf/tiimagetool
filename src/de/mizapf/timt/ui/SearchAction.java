@@ -147,16 +147,30 @@ public class SearchAction extends Activity {
 	}
 	
 	private void search(File imagefile, ArrayList<SearchResult> list) {
+		Volume vol = null;
+		boolean bOpened = false;
+		
 		try {
-			ImageFormat image = ImageFormat.getImageFormat(imagefile.getAbsolutePath());
-			if (true) throw new NotImplementedException("Search");
-			Volume vol = new Volume(image, null);
-			// System.out.println("Searching image " + image.getAbsolutePath());
+			String sAbsFile = imagefile.getAbsolutePath();  
+			FileImageFormat image = (FileImageFormat)ImageFormat.getImageFormat(sAbsFile);
+
+			System.out.println("Searching image " + sAbsFile);
+
+			if (imagetool.hasAlreadyOpenedVolume(sAbsFile)) {
+				vol = imagetool.getAlreadyOpenedVolume(sAbsFile);
+			}
+			else {			
+				vol = openImage(image);
+				if (vol == null) return;
+				bOpened = true;
+			}
+
 			m_view.setFilename(imagefile.getAbsolutePath());
 			if (!m_view.stopRequested() && m_count < m_maxhits) {
 				searchDir(vol.getRootDirectory(), list);
 			}
-			vol.close();
+
+			if (bOpened) vol.close();
 		}
 		catch (IOException iox) {
 			iox.printStackTrace();
@@ -164,6 +178,47 @@ public class SearchAction extends Activity {
 		catch (ImageException ix) {
 			ix.printStackTrace();
 		}
+	}
+	
+	// Simplified version of OpenImageAction.open 
+	private Volume openImage(FileImageFormat image) {
+		
+		Volume vol = null;
+		try {
+			// ============== Open the image	
+			byte[] vibmap = null;
+			TFileSystem fs = null;	
+			
+			if (image instanceof FloppyImageFormat) {
+				vibmap = image.readSector(0).getData();					
+				fs = ((FloppyImageFormat)image).getFileSystem(vibmap);
+				((FloppyFileSystem)fs).configure(vibmap);
+				((FloppyFileSystem)fs).setupAllocationMap(vibmap);
+			}
+			
+			if (image.isPartitioned()) {
+				System.out.println("Cannot search partitioned image");
+				return null;
+			}		
+			
+			if (image instanceof HarddiskImageFormat) {
+				HarddiskImageFormat hif = (HarddiskImageFormat)image;	
+				vibmap = image.readSector(0).getData();									
+				fs = hif.getFileSystem(vibmap);
+				((HarddiskFileSystem)fs).setupAllocationMap(image.getContent(0, 31));
+			}
+
+			vol = new Volume(image, fs);					
+		}
+		catch (ImageException ix) {
+		}
+		catch (FileNotFoundException fnfx) {
+		}
+		catch (IOException iox) {
+		}
+		catch (NumberFormatException nfx) {
+		}
+		return vol;
 	}
 	
 	private void searchDir(Directory dir, ArrayList<SearchResult> list) {

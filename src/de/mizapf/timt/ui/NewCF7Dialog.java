@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2016 Michael Zapf
+    Copyright 2023 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
@@ -98,6 +98,8 @@ class NewCF7Dialog extends ToolDialog implements ActionListener, FocusListener {
 		}
 	}
 	
+	// Volume numbers count from 0 but are shown +1 (and hence, input is +1)
+	
 	Interval[] getIntervals() throws NumberFormatException {
 		String input = m_tfSelection.getText();
 		String[] part = input.split(",");
@@ -107,19 +109,19 @@ class NewCF7Dialog extends ToolDialog implements ActionListener, FocusListener {
 			int start = -1;
 			int end = -1;
 			try {
-				start = Integer.parseInt(se[0]);
+				start = Integer.parseInt(se[0])-1;
 				end = start;
 			}
 			catch (NumberFormatException nf) {
 				throw new NumberFormatException(String.format(TIImageTool.langstr("ParseError"), se[0]));
 			}
 			
-			if (start<=0) throw new NumberFormatException(TIImageTool.langstr("CF7Greater"));
+			if (start<0) throw new NumberFormatException(TIImageTool.langstr("CF7Greater"));
 			
 			if (se.length>2) throw new NumberFormatException(TIImageTool.langstr("CF7InvInt") + ": " + s);
 			if (se.length==2) {
 				try {
-					end = Integer.parseInt(se[1]);
+					end = Integer.parseInt(se[1])-1;
 				}
 				catch (NumberFormatException nf) {
 					throw new NumberFormatException(String.format(TIImageTool.langstr("ParseError"), se[1]));
@@ -132,76 +134,3 @@ class NewCF7Dialog extends ToolDialog implements ActionListener, FocusListener {
 		return list.toArray(new Interval[part.length]);
 	}
 }
-	
-	
-/*
-	JTextField 		m_tfVolumeName;
-	boolean 		m_fullImage;
-	
-	NewCF7Dialog(JFrame owner, boolean fullImage) {
-		super(owner, TIImageTool.langstr("NewCF7Title"));
-		m_fullImage = fullImage;
-	}
-	
-
-	| 	Create a new CF7 image									|
-
-		This is a single volume for a CF7-formatted card. You can copy
-		its contents into a CF7 image by using the usual file views
-		(copy/paste or drag-and-drop) or by using the tool dsk2cf.exe
-		for your CF7 device. A volumes has 1600 sectors and resembles a
-		disk image in sector dump format.
-		
-		Note that you can work on CF7 images in TIImageTool directly. You 
-		do not need an external volume file unless you want to store it
-		as a separate file.
-		
-		See also the Utilities menu.
-		
-		Volume name			EMPTY________
-	
-				+-------+			+-----------+
-				|	OK	|			|	Cancel	|
-				+-------+           +-----------+
-*/	
-/*	public void createGui(Font font) {
-		prepareGui();
-
-		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
-		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("NewCF7Column"));
-
-		if (m_fullImage) {
-			putTextLine(this, TIImageTool.langstr("NewCF7Hint1"), 0);
-			add(Box.createVerticalStrut(10));
-			putTextLine(this, "!" + TIImageTool.langstr("NewCF7Hint2"), 0);
-			add(Box.createVerticalStrut(10));
-			
-			putMultiTextLine(this, TIImageTool.langstr("NewCF7Hint3")); 
-			add(Box.createVerticalStrut(10));
-			putMultiTextLine(this, TIImageTool.langstr("NewCF7Hint4"));
-		}
-		else {
-			putMultiTextLine(this, TIImageTool.langstr("NewCF7Hint5"));
-			add(Box.createVerticalStrut(10));
-			putTextLine(this, "!" + TIImageTool.langstr("NewCF7Hint6"), 0);
-			add(Box.createVerticalStrut(10));
-			putTextLine(this, TIImageTool.langstr("NewCF7Hint7"), 0);
-			add(Box.createVerticalStrut(10));
-			putTextLine(this, TIImageTool.langstr("NewCF7Hint8"), 0);
-			add(Box.createVerticalStrut(10));
-			m_tfVolumeName = putTextField(this, TIImageTool.langstr("VolumeName"), "", nColumnWidth, 0);
-		}
-		add(Box.createVerticalStrut(10));
-		add(Box.createVerticalGlue());
-
-		addButtons(m_fullImage? ONLY_OK : OK_AND_CANCEL);
-	}
-	
-	String getDiskName() {
-		return m_tfVolumeName.getText();
-	}
-	
-	String getImageTypeSuffix() {
-		return ".dsk";
-	}
-	*/

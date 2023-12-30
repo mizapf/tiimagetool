@@ -164,7 +164,7 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 	    We only consider those partitions that have a DSK signature.
 	*/
 	public void setupPartitionTable() {
-		List<Partition> plist = new LinkedList<Partition>();
+		LinkedList<Partition> plist = new LinkedList<Partition>();
 
 		setFormatUnitLength(20 * 2 * TFileSystem.SECTOR_LENGTH);
 
@@ -180,7 +180,7 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 			try {
 				Sector vib = readSector(partsect);
 				byte[] abyVib = vib.getData();
-				System.out.println(Utilities.hexdump(abyVib));
+				// System.out.println(Utilities.hexdump(abyVib));
 				String sName = Utilities.getString10(abyVib, 0);
 				boolean bValid = false;
 				
@@ -198,10 +198,11 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 				if (bValid) {
 					// System.out.println("found partition " + sName);
 					plist.add(new Partition(partsect/1600, partsect, lensect, sName));
+					nFail = 3;
 				}
 				else {
-					// System.out.println("no");
 					if (nFail==0) break;
+					plist.add(new Partition(partsect/1600, partsect, lensect, "---"));
 					nFail--;
 				}
 			}
@@ -213,6 +214,11 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 			}
 
 			partsect += 1600;
+		}
+		
+		// Remove the trailing partitions with name "---"
+		for (int i=nFail; i < 3; i++) {
+			plist.removeLast();
 		}
 		
 		m_partition = plist.toArray(new Partition[0]);

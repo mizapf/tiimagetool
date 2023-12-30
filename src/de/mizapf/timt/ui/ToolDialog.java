@@ -350,13 +350,17 @@ public class ToolDialog extends JDialog implements ActionListener {
 	}
 	
 	final protected JLabel putLabel(Container where, String sText, String sDefaultEntry, int nColumnWidth) {
+		return putLabel(where, sText, sDefaultEntry, nColumnWidth, 0);
+	}
+	
+	final protected JLabel putLabel(Container where, String sText, String sDefaultEntry, int nColumnWidth, int nFieldWidth) {
 		Box box1 = new Box(BoxLayout.X_AXIS);
 		JLabel jl = new JLabel();
 		jl.setText(sDefaultEntry);
 		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
 		JLabel jla = new JLabel(sText, SwingConstants.LEFT);
 		addField(box1, jla,  nColumnWidth, TIImageTool.dialogHeight, TIImageTool.dialogHeight/2);
-		addField(box1, jl, 0, TIImageTool.dialogHeight,  0);
+		addField(box1, jl, nFieldWidth, TIImageTool.dialogHeight,  0);
 		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));		
 		where.add(box1);
 		return jl;

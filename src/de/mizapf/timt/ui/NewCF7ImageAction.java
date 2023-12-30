@@ -24,6 +24,7 @@ import javax.swing.*;
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Arrays;
 
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.TIImageTool;
@@ -65,6 +66,19 @@ public class NewCF7ImageAction extends Activity {
 		boolean bOK = false;
 		
 		if (newimagedia.confirmed()) {		
+
+			Interval[] intv;
+			String names;
+
+			try {
+				intv = newimagedia.getIntervals();
+				names = newimagedia.getVolumeNames();
+			}
+			catch (NumberFormatException nfx) {
+				JOptionPane.showMessageDialog(m_parent, nfx.getMessage(), TIImageTool.langstr("FormatCF"), JOptionPane.ERROR_MESSAGE);
+				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				return;
+			}
 			
 			JFileChooser jfc = null;
 			if (imagetool.getSourceDirectory("image")!=null) {
@@ -115,15 +129,14 @@ public class NewCF7ImageAction extends Activity {
 					}
 					
 					FileOutputStream fos = new FileOutputStream(selectedFile);
-					Interval[] intv = newimagedia.getIntervals();
-					if (intv.length > 0) {					
+					
+					if (intv.length > 0) {		
 						
-						String names = newimagedia.getVolumeNames();
 						if (names.length() < 10) {
-							for (int i=1; i <= nVolumes; i++) {
+							for (int i=0; i < nVolumes; i++) {
+								clearVolume(i, volume);
 								for (int j=0; j < intv.length; j++) {
 									if (intv[j].contains(i)) setupVolume(i, volume, names);
-									else clearVolume(i, volume);
 								}
 								fos.write(volume);
 							}
@@ -154,16 +167,21 @@ public class NewCF7ImageAction extends Activity {
 		if (bOK) JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("Completed"), TIImageTool.langstr("FormatCF")), TIImageTool.langstr("FormatCF"), JOptionPane.INFORMATION_MESSAGE);
 	}
 	
-	private void setupVolume(int num, byte[] volume, String name) {
+	static void setupVolume(int num, byte[] volume, String name) {
+		setupVolume(num, volume, name, false);
+	}
+
+	static void setupVolume(int num, byte[] volume, String name, boolean renameOnly) {
+		// System.out.println("Setup volume " + (num+1));
 		Interval intv = getVariable(name);
 		String sName = name;
 		
-		if (intv.start != -1) {
+		if ((intv != null) && (intv.start != -1)) {
 			// xxxxxx ## xx
 			//   pref    tail
 			StringBuilder sbName = new StringBuilder();	
 			String pref = name.substring(0, intv.start);
-			String number = String.valueOf(num);
+			String number = String.valueOf(num+1);
 			sbName.append(pref);
 			
 			if (intv.start == intv.end) {
@@ -194,26 +212,34 @@ public class NewCF7ImageAction extends Activity {
 		for (int i=0; i < 10; i++) {
 			volume[i*2] = (byte)((i < sName.length())? sName.charAt(i) : ' ');
 		}
-		volume[0x14] = (byte)0x06;
-		volume[0x16] = (byte)0x40;
-		volume[0x18] = (byte)0x20;
-		volume[0x1a] = (byte)0x44;
-		volume[0x1c] = (byte)0x53;
-		volume[0x1e] = (byte)0x4b;
-		volume[0x20] = (byte)0x20;
-		volume[0x22] = (byte)0x28;
-		volume[0x24] = (byte)0x01;
-		volume[0x26] = (byte)0x01;
-		volume[0x70] = (byte)0x03;
-	}
-
-	private void clearVolume(int num, byte[] volume) {
-		for (int i=0; i < 0x70; i+=2) {
-			volume[i] = (byte)0x00;
+		if (!renameOnly) {
+			volume[0x14] = (byte)0x06;
+			volume[0x16] = (byte)0x40;
+			volume[0x18] = (byte)0x20;
+			volume[0x1a] = (byte)0x44;
+			volume[0x1c] = (byte)0x53;
+			volume[0x1e] = (byte)0x4b;
+			volume[0x20] = (byte)0x20;
+			volume[0x22] = (byte)0x28;
+			volume[0x24] = (byte)0x01;
+			volume[0x26] = (byte)0x01;
+			volume[0x70] = (byte)0x03;
+			for (int i=0x71; i < volume.length; i++) {
+				volume[i] = (byte)0x00;
+			}
 		}
 	}
+
+	static void clearVolume(int num, byte[] volume) {
+		// System.out.println("Clear volume " + num);
+		Arrays.fill(volume, (byte)0x00);
+		
+		/*for (int i=0; i < 0x70; i+=2) {
+			volume[i] = (byte)0x00;
+		} */
+	}
 	
-	private Interval getVariable(String names) {
+	static Interval getVariable(String names) {
 		// Determine the variable position in the string
 		int posh1 = -1;
 		int posh2 = -1;

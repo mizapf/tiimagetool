@@ -39,6 +39,10 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 	JComponent m_head;
 	JPanel m_jp;
 	
+	int m_nLeft;
+	int m_nRight;
+	int m_nHeight;
+	
 	SearchResult[] m_content;
 	
 	JTextArea m_jep;
@@ -77,7 +81,7 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 		m_app.registerFrame(this);
 	}
 
-	public void createGui(SearchResult[] content, Font fontName) {	
+	public void createGui(SearchResult[] content, Font fontName, Dimension di) {	
 
 		m_mbar = new JMenuBar();
 		m_mFile = new JMenu(TIImageTool.langstr("SearchResultMenu"));
@@ -105,7 +109,18 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 		color[0] = new Color(180,200,220);
 		color[1] = new Color(220,230,240);
 		color[2] = new Color(230,241,252);
+		
+		int nLeft = 0;
+		int nRight = 0;
+		
+		for (int i=0; i < content.length; i++) {
+			if (content[i].path.length() > nLeft) nLeft = content[i].path.length();
+			if (content[i].image.length() > nRight) nRight = content[i].image.length();
+		}
 	
+		m_nLeft = m_app.getColumnWidth(nLeft) + TIImageTool.dialogHeight;
+		m_nRight = m_app.getColumnWidth(nRight) + TIImageTool.dialogHeight;
+		
 		cntView.add(createLine(TIImageTool.langstr("SearchResultCol1"), TIImageTool.langstr("SearchResultCol2"), color[0], true));
 		
 		String lastVolume = null;
@@ -126,8 +141,8 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 		m_jp.add(Box.createVerticalGlue());
 		
 		JScrollPane scp = new JScrollPane(m_jp);
-		scp.setPreferredSize(new Dimension(600,300));
-
+		
+		scp.setPreferredSize(di);
 		
 		cntView.add(scp);
 		m_jp.setBackground(DirectoryPanel.NORM);
@@ -138,19 +153,21 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 
 		Box box1 = new Box(BoxLayout.X_AXIS);
 		
+		int nLineHeight = (int)(TIImageTool.dialogHeight * 1.3);
+		
 		// Left part
-		box1.add(Box.createHorizontalStrut(10));
+		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
 		
 		JLabel jlPath = new JLabel(left, SwingConstants.LEFT);
-		jlPath.setMinimumSize(new Dimension(200, 20));
-		jlPath.setPreferredSize(new Dimension(200, 20));
-		jlPath.setMaximumSize(new Dimension(300, 20));
+		jlPath.setMinimumSize(new Dimension(m_nLeft, nLineHeight));
+		jlPath.setPreferredSize(new Dimension(m_nLeft, nLineHeight));
+		jlPath.setMaximumSize(new Dimension(m_nLeft, nLineHeight));
 		
 		jlPath.setFont(title? TIImageTool.boldFont : TIImageTool.dialogFont);
 		box1.add(jlPath);
 		
 		// Space
-		box1.add(Box.createHorizontalStrut(30));
+		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight));
 		
 		// Right part
 		JLabel jlImage = new JLabel(right, SwingConstants.LEFT);
@@ -159,13 +176,13 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 		
 		box1.add(Box.createHorizontalGlue());
 
-		box1.setMinimumSize(new Dimension(400, 20));
-		box1.setMaximumSize(new Dimension(Short.MAX_VALUE, TIImageTool.plainHeight+2));
+		box1.setMinimumSize(new Dimension(m_nRight, nLineHeight));
+		box1.setMaximumSize(new Dimension(Short.MAX_VALUE, nLineHeight));
 		box1.setOpaque(true);
 		box1.setBackground(col);
 		return box1;		
 	}
-	
+		
 	void terminate() {
 		dispose();
 	}

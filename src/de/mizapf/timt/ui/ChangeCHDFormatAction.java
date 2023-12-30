@@ -94,10 +94,8 @@ public class ChangeCHDFormatAction extends Activity {
 		boolean bDone = false;
 		int nNewFormat = 0;
 		while (!bDone) {
-			ChangeCHDFormatDialog changeDialog = new ChangeCHDFormatDialog(m_parent);
+			ChangeCHDFormatDialog changeDialog = new ChangeCHDFormatDialog(m_parent, sImageFile, source.getVersion());
 			changeDialog.createGui(imagetool.boldFont);
-			changeDialog.setFileName(sImageFile);
-			changeDialog.setSourceVersion(source.getVersion());
 			changeDialog.setVisible(true);
 			
 			bDone = true;

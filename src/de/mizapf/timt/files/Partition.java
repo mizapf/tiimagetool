@@ -28,7 +28,7 @@ public class Partition {
 	int length;
 	String name;
 	
-	Partition(int num, int off, int len, String nam) {
+	public Partition(int num, int off, int len, String nam) {
 		number = num;
 		offset = off;
 		length = len;
@@ -37,5 +37,17 @@ public class Partition {
 	
 	public String getName() {
 		return name;
+	}
+	
+	public int getNumber() {
+		return number;
+	}
+	
+	public int getOffset() {
+		return offset;
+	}
+	
+	public int getLength() {
+		return length;
 	}
 }

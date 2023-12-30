@@ -111,10 +111,6 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 		// System.out.println(Utilities.hexdump(vib));		
 		configureCommon(vibmap);
 		
-		// Get the tracks, sectors, and sides
-		m_nFSSectorsPerAU = ((vibmap[0x10] >> 4) & 0x0f) + 1;
-		m_nFSTotalSectors = Utilities.getInt16(vibmap, 0x0a) * m_nFSSectorsPerAU;
-		
 		// SCSI does not define "tracks" but only linear sector numbers
 		// We define the format units as 32 sectors (for the RawHDFormat; the
 		// MameCHDFormat has its own notion of format units)

@@ -234,7 +234,12 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 			setVolumeName0("UNNAMED");
 		}
 		m_nFSSectorsPerAU = ((vibmap[0x10] >> 4) & 0x0f) + 1;
-		m_nFSTotalSectors = Utilities.getInt16(vibmap, 0x0a) * m_nFSSectorsPerAU;		
+		
+		int nAU = Utilities.getInt16(vibmap, 0x0a);
+		if (nAU > 0xf800) nAU = 0xf800;
+		System.out.println(nAU);
+		
+		m_nFSTotalSectors = nAU * m_nFSSectorsPerAU;		
 			
 		m_tCreation = new Time(vibmap, 0x12);
 
@@ -256,6 +261,7 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		
 	@Override
 	public void setupAllocationMap(byte[] vibmap) {
+		System.out.println("total = " + getTotalSectors() + ", sect/AU = " + getSectorsPerAU());
 		m_allocMap = new AllocationMap(getTotalSectors()/getSectorsPerAU(), getSectorsPerAU(), false);
 		m_allocMap.setMapFromBitfield(vibmap);
 	}

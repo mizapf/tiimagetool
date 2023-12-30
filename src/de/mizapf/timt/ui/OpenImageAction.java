@@ -94,11 +94,18 @@ public class OpenImageAction extends Activity {
 				}
 				
 				if (image.isPartitioned()) {
-					PartitionSelectionDialog psd = new PartitionSelectionDialog(m_parent, image.getPartitionTable(), image instanceof CF7ImageFormat);
+					Partition[] part = image.getPartitionTable();
+					PartitionSelectionDialog psd = new PartitionSelectionDialog(m_parent, part, image instanceof CF7ImageFormat);
 					psd.createGui(imagetool.boldFont);
 					psd.setVisible(true);
 					if (psd.confirmed()) {
 						int selPart = psd.getSelectedNumber()-1;
+						
+						if (part[selPart].getName().equals("---")) {
+							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.PartitionUnformatted"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+							continue;
+						}
+						
 						image.setPartition(selPart);
 						// Do not open the partition if another partition of 
 						// the same image is open! This needs further investigation,

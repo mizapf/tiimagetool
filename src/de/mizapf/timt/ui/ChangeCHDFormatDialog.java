@@ -32,9 +32,13 @@ class ChangeCHDFormatDialog extends ToolDialog {
 	JLabel 				m_jlSourceImage;
 	JLabel				m_jlCurrentFormat;
 	JComboBox<String>	m_jcCHDVersion;
+	String 				m_sFile;
+	int					m_nVersion;
 	
-	ChangeCHDFormatDialog(JFrame owner) {
+	ChangeCHDFormatDialog(JFrame owner, String imageFile, int version) {
 		super(owner, TIImageTool.langstr("ConvertCHDVersion"));
+		m_sFile = imageFile;
+		m_nVersion = version; 
 	}
 	
 /*
@@ -54,6 +58,7 @@ class ChangeCHDFormatDialog extends ToolDialog {
 	public void createGui(Font font) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 		int nColumnWidth = fm.stringWidth(TIImageTool.langstr("ChangeCHDColumn"));
+		int nFieldWidth = fm.stringWidth(m_sFile);
 
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
@@ -66,7 +71,8 @@ class ChangeCHDFormatDialog extends ToolDialog {
 		
 		m_jlSourceImage = putLabel(this, TIImageTool.langstr("ImageFile"), "-", nColumnWidth);  
 		m_jlCurrentFormat = putLabel(this, TIImageTool.langstr("CurrentVersion"), "-", nColumnWidth);
-
+		m_jlSourceImage.setText(m_sFile);
+		m_jlCurrentFormat.setText(String.valueOf(m_nVersion));
 		add(Box.createVerticalStrut(10));
 
 		String[] asOptio = { "4", "5" };
@@ -76,14 +82,6 @@ class ChangeCHDFormatDialog extends ToolDialog {
 		add(Box.createVerticalGlue());
 
 		addButtons();
-	}
-		
-	void setFileName(String sFileName) {
-		m_jlSourceImage.setText(sFileName);
-	}
-	
-	void setSourceVersion(int nVersion) {
-		m_jlCurrentFormat.setText(String.valueOf(nVersion));
 	}
 	
 	int getNewFormat() {
