@@ -27,13 +27,13 @@
 	[x] SCSI/IDE harddisk (512 bytes/sector)
 	[x] IDE harddisk support (incl. partitions)
 	[x] Add default hard disk format selection ("Seagate ST-225 | ... | maxAU8 | maxAU16 | user-defined")
-	[ ] Add check for CF card read (check for newly created image file)
+	[?] Add check for CF card read (check for newly created image file)
 	[ ] Search for CF7 card and for dd / chown automatically.
 	[ ] Check for CF7 open issues in Windows
 	[x] "Please wait" window for CF7
 	[x] Define suffixes for images
 	[x] Add Edit CF7 to utilities (add/del/rename volumes)
-	[ ] Allow for up to 8 IDE partitions (new Nov 2023)
+	[x] Allow for up to 8 IDE partitions (new Nov 2023)
 
 	Disassembler
 	[ ] Disassembler problem in symbolic mode; see disassembler file
@@ -43,13 +43,14 @@
     Display
 	    Fix font size:
 	[x] - Change CHD version (file name is truncated)
-	[ ] - Serial bridge
+	[x] - Serial bridge
 	[x] - Search dialog
-	[?] Paste error: If last entry is dir, object will be pasted there
-	[ ] Safe area for right-click outside of file
-    [x] Periods appear doubled in XB file listing -> appears when . is used as escape character       [ ] Add note in documentation to avoid "~" or "." as escape character
+	[-] Paste error: If last entry is dir, object will be pasted there (not reproducible)
+	[x] Safe area for right-click outside of file
+    [x] Periods appear doubled in XB file listing -> appears when . is used as escape character       
+    [ ] Add note in documentation to avoid "~" or "." as escape character
 	[?] Recent files need escaping for semicolon in file name    
-    [-] Right-click on another file does not deselect the previously marked file → javax.swing.ListSelectionModel
+    [x] Right-click on another file does not deselect the previously marked file → javax.swing.ListSelectionModel
     [x] Keep dimension of text output window
 	
     Files
@@ -59,7 +60,8 @@
     [x] Create archive fails with same exception when the current folder
         has no files, only directories
     [ ] Cannot drag&drop into Archive
-    [ ] YAPP G7 cannot be loaded; treated wrongly as G6 (ImageFrame:246)
+    [x] YAPP G7 cannot be loaded; treated wrongly as G6 (ImageFrame:246)
+    [ ] Show 192 line graphics without black bar (192 line detection seems to be broken)
 	[ ] Show embedded machine language in BASIC (or indicate at least)
 	[?] Allow for more DIS/VAR formats to be viewed (needs test)
 
@@ -71,6 +73,7 @@
 	
     Current:
     [ ] Allow Return key for New floppy image
+    [ ] Allow Return key for new element
     [ ] Encode control characters in files from escape sequence (like §81 -> CTRL-a)
     [x] Use empty sector pattern 
     [x] Save As is active after closing all open images

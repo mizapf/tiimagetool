@@ -243,7 +243,8 @@ public class ImageFrame extends JFrame {
 		int nCount = 0;
 		int nLineBytes = 0;
 		
-		nPos = (g6 | yapp)? 0x22 : 0x02;
+		// nPos = (g6 | yapp)? 0x22 : 0x02;
+		nPos = g6? 0x22 : 0x02;
 		
 		ByteArrayOutputStream baosLine = new ByteArrayOutputStream();
 		// Now add the lines

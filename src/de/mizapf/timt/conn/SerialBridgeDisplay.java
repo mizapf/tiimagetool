@@ -108,7 +108,7 @@ public class SerialBridgeDisplay implements ActionListener, WindowListener {
 	
 	public SerialBridgeDisplay() {
 		m_frmDisplay = new JFrame(TIImageTool.langstr("SBDisplayTitle"));
-		Font fnt = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
+		Font fnt = TIImageTool.dialogFont;
 		createGui(fnt);
 	}
 

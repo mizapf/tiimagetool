@@ -48,6 +48,10 @@ class EditCF7Dialog extends ToolDialog implements ActionListener {
 	
 	public void createGui(Font font) {
 		prepareGui();
+		putMultiTextLine(this, TIImageTool.langstr("Dialog.CF7.Exp1"));
+		putMultiTextLine(this, TIImageTool.langstr("Dialog.CF7.Exp2"));
+		add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
+	
 		m_nColumnWidth = determineFieldWidth(TIImageTool.langstr("VolumeName"));
 		m_nNumWidth = determineFieldWidth("XXXXXXXXXXX");
 						

@@ -142,7 +142,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		// m_Listing.setBackground(Color.YELLOW);
 		
 		JScrollPane jsp = new JScrollPane(m_Listing);
-		add(jsp);		
+		add(jsp);	
 //		m_Listing.addListSelectionListener(this);
 		m_Listing.setDragEnabled(true);
 		m_Listing.setDropMode(DropMode.ON);
@@ -390,40 +390,41 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		// System.out.println("render element '" + sName + "', index = " + index + ", isSelected = " + isSelected + ", hasFocus = " + cellHasFocus);
 
 		m_lastSelected = el;
+		JComponent line = null;
 		
 		if (el instanceof EndOfListElement) {
-			JComponent line = new Box(BoxLayout.X_AXIS);
-			line.setMinimumSize(new Dimension(10,10));
-			return line;
-		}
-		
-		if (el instanceof TFile) {
-			TFile file = (TFile)el;
-			
-			int nSize = 0;
-			if (file.isProgram()) nSize = file.getProgramLength();
-			else nSize = file.getRecordLength();
-			
-			sCreation = file.getCreationTime().toString();
-			sUpdate = file.getUpdateTime().toString();
-			sType = file.typeToString();
-			sLength = String.valueOf(nSize); 
-			sProtected = file.isProtected()? "P":" ";
-			sFragmented = file.isFragmented()? "F" : " ";
-			bContainer = file.hasArchiveFormat();
-			sSectors = String.valueOf(el.getAllRequiredSectors(vol.getAUSize()));
+			line = new Box(BoxLayout.X_AXIS);
+			line.add(Box.createVerticalStrut((int)(1.5*TIImageTool.dialogHeight)));
 		}
 		else {
-			Directory dir = (Directory)el;
-			if (!dir.isParentLink()) {
-				sType = "Dir";
-				sLength = String.valueOf(vol.getAUSize()*TFileSystem.SECTOR_LENGTH);
-				sCreation = dir.getCreationTime().toString();
+			if (el instanceof TFile) {
+				TFile file = (TFile)el;
+				
+				int nSize = 0;
+				if (file.isProgram()) nSize = file.getProgramLength();
+				else nSize = file.getRecordLength();
+				
+				sCreation = file.getCreationTime().toString();
+				sUpdate = file.getUpdateTime().toString();
+				sType = file.typeToString();
+				sLength = String.valueOf(nSize); 
+				sProtected = file.isProtected()? "P":" ";
+				sFragmented = file.isFragmented()? "F" : " ";
+				bContainer = file.hasArchiveFormat();
 				sSectors = String.valueOf(el.getAllRequiredSectors(vol.getAUSize()));
 			}
+			else {
+				Directory dir = (Directory)el;
+				if (!dir.isParentLink()) {
+					sType = "Dir";
+					sLength = String.valueOf(vol.getAUSize()*TFileSystem.SECTOR_LENGTH);
+					sCreation = dir.getCreationTime().toString();
+					sSectors = String.valueOf(el.getAllRequiredSectors(vol.getAUSize()));
+				}
+			}
+			
+			line = createLine(font, el, true, sName, sSectors, sType, sLength, sProtected, sFragmented, sCreation, sUpdate, bContainer, isSelected, cellHasFocus);
 		}
-		
-		JComponent line = createLine(font, el, true, sName, sSectors, sType, sLength, sProtected, sFragmented, sCreation, sUpdate, bContainer, isSelected, cellHasFocus);
 		return line;
 	}
 	

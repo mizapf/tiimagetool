@@ -44,9 +44,9 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 	
 	NewIDEImageDialog(JFrame owner) {
 		super(owner, TIImageTool.langstr("Title.IDE.CreateNew"));
-		m_atfPartition = new JTextField[4];
-		m_atfSize = new JTextField[4];
-		m_anSize = new int[4];
+		m_atfPartition = new JTextField[8];
+		m_atfSize = new JTextField[8];
+		m_anSize = new int[8];
 	}
 	
 /*		
@@ -83,22 +83,30 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 		int nColumnWidth = determineMaxWidth(font, TIImageTool.langstr("Image.IDE.FullCapacity"), TIImageTool.langstr("VolumeName"));
 		int nFieldWidth = fm.stringWidth("XXXXXXXXXXXX");
 
-		add(vspace(80));
 		putMultiTextLine(this, TIImageTool.langstr("Dialog.IDE.Header"));
 		putMultiTextLine(this, TIImageTool.langstr("Dialog.IDE.HeaderUnpart"));
-		add(vspace(120));
+		add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
+		
+//		add(vspace(120));
 		// Max capacity is 4*248 = 992 MiB
 		m_tfSize = putTextField(this,  TIImageTool.langstr("Image.IDE.FullCapacity"), "200", nColumnWidth, nFieldWidth); 
-		add(vspace(80));		
+		add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
+		
+		//		add(vspace(80));		
 		m_tfSize.addActionListener(this);	
 		m_tfSize.addFocusListener(this);	
+
+		JPanel jp = new JPanel();
+		jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
 		
-		for (int i=1; i < 5; i++) {
-			putTextLine(this, "!" + TIImageTool.langstr("Dialog.IDE.Partition") + " " + i, 0);
-			add(vspace(80));
-			m_atfPartition[i-1] = putTextField(this, TIImageTool.langstr("VolumeName"), (i==1)? "PART1" : "", nColumnWidth, nFieldWidth);
-			m_atfSize[i-1] = putTextField(this, TIImageTool.langstr("Capacity"), (i==1)? "200" : "", nColumnWidth, nFieldWidth);
-			add(vspace(80));
+		for (int i=1; i <=8; i++) {
+			putTextLine(jp, "!" + TIImageTool.langstr("Dialog.IDE.Partition") + " " + i, 0);
+			jp.add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
+
+			m_atfPartition[i-1] = putTextField(jp, TIImageTool.langstr("VolumeName"), (i==1)? "PART1" : "", nColumnWidth, nFieldWidth);
+			m_atfSize[i-1] = putTextField(jp, TIImageTool.langstr("Capacity"), (i==1)? "200" : "", nColumnWidth, nFieldWidth);
+			jp.add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
+
 			m_atfSize[i-1].addActionListener(this);	
 			m_atfSize[i-1].addFocusListener(this);
 			
@@ -106,10 +114,13 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 			m_atfPartition[i-1].addFocusListener(this);
 		}
 		
+		JScrollPane jsp = new JScrollPane(jp);
+		add(jsp);
+
 		add(Box.createVerticalGlue());
 
-		m_asName = new String[4];
-		for (int i=0; i < 4; i++) m_asName[i] = "";
+		m_asName = new String[8];
+		for (int i=0; i < 8; i++) m_asName[i] = "";
 		m_nFullCapacity = 200;
 		
 		addButtons();
@@ -129,7 +140,7 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 			}
 		}
 		
-		for (int i=0; i < 4; i++) {
+		for (int i=0; i < 8; i++) {
 			if (ae.getSource()==m_atfPartition[i]) {
 				String editpart = m_atfPartition[i].getText().trim();
 				if ((editpart.length() == 0 && m_asName[i].length() > 0)
@@ -147,7 +158,7 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 	private void distributeCapacity() {
 		int count = getDefinedPartitions();
 		// System.out.println("Defined partitions = " + count);
-		for (int i=count; i < 4; i++) {
+		for (int i=count; i < 8; i++) {
 			m_atfPartition[i].setText("");
 			m_atfSize[i].setText("");
 		}
@@ -186,7 +197,7 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 			return;
 		}
 		
-		for (int i=0; i < 4; i++) {
+		for (int i=0; i < 8; i++) {
 			if (fe.getSource()==m_atfPartition[i]) {
 				String editpart = m_atfPartition[i].getText().trim();
 				// if ((editpart.length() == 0 && m_asName[i].length() > 0)
@@ -198,10 +209,10 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 	}
 	
 	private int getDefinedPartitions() {
-		for (int i=0; i < 4; i++) {
+		for (int i=0; i < 8; i++) {
 			if (m_atfPartition[i].getText().trim().length()==0) return i;
 		}
-		return 4;
+		return 8;
 	}
 	
 	String[] getPartitionNames() {

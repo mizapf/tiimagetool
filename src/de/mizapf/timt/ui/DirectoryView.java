@@ -803,7 +803,23 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				if (!entryname.equals("..")) { 
 					JList<Element> list = m_panel.getLinkToJList();
 					int index = list.locationToIndex(act.getPoint());
-					list.addSelectionInterval(index, index);
+					int[] selected = list.getSelectedIndices();
+					// We implement the typical right-click behavior from KDE
+					// Rclick on selected item (1 selected): openCM
+					// Rclick on selected item (several sel): openCM
+					// Rclick on unselected item (0 selected): select + openCM
+					// Rclick on unselected item (several sel): unselectAll + select + openCM
+					boolean clickSel = false;
+					int i=0;
+					while ((i < selected.length) && (clickSel==false)) {
+						if (index == selected[i++]) clickSel = true;
+					}
+					if (!clickSel) {
+						if (selected.length > 0) {
+							list.clearSelection();
+						}							
+						list.addSelectionInterval(index, index);
+					}
 					openEntryContextMenu(list, act.getX(), act.getY(), act.isShiftDown(), act.isControlDown());
 				}
 			}

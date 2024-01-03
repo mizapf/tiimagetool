@@ -118,6 +118,16 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 	    30-33: Offset 4th partition
 	    34-37: #sectors 4th partition
 	    
+	    Expansion as of Nov 2023
+	    38-3b: Offset 5th partition
+	    3c-3f: #sectors 5th partition
+	    40-43: Offset 6th partition
+	    44-47: #sectors 6th partition
+	    48-4b: Offset 7th partition
+	    4c-4f: #sectors 7th partition
+	    50-53: Offset 8th partition
+	    54-57: #sectors 8th partition
+	    
 	    offset = 0 -> unused
 	    
     */
@@ -126,10 +136,10 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
     // der erwartete Sektor nicht gefunden
     
 	public void setupPartitionTable() throws ImageException, IOException {
-		m_partition = new Partition[4];
+		m_partition = new Partition[8];
 		byte[] sect0 = readSector(0).getData();
 		
-		for (int i=0; i < 4; i++) {
+		for (int i=0; i < 8; i++) {
 			int partsect = Utilities.getInt32be(sect0, 0x18 + i*8) * 2;
 			int lensect = Utilities.getInt32be(sect0, 0x20 + i*8) * 2;
 			// System.out.println(i + ": partsect=" + partsect);
