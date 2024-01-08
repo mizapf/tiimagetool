@@ -101,6 +101,43 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	
 	Element m_clickedElement;
 	
+	public static final int IT_CUT 			= 1<<0;
+	public static final int IT_COPY 		= 1<<1;
+	public static final int IT_PASTE		= 1<<2;
+	public static final int IT_DELETE 		= 1<<3;
+	public static final int IT_RENAME 		= 1<<4;
+	public static final int IT_SELECT 		= 1<<5;
+	public static final int IT_VIEWTEXT 	= 1<<6;
+	public static final int IT_VIEWIMAGE 	= 1<<7;
+	public static final int IT_VIEWDUMP 	= 1<<8;
+	public static final int IT_VIEWFIB 	= 1<<9;
+	public static final int IT_ASSEMBLE 	= 1<<10;
+	public static final int IT_LINK 		= 1<<11;
+	public static final int IT_DISASS	 	= 1<<12;
+	public static final int IT_GPLDIS	 	= 1<<13;
+	public static final int IT_LIST		 	= 1<<14;
+	public static final int IT_SEND		 	= 1<<15;
+	public static final int IT_SAVETFI	 	= 1<<16;
+	public static final int IT_SAVEDUMP 	= 1<<17;
+	public static final int IT_ARCHIVE 	= 1<<18;
+	
+	public static final int IT_MULTI = IT_ARCHIVE | IT_VIEWDUMP | IT_SEND | IT_RENAME | IT_SELECT |							IT_SAVETFI | IT_SAVEDUMP | IT_LINK |
+										IT_VIEWIMAGE | IT_CUT | IT_COPY | IT_PASTE | IT_DELETE |
+										IT_LIST | IT_VIEWTEXT | IT_DISASS | 
+										IT_GPLDIS | IT_ASSEMBLE;
+										
+	public static final int IT_BASIC = IT_ARCHIVE | IT_VIEWDUMP | IT_SEND | IT_DELETE | IT_RENAME |
+										IT_SAVETFI | IT_SAVEDUMP | IT_SELECT |
+										IT_CUT | IT_COPY |	IT_PASTE |IT_LIST | IT_VIEWTEXT;
+										
+	public static final int IT_NOBASIC = IT_ARCHIVE | IT_VIEWDUMP | IT_SEND | IT_DELETE | IT_RENAME |
+										IT_SAVETFI | IT_SAVEDUMP | IT_LINK | IT_SELECT |
+										IT_VIEWIMAGE | IT_CUT | IT_COPY | IT_PASTE |
+										IT_VIEWTEXT | IT_ASSEMBLE;
+										
+	public static final int IT_DIR =  IT_CUT | IT_COPY | IT_PASTE | IT_DELETE |     // betreten(1), cut, copy, del, ren, selall
+										IT_RENAME | IT_SELECT;
+	
 	public static final Color BACK = new Color(200,221,242);
 	
 	/** The (only one) context menu. Needed to decide whether to react on mouseentered. */
@@ -504,6 +541,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		
 		boolean bClipboard = m_app.clipboardNotEmpty();	
 		m_mEdit.activateMenuItems(true, bDirPossible, bClipboard, m_app.offersSerialConnection(), getVolume().isHFDCImage());
+		m_mEdit.activateActionMenu(true);
 	}
 	
 	public void windowActivated(WindowEvent we) {
@@ -549,27 +587,6 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	void openEntryContextMenu(Component whereclicked, int xpos, int ypos, boolean bWithShift, boolean bWithControl) {
 		// we're in the AWT thread here, no need for an invokeLater
 		m_ctxmenu = new JPopupMenu();
-
-		boolean bCut = false; //true;
-		boolean bCopy = false; //true;
-		boolean bPaste = false; //true;
-		boolean bRename = false; //true;
-		
-		boolean bText = false; //true;
-		boolean bDump = false; //true;
-//		boolean bUtil = false; //true;
-		boolean bImage = false; //true;
-
-		boolean bAssemble = false;
-		boolean bLink = false;
-		boolean bDisass = false; //true;
-		boolean bGDisass = false; //true;
-		boolean bBasic = false; //true;
-		boolean bSaveRem = false; //true;
-		boolean bSaveTfi = false; //true;
-		boolean bSaveDump = false; //true;
-		boolean bDelete = false; //true;
-		boolean bArchive = false;
 
 		List<Element> selected = m_panel.getSelectedEntries();
 			
@@ -633,22 +650,10 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			m_ctxmenu.add(m_iArchive);
 		}
 
+		int setting = 0;
+		
 		if (selected.size() > 0) {
-			bArchive = true;
-			bDump = true;
-			bSaveRem = true;
-			bSaveDump = true;
-			bSaveTfi = true;	
-//			bUtil = true;
-			bImage = true;
-			bCut = true;
-			bCopy = true;
-			bBasic = true;
-			bText = true;
-			bDisass = true;
-			bGDisass = true;
-			bAssemble = true;
-			bLink = true;
+			setting = IT_MULTI;
 		}
 				
 		for (Element el:selected) {
@@ -656,91 +661,67 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				TFile file = (TFile)el;
 				try {
 					if (!file.isBasicFile()) {
-						bBasic = false;
+						setting &= ~IT_LIST;
+
 						if (!file.isProgram()) {
-							bGDisass = false;
+							setting &= ~IT_GPLDIS;
+
 							if (!file.isTaggedObjectCodeFile()) {
-								bDisass = false;
-								bLink = false;
+								setting &= ~IT_DISASS;
+								setting &= ~IT_LINK;
 							}
 						}
 						else {
-							bLink = false;
-							bAssemble = false;
+							setting &= ~(IT_LINK | IT_ASSEMBLE);
 						}
 					}
 					else {
-						bDisass = false;
-						bGDisass = false;
-						bImage = false;
-						bAssemble = false;
-						bLink = false;
+						setting = IT_BASIC;
 					}
 				}
 				catch (Exception iox) {
-					bBasic = false;
-					bDisass = false;
-					bGDisass = false;
+					setting = IT_NOBASIC;
 				}
-/*				try {
-					if (!file.hasUtilFormat()) bUtil = false;
-				}
-				catch (Exception ex) {
-					bUtil = false;
-				}
-*/				
 				if (!file.mayBePrintable()) {
-					bText = false;
-					bAssemble = false;
+					setting &= ~(IT_VIEWTEXT | IT_ASSEMBLE);
 				}
 				
 				if (!file.isAsmSourceCodeFile()) {
-					bAssemble = false;
+					setting &= ~IT_ASSEMBLE;
 				}
 				
-				if (!file.isImageFile()) bImage = false;
+				if (!file.isImageFile()) setting &= ~IT_VIEWIMAGE;
 			}
 			else {
-				bText = false;
-				bDump = false;
-//				bUtil = false;
-				bAssemble = false;
-				bLink = false;
-				bDisass = false;
-				bGDisass = false;
-				bBasic = false;
-				bSaveRem = false;
-				bSaveDump = false;
-				bSaveTfi = false;
-				bImage = false;
-				bArchive = false;
+				setting = IT_DIR;
+				break;
 			}
 		}
 		
-		if (!m_app.offersSerialConnection() || selected.size()>1) bSaveRem = false;
+		if (!m_app.offersSerialConnection() || selected.size()>1) setting &= ~IT_SEND;
 
-		m_iPaste.setEnabled(true /*m_app.clipboardNotEmpty() */);
+		m_iPaste.setEnabled((setting & IT_PASTE)!=0 /*m_app.clipboardNotEmpty() */);
 		
-		m_iCut.setEnabled(bCut);
-		m_iCopy.setEnabled(bCopy);
-		m_iPaste.setEnabled(bPaste);
-		m_iDelete.setEnabled(bCut);
-		m_iRename.setEnabled(bCut);
-		m_iSelect.setEnabled(bCut);
-		m_iViewText.setEnabled(bText);
-		m_iViewImage.setEnabled(bImage);
+		m_iCut.setEnabled((setting & IT_CUT)!=0);
+		m_iCopy.setEnabled((setting & IT_COPY)!=0);
+		m_iPaste.setEnabled((setting & IT_PASTE)!=0);
+		m_iDelete.setEnabled((setting & IT_DELETE)!=0);
+		m_iRename.setEnabled((setting & IT_RENAME)!=0);
+		m_iSelect.setEnabled((setting & IT_SELECT)!=0);
+		m_iViewText.setEnabled((setting & IT_VIEWTEXT)!=0);
+		m_iViewImage.setEnabled((setting & IT_VIEWIMAGE)!=0);
 //		m_iViewUtil.setEnabled(bUtil);
-		m_iViewDump.setEnabled(bDump);
-		m_iViewFIB.setEnabled(bDump);
-		m_iAssemble.setEnabled(bAssemble);
-		m_iLink.setEnabled(bLink);
-		m_iDisass.setEnabled(bDisass);
-		m_iGPLDisass.setEnabled(bGDisass);
-		m_iList.setEnabled(bBasic);
-		m_iSendRem.setEnabled(bSaveRem);
-		m_iSaveTfi.setEnabled(bSaveTfi);
-		m_iSaveDump.setEnabled(bSaveDump);
-		m_iArchive.setEnabled(bArchive);		
+		m_iViewDump.setEnabled((setting & IT_VIEWDUMP)!=0);
+		m_iViewFIB.setEnabled((setting & IT_VIEWDUMP)!=0);
+		m_iAssemble.setEnabled((setting & IT_ASSEMBLE)!=0);
+		m_iLink.setEnabled((setting & IT_LINK)!=0);
+		m_iDisass.setEnabled((setting & IT_DISASS)!=0);
+		m_iGPLDisass.setEnabled((setting & IT_GPLDIS)!=0);
+		m_iList.setEnabled((setting & IT_LIST)!=0);
+		m_iSendRem.setEnabled((setting & IT_SEND)!=0);
+		m_iSaveTfi.setEnabled((setting & IT_SAVETFI)!=0);
+		m_iSaveDump.setEnabled((setting & IT_SAVEDUMP)!=0);
+		m_iArchive.setEnabled((setting & IT_ARCHIVE)!=0);		
 
 //		m_dvSelected.backpaintEntryLines();
 		

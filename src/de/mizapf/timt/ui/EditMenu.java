@@ -36,6 +36,7 @@ public class EditMenu extends JMenu {
 	JMenuItem m_iCutm;
 	JMenuItem m_iCopym;
 	JMenuItem m_iPastem;
+	JMenu     m_mOperations;
 	JMenuItem m_iDeletem;
 	JMenuItem m_iRenamem;
 	JMenuItem m_iRenamevm;
@@ -47,7 +48,21 @@ public class EditMenu extends JMenu {
 	JMenuItem m_iInsertEmulate;
 	JMenuItem m_iCreateDirectory;	
 	JMenuItem m_iCreateArchive;
-		
+	
+	// Actions submenu
+	JMenuItem m_iViewFIB;
+	JMenuItem m_iViewText;
+	JMenuItem m_iViewImage;
+	JMenuItem m_iViewDump;
+	JMenuItem m_iAssemble;
+	JMenuItem m_iLink;
+	JMenuItem m_iDisass;
+	JMenuItem m_iGPLDisass;
+	JMenuItem m_iList;
+	JMenuItem m_iSaveTfi;
+	JMenuItem m_iSaveDump;
+	JMenuItem m_iSendRem;
+	
 	public EditMenu(JFrame frm, TIImageTool app) {
 		super(TIImageTool.langstr("Edit"));
 		m_frmMain = frm;
@@ -78,6 +93,36 @@ public class EditMenu extends JMenu {
 		add(m_iSelectm);
 		addSeparator();
 		
+		m_mOperations = new JMenu(TIImageTool.langstr("Menu.Edit.Actions"));
+		m_iViewFIB = m_app.createMenuItem(new ViewFIBAction());
+		m_mOperations.add(m_iViewFIB);
+		m_iViewText =  m_app.createMenuItem(new ViewTextAction());
+		m_mOperations.add(m_iViewText);
+		m_iViewImage =  m_app.createMenuItem(new ViewImageAction());
+		m_mOperations.add(m_iViewImage);
+		m_iViewDump =  m_app.createMenuItem(new ViewDumpAction());
+		m_mOperations.add(m_iViewDump);
+		m_iAssemble =  m_app.createMenuItem(new AssembleAction());
+		m_mOperations.add(m_iAssemble);
+		m_iLink =  m_app.createMenuItem(new LinkAction());
+		m_mOperations.add(m_iLink);
+		m_iDisass =  m_app.createMenuItem(new DisassembleAction());
+		m_mOperations.add(m_iDisass);
+		m_iGPLDisass = m_app.createMenuItem(new GPLDisassembleAction());
+		m_mOperations.add(m_iGPLDisass);
+		m_iList = m_app.createMenuItem(new ListAction());
+		m_mOperations.add(m_iList);
+		m_iSaveTfi = m_app.createMenuItem(new SaveTFIAction());
+		m_mOperations.add(m_iSaveTfi);
+		m_iSaveDump = m_app.createMenuItem(new SavePlainAction());
+		m_mOperations.add(m_iSaveDump);
+		m_iSendRem = m_app.createMenuItem(new ExportRemoteAction());
+		m_mOperations.add(m_iSendRem);
+		
+		add(m_mOperations);
+		m_mOperations.setEnabled(false);
+		
+		addSeparator();		
 		m_iCreateDirectory = createMenuItem(new NewDirectoryAction());
 		add(m_iCreateDirectory);
 		m_iCreateArchive = createMenuItem(new CreateArchiveAction());
@@ -131,6 +176,10 @@ public class EditMenu extends JMenu {
 		m_iUndo.setEnabled(false);
 		m_iRedo.setEnabled(false);
 	}	
+	
+	public void activateActionMenu(boolean bActive) {
+		m_mOperations.setEnabled(bActive);
+	}
 	
 	private JMenuItem createMenuItem(Activity act) {
 		JMenuItem mi = new JMenuItem(act.getMenuName());

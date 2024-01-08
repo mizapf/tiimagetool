@@ -84,6 +84,7 @@ public class ImageFrame extends JFrame {
 		m_abyContent = abyContent;
 		m_app = app;
 		if (m_app != null) m_app.registerFrame(this);
+		System.out.println(Utilities.hexdump(abyContent));
 	}
 	
 	public static void main(String[] arg) {
@@ -189,9 +190,12 @@ public class ImageFrame extends JFrame {
 	/*
 		TODO: Use additional query dialog (ambiguous format definition)
 		Flag = 9e seems to be MyArt G6 as well.
-		MyArt uses x200 for 512 times in G6
+		MyArt uses 0x200 for 512 times in G6
 		
 		Try to determine mode from file contents
+		
+		CHECK: Is there a way to distinguish between 192 and 212 line pictures?
+		It seems as if Myart always loads 212 lines, and fills the rest with black.
 	*/
 	byte[] myartToBMP(boolean g6, boolean yapp) throws IOException, FormatException {
 		
@@ -249,16 +253,19 @@ public class ImageFrame extends JFrame {
 		ByteArrayOutputStream baosLine = new ByteArrayOutputStream();
 		// Now add the lines
 		while (!bDone) {
-			int nValue = ((m_abyContent[nPos]<<8) & 0xff00) | (m_abyContent[nPos+1] & 0xff);
-			// System.out.println(Utilities.toHex(nValue, 4));
+			int nValue = Utilities.getInt16(m_abyContent, nPos);
+			if (nColumn==0) {
+				System.out.print("\nRow " + nRow + ": ");
+			}
+			System.out.print(Utilities.toHex(nValue, 4) + " ");
 			nPos += 2;
 			int nColor = 0;
 			int nMaxColumn = g6? 512 : 256;
 			
 			if (g6) {
 				nColor = anColor[(nValue >> 12) & 0xf];
-				nCount = (nValue & 0x1ff);
-				if (nCount==0) nCount = 512;  // CHECK: is that correct?
+				nCount = (nValue & 0x3ff); // Can be up to 0x200
+				if (nCount==0) nCount = 512;  // Just for safety				
 			}
 			else {
 				nColor = anColor[(nValue >> 8) & 0xff];
@@ -278,7 +285,6 @@ public class ImageFrame extends JFrame {
 					baosLine.write(0);
 					nLineBytes++;
 				}
-				// System.out.println("Row " + nRow + ", line bytes = " + nLineBytes);
 				baos.write(baosLine.toByteArray());
 				if (!m_bInterlace) baos.write(baosLine.toByteArray());
 				baosLine = new ByteArrayOutputStream();
@@ -286,7 +292,16 @@ public class ImageFrame extends JFrame {
 				nColumn = 0;
 				nRow++;
 			}
-			if (nRow == m_nRows || nPos >= m_abyContent.length) bDone = true;
+			if (nRow == m_nRows) {
+				System.out.println("Completed image with " + nRow + " rows, mode " + (g6? "G6" : "G7"));
+				bDone = true;
+			}
+			else {
+				if (nPos >= m_abyContent.length) {
+					System.out.println("Picture clipped at row " + nRow + ", mode " + (g6? "G6" : "G7"));
+					bDone = true;
+				}
+			}
 		}
 		
 		byte[] abyResult = baos.toByteArray();

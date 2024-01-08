@@ -909,7 +909,7 @@ public class HFEFormat extends FloppyImageFormat {
 	ImageSector findSector(int number) throws ImageException {
 		// Calculate the CHS location
 		if (number != 0) {
-			if (number >= getTotalSectors()) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), getTotalSectors()));
+			// if (number >= getTotalSectors()) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), getTotalSectors()));
 			if (getSectorsPerTrack() < 8) throw new ImageException(String.format(TIImageTool.langstr("ImageUnknown")));
 		}
 		Location loc = lbaToChs(number, getTracks(), getSectorsPerTrack());
@@ -933,7 +933,8 @@ public class HFEFormat extends FloppyImageFormat {
 		
 		if ((number != 0) && getSectorsPerTrack() < 8) throw new ImageException(String.format(TIImageTool.langstr("ImageUnknown")));
 
-		if (number >= getTotalSectors()) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), getTotalSectors()));
+		// Total sectors is not known inside the format
+		// if (number >= getTotalSectors()) throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), getTotalSectors()));
 		return lbaToChs(number, getTracks(), getSectorsPerTrack()).cylinder;
 	}	
 		

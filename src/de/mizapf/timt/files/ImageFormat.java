@@ -130,9 +130,6 @@ public abstract class ImageFormat  {
 
 	public final static String[] suffix = { "", "dsk", "dtk", "hfe", "hd", "raw", "cf7" };
 
-	// Independent of the file system, a physical property
-	// int m_nTotalSectors;
-	
 	// Indicates whether the current format unit has been changed 
 	boolean m_bDirty;
 
@@ -342,7 +339,7 @@ public abstract class ImageFormat  {
 		// Write back all sectors
 	}
 	
-	final int getTotalSectors() {
+	public final int getTotalSectors() {
 		return m_nTotalSectors;
 	}
 	

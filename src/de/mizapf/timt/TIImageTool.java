@@ -52,6 +52,7 @@
 	[?] Recent files need escaping for semicolon in file name    
     [x] Right-click on another file does not deselect the previously marked file → javax.swing.ListSelectionModel
     [x] Keep dimension of text output window
+    [ ] Drag into Windows Explorer does not work
 	
     Files
 	[x] Create archive in newly created image (not loaded) triggers Exception (java.lang.IndexOutOfBoundsException: Index: -1
@@ -61,15 +62,17 @@
         has no files, only directories
     [ ] Cannot drag&drop into Archive
     [x] YAPP G7 cannot be loaded; treated wrongly as G6 (ImageFrame:246)
-    [ ] Show 192 line graphics without black bar (192 line detection seems to be broken)
+    [ ] Show 192 line graphics without black bar (192 line detection seems to be broken: Check whether possible at all)
 	[ ] Show embedded machine language in BASIC (or indicate at least)
 	[?] Allow for more DIS/VAR formats to be viewed (needs test)
 
     Utils
-    [ ] Next sector does not work in Sector Editor with raw file
+    [x] Next sector does not work in Sector Editor with raw file
+    [ ] Write back with sector editor
 	[ ] Cartridge creator (RPK)
 	[ ] Add access to xdt99
 	[x] Change MacOS defaults (see below in this file)
+	[ ] Update hints
 	
     Current:
     [ ] Allow Return key for New floppy image
@@ -2252,6 +2255,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 
 		if (m_jtViews.getTabCount()==0) {
 			m_mEdit.activateMenuItems(false, false, false, m_bSerial, bImageIsHFDC);
+			m_mEdit.activateActionMenu(false);
 		}
 		else {
 			m_dvSelected.activateEditMenu();
