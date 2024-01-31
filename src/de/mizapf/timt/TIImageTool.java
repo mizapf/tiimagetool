@@ -53,6 +53,7 @@
     [x] Right-click on another file does not deselect the previously marked file → javax.swing.ListSelectionModel
     [x] Keep dimension of text output window
     [ ] Drag into Windows Explorer does not work
+    [ ] Dis/Fix 255 display (and pos. other files) should be improved
 	
     Files
 	[x] Create archive in newly created image (not loaded) triggers Exception (java.lang.IndexOutOfBoundsException: Index: -1
@@ -87,6 +88,7 @@
   	[ ] Abort copy/move should not touch the destination image
   	[x] Search function
   	[ ] Rebuild image tree (-> undo/redo)
+  	[ ] Hard disk image contains floppy disk filling
 */
 
 package de.mizapf.timt;
