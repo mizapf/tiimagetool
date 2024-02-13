@@ -40,7 +40,7 @@ public class AllocationMap implements Cloneable {
 		@param nAUSize Length of AU
 		@param bFloppy FLoppy allocation maps are little-endian
 	*/
-	public AllocationMap(int nAU, int nAUSize, boolean bFloppy) {
+	public AllocationMap(int nAU, int nAUSize, boolean bFloppy, byte[] bitfield) {
 		// System.out.println("New allocmap, size = " + (nAU+7)/8);
 		if (bFloppy) {
 			// m_abyMap = new byte[(nAU+7)/8];
@@ -73,6 +73,23 @@ public class AllocationMap implements Cloneable {
 		m_nLength = nAU;
 		m_nAUSize = nAUSize;
 		m_bFloppy = bFloppy;
+		
+		// Note that the LSB represents the first AU, and the MSB is seven
+		// AUs later (going from right to left for each byte)
+		//
+		// 00000000 00000000 1111111 11111111
+		// 76543210 fedcba98 7654321 fedcba98
+		//
+		// Freshly formatted disks should have a 0x03 as the first allocated bits
+		// (sector 0, sector 1)
+		//
+		if (bitfield != null) {
+			int nOffset = m_bFloppy? 0x38 : TFileSystem.SECTOR_LENGTH;  // Start at byte 0x38 for floppies and at sector 1 for hard disks
+			int nLength = bitfield.length - nOffset;
+			if (nLength > m_abyMap.length) nLength = m_abyMap.length;
+			// System.out.println("aby.length = " + vibmap.length + ", nOffset = " + nOffset + ", map.length = " + m_abyMap.length + ", length = " + nLength);
+			System.arraycopy(bitfield, nOffset, m_abyMap, 0, nLength);
+		}
 	}
 
 	public Object clone() {
@@ -88,28 +105,6 @@ public class AllocationMap implements Cloneable {
 		}
 	}
 
-	// Note that the LSB represents the first AU, and the MSB is seven
-	// AUs later (going from right to left for each byte)
-	//
-	// 00000000 00000000 1111111 11111111
-	// 76543210 fedcba98 7654321 fedcba98
-	//
-	// Freshly formatted disks should have a 0x03 as the first allocated bits
-	// (sector 0, sector 1)
-	//
-
-	/** Sets the allocation map.
-		@param vibmap VIB and allocation map
-	*/
-	public void setMapFromBitfield(byte[] vibmap) {
-		int nStartAU = 0;
-		int nOffset = m_bFloppy? 0x38 : TFileSystem.SECTOR_LENGTH;  // Start at byte 0x38 for floppies and at sector 1 for hard disks
-		int nLength = vibmap.length - nOffset;
-		if (nLength > m_abyMap.length) nLength = m_abyMap.length;
-		System.out.println("aby.length = " + vibmap.length + ", nOffset = " + nOffset + ", map.length = " + m_abyMap.length + ", length = " + nLength);
-		System.arraycopy(vibmap, nOffset, m_abyMap, 0, nLength);
-	}
-	
 	public byte[] toBitField() {
 		return m_abyMap;
 	}
@@ -121,8 +116,12 @@ public class AllocationMap implements Cloneable {
 	public int getMaxAU() {
 		return m_nLength;
 	}
-		
-	public void allocate(int nUnit) {
+
+	public void allocate(int nSector) {
+		allocateAU(nSector / m_nAUSize);
+	}
+	
+	public void allocateAU(int nUnit) {
 		if (nUnit < m_nLength) {
 			if (m_bFloppy) {
 				m_abyMap[nUnit/8] |= (1 << (nUnit%8));			
@@ -143,7 +142,7 @@ public class AllocationMap implements Cloneable {
 		// System.out.println("Allocate interval (sectors) = [" + it.start + ", "+ it.end + "]");
 		int nStartAU = it.start/m_nAUSize;
 		int nEndAU = it.end/m_nAUSize;
-		for (int i=nStartAU; i <= nEndAU; i++) allocate(i);		
+		for (int i=nStartAU; i <= nEndAU; i++) allocateAU(i);		
 	}
 	
 	public void deallocate(int nUnit) throws IndexOutOfBoundsException {

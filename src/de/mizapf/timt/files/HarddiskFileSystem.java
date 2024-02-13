@@ -88,10 +88,12 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		setGeometry(param);
 		// System.out.println("total sectors = " + param.getTotalSectors());
 		// System.out.println("AU size = " + param.auSize);
-		m_allocMap = new AllocationMap(param.getTotalSectors() / param.auSize, param.auSize, false);
+		
+		setupAllocationMap(null);
+		
 		m_allocMap.allocate(new Interval(0,31));
 		m_allocMap.allocate(new Interval(32,63));   // Backup
-		m_allocMap.allocate(64 / param.auSize);   // FDIR (AU)
+		m_allocMap.allocate(64);                    // FDIR (sector)
 	}
 	
 	public static HarddiskFileSystem getInstance(FormatParameters parm) {
@@ -260,9 +262,13 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 	}
 		
 	@Override
-	public void setupAllocationMap(byte[] vibmap) {
+	public void setupAllocationMap(byte[] bitfield) {
 		System.out.println("total = " + getTotalSectors() + ", sect/AU = " + getSectorsPerAU());
-		m_allocMap = new AllocationMap(getTotalSectors()/getSectorsPerAU(), getSectorsPerAU(), false);
-		m_allocMap.setMapFromBitfield(vibmap);
+		m_allocMap = new AllocationMap(getTotalSectors()/getSectorsPerAU(), getSectorsPerAU(), false, bitfield);
+	}
+	
+	@Override
+	public Interval getAllocationInterval() {
+		return new Interval(0, 31);
 	}
 }

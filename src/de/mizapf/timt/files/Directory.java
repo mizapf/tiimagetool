@@ -383,6 +383,13 @@ public class Directory extends Element {
 		return m_Subdirs;
 	}
 	
+	public Directory enterDirectory(String sDir) throws ImageException {
+		for (Directory d : m_Subdirs) {
+			if (d.getName().equals(sDir)) return d;
+		}
+		throw new ImageException(String.format(TIImageTool.langstr("VolumeDirNotFound"), sDir));
+	}
+	
 	public TFile getFile(String sFile) throws FileNotFoundException {
 		for (TFile file : m_Files) {
 			if (file.getName().equals(sFile)) return file; 
@@ -665,6 +672,7 @@ public class Directory extends Element {
 		if (m_Volume.isHarddiskImage() && isRootDirectory()) {
 			m_Volume.updateVIB();
 		}
+		// VIB of floppy is updated by updating the allocation map
 		m_Volume.writeAllocationMap();  // Commit on the source may change its allocation (move), but should not advance the generation
 		if (bFinal) {
 			m_Volume.nextGeneration();
@@ -714,7 +722,6 @@ public class Directory extends Element {
 		}
 
 		addToList(dirNew);
-		// if (bNextGen) m_Volume.reopenForWrite();
 		
 		// Create the file index for the new directory
 		dirNew.writeFDIR();
@@ -739,7 +746,6 @@ public class Directory extends Element {
 			m_Volume.writeAllocationMap();
 		}
 
-		// if (bNextGen) m_Volume.reopenForRead();
 		return dirNew;
 	}
 	
@@ -841,6 +847,7 @@ public class Directory extends Element {
 
 	/** Removes the directory from the list of directories, but not on the disk. */ 
 	private void removeFromList(Directory deldir) {
+		System.out.println("Removing " + deldir.getName() + " from dir " + this);
 		Directory[] aold = m_Subdirs;
 		m_Subdirs = new Directory[aold.length-1];
 		int poso = 0;

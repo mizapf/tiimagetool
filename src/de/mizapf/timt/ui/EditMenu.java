@@ -173,7 +173,7 @@ public class EditMenu extends JMenu {
 		m_iCreateDirectory.setEnabled(bOpenImage && bDirPossible);
 		m_iCreateArchive.setEnabled(bOpenImage);
 		
-		m_iUndo.setEnabled(false);
+		m_iUndo.setEnabled(true);
 		m_iRedo.setEnabled(false);
 	}	
 	

@@ -89,8 +89,7 @@ public class OpenImageAction extends Activity {
 						}
 					}						
 					fs = ((FloppyImageFormat)image).getFileSystem(vibmap);
-					((FloppyFileSystem)fs).configure(vibmap);
-					((FloppyFileSystem)fs).setupAllocationMap(vibmap);
+					fs.setupAllocationMap(vibmap);
 				}
 				
 				if (image.isPartitioned()) {
@@ -139,13 +138,13 @@ public class OpenImageAction extends Activity {
 							// FIXME
 							
 							fs = ((CF7ImageFormat)image).getFileSystem(vibmap);
-							((CF7VolumeFileSystem)fs).configure(vibmap);
-							((CF7VolumeFileSystem)fs).setupAllocationMap(vibmap);
+							fs.setupAllocationMap(vibmap);
 						}
 					}
 					else continue;
 				}		
 				
+				// image may have been replaced by the selected partition
 				if (image instanceof HarddiskImageFormat) {
 					HarddiskImageFormat hif = (HarddiskImageFormat)image;
 										
@@ -171,7 +170,8 @@ public class OpenImageAction extends Activity {
 					}
 					
 					fs = hif.getFileSystem(vibmap);
-					((HarddiskFileSystem)fs).setupAllocationMap(image.getContent(0, 31));
+					// Allocation map skips the first SECTOR_LENGTH bytes
+					fs.setupAllocationMap(image.getContent(0, 31));
 				}
 				
 				if (imagetool.hasAlreadyOpenedVolume(sAbsFile)) {

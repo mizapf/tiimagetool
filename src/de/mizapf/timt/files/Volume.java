@@ -53,27 +53,12 @@ public class Volume {
 
 		m_Image = image;
 		m_bReadOnly = false;
-				
-		m_FileSystem = fs;
-		if (m_FileSystem == null) {
+
+		if (fs == null) {
 			throw new InternalException("** FileSystem is null");
 		}
+		m_FileSystem = fs;
 
-		// System.out.println(m_Image.getClass().getName());
-		// System.out.println(m_FileSystem.getClass().getName());
-
-		Sector sector0 = image.readSector(0);
-		// System.out.println(Utilities.hexdump(sector0.getData()));
-		
-		Directory dirRoot = null; 
-		
-		if (m_FileSystem instanceof FloppyFileSystem) 
-			dirRoot = new Directory(this, sector0);  // used for floppy
-		else
-			dirRoot = new Directory(this, sector0, null);   // used for HD
-
-		m_FileSystem.setRootDirectory(dirRoot);
-		
 		// Check whether the image is read-only
 		try {
 			image.reopenForWrite();
@@ -83,6 +68,9 @@ public class Volume {
 			m_bReadOnly = true;
 		}
 		image.reopenForRead();
+
+		buildTree();
+		
 		image.setStartGeneration();
 	}
 	
@@ -104,6 +92,19 @@ public class Volume {
 		catch (ProtectedException px) {
 			System.err.println("Internal error: Volume is write-protected, although it is a memory image");
 		}	
+	}
+	
+	public void buildTree() throws ImageException, IOException {
+		Sector sector0 = m_Image.readSector(0);
+		System.out.println(Utilities.hexdump(sector0.getData()));
+		Directory dirRoot = null;
+		
+		if (m_FileSystem instanceof FloppyFileSystem)
+			dirRoot = new Directory(this, sector0);  // used for floppy
+		else
+			dirRoot = new Directory(this, sector0, null);   // used for HD
+
+		m_FileSystem.setRootDirectory(dirRoot);
 	}
 	
 	public boolean isReadOnly() {
@@ -167,14 +168,13 @@ public class Volume {
 		return -1;
 	}
 	
-/*	public int getHeads() {
-		if (m_FileSystem instanceof HarddiskFileSystem)
-			return ((HarddiskFileSystem)m_FileSystem).getHeads();
-		if (m_FileSystem instanceof FloppyFileSystem)
-			return ((FloppyFileSystem)m_FileSystem).getSides();
-		return 0;
+	public Directory traverse(String[] path) throws ImageException {
+		Directory dir = m_FileSystem.getRootDirectory();
+		for (String nextdir : path) 
+			dir = dir.enterDirectory(nextdir);
+		return dir;		
 	}
-	*/
+	
 	public int getImageType() {
 		if (m_Image == null) return ImageFormat.MEMORY;
 		// System.out.println("git: " + m_Image.getClass().getName() + ", type = " + m_Image.getImageType());
@@ -223,6 +223,13 @@ public class Volume {
 		for (Sector sect : alloc) {
 			if (sect != null) writeSector(sect);
 		}
+	}
+	
+	public void readAllocationMap() throws IOException, ImageException {
+		System.out.println("Read allocation map");
+		Interval allSect = m_FileSystem.getAllocationInterval();
+		byte[] amap = m_Image.getContent(allSect.start, allSect.end);
+		m_FileSystem.setupAllocationMap(amap);
 	}
 	
 	public boolean isHarddiskImage() {
@@ -430,8 +437,10 @@ public class Volume {
 		return m_Image.cacheHasUnsavedEntries();
 	}
 	
-	public void undoAction() {
+	public void undoAction() throws ImageException, IOException {
 		m_Image.previousGeneration();
+		buildTree();
+		readAllocationMap();   // restore the previous allocation map
 	}
 	
 	public FormatParameters getFormatParams() {
@@ -447,9 +456,4 @@ public class Volume {
 	public void revertChanges() {
 		m_Image.revertChanges();
 	}
-	
-/*	public String getProposedName() {
-		if (m_sImageFileName != null) return m_sImageFileName;
-		return m_FileSystem.getVolumeName().toLowerCase();
-	} */
 }

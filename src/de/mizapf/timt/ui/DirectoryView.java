@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.SortedSet;
+import java.util.LinkedList;
 import javax.swing.*;
 
 import de.mizapf.timt.files.*;
@@ -320,7 +321,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		else return m_frmOwn.getSize(); 
 	}
 	
-	void enterDirectory(Directory dir) {
+	public void enterDirectory(Directory dir) {
 		// AWT thread
 		m_dirCurrent = dir;
 		m_panel.rebuild();
@@ -744,6 +745,15 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		enterDirectory(getVolume().getRootDirectory());
 	}
 	
+	public String[] getPath() {
+		LinkedList<String> path = new LinkedList<String>();
+		Directory dir = m_dirCurrent;
+		while (!dir.isRootDirectory()) {
+			path.addFirst(dir.getName());
+			dir = dir.getParentDirectory();
+		}
+		return path.toArray(new String[path.size()]);
+	}
 		
 	// ===================================================================
 	//   MouseListener

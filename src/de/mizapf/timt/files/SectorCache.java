@@ -78,17 +78,19 @@ public class SectorCache {
 	
 	private Sector getRecentVersion(LinkedList<Sector> seclist) {
 		Iterator<Sector> backit = seclist.descendingIterator();
-		// System.out.println("Version list length: " + seclist.size() + ", gen = " + m_generation);
+		System.out.println("Version list length: " + seclist.size() + ", nextgen = " + m_generation);
 		Sector sect = null;
 		while (backit.hasNext()) {
 			Sector sec = backit.next();
-			// System.out.println("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + ")");
-			if (sec.getGeneration() <= m_generation && sect == null) {
+			System.out.println("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + ")");
+			if (sec.getGeneration() < m_generation) {
+				System.out.println("hit");
 				sect = sec;
+				break;
 			}
 		}
-		if (sect == null)
-			System.err.println("SectorCache: Could not find requested version of sector");
+		// If we could not find a version earlier than the selected generation, return null
+		// i.e. take it from the image
 		return sect;
 	}
 	
@@ -115,7 +117,7 @@ public class SectorCache {
 	    @param sect Sector
 	*/
 	void write(Sector sect) {
-
+		System.out.println("Write sector " + sect.getNumber() + ", gen " + m_generation);
 		boolean bNew = true;
 		
 		// Set the generation
@@ -132,11 +134,17 @@ public class SectorCache {
 		}
 		else {
 			Sector lsect = getRecentVersion(secversions);
-			if (lsect.getGeneration() == m_generation) {
-				// Same generation; overwrite the sector contents
-				lsect.modify(sect.getData());
-				// System.out.println("Replacing the contents of sector " + sect.getNumber() + " in generation " + m_generation);
-				bNew = false;
+			if (lsect != null) {
+				if (lsect.getGeneration() == m_generation) {
+					// Same generation; overwrite the sector contents
+					lsect.modify(sect.getData());
+					// System.out.println("Replacing the contents of sector " + sect.getNumber() + " in generation " + m_generation);
+					bNew = false;
+				}
+			}
+			else {
+				// else we once had a history before undoing. In that case, bNew = true
+				secversions.clear();
 			}
 		}
 		if (bNew) {
@@ -144,7 +152,6 @@ public class SectorCache {
 			secversions.add((Sector)sect.clone());
 			// System.out.println("Caching a new version (" + m_generation + ") of sector " + sect.getNumber());
 		}
-		System.out.println("Write sector " + sect.getNumber() + ", gen " + m_generation);
 		// System.out.println(Utilities.hexdump(sect.getData()));
 	}
 	

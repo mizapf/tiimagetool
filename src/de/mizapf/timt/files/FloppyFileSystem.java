@@ -27,7 +27,10 @@ import java.util.Arrays;
 
 import java.io.IOException;
 
-/** Represents a TI floppy disk file system. */	
+/** Represents a TI floppy disk file system. 
+	The floppy file system itself does not access the sectors. This is done
+	by the image format.
+*/	
 public class FloppyFileSystem extends TFileSystem {
 	
 	public final static int UNKNOWN_DENSITY = -1;
@@ -64,9 +67,12 @@ public class FloppyFileSystem extends TFileSystem {
 		// Cause: NewFloppyImageDialog does not define the sector count
 		setGeometry(param.cylinders, param.heads, param.sectors);
 
-		m_allocMap = new AllocationMap(getTotalSectors() / getSectorsPerAU(), getSectorsPerAU(), true);
+		setupAllocationMap(null);
+
+		// Allocates the AUs of sectors 0 and 1
+		// For an AU size > 1, the second operation has no effect
 		m_allocMap.allocate(0);
-		if (getSectorsPerAU() < 2) m_allocMap.allocate(1);
+		m_allocMap.allocate(1);
 	}
 	
 	@Override
@@ -196,6 +202,7 @@ public class FloppyFileSystem extends TFileSystem {
 	@Override
 	byte[] createVIBContents() {
 		// Create a new VIB
+		// System.out.println("Building VIB from root directory " + m_dirRoot);
 		byte[] abyNewVIB = new byte[SECTOR_LENGTH];
 
 		Utilities.setString(abyNewVIB, 0, getVolumeName(), 10);
@@ -208,24 +215,19 @@ public class FloppyFileSystem extends TFileSystem {
 		abyNewVIB[0x12] = (byte)(m_nFSHeads & 0xff);
 		abyNewVIB[0x13] = (byte)(getDensityCode() & 0xff);
 		
-//		if (!m_bCF7) {
-			Directory[] dirs = m_dirRoot.getDirectories();
-			for (int i=0; i < 3; i++) {
-				if (i < dirs.length) {
-					Directory sub = dirs[i];
-					Utilities.setString(abyNewVIB, 0x14 + i*12, sub.getName(), 10);
-					Utilities.setInt16(abyNewVIB, 0x1e + i*12, sub.getFileIndexSector()); 					
-				}
-				else {
-					// No directory
-					for (int j=0; j < 12; j++) abyNewVIB[0x14 + j + i*12] = (byte)0;
-				}
+		Directory[] dirs = m_dirRoot.getDirectories();
+		for (int i=0; i < 3; i++) {
+			if (i < dirs.length) {
+				Directory sub = dirs[i];
+				Utilities.setString(abyNewVIB, 0x14 + i*12, sub.getName(), 10);
+				Utilities.setInt16(abyNewVIB, 0x1e + i*12, sub.getFileIndexSector()); 					
 			}
-//		}
-/*		else {
-			// Clear the DIR area for CF7; there are no subdirectories
-			for (int i=0x14; i<0x38; i++) abyNewVIB[i] = (byte)0x00;
-		} */
+			else {
+				// No directory
+				for (int j=0; j < 12; j++) abyNewVIB[0x14 + j + i*12] = (byte)0;
+			}
+		}
+
 		byte[] map = m_allocMap.toBitField();
 		// System.out.println("Map length = " + map.length);
 		for (int j=0; j < map.length; j++) {
@@ -341,8 +343,12 @@ public class FloppyFileSystem extends TFileSystem {
 	}
 	
 	@Override
-	public void setupAllocationMap(byte[] vibmap) {
-		m_allocMap = new AllocationMap(getTotalSectors() / getSectorsPerAU(), getSectorsPerAU(), true);
-		m_allocMap.setMapFromBitfield(vibmap);
+	public void setupAllocationMap(byte[] bitfield) {
+		m_allocMap = new AllocationMap(getTotalSectors() / getSectorsPerAU(), getSectorsPerAU(), true, bitfield);
 	}	
+	
+	@Override
+	public Interval getAllocationInterval() {
+		return new Interval(0, 0);
+	}
 }

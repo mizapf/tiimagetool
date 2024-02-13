@@ -87,8 +87,9 @@
   	[x] Unformatted image (998dd.dsk) can be opened without warning
   	[ ] Abort copy/move should not touch the destination image
   	[x] Search function
-  	[ ] Rebuild image tree (-> undo/redo)
+  	[x] Rebuild image tree (-> undo/redo)
   	[ ] Hard disk image contains floppy disk filling
+  	[ ] Save content to another destination
 */
 
 package de.mizapf.timt;
@@ -564,12 +565,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_iChangeCHDFormat = createMenuItem(new ChangeCHDFormatAction());
 			m_mUtility.add(m_iChangeCHDFormat);
 			
-/*			m_iCHDToRaw = createMenuItem(new CHDRawAction());
-			m_mUtility.add(m_iCHDToRaw);
-			
-			m_iRawToCHD = createMenuItem(new RawCHDAction());
-			m_mUtility.add(m_iRawToCHD);
-*/			
 			m_mUtility.addSeparator();
 			m_iSerialBridge = createMenuItem(new SerialBridgeAction());
 			m_mUtility.add(m_iSerialBridge);
@@ -581,6 +576,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			m_mHelp.add(createMenuItem(new HelpAction()));
 			m_mHelp.add(createMenuItem(new HintAction()));
+			m_mHelp.addSeparator();
+			m_mHelp.add(createMenuItem(new RefreshAction()));
 			m_mHelp.addSeparator();
 			m_mHelp.add(createMenuItem(new AboutAction()));
 			
@@ -1918,6 +1915,28 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			}
 		}
 		return null;
+	}
+	
+	public void refresh() {
+		DirectoryView dv = determineSelectedTab();
+		try {
+			if (dv != null) {
+				Volume vol = dv.getVolume();
+				if (vol != null) {
+					vol.buildTree();
+					String[] path = dv.getPath();
+					Directory dir = vol.traverse(path);
+					dv.enterDirectory(dir);
+					dv.refreshView();
+				}
+			}
+		}
+		catch (ImageException ix) {
+			ix.printStackTrace();
+		}
+		catch (IOException iox) {
+			iox.printStackTrace();
+		}
 	}
 	
 	/****************************************************

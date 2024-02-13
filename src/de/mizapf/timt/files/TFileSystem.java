@@ -100,6 +100,7 @@ public abstract class TFileSystem {
 	}
 
 	void setRootDirectory(Directory root) {
+		System.out.println("Set root directory " + root);
 		m_dirRoot = root;
 	}
 	
@@ -310,4 +311,6 @@ public abstract class TFileSystem {
 	}
 	
 	abstract public void setupAllocationMap(byte[] vibmap);
+	
+	abstract public Interval getAllocationInterval();
 }

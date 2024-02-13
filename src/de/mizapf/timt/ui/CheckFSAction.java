@@ -170,7 +170,7 @@ public class CheckFSAction extends Activity {
 			if (nRet == JOptionPane.YES_OPTION) {
 				bChangedAlloc = true;
 				for (int au:agl.getAllocationGaps()) {
-					allocMap.allocate(au);
+					allocMap.allocateAU(au);
 				}
 			}
 			else {

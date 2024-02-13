@@ -75,10 +75,10 @@ public abstract class Element implements Comparable<Element> {
 	
 	// TODO: implement equals (must consider java.io.file which contains the image) 
 	
-	public String toString() {
+/*	public String toString() {
 		return getName();
 	}
-	
+*/	
 	public String getPathname() {
 		StringBuilder sb = new StringBuilder();
 		if (m_dirParent != null && !m_dirParent.isRootDirectory()) {
