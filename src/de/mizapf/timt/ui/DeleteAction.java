@@ -120,8 +120,8 @@ public class DeleteAction extends Activity {
 				}
 			}
 			try {
-				// System.out.println("Commit after delete");
 				dirCurrent.commit(true);
+				// System.out.println("Commit after delete, changed=" + dirCurrent.getVolume().isModified());
 			}
 			catch (FileNotFoundException fnfx) {
 				if (fnfx.getMessage().indexOf("ermission")!=-1) {
@@ -147,7 +147,7 @@ public class DeleteAction extends Activity {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(),  TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
 				imagetool.closeCurrentView();
 			}
-			dvCurrent.refreshAll();			
+			imagetool.refreshPanel(vol);			
 		}
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}

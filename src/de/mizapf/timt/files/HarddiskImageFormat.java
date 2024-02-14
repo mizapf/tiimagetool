@@ -54,7 +54,6 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		m_nCylinders = params.cylinders;		
 		m_nHeads = params.heads;
 		m_nActivePartition = -1;
-		System.out.println("hier2");
 	}
 
 	/** May be overridden by formats like RawHDFormat which cannot rely on this. */
@@ -157,7 +156,7 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		if (m_partition != null) return true;
 		
 		byte[] vib = readSector(0).getData();
-		System.out.println(Utilities.hexdump(vib));
+		// System.out.println(Utilities.hexdump(vib));
 		return (vib[0x0e] == 'P' && vib[0x0f] == 'T' && vib[0x0a] == (byte)0xff && vib[0x0b] == (byte)0xff);
 	}
 }

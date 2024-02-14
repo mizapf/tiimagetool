@@ -463,7 +463,7 @@ public class Directory extends Element {
 				throw new ImageException(TIImageTool.langstr("MissingNameInTFI"));
 			}
 		}
-		System.out.println("Directory.insertFile(" + sContName + ")");
+		// System.out.println("Directory.insertFile(" + sContName + ")");
 
 		// Already there?
 		sContName = sContName.trim();
@@ -665,7 +665,7 @@ public class Directory extends Element {
 	// Called by Actions. Only the Archive.commit may throw an IOException
 	public void commit(boolean bFinal) throws ImageException, IOException, ProtectedException {
 		// Update directory descriptor record
-		System.out.println("Directory " + getName() + " commit: final=" + bFinal);
+		// System.out.println("Directory " + getName() + " commit: final=" + bFinal);
 		// Thread.currentThread().dumpStack();
 		writeDDR();
 		writeFDIR();
@@ -677,7 +677,7 @@ public class Directory extends Element {
 		if (bFinal) {
 			m_Volume.nextGeneration();
 		}
-		System.out.println("Directory commit done");
+		// System.out.println("Directory commit done");
 	}
 	
 	/** Creates a new subdirectory. 
@@ -847,7 +847,7 @@ public class Directory extends Element {
 
 	/** Removes the directory from the list of directories, but not on the disk. */ 
 	private void removeFromList(Directory deldir) {
-		System.out.println("Removing " + deldir.getName() + " from dir " + this);
+		// System.out.println("Removing " + deldir.getName() + " from dir " + this);
 		Directory[] aold = m_Subdirs;
 		m_Subdirs = new Directory[aold.length-1];
 		int poso = 0;

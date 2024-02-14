@@ -128,9 +128,9 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 		}
 		
 		void encode() {
-			System.out.println("Current format unit = " + m_nCurrentFormatUnit);
+			// System.out.println("Current format unit = " + m_nCurrentFormatUnit);
 			for (ImageSector sect : m_decodedSectors) {
-				System.out.println("DecSec = " + sect.getNumber() +", pos = " + sect.getPosition());
+				// System.out.println("DecSec = " + sect.getNumber() +", pos = " + sect.getPosition());
 				byte[] content = sect.getData();
 				int pos = sect.getPosition();
 				for (int j=0; j < TFileSystem.SECTOR_LENGTH; j++) {
@@ -247,7 +247,7 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 		outside of its format units. */
     @Override
 	void prepareNewImage(FormatParameters params) {
-		System.out.println("CF7: prepareNewImage");
+		// System.out.println("CF7: prepareNewImage");
 	}
 	
 	int getFormatUnitLength(int funum) {

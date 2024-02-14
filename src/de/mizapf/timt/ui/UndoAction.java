@@ -49,7 +49,7 @@ public class UndoAction extends Activity {
 		Volume vol = dvCurrent.getVolume();
 		try {
 			vol.undoAction();
-			imagetool.refresh();
+			imagetool.refresh(dvCurrent);
 		}
 		catch (ImageException ix) {
 			ix.printStackTrace();

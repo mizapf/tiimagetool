@@ -1177,7 +1177,7 @@ public class TFile extends Element {
 
 		try {
 			if (hasFixedRecordLength() && getRecordLength()==128 && !isProgram()) {
-				System.out.println("Check file " + m_sName + " as Archive");
+				// System.out.println("Check file " + m_sName + " as Archive");
 				byte[] content = getRawContent();
 				
 				if (Archive.hasPlainArchiveFormat(content)) m_nIsArchive = YES;

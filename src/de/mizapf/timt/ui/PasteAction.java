@@ -344,7 +344,7 @@ public class PasteAction extends Activity {
 					String sImportName = null;
 
 					for (Element el : list) {
-						System.out.println("Element " + el);
+						// System.out.println("Element " + el);
 
 						// System.out.println("el = " + el);
 						// File copy

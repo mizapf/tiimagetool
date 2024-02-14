@@ -78,13 +78,13 @@ public class SectorCache {
 	
 	private Sector getRecentVersion(LinkedList<Sector> seclist) {
 		Iterator<Sector> backit = seclist.descendingIterator();
-		System.out.println("Version list length: " + seclist.size() + ", nextgen = " + m_generation);
+		// System.out.println("Version list length: " + seclist.size() + ", nextgen = " + m_generation);
 		Sector sect = null;
 		while (backit.hasNext()) {
 			Sector sec = backit.next();
-			System.out.println("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + ")");
+			// System.out.println("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + ")");
 			if (sec.getGeneration() < m_generation) {
-				System.out.println("hit");
+				// System.out.println("hit");
 				sect = sec;
 				break;
 			}
@@ -177,7 +177,7 @@ public class SectorCache {
 		variable m_generation refers to the next change, not the current.
 	*/
 	public boolean hasUnsavedEntries() {
-		System.out.println("gen(" + m_sName + ") = " + m_generation + ", last save = " + m_checkpoint);  //#%
+		// System.out.println("gen(" + m_sName + ") = " + m_generation + ", last save = " + m_checkpoint);  //#%
 		return m_generation > m_checkpoint + 1;
 	}
 

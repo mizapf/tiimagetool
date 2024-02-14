@@ -141,7 +141,7 @@ public class EditMenu extends JMenu {
 		add(m_iInsertEmulate);		
 	}	
 		
-	public void activateMenuItems(boolean bOpenImage, boolean bDirPossible, boolean bClipboard, boolean bSerial, boolean bHFDC) {
+	public void activateMenuItems(boolean bUndo, boolean bOpenImage, boolean bDirPossible, boolean bClipboard, boolean bSerial, boolean bHFDC) {
 				
 /*		if (bOpenImage) {
 			Volume vol = m_View.getVolume();
@@ -173,7 +173,7 @@ public class EditMenu extends JMenu {
 		m_iCreateDirectory.setEnabled(bOpenImage && bDirPossible);
 		m_iCreateArchive.setEnabled(bOpenImage);
 		
-		m_iUndo.setEnabled(true);
+		m_iUndo.setEnabled(bUndo);
 		m_iRedo.setEnabled(false);
 	}	
 	

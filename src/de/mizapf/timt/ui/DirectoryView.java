@@ -358,7 +358,6 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		Volume vol = getVolume();
 		
 		if (vol != null) {
-			// System.out.println("refresh");
 			setSaveOptions(vol.isModified());
 			if (m_frmOwn != null) {
 				m_frmOwn.setTitle(vol.getModShortImageName());
@@ -367,6 +366,10 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				m_TabLabel.setText(vol.getModShortImageName());
 			}
 		}
+	}
+	
+	public boolean isDetached() {
+		return m_frmOwn != null;
 	}
 	
 	public void setTabLabel(JLabel jl) {
@@ -539,9 +542,9 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			if (!dirCurrent.isRootDirectory()) bDirPossible = false;
 			if (dirCurrent.getDirectories().length>2) bDirPossible = false;
 		}			
-		
+		boolean bUndo = getVolume().isModified();
 		boolean bClipboard = m_app.clipboardNotEmpty();	
-		m_mEdit.activateMenuItems(true, bDirPossible, bClipboard, m_app.offersSerialConnection(), getVolume().isHFDCImage());
+		m_mEdit.activateMenuItems(bUndo, true, bDirPossible, bClipboard, m_app.offersSerialConnection(), getVolume().isHFDCImage());
 		m_mEdit.activateActionMenu(true);
 	}
 	
@@ -825,7 +828,6 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	void doubleClickFile(TFile file) {
 		JFrame frame = getFrame();
 		Volume vol = file.getVolume();
-		
 		if (file.hasArchiveFormat()) {
 			try {
 				Archive ark = file.unpackArchive();

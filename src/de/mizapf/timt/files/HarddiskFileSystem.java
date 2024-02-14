@@ -239,7 +239,7 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		
 		int nAU = Utilities.getInt16(vibmap, 0x0a);
 		if (nAU > 0xf800) nAU = 0xf800;
-		System.out.println(nAU);
+		// System.out.println(nAU);
 		
 		m_nFSTotalSectors = nAU * m_nFSSectorsPerAU;		
 			
@@ -263,7 +263,7 @@ public abstract class HarddiskFileSystem extends TFileSystem {
 		
 	@Override
 	public void setupAllocationMap(byte[] bitfield) {
-		System.out.println("total = " + getTotalSectors() + ", sect/AU = " + getSectorsPerAU());
+		// System.out.println("total = " + getTotalSectors() + ", sect/AU = " + getSectorsPerAU());
 		m_allocMap = new AllocationMap(getTotalSectors()/getSectorsPerAU(), getSectorsPerAU(), false, bitfield);
 	}
 	

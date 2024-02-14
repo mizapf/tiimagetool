@@ -201,6 +201,9 @@ public abstract class ImageFormat  {
 	public static ImageFormat getImageFormat(String sFile) throws FileNotFoundException, IOException, ImageException {
 		
 		File fl = new File(sFile);
+		if (!fl.exists()) 
+			throw new FileNotFoundException(sFile);
+		
 		long nLength = fl.length();
 		if (nLength == 0) throw new ImageException(sFile + ": " + TIImageTool.langstr("ImageEmpty"));
 		

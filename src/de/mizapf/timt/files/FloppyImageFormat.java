@@ -76,11 +76,6 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 			return new Location(0, 0, 0);
 		}
 		
-/*		if (m_nTotalSectors != 0 && nSectorNumber >= m_nTotalSectors)  {
-			// Thread.currentThread().dumpStack();
-			System.out.println("total sectors = " + m_nTotalSectors + ", secno = " + nSectorNumber);
-			throw new ImageException(String.format(TIImageTool.langstr("ImageSectorHigh"), m_nTotalSectors));
-		} */					
 		int sector = nSectorNumber % nSecPerTrack;
 		int lintrack = nSectorNumber / nSecPerTrack;
 		

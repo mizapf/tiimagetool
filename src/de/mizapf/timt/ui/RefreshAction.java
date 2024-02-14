@@ -44,6 +44,6 @@ public class RefreshAction extends Activity {
 	
 	public void go() {
 		System.out.println("Refresh");
-		imagetool.refresh();
+		imagetool.refresh(null);
 	}
 }

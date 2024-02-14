@@ -81,7 +81,8 @@
     [ ] Encode control characters in files from escape sequence (like §81 -> CTRL-a)
     [x] Use empty sector pattern 
     [x] Save As is active after closing all open images
-    [ ] Complete undo/redo
+    [x] Complete undo
+    [ ] Complete redo
     [x] Restore all floppy formats
     [x] Restore all hd formats
   	[x] Unformatted image (998dd.dsk) can be opened without warning
@@ -589,18 +590,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				// If not available, block the remote functions
 				Class cls = Class.forName(SERIALPACKAGE + "SerialPort");
 				m_bSerial = true;
-				gnu.io.DriverManager.getInstance().loadDrivers();
-				
-				/* // No output
-				java.util.Enumeration<gnu.io.CommPortIdentifier> identifiers =
-					gnu.io.CommPortIdentifier.getPortIdentifiers();
-					
-					while(identifiers.hasMoreElements()){
-						gnu.io.CommPortIdentifier a = identifiers.nextElement();
-						System.out.println(a.getName());
-					}
-				*/
-                
+				gnu.io.DriverManager.getInstance().loadDrivers();                
 			}
 			catch (ClassNotFoundException cnfx) {
 				m_bSerial = false;
@@ -731,8 +721,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 		
 		public void run() {
+			// System.out.println("Volume " + volume);
 			for (DirectoryView dv : m_Views) {
 				if (volume == null) {
+					// System.out.println("VR refresh " + dv + (dv.isDetached()? " (detached)" : ""));
 					dv.refreshView();
 				}
 				else {
@@ -740,6 +732,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 						dv.refreshView();
 					if (backtoroot) dv.gotoRootDirectory();
 				}
+			}
+			// Refresh the selected view last
+			if (volume == null) {
+				if (m_dvSelected != null)
+					m_dvSelected.refreshView();
+				// else System.out.println("m_dvSel == null");
 			}
 		}
 	}
@@ -1574,7 +1572,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public void selectView(DirectoryView dv) {
 		m_dvSelected = dv;
 		setSaveOptions();
-//		System.out.println("selected view of " + dv.getDirectory().getVolume().getImageName());
+		activateMenuItems();
+		// System.out.println("selected view of " + dv.getDirectory().getVolume().getImageName());
 	}
 	
 	void unselectAllViews() {
@@ -1917,28 +1916,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return null;
 	}
 	
-	public void refresh() {
-		DirectoryView dv = determineSelectedTab();
-		try {
-			if (dv != null) {
-				Volume vol = dv.getVolume();
-				if (vol != null) {
-					vol.buildTree();
-					String[] path = dv.getPath();
-					Directory dir = vol.traverse(path);
-					dv.enterDirectory(dir);
-					dv.refreshView();
-				}
-			}
-		}
-		catch (ImageException ix) {
-			ix.printStackTrace();
-		}
-		catch (IOException iox) {
-			iox.printStackTrace();
-		}
-	}
-	
 	/****************************************************
 		Utility functions for menu activities
 	****************************************************/
@@ -2039,15 +2016,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			String sImageName = dir.getVolume().getImageName();
 			addRecent(dir.getVolume().getImageName());
 		}
-	}
-	
-	public void refreshPanel(Volume vol) {
-		SwingUtilities.invokeLater(new ViewRefresher(vol));		
-	}
-
-	public void reloadVolume(Volume vol) throws FileNotFoundException, IOException, ImageException {
-		// Volume volNew = new Volume(vol.getImageName());
-		SwingUtilities.invokeLater(new ViewRefresher(vol, true));
 	}
 	
 	DirectoryView getFocusedView() {
@@ -2236,9 +2204,47 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return m_markForCut;
 	}
 
+	public void refreshPanel(Volume vol) {
+		SwingUtilities.invokeLater(new ViewRefresher(vol));		
+	}
+
+	public void reloadVolume(Volume vol) throws FileNotFoundException, IOException, ImageException {
+		// Volume volNew = new Volume(vol.getImageName());
+		SwingUtilities.invokeLater(new ViewRefresher(vol, true));   // back to root directory
+	}
+	
 	public void refreshAllViews() {
 		SwingUtilities.invokeLater(new ViewRefresher(null));		
 	}
+	
+	public void refresh(DirectoryView dvRefr) {
+		
+		// Create new Directory trees for all open volumes
+		// but don't create different trees for the same volume
+		Map<Volume,Directory> list = new HashMap<Volume,Directory>();
+		for (DirectoryView dv : m_Views) {
+			// System.out.println("refresh " + dv);
+			if (dvRefr == null || dv.getVolume() == dvRefr.getVolume()) {
+				Volume vol = dv.getVolume();
+				Directory dir = list.get(vol);
+				try {
+					if (dir == null) {
+						vol.buildTree();
+						dir = vol.traverse(dv.getPath());
+						list.put(vol, dir);
+					}
+					dv.enterDirectory(dir);
+				}
+				catch (ImageException ix) {
+					ix.printStackTrace();
+				}
+				catch (IOException iox) {
+					iox.printStackTrace();
+				}
+			}
+			SwingUtilities.invokeLater(new ViewRefresher(null));
+		}
+	}		
 	
 	void clearSelection(DirectoryView dvExcept) {
 		for (DirectoryView dv : m_Views) {
@@ -2275,7 +2281,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_iSerialBridge.setEnabled(m_bSerial);
 
 		if (m_jtViews.getTabCount()==0) {
-			m_mEdit.activateMenuItems(false, false, false, m_bSerial, bImageIsHFDC);
+			m_mEdit.activateMenuItems(false, false, false, false, m_bSerial, bImageIsHFDC);
 			m_mEdit.activateActionMenu(false);
 		}
 		else {

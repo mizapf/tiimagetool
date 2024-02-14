@@ -340,16 +340,6 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		
 	//    ListSelectionListener
 	// =============================================================
-
-/*	public void valueChanged(ListSelectionEvent lse) {
-		int minIndex = lse.getFirstIndex();
-		int maxIndex = lse.getLastIndex();
-		if (!lse.getValueIsAdjusting()) {
-			System.out.println("First selection index = " + minIndex + ", last selection index = " + maxIndex);
-			// Source is JList
-			System.out.println("Selected index = " + m_Listing.getSelectedIndex());
-		}		
-	} */
 	
 	/** Returns the element where the pointer stopped. */
 	Element getLastSelected() {

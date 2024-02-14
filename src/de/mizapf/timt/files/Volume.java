@@ -96,7 +96,7 @@ public class Volume {
 	
 	public void buildTree() throws ImageException, IOException {
 		Sector sector0 = m_Image.readSector(0);
-		System.out.println(Utilities.hexdump(sector0.getData()));
+		// System.out.println(Utilities.hexdump(sector0.getData()));
 		Directory dirRoot = null;
 		
 		if (m_FileSystem instanceof FloppyFileSystem)
@@ -125,15 +125,7 @@ public class Volume {
 		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		m_Image.writeSector(sect);
 	}
-		
-/*	public void reopenForWrite() throws IOException, ProtectedException {
-		m_Image.reopenForWrite();
-	}
-	
-	public void reopenForRead() throws IOException {
-		m_Image.reopenForRead();
-	}
-*/
+
 	public void close() throws IOException {
 		// If there is no image file, changes may be lost
 		if (m_Image != null) m_Image.close();
@@ -214,7 +206,7 @@ public class Volume {
 	}
 
 	public void writeAllocationMap() throws ProtectedException {
-		System.out.println("Write allocation map");
+		// System.out.println("Write allocation map");
 		// Thread.currentThread().dumpStack();
 
 		Sector[] alloc = m_FileSystem.createAllocationMapSectors();
@@ -226,7 +218,7 @@ public class Volume {
 	}
 	
 	public void readAllocationMap() throws IOException, ImageException {
-		System.out.println("Read allocation map");
+		// System.out.println("Read allocation map");
 		Interval allSect = m_FileSystem.getAllocationInterval();
 		byte[] amap = m_Image.getContent(allSect.start, allSect.end);
 		m_FileSystem.setupAllocationMap(amap);
