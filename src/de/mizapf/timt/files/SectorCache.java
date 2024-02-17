@@ -179,19 +179,19 @@ public class SectorCache {
 		variable m_generation refers to the next change, not the current.
 	*/
 	public boolean hasUnsavedEntries() {
-		System.out.println("gen(" + m_sName + ") = " + m_generation + ", last save = " + m_checkpoint);  //#%
+		// System.out.println("gen(" + m_sName + ") = " + m_generation + ", last save = " + m_checkpoint);  //#%
 		return m_generation > m_checkpoint + 1;
 	}
 
 	public void nextGeneration(boolean bNew) {
 //		Thread.currentThread().dumpStack();
-		System.out.println("+ nextgen(" + m_sName + ")");
+		// System.out.println("+ nextgen(" + m_sName + ")");
 		m_generation++;
 		if (bNew) m_maxgen = m_generation;
 	}
 		
 	public void previousGeneration() {
-		System.out.println("- prevgen(" + m_sName + ")");
+		// System.out.println("- prevgen(" + m_sName + ")");
 		m_generation--;
 	}
 

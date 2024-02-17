@@ -118,7 +118,5 @@ public class CF7VolumeFileSystem extends FloppyFileSystem {
 		catch (InvalidNameException inx) {
 			setVolumeName0("UNNAMED");
 		}
-		
-		configure(vib);
 	}
 }
