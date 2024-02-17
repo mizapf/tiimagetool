@@ -121,7 +121,7 @@ public class DeleteAction extends Activity {
 			}
 			try {
 				dirCurrent.commit(true);
-				// System.out.println("Commit after delete, changed=" + dirCurrent.getVolume().isModified());
+				System.out.println("Commit after delete, changed=" + dirCurrent.getVolume().isModified());
 			}
 			catch (FileNotFoundException fnfx) {
 				if (fnfx.getMessage().indexOf("ermission")!=-1) {

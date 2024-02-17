@@ -543,8 +543,9 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			if (dirCurrent.getDirectories().length>2) bDirPossible = false;
 		}			
 		boolean bUndo = getVolume().isModified();
+		boolean bRedo = getVolume().redoPossible();
 		boolean bClipboard = m_app.clipboardNotEmpty();	
-		m_mEdit.activateMenuItems(bUndo, true, bDirPossible, bClipboard, m_app.offersSerialConnection(), getVolume().isHFDCImage());
+		m_mEdit.activateMenuItems(bUndo, bRedo, true, bDirPossible, bClipboard, m_app.offersSerialConnection(), getVolume().isHFDCImage());
 		m_mEdit.activateActionMenu(true);
 	}
 	

@@ -360,8 +360,8 @@ public abstract class ImageFormat  {
 	}
 	
 	// Called from Volume and SectorEditFrame
-	public void nextGeneration() {
-		m_writeCache.nextGeneration();
+	public void nextGeneration(boolean bNew) {
+		m_writeCache.nextGeneration(bNew);
 	}
 	
 	public void previousGeneration() {
@@ -374,6 +374,10 @@ public abstract class ImageFormat  {
 	
 	public String getModShortImageName() {
 		return cacheHasUnsavedEntries()? ("*" + getShortImageName()) : getShortImageName(); 
+	}
+	
+	public boolean redoPossible() {
+		return m_writeCache.canBeRedone();
 	}
 	
 	abstract String getImageName();
@@ -396,9 +400,5 @@ public abstract class ImageFormat  {
 			}
 		}
 		return sName;
-	}
-	
-	void revertChanges() {
-		m_writeCache.revert();
 	}
 }

@@ -82,7 +82,7 @@
     [x] Use empty sector pattern 
     [x] Save As is active after closing all open images
     [x] Complete undo
-    [ ] Complete redo
+    [x] Complete redo
     [x] Restore all floppy formats
     [x] Restore all hd formats
   	[x] Unformatted image (998dd.dsk) can be opened without warning
@@ -2281,11 +2281,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_iSerialBridge.setEnabled(m_bSerial);
 
 		if (m_jtViews.getTabCount()==0) {
-			m_mEdit.activateMenuItems(false, false, false, false, m_bSerial, bImageIsHFDC);
+			m_mEdit.activateMenuItems(false, false, false, false, false, m_bSerial, bImageIsHFDC);
 			m_mEdit.activateActionMenu(false);
 		}
 		else {
-			m_dvSelected.activateEditMenu();
+			if (m_dvSelected != null) 
+				m_dvSelected.activateEditMenu();
 		}
 	}
 	

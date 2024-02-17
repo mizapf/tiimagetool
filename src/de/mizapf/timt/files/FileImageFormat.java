@@ -177,7 +177,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		writeCurrentFormatUnit();
 		
 		m_writeCache.setCheckpoint();
-		m_writeCache.nextGeneration();
+		m_writeCache.nextGeneration(true);
 		reopenForRead();
 	}
 	
@@ -200,7 +200,7 @@ public abstract class FileImageFormat extends ImageFormat {
 			writeCurrentFormatUnit();
 			
 			m_writeCache.setCheckpoint();
-			m_writeCache.nextGeneration();
+			m_writeCache.nextGeneration(true);
 			m_bInitial = false;
 			reopenForRead();
 		}

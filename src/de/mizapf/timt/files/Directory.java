@@ -622,7 +622,6 @@ public class Directory extends Element {
 		catch (IndexOutOfBoundsException ix) {
 			throw new ImageException(TIImageTool.langstr("DirectoryEntryCorrupt"));
 		}		
-		// m_Volume.nextGeneration();
 	}
 	
 	/** Called from PasteAction, only for sourceVol == targetVol. */
@@ -675,7 +674,7 @@ public class Directory extends Element {
 		// VIB of floppy is updated by updating the allocation map
 		m_Volume.writeAllocationMap();  // Commit on the source may change its allocation (move), but should not advance the generation
 		if (bFinal) {
-			m_Volume.nextGeneration();
+			m_Volume.nextGeneration(true);
 		}
 		// System.out.println("Directory commit done");
 	}

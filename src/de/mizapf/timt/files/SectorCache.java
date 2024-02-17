@@ -64,6 +64,7 @@ public class SectorCache {
 	private int m_generation;
 	private int m_checkpoint;
 	private int m_current;
+	private int m_maxgen;
 	
 	private String m_sName; // debugging
 	
@@ -117,7 +118,7 @@ public class SectorCache {
 	    @param sect Sector
 	*/
 	void write(Sector sect) {
-		System.out.println("Write sector " + sect.getNumber() + ", gen " + m_generation);
+		// System.out.println("Write sector " + sect.getNumber() + ", gen " + m_generation);
 		boolean bNew = true;
 		
 		// Set the generation
@@ -130,7 +131,7 @@ public class SectorCache {
 			// No history yet
 			secversions = new LinkedList<Sector>();
 			m_cache.put(sect.getNumber(), secversions);
-			System.out.println("Creating new history for sector " + sect.getNumber());
+			// System.out.println("Creating new history for sector " + sect.getNumber());
 		}
 		else {
 			Sector lsect = getRecentVersion(secversions);
@@ -155,7 +156,7 @@ public class SectorCache {
 		// System.out.println(Utilities.hexdump(sect.getData()));
 	}
 	
-	/** Revert all entries for the current generation. */
+	/*
 	void revert() {
 		Iterator<Integer> iterKey = m_cache.keySet().iterator();
 		while (iterKey.hasNext()) {
@@ -172,19 +173,21 @@ public class SectorCache {
 			}
 		}
 	}
+	*/
 	
 	/** Indicates whether this image has unsaved changes. Note that the
 		variable m_generation refers to the next change, not the current.
 	*/
 	public boolean hasUnsavedEntries() {
-		// System.out.println("gen(" + m_sName + ") = " + m_generation + ", last save = " + m_checkpoint);  //#%
+		System.out.println("gen(" + m_sName + ") = " + m_generation + ", last save = " + m_checkpoint);  //#%
 		return m_generation > m_checkpoint + 1;
 	}
 
-	public void nextGeneration() {
+	public void nextGeneration(boolean bNew) {
 //		Thread.currentThread().dumpStack();
 		System.out.println("+ nextgen(" + m_sName + ")");
 		m_generation++;
+		if (bNew) m_maxgen = m_generation;
 	}
 		
 	public void previousGeneration() {
@@ -199,6 +202,10 @@ public class SectorCache {
 	// Not used yet, and maybe identical to m_generation
 	public void setCurrentGeneration(int n) {
 		m_current = n;
+	}
+	
+	public boolean canBeRedone() {
+		return m_generation < m_maxgen;
 	}
 }
 

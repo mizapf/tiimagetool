@@ -391,10 +391,14 @@ public class Volume {
 	}
 	
 	// Called from Actions and Directory
-	public void nextGeneration() {
-		m_Image.nextGeneration();
+	public void nextGeneration(boolean bNew) {
+		m_Image.nextGeneration(bNew);
 	}
 
+	public boolean redoPossible() {
+		return m_Image.redoPossible();
+	}
+	
 	// Called from SaveImageAction
 	/** Save all modified sectors to the image. A sector is modified 
 		when the cache has an entry of it, or when the cache has never been
@@ -435,6 +439,12 @@ public class Volume {
 		readAllocationMap();   // restore the previous allocation map
 	}
 	
+	public void redoAction() throws ImageException, IOException {
+		nextGeneration(false);
+		buildTree();
+		readAllocationMap();   // restore the previous allocation map
+	}
+	
 	public FormatParameters getFormatParams() {
 		return m_FileSystem.getParams();
 	}
@@ -443,9 +453,5 @@ public class Volume {
 	 	file system. */
 	public int getSysAllocated() {
 		return m_FileSystem.getSysAllocated();
-	}
-	
-	public void revertChanges() {
-		m_Image.revertChanges();
 	}
 }

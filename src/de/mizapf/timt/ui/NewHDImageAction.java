@@ -325,7 +325,7 @@ public class NewHDImageAction extends Activity {
 				newVolume = new Volume(hfs, imagetool.nextUnnamedIndex());
 				Directory root = newVolume.getRootDirectory();					
 				imagetool.addDirectoryView(root);
-				newVolume.nextGeneration();
+				newVolume.nextGeneration(true);
 			}
 			else break;
 		}

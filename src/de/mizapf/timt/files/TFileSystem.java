@@ -100,7 +100,7 @@ public abstract class TFileSystem {
 	}
 
 	void setRootDirectory(Directory root) {
-		System.out.println("Set root directory " + root);
+		// System.out.println("Set root directory " + root);
 		m_dirRoot = root;
 	}
 	

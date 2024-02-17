@@ -199,8 +199,8 @@ public class OpenImageAction extends Activity {
 					
 					// Add a tab and show the root directory.
 					imagetool.addDirectoryView(root);
-					image.setCheckpoint();
-					vol.nextGeneration();
+					image.setCheckpoint();      // req
+					vol.nextGeneration(true);   // req
 				}
 			}
 			catch (ImageException ix) {

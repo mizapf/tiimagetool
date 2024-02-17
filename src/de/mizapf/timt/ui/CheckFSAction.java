@@ -509,7 +509,7 @@ public class CheckFSAction extends Activity {
 								f.rewriteFIB();
 							}
 						}
-						vol.nextGeneration();
+						vol.nextGeneration(true);
 						// vol.reopenForRead();
 					}
 					catch (FileNotFoundException fnfx) {

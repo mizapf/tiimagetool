@@ -61,7 +61,7 @@ public class NewFloppyImageAction extends Activity {
 			newVolume = new Volume(ffs, imagetool.nextUnnamedIndex());
 			Directory root = newVolume.getRootDirectory();					
 			imagetool.addDirectoryView(root);
-			newVolume.nextGeneration();
+			newVolume.nextGeneration(true);
 		}
 	}
 }

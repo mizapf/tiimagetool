@@ -21,10 +21,19 @@
 package de.mizapf.timt.ui;
 
 import javax.swing.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.InputEvent;
+import java.io.IOException;
+
 import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.NotImplementedException;
+import de.mizapf.timt.files.*;
 
 public class RedoAction extends Activity {
+
+	public int getKeyCode() {
+		return KeyEvent.VK_Z;
+	}
 
 	public String getMenuName() {
 		return TIImageTool.langstr("Redo");
@@ -34,7 +43,27 @@ public class RedoAction extends Activity {
 		return "REDO";
 	}
 	
+	public int getModifier() {
+		return InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK;
+	}
+	
 	public void go() {
-		throw new NotImplementedException("Redo");
+		DirectoryView dvCurrent = imagetool.getSelectedView();
+		Directory dirCurrent = dvCurrent.getDirectory();
+		DirectoryPanel dp = dvCurrent.getPanel();
+
+		Volume vol = dvCurrent.getVolume();
+		try {
+			vol.redoAction();
+			imagetool.refresh(dvCurrent);
+		}
+		catch (ImageException ix) {
+			ix.printStackTrace();
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+		}
+		catch (IOException iox) {
+			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName() + " (" + iox.getMessage() + ")", TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+			iox.printStackTrace();
+		}		
 	}
 }
