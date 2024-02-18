@@ -45,7 +45,7 @@ public class SaveImageAction extends Activity {
 	}
 	
 	public void go() {
-		System.out.println("Save");
+		// System.out.println("Save");
 		DirectoryView dvCurrent = imagetool.getSelectedView();
 		Volume vol = dvCurrent.getVolume();
 		// If the image is still unnamed, treat as Save As

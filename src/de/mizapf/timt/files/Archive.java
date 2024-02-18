@@ -159,7 +159,7 @@ public class Archive extends Directory {
 		int nDirSectors = 0;
 		
 		// Go through all entries
-		while (!bFound && (nDirSectors < 10)) {
+		while (!bFound && (nDirSectors < 10) && (content.length >= nDirSectors*TFileSystem.SECTOR_LENGTH + 0xff)) {
 			if (content[nDirSectors*TFileSystem.SECTOR_LENGTH + 0xfc] == (byte)'E' 
 				&& content[nDirSectors*TFileSystem.SECTOR_LENGTH + 0xfd] == (byte)'N' 
 			&& content[nDirSectors*TFileSystem.SECTOR_LENGTH + 0xfe] == (byte)'D' 
@@ -169,7 +169,7 @@ public class Archive extends Directory {
 		
 		nDirSectors++;
 		
-		if (!bFound) throw new IllegalOperationException(TIImageTool.langstr("ArchiveNot"));
+		if (!bFound) throw new IllegalOperationException(TIImageTool.langstr("LZWMissingEOA"));
 
 		bDone = false;
 		nPos = 0;
@@ -283,7 +283,7 @@ public class Archive extends Directory {
 				throw new ImageException(TIImageTool.langstr("MissingNameInTFI"));
 			}
 		}
-		System.out.println("Archive.insertFile(" + sContName + ")");
+		// System.out.println("Archive.insertFile(" + sContName + ")");
 
 		// Already there?
 		sContName = sContName.trim();
@@ -306,7 +306,7 @@ public class Archive extends Directory {
 		
 		if (!TFile.validName(sContName)) throw new InvalidNameException(sContName); 
 
-		System.out.println("Insert a new file " + sContName); 
+		// System.out.println("Insert a new file " + sContName); 
 		ArchiveFile afNew = new ArchiveFile(abyTif, 128, sContName, fileNew.getRecordLength(), fileNew.getFlags(), 
 			fileNew.getRecordsPerSector(), fileNew.getEOFOffset(), fileNew.getRecordCount(), fileNew.getAllocatedSectors(), this);
 
@@ -327,7 +327,7 @@ public class Archive extends Directory {
 		compresses the archive only after adding all files. 
 		Called from CreateArchiveAction only.
 	*/		
-	public void insertFiles(TIFiles[] files, String sNewFilename, boolean bNextGen) throws ProtectedException, IOException, InvalidNameException, ImageFullException, ImageException, FileExistsException {
+	public void insertFilesIntoArchive(TIFiles[] files) throws ProtectedException, IOException, InvalidNameException, ImageFullException, ImageException, FileExistsException {
 		if (isProtected()) throw new ProtectedException(TIImageTool.langstr("ArchiveProtected"));
 
 		if (m_Files.length>=127) {
@@ -335,7 +335,8 @@ public class Archive extends Directory {
 		}
 
 		int nSectors = 0;
-
+		boolean bNextGen = false;
+		
 		// Add all files here before compressing
 		for (TIFiles tifile : files) {
 			byte[] abyTif = tifile.toByteArray();
@@ -345,12 +346,10 @@ public class Archive extends Directory {
 			// System.out.println("Needs " + nSectors + " sectors (without FIB)");
 			
 			// New file name
-			String sContName = sNewFilename;
-			if (sNewFilename==null) {
-				sContName = fileNew.getName();
-				if (sContName==null) {
-					throw new ImageException(TIImageTool.langstr("MissingNameInTFI"));
-				}
+			String sContName = null;
+			sContName = fileNew.getName();
+			if (sContName==null) {
+				throw new ImageException(TIImageTool.langstr("MissingNameInTFI"));
 			}
 			
 			// Already there?
@@ -362,7 +361,7 @@ public class Archive extends Directory {
 			
 			if (!TFile.validName(sContName)) throw new InvalidNameException(sContName); 
 			
-			System.out.println("Insert a new file " + sContName); 
+			// System.out.println("Insert a new file " + sContName); 
 			ArchiveFile afNew = new ArchiveFile(abyTif, 128, sContName, fileNew.getRecordLength(), fileNew.getFlags(), 
 				fileNew.getRecordsPerSector(), fileNew.getEOFOffset(), fileNew.getRecordCount(), fileNew.getAllocatedSectors(), this);
 			
@@ -399,7 +398,7 @@ public class Archive extends Directory {
 	@Override
 	public void commit(boolean bNextGen) throws ImageException, IOException, ProtectedException {
 		// For archives, we now have to rebuild the byte array
-		System.out.println("Archive commit");
+		// System.out.println("Archive commit");
 		m_abyOldContent = m_abyContent;
 		Directory dirParent = getContainingDirectory();
 		// System.out.println("Rebuild");
@@ -409,7 +408,7 @@ public class Archive extends Directory {
 		try {
 			// System.out.println("Update file");
 			m_fBase = dirParent.updateFile(m_fBase, m_abyContent, (m_abyContent.length/256)*2, bNextGen);
-			System.out.println("Archive commit done");
+			// System.out.println("Archive commit done");
 
 		}
 		catch (ImageFullException ifx) {
@@ -540,7 +539,7 @@ public class Archive extends Directory {
 		baos.write((byte)'!');
 		
 		for (TFile f : m_Files) {
-			System.out.println("f.name = " + f.getName() + ", class = " + f.getClass().getName());
+			// System.out.println("f.name = " + f.getName() + ", class = " + f.getClass().getName());
 			byte[] aby = ((ArchiveFile)f).getSectorContent();
 			baos.write(aby, 0, aby.length);
 		}

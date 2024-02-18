@@ -156,25 +156,6 @@ public class SectorCache {
 		// System.out.println(Utilities.hexdump(sect.getData()));
 	}
 	
-	/*
-	void revert() {
-		Iterator<Integer> iterKey = m_cache.keySet().iterator();
-		while (iterKey.hasNext()) {
-			Integer key = iterKey.next();
-			LinkedList<Sector> secList = m_cache.get(key);
-			Sector sect = secList.getLast();
-			if (sect.getGeneration() == m_generation) {
-				secList.removeLast();
-				System.out.println("Removed entry for sector " + sect.getNumber());
-			}
-			if (secList.size()==0) {
-				iterKey.remove();
-				System.out.println("Removed history for sector " + sect.getNumber());
-			}
-		}
-	}
-	*/
-	
 	/** Indicates whether this image has unsaved changes. Note that the
 		variable m_generation refers to the next change, not the current.
 	*/

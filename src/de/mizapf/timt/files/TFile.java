@@ -531,7 +531,7 @@ public class TFile extends Element {
 		int nRead = 0;
 		int nSector = 0;
 		Interval current = null;
-//		System.out.println("File " + getName() + ", used: " + getUsedSectors());
+		// System.out.println("File " + getName() + ", used: " + getUsedSectors());
 		if (m_aCluster.length==0) {
 			throw new ImageException(String.format(TIImageTool.langstr("TFileNoContent"), getPathname()));
 		}
@@ -569,7 +569,6 @@ public class TFile extends Element {
 			Sector sect = vol.readSector(nSector);
 			System.arraycopy(sect.getData(), 0, aby, i*256, 256);
 		}
-		// System.out.println(Utilities.hexdump(0, 0, aby, aby.length, false));
 		return aby;
 	}
 	
@@ -1203,21 +1202,27 @@ public class TFile extends Element {
 		m_nIsArchive = bArchive? YES : NO;
 	}
 	
+	public Archive unpackArchive(byte[] content, boolean compressed) throws IllegalOperationException, FormatException, IOException, ImageException {
+		
+		if (compressed) {
+			LZW lzw = new LZW(content);
+			content = lzw.uncompress();
+		}
+		
+		return new Archive(getVolume(), m_sName, getContainingDirectory(), content, this, compressed);
+	}
+	
 	public Archive unpackArchive() throws IllegalOperationException, FormatException, IOException, ImageException {
 		if (m_nIsArchive==NO) throw new IllegalOperationException(TIImageTool.langstr("ArchiveNot"));
-		boolean bCompressed = false;
 		
 		byte[] content = getRawContent();
+		Archive ark = null;
 		try {
-			if (!isDisplay()) {
-				LZW lzw = new LZW(content);
-				content = lzw.uncompress();
-				bCompressed = true;
-			}
+			ark = unpackArchive(content, !isDisplay());
 		}
 		catch (ArrayIndexOutOfBoundsException ax) {
 			throw new ImageException(TIImageTool.langstr("ArchiveBroken"));
 		}
-		return new Archive(getVolume(), m_sName, getContainingDirectory(), content, this, bCompressed);
+		return ark;
 	}
 }

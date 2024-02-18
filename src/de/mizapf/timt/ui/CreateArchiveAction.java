@@ -102,10 +102,10 @@ public class CreateArchiveAction extends Activity {
 				// then add the archive
 				System.out.println("Add the empty archive file " + ad.getArchiveName() + " to the current directory");
 				arkf = dirCurrent.insertFile(abyTfi, null, false);
-				ark = arkf.unpackArchive();
+				ark = arkf.unpackArchive(abyEmpty, ad.useCompression());
 				// vol.sameGeneration();
 				System.out.println("Add all selected files to the archive");
-				ark.insertFiles(aforarc, null, false);
+				ark.insertFilesIntoArchive(aforarc);
 				dirCurrent.commit(true);
 				System.out.println("Create archive done");
 			// FIXME: Element selection must be improved (select/deselect) 
@@ -138,7 +138,7 @@ public class CreateArchiveAction extends Activity {
 				fx.printStackTrace();
 			}
 			catch (IllegalOperationException ix) {
-				ix.printStackTrace();
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ArchiveError") + ": " + ix.getMessage(), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE);
 			}
 			imagetool.refreshPanel(vol);			
 		}
