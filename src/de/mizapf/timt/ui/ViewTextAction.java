@@ -57,7 +57,7 @@ public class ViewTextAction extends Activity {
 					}					
 					if (showit) {
 						String sContent = Utilities.sanitizeBytes(content, settings.getPropertyString(imagetool.ESCAPE), settings.getPropertyBoolean(TIImageTool.VERBOSE));
-						imagetool.showTextContent(selected.getName(), sContent);  
+						imagetool.showEditTextContent((TFile)selected, sContent);  
 					}
 				}
 				catch (EOFException eofx) {

@@ -39,35 +39,24 @@ public class MemoryImageFormat extends ImageFormat {
 	// Empty sector
 	byte[] m_empty;
 
-	public MemoryImageFormat(String sImageName, int number) {
+	public MemoryImageFormat(String sImageName, int number, boolean hd) {
 		// super(sImageName);
 		m_empty = new byte[TFileSystem.SECTOR_LENGTH];
 		m_nUnnamedIndex = number;
 		m_writeCache.setName(sImageName + number);
-		byte[] fillpat = getFillPattern();
+		byte[] fillpat = null; // getFillPattern();
 
-		if (fillpat == null) {
-			fillpat = new byte[1];
-			fillpat[0] = (byte)0x00;
-		}
-		
+		setFillPattern(m_Settings.getPropertyString(hd? TIImageTool.FILLHPAT : TIImageTool.FILLPAT));
+				
 		for (int j=0; j < TFileSystem.SECTOR_LENGTH; j++) {
-			m_empty[j] = fillpat[j % fillpat.length];
+			m_empty[j] = m_fillPattern[j % m_fillPattern.length];
 		}
 	}
 	
 	public String getFormatName() {
 		return TIImageTool.langstr("Unsaved");
 	}
-	
-	/** Create an empty sector content with the given pattern. */
-	void setEmptySector(byte[] pattern) {
-		int j = 0;
-		for (int i=0; i < TFileSystem.SECTOR_LENGTH; i++) {
-			m_empty[i] = pattern[j++];
-			if (j > pattern.length) j=0;
-		}
-	}
+
 
 	/** Read a sector. The MemoryImageFormat always uses a write cache. */
 	public Sector readSector(int nSectorNumber) {

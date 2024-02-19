@@ -110,8 +110,8 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 		color[1] = new Color(220,230,240);
 		color[2] = new Color(230,241,252);
 		
-		int nLeft = 0;
-		int nRight = 0;
+		int nLeft = 20;
+		int nRight = 20;
 		
 		for (int i=0; i < content.length; i++) {
 			if (content[i].path.length() > nLeft) nLeft = content[i].path.length();
@@ -125,15 +125,21 @@ public class SearchResultFrame extends JFrame implements ActionListener {
 		
 		String lastVolume = null;
 	
-		for (int i=0; i < content.length; i++) {		
-			String pathtext = "";		
-			if (lastVolume != content[i].image) {
-				pathtext = lastVolume = content[i].image;
-				line++;
+		if (content.length > 0) {
+			for (int i=0; i < content.length; i++) {		
+				String pathtext = "";		
+				if (lastVolume != content[i].image) {
+					pathtext = lastVolume = content[i].image;
+					line++;
+				}
+				Box box2 = createLine(content[i].path, pathtext, color[(line&1)+1], false); 
+				m_jp.add(box2);
+				box2.addMouseListener(new ClickListener(content[i].image, m_app.getActivity("OPENIMAGE")));
 			}
-			Box box2 = createLine(content[i].path, pathtext, color[(line&1)+1], false); 
+		}
+		else {
+			Box box2 = createLine("--", TIImageTool.langstr("SearchResultNothing"), color[(line&1)+1], false); 
 			m_jp.add(box2);
-			box2.addMouseListener(new ClickListener(content[i].image, m_app.getActivity("OPENIMAGE")));
 		}
 		
 		m_content = content;

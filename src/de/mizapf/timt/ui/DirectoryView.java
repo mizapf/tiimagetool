@@ -155,9 +155,6 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 	final static String DNDCOPY = "dndcopy";
 	final static String DNDCANCEL = "dndcancel";
 	
-	final static String SAVE = "save";
-	final static String SAVEAS = "saveas";
-	
 	public DirectoryView(Directory dir, boolean bAttached, TIImageTool app, Settings set) {
 		m_dirCurrent = dir;
 		m_bAttached = bAttached;
@@ -238,13 +235,6 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_mFile = new JMenu(m_app.langstr("File"));
 		
 		// Save
-	/*	m_iSave = new JMenuItem(m_app.langstr("Save"));
-		m_iSave.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK));
-		m_iSave.addActionListener(this);
-		m_iSave.setActionCommand(SAVE);
-		m_iSaveAs = new JMenuItem(m_app.langstr("SaveAs"));
-		m_iSaveAs.addActionListener(this);
-		m_iSaveAs.setActionCommand(SAVEAS); */
 		m_iSave = m_app.createMenuItem(new SaveImageAction());
 		m_iSaveAs = m_app.createMenuItem(new SaveAsImageAction());
 		
@@ -259,7 +249,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_mFile.add(m_iClose);
 		
 		m_mbar.add(m_mFile);
-		m_mEdit = new EditMenu(m_frmOwn, m_app);   // create an own edit menu
+		m_mEdit = new EditMenu(m_frmOwn, m_app, this);   // create an own edit menu
 		m_frmOwn.setJMenuBar(m_mbar);
 		m_mbar.add(m_mEdit);
 		
@@ -507,18 +497,8 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 					// System.out.println(DNDCANCEL);
 				}
 				else {
-					if (ae.getActionCommand() == SAVE) {
-						System.out.println("*** Save");
-					}
-					else {
-						if (ae.getActionCommand() == SAVEAS) {
-							System.out.println("*** SaveAs");
-						}
-						else {
-							// Attach the stand-alone frame
-							reattach();
-						}
-					}
+					// Attach the stand-alone frame
+					reattach();
 				}
 			}
 		}
@@ -589,7 +569,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		m_ctxmenu.show(act.getComponent(), act.getX(), act.getY());		
 	}
 	
-	void openEntryContextMenu(Component whereclicked, int xpos, int ypos, boolean bWithShift, boolean bWithControl) {
+	private void openEntryContextMenu(Component whereclicked, int xpos, int ypos, boolean bWithShift, boolean bWithControl) {
 		// we're in the AWT thread here, no need for an invokeLater
 		m_ctxmenu = new JPopupMenu();
 
@@ -655,12 +635,45 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 			m_ctxmenu.add(m_iArchive);
 		}
 
-		int setting = 0;
+		int setting = 0;				
+		setting = getSetting(selected);
+				
+		if (!m_app.offersSerialConnection() || selected.size()>1) setting &= ~IT_SEND;
+
+		m_iPaste.setEnabled((setting & IT_PASTE)!=0 /*m_app.clipboardNotEmpty() */);
 		
+		m_iCut.setEnabled((setting & IT_CUT)!=0);
+		m_iCopy.setEnabled((setting & IT_COPY)!=0);
+		m_iPaste.setEnabled((setting & IT_PASTE)!=0);
+		m_iDelete.setEnabled((setting & IT_DELETE)!=0);
+		m_iRename.setEnabled((setting & IT_RENAME)!=0);
+		m_iSelect.setEnabled((setting & IT_SELECT)!=0);
+		m_iViewText.setEnabled((setting & IT_VIEWTEXT)!=0);
+		m_iViewImage.setEnabled((setting & IT_VIEWIMAGE)!=0);
+//		m_iViewUtil.setEnabled(bUtil);
+		m_iViewDump.setEnabled((setting & IT_VIEWDUMP)!=0);
+		m_iViewFIB.setEnabled((setting & IT_VIEWDUMP)!=0);
+		m_iAssemble.setEnabled((setting & IT_ASSEMBLE)!=0);
+		m_iLink.setEnabled((setting & IT_LINK)!=0);
+		m_iDisass.setEnabled((setting & IT_DISASS)!=0);
+		m_iGPLDisass.setEnabled((setting & IT_GPLDIS)!=0);
+		m_iList.setEnabled((setting & IT_LIST)!=0);
+		m_iSendRem.setEnabled((setting & IT_SEND)!=0);
+		m_iSaveTfi.setEnabled((setting & IT_SAVETFI)!=0);
+		m_iSaveDump.setEnabled((setting & IT_SAVEDUMP)!=0);
+		m_iArchive.setEnabled((setting & IT_ARCHIVE)!=0);		
+
+//		m_dvSelected.backpaintEntryLines();
+		
+		m_ctxmenu.show(whereclicked, xpos, ypos);		
+	}
+		
+	static int getSetting(List<Element> selected) {
+		int setting = 0;
 		if (selected.size() > 0) {
 			setting = IT_MULTI;
 		}
-				
+
 		for (Element el:selected) {
 			if (el instanceof TFile) {
 				TFile file = (TFile)el;
@@ -702,37 +715,9 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 				break;
 			}
 		}
-		
-		if (!m_app.offersSerialConnection() || selected.size()>1) setting &= ~IT_SEND;
-
-		m_iPaste.setEnabled((setting & IT_PASTE)!=0 /*m_app.clipboardNotEmpty() */);
-		
-		m_iCut.setEnabled((setting & IT_CUT)!=0);
-		m_iCopy.setEnabled((setting & IT_COPY)!=0);
-		m_iPaste.setEnabled((setting & IT_PASTE)!=0);
-		m_iDelete.setEnabled((setting & IT_DELETE)!=0);
-		m_iRename.setEnabled((setting & IT_RENAME)!=0);
-		m_iSelect.setEnabled((setting & IT_SELECT)!=0);
-		m_iViewText.setEnabled((setting & IT_VIEWTEXT)!=0);
-		m_iViewImage.setEnabled((setting & IT_VIEWIMAGE)!=0);
-//		m_iViewUtil.setEnabled(bUtil);
-		m_iViewDump.setEnabled((setting & IT_VIEWDUMP)!=0);
-		m_iViewFIB.setEnabled((setting & IT_VIEWDUMP)!=0);
-		m_iAssemble.setEnabled((setting & IT_ASSEMBLE)!=0);
-		m_iLink.setEnabled((setting & IT_LINK)!=0);
-		m_iDisass.setEnabled((setting & IT_DISASS)!=0);
-		m_iGPLDisass.setEnabled((setting & IT_GPLDIS)!=0);
-		m_iList.setEnabled((setting & IT_LIST)!=0);
-		m_iSendRem.setEnabled((setting & IT_SEND)!=0);
-		m_iSaveTfi.setEnabled((setting & IT_SAVETFI)!=0);
-		m_iSaveDump.setEnabled((setting & IT_SAVEDUMP)!=0);
-		m_iArchive.setEnabled((setting & IT_ARCHIVE)!=0);		
-
-//		m_dvSelected.backpaintEntryLines();
-		
-		m_ctxmenu.show(whereclicked, xpos, ypos);		
+		return setting;
 	}
-		
+	
 	boolean contextMenuVisible() {
 		return (m_ctxmenu != null && m_ctxmenu.isVisible());
 	}
@@ -887,7 +872,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 							sText = Utilities.hexdump(0, 0, content, content.length, false);
 						}
 					}
-					m_app.showTextContent(file.getName(), sText);
+					m_app.showEditTextContent(file, sText);
 				}
 			}
 			catch (IOException iox) {

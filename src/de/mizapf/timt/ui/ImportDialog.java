@@ -63,7 +63,8 @@ public class ImportDialog extends ToolDialog {
 	
 	byte[]			m_abyContent;
 	
-	boolean m_bSet = false;
+	boolean 		m_bSet = false;
+	boolean			m_bFromEditor = false;
 	
 	String			m_sInfoTitle;
 	
@@ -94,6 +95,10 @@ public class ImportDialog extends ToolDialog {
 	
 	void setInfoTitle(String sInfo) {
 		m_sInfoTitle = sInfo;
+	}
+	
+	void setFromEditor(boolean bFromEditor) {
+		m_bFromEditor = bFromEditor;
 	}
 	
 /*
@@ -131,7 +136,8 @@ public class ImportDialog extends ToolDialog {
 		prepareGui();
 
 		int nLabelWidth = determineFieldWidth(TIImageTool.langstr("ImportDialogColumn"));
-				
+		boolean bOver = false;
+		
 		add(Box.createVerticalStrut(10));
 		if (m_sGivenName != null) {
 			nLabelWidth = determineFieldWidth(TIImageTool.langstr("ImportDialogColumnWide"));
@@ -171,14 +177,24 @@ public class ImportDialog extends ToolDialog {
 			}
 			else {
 				// setMinimumSize(new Dimension(nLabelWidth*3,1));
-				boolean fromEditor = false;
-				if (m_sSuggested == DVEditorFrame.FROMEDITOR) {
+				boolean fromEditor = m_bFromEditor;
+				String sMode = TIImageTool.langstr("ImportDialogMode");
+				
+				if (m_sSuggested == EditorFrame.FROMEDITOR) {
 					putTextLine(this, "!" + TIImageTool.langstr("ImportDialogSubtitle"), 0);
 					m_sSuggested = "UNNAMED";  // not localized since this is a file name in the TI file system
+					sMode = TIImageTool.langstr("ImportSaveDialogMode");
 					fromEditor = true;
 				}
 				else {
-					putTextLine(this, "!" + m_sInfoTitle, 0);
+					if (fromEditor == true && m_sSuggested != null) {
+						putTextLine(this, "!" + TIImageTool.langstr("ImportDialogSubtitle"), 0);
+						sMode = TIImageTool.langstr("ImportSaveDialogMode");
+						bOver = true;
+					}
+					else { 
+						putTextLine(this, "!" + m_sInfoTitle, 0);
+					}
 				}
 				add(Box.createVerticalStrut(10));
 				m_tfFileName = putTextField(this, TIImageTool.langstr("FileName"), m_sSuggested, nLabelWidth, 0);
@@ -200,7 +216,7 @@ public class ImportDialog extends ToolDialog {
 						asFor[0] = TIImageTool.langstr("ImportDialogAsDV80");
 						asFor[1] = TIImageTool.langstr("ImportDialogAsBASIC");
 						asFor[2] = TIImageTool.langstr("ImportDialogAsExBas");
-						arb = putRadioButtons(this, TIImageTool.langstr("ImportDialogMode"), nLabelWidth, asFor, null, 1);
+						arb = putRadioButtons(this, sMode, nLabelWidth, asFor, null, 1);
 						m_rbtOpt1 = arb[0];
 						m_rbtOpt2 = arb[1];
 						m_rbtOpt3 = arb[2];
@@ -213,7 +229,7 @@ public class ImportDialog extends ToolDialog {
 						asFor[0] = TIImageTool.langstr("ImportDialogAsDV80");
 						asFor[1] = TIImageTool.langstr("ImportDialogAsBin");
 						asFor[2] = TIImageTool.langstr("ImportDialogAsOther");
-						arb = putRadioButtons(this, TIImageTool.langstr("ImportDialogMode"), nLabelWidth, asFor, null, 0);
+						arb = putRadioButtons(this, sMode, nLabelWidth, asFor, null, 0);
 						m_rbtOpt1 = arb[0];
 						m_rbtOpt2 = arb[1];
 						m_rbtOpt3 = arb[2];
@@ -284,6 +300,9 @@ public class ImportDialog extends ToolDialog {
 				}
 			}
 		}		
+		if (bOver)
+			putTextLine(this, TIImageTool.langstr("Note.Overwrite"), 0);
+
 		add(Box.createVerticalStrut(10));
 		add(Box.createVerticalGlue());
 		addButtons();
@@ -413,5 +432,12 @@ public class ImportDialog extends ToolDialog {
 	
 	void setFormat(int nFormat) {
 		m_nPresetFormat = nFormat;
+	}
+	
+	ImportParameters getParameters() {
+		return new ImportParameters(importAsBasic(), importAsText(), importAsWideText(),
+			importAsBinary(), importAsOther(),
+			getFileName(), getBasicVersion(), 
+			getSaveFormat(), getProtected(), getFlags(), getRecordLength());
 	}
 }

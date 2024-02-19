@@ -21,14 +21,21 @@
 
 package de.mizapf.timt.ui;
 import javax.swing.*;
+import javax.swing.event.MenuListener;
+import javax.swing.event.MenuEvent;
+
+import java.util.List;
+
+import de.mizapf.timt.files.Element;
 import de.mizapf.timt.files.Volume;
 import de.mizapf.timt.files.Directory;
 import de.mizapf.timt.TIImageTool;
 
-public class EditMenu extends JMenu {
+public class EditMenu extends JMenu implements MenuListener {
 	
 	JFrame m_frmMain;
 	TIImageTool m_app;
+	DirectoryView m_dv;
 	
 	JMenuItem m_iUndo;
 	JMenuItem m_iRedo;
@@ -63,10 +70,13 @@ public class EditMenu extends JMenu {
 	JMenuItem m_iSaveDump;
 	JMenuItem m_iSendRem;
 	
-	public EditMenu(JFrame frm, TIImageTool app) {
+	public EditMenu(JFrame frm, TIImageTool app, DirectoryView dv) {
 		super(TIImageTool.langstr("Edit"));
+		
+		addMenuListener(this);
 		m_frmMain = frm;
 		m_app = app;
+		m_dv = dv;
 		
 		m_iUndo = createMenuItem(new UndoAction());
 		add(m_iUndo);
@@ -119,10 +129,12 @@ public class EditMenu extends JMenu {
 		m_iSendRem = m_app.createMenuItem(new ExportRemoteAction());
 		m_mOperations.add(m_iSendRem);
 		
-		add(m_mOperations);
-		m_mOperations.setEnabled(false);
+		if (m_app.contextFunctionsInEdit()) {
+			add(m_mOperations);
+			m_mOperations.setEnabled(false);
+			addSeparator();		
+		}
 		
-		addSeparator();		
 		m_iCreateDirectory = createMenuItem(new NewDirectoryAction());
 		add(m_iCreateDirectory);
 		m_iCreateArchive = createMenuItem(new CreateArchiveAction());
@@ -143,19 +155,6 @@ public class EditMenu extends JMenu {
 		
 	public void activateMenuItems(boolean bUndo, boolean bRedo, boolean bOpenImage, boolean bDirPossible, boolean bClipboard, boolean bSerial, boolean bHFDC) {
 				
-/*		if (bOpenImage) {
-			Volume vol = m_View.getVolume();
-			bDirPossible = true;
-			if (vol.isFloppyImage()) {
-				Directory dirCurrent = m_View.getDirectory(); 
-				if (!dirCurrent.isRootDirectory()) bDirPossible = false;
-				if (dirCurrent.getDirectories().length>2) bDirPossible = false;
-			}			
-			bSelected = true;
-		}
-		
-		boolean bClipboard = !m_app.clipboardIsEmpty();
-*/		
 		bClipboard = true; // We have to lock paste to true, otherwise ctrl-v from outside does not work
 		m_iCutm.setEnabled(bOpenImage);
 		m_iCopym.setEnabled(bOpenImage);
@@ -193,5 +192,42 @@ public class EditMenu extends JMenu {
 	public void setPaste(boolean state) {
 		m_iPastem.setEnabled(state);
 	}	
+	
+	public void menuCanceled(MenuEvent me) {
+		// System.out.println("Menu canceled");
+	}
+	
+	public void menuDeselected(MenuEvent me) {
+		// System.out.println("Menu delesected");
+	}
+	
+	public void menuSelected(MenuEvent me) {
+		// System.out.println("Menu selected");
+		DirectoryView dv = m_dv;
+		if (m_dv == null) {
+			dv = m_app.getSelectedView();
+		}
+		
+		if (dv != null) {
+			List<Element> entries = dv.getSelectedEntries();
+			int setting = 0;
+			if (entries.size() > 0) {
+				setting = DirectoryView.getSetting(entries);
+			}
+
+			m_iViewText.setEnabled((setting & DirectoryView.IT_VIEWTEXT)!=0);
+			m_iViewImage.setEnabled((setting & DirectoryView.IT_VIEWIMAGE)!=0);
+			m_iViewDump.setEnabled((setting & DirectoryView.IT_VIEWDUMP)!=0);
+			m_iViewFIB.setEnabled((setting & DirectoryView.IT_VIEWDUMP)!=0);
+			m_iAssemble.setEnabled((setting & DirectoryView.IT_ASSEMBLE)!=0);
+			m_iLink.setEnabled((setting & DirectoryView.IT_LINK)!=0);
+			m_iDisass.setEnabled((setting & DirectoryView.IT_DISASS)!=0);
+			m_iGPLDisass.setEnabled((setting & DirectoryView.IT_GPLDIS)!=0);
+			m_iList.setEnabled((setting & DirectoryView.IT_LIST)!=0);
+			m_iSendRem.setEnabled((setting & DirectoryView.IT_SEND)!=0);
+			m_iSaveTfi.setEnabled((setting & DirectoryView.IT_SAVETFI)!=0);
+			m_iSaveDump.setEnabled((setting & DirectoryView.IT_SAVEDUMP)!=0);
+		}
+	}
 }
 

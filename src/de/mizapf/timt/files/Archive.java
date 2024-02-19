@@ -411,14 +411,14 @@ public class Archive extends Directory {
 			// System.out.println("Archive commit done");
 
 		}
-		catch (ImageFullException ifx) {
+/*		catch (ImageFullException ifx) {
 			// Image is full; revert to previous state
 			ifx.printStackTrace();
-			throw new ImageException(TIImageTool.langstr("ArchiveUnexp"));
-		}
+			throw new ImageException(TIImageTool.langstr("ArchiveNoSpaceLeft"));
+		} */
 		catch (InvalidNameException inx) {
 			inx.printStackTrace();
-			throw new ImageException(TIImageTool.langstr("ArchiveUnexp"));
+			throw new ImageException(TIImageTool.langstr("ArchiveError"));
 		}
 	}
 

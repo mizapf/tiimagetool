@@ -187,7 +187,6 @@ public abstract class ImageFormat  {
 	public static void setSettings(Settings set) {
 		m_Settings = set;
 		setFormats(m_Settings.getPropertyString(TIImageTool.IMGFORM));
-		// setFillPattern(m_Settings.getPropertyString(FILLPAT));
 	}
 	
 	public void setFillPattern(String pat) {
@@ -329,7 +328,6 @@ public abstract class ImageFormat  {
 	
 	protected ImageFormat() {
 		m_writeCache = new SectorCache();
-		setFillPattern(m_Settings.getPropertyString(TIImageTool.FILLPAT));
 		m_nTotalSectors = -1;
 	}
 	

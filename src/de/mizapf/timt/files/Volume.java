@@ -81,7 +81,7 @@ public class Volume {
 		Directory dirRoot = new Directory(this, fs.getRootFDIR());
 		fs.setRootDirectory(dirRoot);
 
-		m_Image = new MemoryImageFormat("unsaved", unnamedNumber);
+		m_Image = new MemoryImageFormat("unsaved", unnamedNumber, fs instanceof HarddiskFileSystem);
 		
 		Sector[] initsec = fs.createInitSectors();
 		try {

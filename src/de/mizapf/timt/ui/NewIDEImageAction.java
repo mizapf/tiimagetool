@@ -166,7 +166,7 @@ public class NewIDEImageAction extends Activity {
 						selectedFile.delete();
 					}
 					
-					MemoryImageFormat mif = new MemoryImageFormat("idepart", 0);
+					MemoryImageFormat mif = new MemoryImageFormat("idepart", 0, true);
 					
 					byte[] parttable = new byte[TFileSystem.SECTOR_LENGTH];
 					Utilities.setString(parttable, 0, "*TI99FSPT*", 10);

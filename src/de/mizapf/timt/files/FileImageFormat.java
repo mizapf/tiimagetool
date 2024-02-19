@@ -65,6 +65,10 @@ public abstract class FileImageFormat extends ImageFormat {
 		m_nTotalSectors = param.getTotalSectors();
 	}
 	
+	protected FileImageFormat() {
+		super();
+	}
+	
 	protected void loadFormatUnit(int funum) throws ImageException, IOException {
 		if (funum < 0) throw new InternalException("Wrong format unit number: " + funum);
 		// Flush the current format unit to the image

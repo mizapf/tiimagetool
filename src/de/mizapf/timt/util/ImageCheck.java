@@ -59,20 +59,27 @@ public class ImageCheck {
 			}
 			Interval[] ainv = aFile[i].getAllocatedBlocks();
 			try {
-				ps.print(", " + TIImageTool.langstr("Occupying") + " ");
-				boolean first = true;
-				for (int j=0; j < ainv.length; j++) {
-					if (!first) ps.print(", ");
-					first = false;
-					ps.print(ainv[j]);
-					Integer[] aret = map.getUnallocatedLocations(ainv[j]);
-					if (aret.length>0) {
-						agl.setList(aret);
+				if ((ainv.length == 1) && (ainv[0].start == ainv[0].end)) {
+					ps.print(", " + TIImageTool.langstr("Check.OccupyingS") + " " + ainv[0].start);
+				}
+				else {
+					ps.print(", " + TIImageTool.langstr("Check.OccupyingI") + " ");
+					boolean first = true;
+					for (int j=0; j < ainv.length; j++) {
+						if (!first) ps.print(", ");
+						first = false;
+						ps.print(ainv[j]);
+						Integer[] aret = map.getUnallocatedLocations(ainv[j]);
+						if (aret.length>0) {
+							agl.setList(aret);
+						}
 					}
 				}
 				ps.print("\n");
 			}
 			catch (IndexOutOfBoundsException ix) {
+				ix.printStackTrace();
+				
 				ps.println(":  " + String.format(TIImageTool.langstr("InvalidCluster"), sbFullname.toString()));
 			}
 			if (agl.size()>0) broken.add(agl);

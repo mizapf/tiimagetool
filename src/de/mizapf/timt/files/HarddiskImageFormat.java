@@ -24,7 +24,7 @@ import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.io.RandomAccessFile;
 import de.mizapf.timt.util.NotImplementedException;
-
+import de.mizapf.timt.TIImageTool;
 import de.mizapf.timt.util.Utilities;
 
 public abstract class HarddiskImageFormat extends FileImageFormat implements PartitionedStorage {
@@ -46,6 +46,7 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 	protected HarddiskImageFormat(String sImageName) throws FileNotFoundException, IOException, ImageException {
 		super(sImageName);
 		m_nActivePartition = -1;
+		setFillPattern(m_Settings.getPropertyString(TIImageTool.FILLHPAT));
 	}
 
 	protected HarddiskImageFormat(String sImageName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
@@ -54,6 +55,7 @@ public abstract class HarddiskImageFormat extends FileImageFormat implements Par
 		m_nCylinders = params.cylinders;		
 		m_nHeads = params.heads;
 		m_nActivePartition = -1;
+		setFillPattern(m_Settings.getPropertyString(TIImageTool.FILLHPAT));
 	}
 
 	/** May be overridden by formats like RawHDFormat which cannot rely on this. */

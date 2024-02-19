@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2011 Michael Zapf
+    Copyright 2024 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
@@ -31,7 +31,7 @@ import java.util.*;
 import java.awt.print.*;
 import de.mizapf.timt.TIImageTool;
 
-class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListener, DocumentListener {
+class EditorFrame extends JFrame implements ActionListener, UndoableEditListener, DocumentListener {
 
 	public final static String FROMEDITOR = ".FRMED";
 	
@@ -130,25 +130,25 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 		}
 	}
 
-	DVEditorFrame(Frame owner, ImportContentAction ia, DirectoryView dv) {
+	EditorFrame(Frame owner, ImportContentAction ia, DirectoryView dv, String sName, String content, boolean bEditable) {
 		// Parameter dialog should probably be raised in this class
 		super(TIImageTool.langstr("DVEditorTitle"));
 		m_flText = null;
-		m_sTitle = TIImageTool.langstr("Unnamed");
-		createUI("");
+		m_sTitle = (sName == null)? TIImageTool.langstr("Unnamed") : sName;
+		createUI(content, bEditable);
 		setWindowTitle();
 		m_importact = ia;
 		m_dvCurrent = dv;
 		setVisible(true);
 	}
 		
-	private void createUI(String sText) {
+	private void createUI(String sText, boolean bEditable) {
 		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		JMenuBar jb = new JMenuBar();
 		JMenu jmFile = new JMenu(TIImageTool.langstr("File"));
 		jb.add(jmFile);
 		JMenu jmEdit = new JMenu(TIImageTool.langstr("Edit"));
-		jb.add(jmEdit);
+		if (bEditable) jb.add(jmEdit);
 
 		m_jmiClose = new JMenuItem(TIImageTool.langstr("CloseSave"));
 		m_jmiQuit = new JMenuItem(TIImageTool.langstr("ExitNoSave"));
@@ -201,6 +201,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 		Container cntEditor = getContentPane();
 		m_jep = new JEditorPane("text/plain", sText);
 		m_jep.setFont(TIImageTool.contentFont);
+		m_jep.setEditable(bEditable);
 		
 		m_doc = m_jep.getDocument();
 		m_doc.addUndoableEditListener(this);
@@ -208,7 +209,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 		
 		JScrollPane jp = new JScrollPane(m_jep);
 		cntEditor.add(jp);
-		setSize(new Dimension(800,600));
+		// setSize(new Dimension(800,600));
 
 		// Undo Manager
 		m_UndoManager = new UndoManager();
@@ -265,12 +266,8 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getActionCommand().equals(CLOSE)) {
 			m_bAbort = false;
-			try {
-				m_importact.convertAndImport(getText().getBytes(), m_dvCurrent, FROMEDITOR, true);
-				dispose();
-			}
-			catch (Exception ix) {
-			}
+			boolean bOK = m_importact.convertAndImport(getText().getBytes(), m_dvCurrent, FROMEDITOR, true);
+			if (bOK) dispose();
 			return;
 		}
 		if (ae.getActionCommand().equals(QUIT)) {

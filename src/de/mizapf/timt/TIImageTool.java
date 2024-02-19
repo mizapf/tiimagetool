@@ -86,11 +86,11 @@
     [x] Restore all floppy formats
     [x] Restore all hd formats
   	[x] Unformatted image (998dd.dsk) can be opened without warning
-  	[ ] Abort copy/move should not touch the destination image
+  	[?] Abort copy/move should not touch the destination image
   	[x] Search function
   	[x] Rebuild image tree (-> undo/redo)
-  	[ ] Hard disk image contains floppy disk filling
-  	[ ] Save content to another destination
+  	[x] Hard disk image contains floppy disk filling
+  	[x] Use a full editor for textual files
 */
 
 package de.mizapf.timt;
@@ -207,8 +207,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String FONTSIZE = "fontsize";
 	public final static String UIFONT = "uifont";
 	public final static String FILLPAT = "fillpat";
+	public final static String FILLHPAT = "fillhpat";
 	public final static String IMGFORM = "imgform";
 	public final static String IMGSUF = "imgsuf";
+	public final static String CONTEXT = "context";
 	
 	Properties m_propNames;
 	
@@ -522,7 +524,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_mFile.add(m_iQuit);
 			
 			// -------------------------------------------
-			m_mEdit = new EditMenu(m_frmMain, TIImageTool.this); 
+			m_mEdit = new EditMenu(m_frmMain, TIImageTool.this, null); 
 			m_mbar.add(m_mEdit);
 			
 			// -------------------------------------------
@@ -773,6 +775,26 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			if (dim==null) dim = new Dimension(800,600);
 			m_content.setPreferredSize(dim);
 			m_content.pack();
+		}
+	}
+	
+	class ContentEditShow implements Runnable {
+	
+		String name;
+		String content;
+		ContentFrame m_content;
+		TFile m_file;
+		
+		ContentEditShow(TFile file, String scontent) {
+			name = null;
+			content = scontent;
+			m_file = file;
+		}
+		
+		public void run() {
+			ImportContentAction ia = new ImportContentAction();
+			ia.setLinks(TIImageTool.this, m_frmMain, m_Settings);
+			ia.go(m_file, content);
 		}
 	}
 	
@@ -1446,10 +1468,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		if (m_frmMain != null) m_Settings.put(WINDOWSIZE, m_frmMain.getWidth() + "x" + m_frmMain.getHeight());
 		else m_Settings.put(WINDOWSIZE, "640x480");
 	}
-	/*
-	public void setProperty(String prop, String value) {
-		m_Settings.put(prop, value);
-	} */
 	
 	public static Locale getLocale(String loc) {
 		int index = 0;
@@ -1553,6 +1571,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	public Dimension getFrameSize() {
 		return m_frmMain.getSize();		
+	}
+	
+	public boolean contextFunctionsInEdit() {
+		return m_Settings.getPropertyBoolean(CONTEXT);
 	}
 	
 	/** From DirectoryView */
@@ -1781,6 +1803,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			// Is this a TIFILES file?
 			if (TIFiles.hasHeader(abyTif)) {
 				dir.insertFile(abyTif, sName, false);
+				// commit is in caller (ImportFilesAction)
 				return;
 			}
 			
@@ -2049,6 +2072,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		SwingUtilities.invokeLater(new ContentShow(name, content, false));		
 	}
 	
+	public void showEditTextContent(TFile file, String content) {
+		SwingUtilities.invokeLater(new ContentEditShow(file, content));		
+	}
+
 	public void showSearchResult(String name, SearchResult[] content) {
 		SwingUtilities.invokeLater(new SearchResultShow(name, content));		
 	}
@@ -2133,6 +2160,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	public void saveContentFrameDimension(int width, int height) {
 		m_Settings.put(CONTSIZE, width + "x" + height);
+	}
+	
+	public Point getFrameLocation() {
+		return m_frmMain.getLocationOnScreen();	
 	}
 	
 	// ===============================================================
@@ -2230,6 +2261,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				try {
 					if (dir == null) {
 						vol.buildTree();
+						vol.readAllocationMap();
 						dir = vol.traverse(dv.getPath());
 						list.put(vol, dir);
 					}

@@ -25,5 +25,7 @@ fontsize=output:s:Zeichensatzgröße
 uifont=output:s:Zeichensatz für Oberfläche
 asmtool=misc:s:Assembler-Befehlszeile
 fillpat=misc:s:Füllung für leere Diskettensektoren
+fillhpat=misc:s:Füllung für leere Harddisksektoren
 imgsuf=misc:s:Dateinamenanhänge für Images
 imgform=misc:s:Unterstützte Imageformate
+context=general:b:Kontextfunktionen unter "Bearbeiten"

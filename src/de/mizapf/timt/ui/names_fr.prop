@@ -27,3 +27,4 @@ asmtool=misc:s:Assembler invocation
 fillpat=misc:s:Fill empty floppy sectors with
 imgsuf=misc:s:Suffixes des fichiers image
 imgform=misc:s:Formats d'images pris en charge
+context=general:b:Fonctions contextuelles dans le menu "Editer"

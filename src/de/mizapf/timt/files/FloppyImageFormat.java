@@ -27,9 +27,6 @@ import de.mizapf.timt.util.*;
 
 public abstract class FloppyImageFormat extends FileImageFormat {
 
-	/** Sector count according to the sectors found on a track. */
-	// private int m_nCountedSectors;  
-		
 	/** Sectors per track according to the image format. */
 	int m_nTracks;
 	
@@ -41,15 +38,17 @@ public abstract class FloppyImageFormat extends FileImageFormat {
 	
 	protected FloppyImageFormat(String sImageName) throws FileNotFoundException, IOException, ImageException {
 		super(sImageName);
+		setFillPattern(m_Settings.getPropertyString(TIImageTool.FILLPAT));
 	}
 	
 	protected FloppyImageFormat(String sImageName, FormatParameters params) throws FileNotFoundException, IOException, ImageException {
 		super(sImageName, params);
 		m_nSectorsPerTrack = params.sectors;
 		m_nTracks = params.cylinders;		
-		m_nSides = params.heads;		
+		m_nSides = params.heads;
+		setFillPattern(m_Settings.getPropertyString(TIImageTool.FILLPAT));
 	}
-	
+		
 	/** Must be overridden by formats like SectorDumpFormat which cannot rely on this. */
 	abstract int getSectorsPerTrack();
 	

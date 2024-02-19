@@ -57,7 +57,7 @@ public class ListAction extends Activity {
 						sText = ((TFile)selected).listBasic((settings.getPropertyBoolean(TIImageTool.BASICVER)==true)? BasicLine.EX_BASIC : BasicLine.TI_BASIC, escape);
 					}
 					
-					imagetool.showTextContent(selected.getName(), sText);  
+					imagetool.showEditTextContent((TFile)selected, sText);  
 				}
 				catch (EOFException eofx) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("Error") + ": " + eofx.getMessage(), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 					

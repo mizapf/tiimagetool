@@ -494,9 +494,8 @@ public class PasteAction extends Activity {
 				}
 				catch (ProtectedException px) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE); 
-				}				
-				imagetool.refreshPanel(volSource);
-				imagetool.refreshPanel(volTarget);				
+				}	
+				imagetool.refresh(null);				
 			}
 		}
 		if (sError != null) {

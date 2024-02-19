@@ -387,6 +387,24 @@ public class Directory extends Element {
 		for (Directory d : m_Subdirs) {
 			if (d.getName().equals(sDir)) return d;
 		}
+		
+		// Check for archive
+		for (TFile f : m_Files) {
+			try {
+				if (f.getName().equals(sDir) && f.hasArchiveFormat()) {
+					return f.unpackArchive();
+				}
+			}
+			catch (IllegalOperationException iax) {
+				System.out.println("Not an archive: " + f.getName());
+			}
+			catch (FormatException fx) {
+				System.out.println("Not an archive: " + f.getName());
+			}
+			catch (IOException iox) {
+				System.out.println("IOException entering archive: " + f.getName());
+			}
+		}
 		throw new ImageException(String.format(TIImageTool.langstr("VolumeDirNotFound"), sDir));
 	}
 	
@@ -913,7 +931,7 @@ public class Directory extends Element {
 		If the new version is too big, inserts the old version again.
 		TODO: Remove this reinsert.
 	*/
-	protected TFile updateFile(TFile file, byte[] abySectorContent, int nNewL3, boolean bNextGen) throws ImageException, IOException, InvalidNameException, ProtectedException {
+	protected TFile updateFile(TFile file, byte[] abySectorContent, int nNewL3, boolean bNextGen) throws ImageException, InvalidNameException, IOException, ProtectedException {
 		// Keep the old file as a TIFiles image
 		byte[] abyTfiNew = TIFiles.createTfi(abySectorContent, file.getName(), file.getFlags(), file.getRecordLength(), nNewL3);
 
@@ -922,17 +940,8 @@ public class Directory extends Element {
 		if (isRootDirectory()) System.out.println(" in root directory");
 		else System.out.println(" in " + getName() + ", class " + getClass().getName());
 		TFile fNew = null;
-		try {
-			fNew = insertFile(abyTfiNew, null, bNextGen, true);
-			commit(bNextGen);  // may recurse
-		}
-		catch (ImageFullException ifx) {
-			// Restore old version
-			// FIXME: This is not needed anymore. However, needs a proper Undo implementation.
-			TIFiles tfiOld = TIFiles.createFromFile(file);  // throws IOX
-			fNew = insertFile(tfiOld.toByteArray(), null, bNextGen);
-			throw ifx;
-		}
+		fNew = insertFile(abyTfiNew, null, bNextGen, true);
+		commit(bNextGen);  // may recurse
 		return fNew;
 	}
 

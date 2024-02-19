@@ -860,6 +860,10 @@ public class TFile extends Element {
 		return (!isProgram() && isDisplay() && !hasFixedRecordLength() && getRecordLength()==80); 
 	}
 
+	public boolean isWideTextFile() {
+		return (!isProgram() && isDisplay() && !hasFixedRecordLength() && getRecordLength()==128); 
+	}
+
 	public boolean mayBePrintable() {
 		return (!isProgram() && isDisplay() && !hasFixedRecordLength()); 
 	}
