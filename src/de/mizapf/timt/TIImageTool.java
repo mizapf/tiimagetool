@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2011-2016 Michael Zapf
+    Copyright 2011-2024 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
@@ -37,7 +37,7 @@
 
 	Disassembler
 	[ ] Disassembler problem in symbolic mode; see disassembler file
-    [ ] Disassembly stops 6 bytes too early when using header
+    [?] Disassembly stops 6 bytes too early when using header
     [ ] IDT label in Disassembler
 
     Display
@@ -48,11 +48,10 @@
 	[-] Paste error: If last entry is dir, object will be pasted there (not reproducible)
 	[x] Safe area for right-click outside of file
     [x] Periods appear doubled in XB file listing -> appears when . is used as escape character       
-    [ ] Add note in documentation to avoid "~" or "." as escape character
+    [x] Add note to avoid "~" or "." as escape character
 	[?] Recent files need escaping for semicolon in file name    
     [x] Right-click on another file does not deselect the previously marked file → javax.swing.ListSelectionModel
     [x] Keep dimension of text output window
-    [ ] Drag into Windows Explorer does not work
     [ ] Dis/Fix 255 display (and pos. other files) should be improved
 	
     Files
@@ -162,8 +161,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JFrame m_frmMain;
 
 	public final static String VERSION = "3.0.0";
-	public final static String MONTH = "November";
-	public final static String YEAR = "2023";
+	public final static String MONTH = "March";
+	public final static String YEAR = "2024";
 	
 	private static final String TITLE = "TIImageTool";
 
@@ -346,6 +345,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	public long m_maxMemory;
 		
+	String m_sStartupError;	
 	// ===============================================
 	// Clipboard for cut-copy-paste
 	
@@ -622,6 +622,9 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			// Let the hint window pop up on start
 			if (m_Settings.getPropertyBoolean(HINTSTART)) setUserInput("HINTS");
+			
+			if (m_sStartupError != null) 
+				JOptionPane.showMessageDialog(m_frmMain, m_sStartupError, TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
 		}
 	}
 	
@@ -1108,6 +1111,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 	
 	TIImageTool() {
+		m_sStartupError = null;
 		m_sPropertiesPath = null;
 		m_Settings = new Settings(getOperatingSystem());
 		
@@ -1120,6 +1124,14 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		catch (IOException iox) {
 			iox.printStackTrace();
 		}		
+
+		int check = m_Settings.checkProperties();
+		if (check != 0) {
+			if ((check & Settings.SET_INVESC)!=0) {
+				m_sStartupError = langstr("Error.InvalidEscape");
+				System.err.println(m_sStartupError);
+			}
+		}
 		
 		// Load the property texts
 		m_propNames = new Properties();
@@ -1199,7 +1211,12 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_tmpDir = new java.io.File(sTempDir, TEMPDIRNAME);
 		if (!m_tmpDir.exists()) {
 			m_tmpDir.mkdir();
-			System.out.println(langstr("MainCreatedTmp") + ": " + m_tmpDir.getName());
+			if (m_tmpDir.exists())
+				System.out.println(langstr("MainCreatedTmp") + ": " + m_tmpDir.getName());
+			else {
+				m_sStartupError = langstr("Error.MainCreatedTmp") + "(" + m_tmpDir.getAbsolutePath() + ")";
+				System.err.println(m_sStartupError);
+			}
 		}
 		m_Settings.put(TEMPDIR, sTempDir);
 		

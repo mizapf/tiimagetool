@@ -39,13 +39,13 @@ public class Settings {
 	
 	Properties m_Props;
 	
+	public final static int SET_INVESC = 1;
+	
 	public Settings(int os) {
 		m_sFile = (os==TIImageTool.WINDOWS)? "tiimagetool.prop" : ".tiimagetoolrc";
 		m_Props = new Properties();		
 		loadProperties();
-		checkProperties();
 	}
-	
 	
 	private void loadProperties() {
 				
@@ -153,10 +153,12 @@ public class Settings {
 		getPropertyString(TIImageTool.CONTEXT, "false");
 	}
 	
-	private void checkProperties() {
+	public int checkProperties() {
+		int ret = 0;
 		String escape = getPropertyString(TIImageTool.ESCAPE);
 		if (escape.length()>0 && escape.charAt(0) < 127)
-			System.err.println("Do not use '" + escape.charAt(0) + "' as the escape character; pick a character which is not in the TI character set. Check the preferences.");
+			ret |= SET_INVESC;
+		return ret;
 	}
 	
 	public String getPropertyString(String sKey) {

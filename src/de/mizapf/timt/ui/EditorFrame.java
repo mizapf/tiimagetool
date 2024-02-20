@@ -222,7 +222,9 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 		m_hmActions = new HashMap<String,Action>();
 		// put possible editor commands by name into hashtable
 		for (Action a:act) m_hmActions.put((String)a.getValue(Action.NAME), a);
-		
+
+		m_jep.setCaretPosition(0);
+
 		m_curNormal = m_jep.getCursor();
 		m_bAbort = true;
 	}

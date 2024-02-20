@@ -53,7 +53,7 @@ class ViewDumpDialog extends ToolDialog implements ActionListener {
 
 		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
-		m_chbHeader = putCheckBox(this, TIImageTool.langstr("ViewDumpHeader"), true, nColumnWidth);
+		m_chbHeader = putCheckBox(this, TIImageTool.langstr("ViewDumpHeader"), false, nColumnWidth);
 		m_tfStart = putTextField(this, TIImageTool.langstr("ViewDumpPrompt"), "0000", nColumnWidth, 0);
 		add(Box.createVerticalStrut(10));
 		

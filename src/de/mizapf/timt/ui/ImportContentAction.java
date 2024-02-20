@@ -79,7 +79,7 @@ public class ImportContentAction extends Activity {
 
 		try {
 			m_nType = getType(file);
-			System.out.println(m_nType);
+			// System.out.println(m_nType);
 			EditorFrame dv = new EditorFrame(dvCurrent.getFrame(), this, dvCurrent, file.getName(), sText, m_nType != NONE);
 			dv.setSize(settings.getPropertyDim(TIImageTool.CONTSIZE));
 			Point loc = imagetool.getFrameLocation();		
