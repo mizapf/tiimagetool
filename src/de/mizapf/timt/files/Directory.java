@@ -850,6 +850,13 @@ public class Directory extends Element {
 		return false;
 	}
 	
+	boolean containsDir(String sName) {
+		for (Directory dir : m_Subdirs) {
+			if (dir.getName().equals(sName)) return true;
+		}
+		return false;
+	}
+	
 	/** Removes the file from the list of files, but not on the disk. */ 
 	protected void removeFromList(TFile delfile) {
 		TFile[] aold = m_Files;

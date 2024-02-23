@@ -156,6 +156,9 @@ class NewHDImageDialog extends ToolDialog implements ActionListener, FocusListen
 		
 		add(Box.createVerticalGlue());
 		setReserved();
+		
+		m_tfName.addKeyListener(this);
+		m_tfSize.addKeyListener(this);
 		addButtons();
 	}
 	

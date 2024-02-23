@@ -46,7 +46,7 @@ import de.mizapf.timt.util.Utilities;
     
     There is a current generation pointer, normally the highest number. When
     retrieving the sector contents, the version is delivered with the highest
-    generation number below or equal to the current generation.
+    generation number below the current generation.
     
     For an Undo operation, the current generation (>0) is decreased by 1.
     For a Redo operation, the current generation (<max) is increased by 1.
@@ -55,6 +55,15 @@ import de.mizapf.timt.util.Utilities;
     When there is a new generation, the current version is relinked to the 
     new generation, and the previous end of list is dropped with no way to
     restore it again.    
+    
+    read --+--> null if there were no changes to the sector in the image
+           +--> Sector (clone) whose generation is the highest below m_generation
+           
+    write--+--> new entry in the list of this sector, with gen set to m_generation
+           +--> overwritten entry when gen==m_generation
+    
+    Undo can only succeed on performed transactions, which is declared by
+    calling next_generation.
     
 */
 public class SectorCache {
@@ -65,6 +74,8 @@ public class SectorCache {
 	private int m_checkpoint;
 	private int m_current;
 	private int m_maxgen;
+	
+	private final static boolean DEBUG = false;
 	
 	private String m_sName; // debugging
 	
@@ -77,15 +88,22 @@ public class SectorCache {
 		m_sName = sName;
 	}
 	
-	private Sector getRecentVersion(LinkedList<Sector> seclist) {
+	private Sector getRecentVersion(LinkedList<Sector> seclist, boolean withCurrent) {
 		Iterator<Sector> backit = seclist.descendingIterator();
-		// System.out.println("Version list length: " + seclist.size() + ", nextgen = " + m_generation);
+		if (DEBUG) System.out.println("Version list length: " + seclist.size() + ", nextgen = " + m_generation);
 		Sector sect = null;
 		while (backit.hasNext()) {
 			Sector sec = backit.next();
-			// System.out.println("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + ")");
-			if (sec.getGeneration() < m_generation) {
-				// System.out.println("hit");
+			if (DEBUG) System.out.println("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + ")");
+			
+			// Must be "<" for a working Undo
+			// Undos are done from committed changes, so nextgen is higher than
+			// the latest change of any sector
+			// With <=, the latest change will still be found, although it was "undone"
+			// TODO: Check whether error conditions are really cleanly undone
+			if ((sec.getGeneration() < m_generation) 
+				|| (withCurrent && (sec.getGeneration() == m_generation))) {
+				if (DEBUG) System.out.println("hit");
 				sect = sec;
 				break;
 			}
@@ -109,7 +127,7 @@ public class SectorCache {
 			return null;
 		}
 		
-		return getRecentVersion(secversions);		
+		return getRecentVersion(secversions, false);		
 	}
 	
 	/** Store the contents of the sector at the current generation. Does not
@@ -118,7 +136,7 @@ public class SectorCache {
 	    @param sect Sector
 	*/
 	void write(Sector sect) {
-		// System.out.println("Write sector " + sect.getNumber() + ", gen " + m_generation);
+		if (DEBUG) System.out.println("Write sector " + sect.getNumber() + ", gen " + m_generation);
 		boolean bNew = true;
 		
 		// Set the generation
@@ -131,49 +149,80 @@ public class SectorCache {
 			// No history yet
 			secversions = new LinkedList<Sector>();
 			m_cache.put(sect.getNumber(), secversions);
-			// System.out.println("Creating new history for sector " + sect.getNumber());
+			if (DEBUG) System.out.println("Creating new history for sector " + sect.getNumber());
 		}
 		else {
-			Sector lsect = getRecentVersion(secversions);
+			Sector lsect = getRecentVersion(secversions, true);
 			if (lsect != null) {
 				if (lsect.getGeneration() == m_generation) {
 					// Same generation; overwrite the sector contents
 					lsect.modify(sect.getData());
-					// System.out.println("Replacing the contents of sector " + sect.getNumber() + " in generation " + m_generation);
+					if (DEBUG) System.out.println("Replacing the contents of sector " + sect.getNumber() + " in generation " + m_generation);
 					bNew = false;
+				}
+				else {
+					if (DEBUG) System.out.println("lsect.gen=" + lsect.getGeneration() + ", m_gen=" + m_generation);
 				}
 			}
 			else {
 				// else we once had a history before undoing. In that case, bNew = true
+				if (DEBUG) System.out.println("Clear the history of sector " + sect.getNumber());
 				secversions.clear();
 			}
 		}
 		if (bNew) {
 			// Append new generation
 			secversions.add((Sector)sect.clone());
-			// System.out.println("Caching a new version (" + m_generation + ") of sector " + sect.getNumber());
+			if (DEBUG) System.out.println("Caching a new version (" + m_generation + ") of sector " + sect.getNumber());
 		}
 		// System.out.println(Utilities.hexdump(sect.getData()));
+	}
+	
+	/** Removes all entries that were not committed by a following 
+	    next_generation. This effectively means that all entries are removed
+	    that have the same generation as the current m_generation value.
+	*/
+	public void rollback() {
+		if (DEBUG) System.out.println("Rollback");
+		Set<Integer> number = m_cache.keySet();
+		for (int i : number) {
+			LinkedList<Sector> seclist = m_cache.get(i);
+			Iterator<Sector> backit = seclist.descendingIterator();
+			while (backit.hasNext()) {
+				Sector sec = backit.next();
+				if (sec.getGeneration() >= m_generation) {
+					if (DEBUG) System.out.println("Removing sector " + i + ", version " + sec.getGeneration() + ", m_gen = " + m_generation);
+					backit.remove();
+				}
+			}
+		}
 	}
 	
 	/** Indicates whether this image has unsaved changes. Note that the
 		variable m_generation refers to the next change, not the current.
 	*/
 	public boolean hasUnsavedEntries() {
-		// System.out.println("gen(" + m_sName + ") = " + m_generation + ", last save = " + m_checkpoint);  //#%
+		if (DEBUG) System.out.println("gen(" + m_sName + ") = " + m_generation + ", last save = " + m_checkpoint);  //#%
 		return m_generation > m_checkpoint + 1;
 	}
 
 	public void nextGeneration(boolean bNew) {
 //		Thread.currentThread().dumpStack();
-		// System.out.println("+ nextgen(" + m_sName + ")");
+		if (DEBUG) System.out.println("+ nextgen(" + m_sName + "): " + (m_generation+1));
 		m_generation++;
 		if (bNew) m_maxgen = m_generation;
 	}
 		
 	public void previousGeneration() {
-		// System.out.println("- prevgen(" + m_sName + ")");
+		if (DEBUG) System.out.println("- prevgen(" + m_sName + "): " + (m_generation-1));
 		m_generation--;
+	}
+	
+	public void sameGeneration() {
+		if (m_generation > 1) {
+			if (DEBUG) System.out.println("- samegen(" + m_sName + "): " + (m_generation-1));
+			m_generation--;
+		}
 	}
 
 	public void setCheckpoint() {
@@ -187,6 +236,10 @@ public class SectorCache {
 	
 	public boolean canBeRedone() {
 		return m_generation < m_maxgen;
+	}
+	
+	public boolean isNew() {
+		return (m_checkpoint < 0) && (m_generation==1);
 	}
 }
 

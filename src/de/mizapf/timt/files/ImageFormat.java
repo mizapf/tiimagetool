@@ -353,6 +353,14 @@ public abstract class ImageFormat  {
 		return m_writeCache.hasUnsavedEntries();
 	}
 	
+	void rollback() {
+		m_writeCache.rollback();
+	}
+	
+	boolean isNew() {
+		return m_writeCache.isNew();
+	}
+	
 	void setStartGeneration() {
 		m_writeCache.setCheckpoint();
 	}
@@ -366,6 +374,10 @@ public abstract class ImageFormat  {
 		m_writeCache.previousGeneration();
 	}
 	
+	public void sameGeneration() {
+		m_writeCache.sameGeneration();
+	}
+
 	public void setCheckpoint() {
 		m_writeCache.setCheckpoint();
 	}

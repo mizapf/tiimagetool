@@ -96,6 +96,7 @@ class NewFloppyImageDialog extends ToolDialog {
 		m_jrTrack80 = arb4[1];
 		
 		add(Box.createVerticalGlue());
+		m_tfName.addKeyListener(this);
 
 		addButtons();
 	}

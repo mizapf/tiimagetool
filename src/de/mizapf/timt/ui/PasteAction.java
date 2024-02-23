@@ -398,6 +398,7 @@ public class PasteAction extends Activity {
 								catch (ImageFullException ifx) {
 									JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("PasteImageFull"), file.getName()), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);										
 									// Give up
+									System.out.println("Image full");
 									bAbort = true;									
 								}
 							} while (bRetry && !bAbort);
@@ -466,7 +467,8 @@ public class PasteAction extends Activity {
 					}
 					// Save also if aborted
 					if (bMove) dirSource.commit(true);
-					dirTarget.commit(true);
+					if (bAbort) volTarget.rollback();
+					else dirTarget.commit(true);
 				}
 				catch (ImageException ix) {
 					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("PasteError"), JOptionPane.ERROR_MESSAGE);					

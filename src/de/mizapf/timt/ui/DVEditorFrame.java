@@ -132,7 +132,7 @@ class DVEditorFrame extends JFrame implements ActionListener, UndoableEditListen
 
 	DVEditorFrame(Frame owner, ImportContentAction ia, DirectoryView dv) {
 		// Parameter dialog should probably be raised in this class
-		super(TIImageTool.langstr("DVEditorTitle"));
+		super(TIImageTool.langstr("EditorTitle"));
 		m_flText = null;
 		m_sTitle = TIImageTool.langstr("Unnamed");
 		createUI("");

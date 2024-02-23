@@ -30,7 +30,7 @@ import de.mizapf.timt.TIImageTool;
 
 import javax.swing.*; 
 
-public class ToolDialog extends JDialog implements ActionListener {
+public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 
 	protected boolean	m_bSet;
 	protected JFrame 	m_frmMain;
@@ -185,7 +185,6 @@ public class ToolDialog extends JDialog implements ActionListener {
 		return box;
 	}
 	
-	
 	public void actionPerformed(ActionEvent ae) {
 		if (ae.getSource()==m_btnOK) {
 			m_bSet = true;
@@ -196,7 +195,24 @@ public class ToolDialog extends JDialog implements ActionListener {
 			dispose();
 		}
 	}
+	
+	public void keyReleased(KeyEvent ke) {
+	}
 			
+	public void keyPressed(KeyEvent ke) {
+	}
+
+	public void keyTyped(KeyEvent ke) {
+		if (ke.getKeyChar()==KeyEvent.VK_ENTER) {
+			m_bSet = true;
+			dispose();
+		}
+		if (ke.getKeyChar()==KeyEvent.VK_ESCAPE) {
+			m_bSet = false;
+			dispose();
+		}
+	}
+
 	protected int getColumnWidth(int count) {
 		StringBuilder sb = new StringBuilder();
 		while (count-- > 0) sb.append("x");

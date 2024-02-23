@@ -67,7 +67,7 @@ class NewElementDialog extends ToolDialog {
 		else {
 			add(Box.createHorizontalStrut(300));			
 		}
-		
+		m_tfElementName.addKeyListener(this);
 		addButtons();	
 	}
 		

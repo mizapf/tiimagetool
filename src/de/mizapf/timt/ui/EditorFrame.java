@@ -132,7 +132,7 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 
 	EditorFrame(Frame owner, ImportContentAction ia, DirectoryView dv, String sName, String content, boolean bEditable) {
 		// Parameter dialog should probably be raised in this class
-		super(TIImageTool.langstr("DVEditorTitle"));
+		super(TIImageTool.langstr("EditorTitle"));
 		m_flText = null;
 		m_sTitle = (sName == null)? TIImageTool.langstr("Unnamed") : sName;
 		createUI(content, bEditable);
@@ -289,7 +289,7 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 		if (ae.getActionCommand().equals(CUT)) {
 			Action ac = m_hmActions.get(DefaultEditorKit.cutAction);
 			if (ac==null) {
-				error(String.format(TIImageTool.langstr("DVEditorIntErr"), TIImageTool.langstr("Cut")));
+				error(String.format(TIImageTool.langstr("EditorIntErr"), TIImageTool.langstr("Cut")));
 				return;
 			}
 			// m_jmiPaste.setEnabled(true);
@@ -299,7 +299,7 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 		if (ae.getActionCommand().equals(COPY)) {
 			Action ac = m_hmActions.get(DefaultEditorKit.copyAction);
 			if (ac==null) {
-				error(String.format(TIImageTool.langstr("DVEditorIntErr"), TIImageTool.langstr("Copy")));
+				error(String.format(TIImageTool.langstr("EditorIntErr"), TIImageTool.langstr("Copy")));
 				return;
 			}
 			// m_jmiPaste.setEnabled(true);
@@ -309,7 +309,7 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 		if (ae.getActionCommand().equals(PASTE)) {
 			Action ac = m_hmActions.get(DefaultEditorKit.pasteAction);
 			if (ac==null) {
-				error(String.format(TIImageTool.langstr("DVEditorIntErr"), TIImageTool.langstr("Paste")));
+				error(String.format(TIImageTool.langstr("EditorIntErr"), TIImageTool.langstr("Paste")));
 				return;
 			}
 			ac.actionPerformed(ae);
@@ -318,7 +318,7 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 		if (ae.getActionCommand().equals(SELECT_ALL)) {
 			Action ac = m_hmActions.get(DefaultEditorKit.selectAllAction);
 			if (ac==null) {
-				error(String.format(TIImageTool.langstr("DVEditorIntErr"), TIImageTool.langstr("SelectAll")));
+				error(String.format(TIImageTool.langstr("EditorIntErr"), TIImageTool.langstr("SelectAll")));
 				return;
 			}
 			ac.actionPerformed(ae);

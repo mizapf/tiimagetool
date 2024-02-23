@@ -162,8 +162,11 @@ public class Volume {
 	
 	public Directory traverse(String[] path) throws ImageException {
 		Directory dir = m_FileSystem.getRootDirectory();
-		for (String nextdir : path) 
-			dir = dir.enterDirectory(nextdir);
+		for (String nextdir : path) {
+			if (dir.containsDir(nextdir))
+				dir = dir.enterDirectory(nextdir);
+			else break;
+		}
 		return dir;		
 	}
 	
@@ -395,8 +398,16 @@ public class Volume {
 		m_Image.nextGeneration(bNew);
 	}
 
+	public void sameGeneration() {
+		m_Image.sameGeneration();
+	}
+	
 	public boolean redoPossible() {
 		return m_Image.redoPossible();
+	}
+	
+	public void rollback() {
+		m_Image.rollback();
 	}
 	
 	// Called from SaveImageAction
@@ -431,6 +442,10 @@ public class Volume {
 	
 	public boolean isModified() {
 		return m_Image.cacheHasUnsavedEntries();
+	}
+	
+	public boolean isNew() {
+		return m_Image.isNew();
 	}
 	
 	public void undoAction() throws ImageException, IOException {

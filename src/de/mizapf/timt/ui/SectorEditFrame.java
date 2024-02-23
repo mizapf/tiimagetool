@@ -30,70 +30,39 @@ import java.awt.font.*;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.TIImageTool;
 
-public class SectorEditFrame extends JFrame implements ActionListener, WindowListener {
+public class SectorEditFrame extends JFrame implements ActionListener, WindowListener, FocusListener {
+
+	TIImageTool m_app;
+	String m_imageName;
+	ImageFormat m_image;
+	boolean m_thereAreChanges=false;
 
 	JMenuBar m_mbar; 
 	JMenu m_mFile;
-	JMenuItem m_iSaveAs;
-	JMenuItem m_iRevert;
-	JMenuItem m_iRevertAll;
 	JMenuItem m_iWrite;
-	JMenuItem m_iClose;
-	TIImageTool m_app;
-	JComponent m_head;
-	JPanel m_jp;
+	JMenuItem m_iClose;	
+	JTextField[] m_atfHex;
+	JTextArea m_taAsciiContent;
+
+	JTextField m_tfSectorNumber;
+	int m_currentSector = 0;
+	int m_lastOffset = -1;
+	int m_lastSector;
 	
+	Sector m_sector;
+
 	JButton m_btnBegin;
 	JButton m_btnPrev;
 	JButton m_btnNext;
 	JButton m_btnEnd;
-	
-	int m_lastValue;
-	int m_newValue;
-	
-	JLabel[] m_jlByteContent;
-	JLabel[] m_jlAsciiContent;
-	
-	int m_lastOffset = -1;
-	boolean m_lastAscii = false;
-	
-	int m_currentSector = 0;
-	
-	// byte[] m_content;
-	Sector m_sector;
-	
-	boolean m_firstDigit;
-	
-	boolean m_thereAreChanges=false;
-	
-	private static final String FONTED = Font.MONOSPACED;
 
-	// Use this as a cache.
-	HashMap<Integer,Sector> m_sectormap;
-		
-	JTextArea m_jep;
-	ImageFormat m_image;
-	
-	JTextField m_tfSector;
-	
-	// FIXME:
-	// The last sector is only known for existing file systems (note 
-	// in particular the HFE format)
-	int m_lastSector;
-	
-	String m_imageName;
-	
-	private static final String SAVEAS = "saveas";
 	private static final String WRITE = "write";
-	private static final String REVERT = "revert";
-	private static final String REVERTALL = "revertall";
 	private static final String CLOSE = "close"; 
-
 	private static final String BEGIN = "begin"; 
 	private static final String END = "end"; 
 	private static final String PREV = "prev";
 	private static final String NEXT = "next";
-
+	
 	class FieldListener implements ActionListener {
 		SectorEditFrame m_sef;
 		JTextField m_tf;
@@ -131,80 +100,165 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		}
 	}
 	
-	class ByteListener implements MouseListener, KeyListener {
-		
-		SectorEditFrame m_sef;
-		int m_offset;
-		JLabel m_jl;
-		
-		ByteListener(SectorEditFrame sef, JLabel jl, int offset) {
-			m_sef = sef;
-			m_offset = offset;
-			m_jl = jl;
-		}
-		
-		public void mouseClicked(MouseEvent ae) {
-			// Do this in the SEF
-			// Unfocus other label
-			m_sef.select(m_offset, false);
-//			m_jl.requestFocus();
-//			m_jl.setBackground(Color.YELLOW);
-		}
-
-		public void mouseEntered(MouseEvent act) { }
-		public void mouseExited(MouseEvent act) { }
-		public void mousePressed(MouseEvent act) { }
-		public void mouseReleased(MouseEvent act) { }
-		
-		public void keyPressed(KeyEvent ke) {	}
-		public void keyReleased(KeyEvent ke) {	}
-		public void keyTyped(KeyEvent ke) {
-			char ch = ke.getKeyChar();
-			switch (ch) {
-			case 10:
-			case 13: m_sef.returnPressed(false); break;
-			case 27: m_sef.escapePressed(false); break;
-			default: m_sef.keyPressed(ch, false); break;
-			}
-		}
+	public SectorEditFrame(String name, ImageFormat image, TIImageTool app) {
+		super(name);
+		m_imageName = name;
+		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+		m_app = app;
+		m_app.registerFrame(this);
+		m_image = image;
 	}
-		
-	class AsciiListener implements MouseListener, KeyListener {
-		
-		SectorEditFrame m_sef;
-		int m_offset;
-		JLabel m_jl;
-		
-		AsciiListener(SectorEditFrame sef, JLabel jl, int offset) {
-			m_sef = sef;
-			m_offset = offset;
-			m_jl = jl;
-		}
-		
-		public void mouseClicked(MouseEvent ae) {
-			m_sef.select(m_offset, true);
-		}
+	
+	public void createGui(Font fontName) {
+		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+		add(Box.createVerticalStrut(10));
 
-		public void mouseEntered(MouseEvent act) { }
-		public void mouseExited(MouseEvent act) { }
-		public void mousePressed(MouseEvent act) { }
-		public void mouseReleased(MouseEvent act) { }
+		m_mbar = new JMenuBar();
+		m_mFile = new JMenu(TIImageTool.langstr("File"));
+		m_mbar.add(m_mFile);	
+
+		m_iWrite = new JMenuItem(TIImageTool.langstr("CloseSave"));
+		m_iWrite.setActionCommand(WRITE);
+		m_iWrite.addActionListener(this);
+		m_mFile.add(m_iWrite);
 		
-		public void keyPressed(KeyEvent ke) {	}
-		public void keyReleased(KeyEvent ke) {	}
-		public void keyTyped(KeyEvent ke) {
-			char ch = ke.getKeyChar();
-			switch (ch) {
-			case 10:
-			case 13: m_sef.returnPressed(true); break;
-			case 27: m_sef.escapePressed(true); break;
-			default: m_sef.keyPressed(ch, true); break;
+		m_iClose = new JMenuItem(TIImageTool.langstr("ExitNoSave"));
+		m_iClose.setActionCommand(CLOSE);
+		m_iClose.addActionListener(this);
+		m_mFile.add(m_iClose);
+		
+		setJMenuBar(m_mbar);
+
+		// Controls panel
+		JPanel jpControls = new JPanel();
+		jpControls.setLayout(new BoxLayout(jpControls, BoxLayout.X_AXIS));
+		
+		JLabel jlSect = new JLabel(TIImageTool.langstr("Sector"));
+		jlSect.setFont(TIImageTool.dialogFont);
+
+		m_tfSectorNumber = new JTextField("0");
+		m_tfSectorNumber.setFont(TIImageTool.dialogFont);
+		m_tfSectorNumber.addActionListener(new FieldListener(this, m_tfSectorNumber));
+		
+		m_btnBegin = new JButton("|<<");
+		m_btnBegin.addActionListener(this);
+		m_btnBegin.setActionCommand(BEGIN);
+		m_btnPrev = new JButton("<");
+		m_btnPrev.addActionListener(this);
+		m_btnPrev.setActionCommand(PREV);
+		m_btnNext = new JButton(">");
+		m_btnNext.addActionListener(this);
+		m_btnNext.setActionCommand(NEXT);
+		m_btnEnd = new JButton(">>|");
+		m_btnEnd.addActionListener(this);
+		m_btnEnd.setActionCommand(END);
+			
+		jpControls.add(jlSect);
+		jpControls.add(Box.createHorizontalStrut(10));
+		jpControls.add(m_tfSectorNumber);
+		jpControls.add(Box.createHorizontalStrut(20));
+		jpControls.add(m_btnBegin);
+		jpControls.add(m_btnPrev);
+		jpControls.add(m_btnNext);
+		jpControls.add(m_btnEnd);
+		jpControls.add(Box.createHorizontalGlue());
+						
+		// Displays
+		JPanel jpDisplays = new JPanel();
+		jpDisplays.setLayout(new BoxLayout(jpDisplays, BoxLayout.X_AXIS));
+		jpDisplays.add(Box.createHorizontalStrut(10));
+		
+		JPanel jpHexDisplay = new JPanel();
+		jpHexDisplay.setLayout(new BoxLayout(jpHexDisplay, BoxLayout.Y_AXIS));
+				
+		m_atfHex = new JTextField[16];
+		for (int i=0; i < 16; i++) {
+			m_atfHex[i] = new JTextField("");
+			m_atfHex[i].setEditable(true);
+			m_atfHex[i].setFont(m_app.contentFont);
+			m_atfHex[i].setBorder(javax.swing.BorderFactory.createEmptyBorder());
+			m_atfHex[i].addFocusListener(this);
+			jpHexDisplay.add(m_atfHex[i]);	
+		}
+		jpDisplays.add(jpHexDisplay);
+		
+		jpDisplays.add(Box.createHorizontalStrut(20));
+		
+		m_taAsciiContent = new JTextArea("");
+		m_taAsciiContent.setEditable(false);
+		m_taAsciiContent.setFont(fontName);
+		jpDisplays.add(m_taAsciiContent);
+		jpDisplays.add(Box.createHorizontalStrut(10));
+
+		add(jpControls);
+		add(Box.createVerticalStrut(10));	
+
+		add(jpDisplays);
+		add(Box.createVerticalStrut(10));	
+		
+		byte[] empty = new byte[256];
+		fillHexDisplay(empty);
+		fillAsciiDisplay(empty);		
+		
+		addWindowListener(this);
+		
+		try {
+			getSector(0);
+			m_lastSector = m_image.getTotalSectors() -1; // only known after the first read sector
+			if (m_lastSector < 0) m_btnEnd.setEnabled(false);
+			fillHexDisplay(m_sector.getData());
+			fillAsciiDisplay(m_sector.getData());
+		}
+		catch (IOException iox) {
+			iox.printStackTrace();
+		}
+		catch (ImageException ix) {
+			ix.printStackTrace();
+		}
+		m_image.nextGeneration(true);	
+	}
+
+	private void fillHexDisplay(byte[] content) {
+		for (int i=0; i < 16; i++) {
+			StringBuilder sbh = new StringBuilder();
+			for (int j=0; j < 16; j++) {
+				byte by = content[i*16+j];
+				sbh.append(Utilities.toHex(by,2));
+				if (j < 15) sbh.append(" ");
 			}
+			m_atfHex[i].setText(sbh.toString());
 		}
 	}
 	
-	// ======================================================================
+	private void fillAsciiDisplay(byte[] content) {
+		StringBuilder sba = new StringBuilder();
 		
+		for (int i=0; i < 16; i++) {
+			for (int j=0; j < 16; j++) {
+				byte by = content[i*16+j];
+				if (by >=32 && by <= 127) sba.append((char)by);
+				else sba.append('.');
+			}
+			if (i < 15) {
+				sba.append("\n");
+			}
+		}
+
+		m_taAsciiContent.setText(sba.toString());
+	}
+	
+	private void closeFrame() {		
+		if (m_thereAreChanges) {
+			int doCheck = JOptionPane.showConfirmDialog(this, TIImageTool.langstr("UnsavedChanges") + ". " + TIImageTool.langstr("ReallyClose"), TIImageTool.langstr("Attention"), JOptionPane.ERROR_MESSAGE);
+			if (doCheck == JOptionPane.YES_OPTION) {
+				m_app.closeFrame(this);
+			}
+		}
+		else {
+			m_app.closeFrame(this);
+		}	
+	}
+	
 	public void windowClosing(WindowEvent we) {
 		closeFrame();
 	}
@@ -226,399 +280,45 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 	
 	public void windowOpened(WindowEvent we) {
 	}
-	
-	
-	public SectorEditFrame(String name, ImageFormat image, TIImageTool app) {
-		super(name);
-		m_imageName = name;
-		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-		m_app = app;
-		m_app.registerFrame(this);
-		m_image = image;
-		m_sectormap = new HashMap<Integer,Sector>();
-		// m_content = new byte[TFileSystem.SECTOR_LENGTH];
-	}
-
-	public void createGui(Font fontName) {	
-
-		m_mbar = new JMenuBar();
-		m_mFile = new JMenu(TIImageTool.langstr("File"));
-		m_mbar.add(m_mFile);
-		m_iSaveAs = new JMenuItem(TIImageTool.langstr("SaveAsText") + " ...");
-		m_iSaveAs.setActionCommand(SAVEAS);
-		m_iSaveAs.addActionListener(this);
-		m_mFile.add(m_iSaveAs);
-
-		m_iRevert = new JMenuItem(TIImageTool.langstr("SectorEditRevertCurrent"));
-		m_iRevert.setActionCommand(REVERT);
-		m_iRevert.addActionListener(this);
-		m_mFile.add(m_iRevert);
-
-		m_iRevertAll = new JMenuItem(TIImageTool.langstr("SectorEditRevertAll"));
-		m_iRevertAll.setActionCommand(REVERTALL);
-		m_iRevertAll.addActionListener(this);
-		m_mFile.add(m_iRevertAll);
-
-		m_iWrite = new JMenuItem(TIImageTool.langstr("SectorEditCommit"));
-		m_iWrite.setActionCommand(WRITE);
-		m_iWrite.addActionListener(this);
-		m_mFile.add(m_iWrite);
-
-		m_iClose = new JMenuItem(TIImageTool.langstr("Close"));
-		m_iClose.setActionCommand(CLOSE);
-		m_iClose.addActionListener(this);
-		m_mFile.add(m_iClose);
-		setJMenuBar(m_mbar);	
-		
-		addWindowListener(this);
-		
-		// ==================
-		
-/*
-		+-------------------------------------+
-		|  Sector:  [    0]  [<<][<][>][>>]   |
-		|                                     |
-		|  00    xx xx xx xx ... xx   XXXXXXXX|
-		|  10    xx xx xx xx ... xx   XXXXXXXX|
-		|  20    xx xx xx xx ... xx   XXXXXXXX|
-		|  ..                                 |
-		|  F0    xx xx xx xx ... xx   XXXXXXXX|
-		|                                     |
-		+-------------------------------------+
-*/
-		
-		Container cntView = getContentPane();
-		cntView.setLayout(new BoxLayout(cntView, BoxLayout.X_AXIS));
-
-		cntView.add(Box.createHorizontalStrut(10));
-		JPanel jpInner = new JPanel();
-		jpInner.setLayout(new BoxLayout(jpInner, BoxLayout.Y_AXIS));
-		cntView.add(jpInner);
-		cntView.add(Box.createHorizontalStrut(10));
-		
-		Box firstLine = new Box(BoxLayout.X_AXIS);		
-		
-		FontMetrics fm = ((Graphics2D)(m_app.getMainFrame().getGraphics())).getFontMetrics(m_app.dialogFont);
-		int nLabelWidth = fm.stringWidth(TIImageTool.langstr("Sector"));
-		JLabel jlSect = new JLabel(TIImageTool.langstr("Sector"));
-		jlSect.setFont(TIImageTool.dialogFont);
-		m_tfSector = new JTextField("0");
-		m_tfSector.setFont(TIImageTool.dialogFont);
-		m_tfSector.setMinimumSize(new Dimension(100,0));
-		m_tfSector.setPreferredSize(new Dimension(2*nLabelWidth,0));
-		m_tfSector.setMaximumSize(new Dimension(100,2*fm.getHeight()));
-		m_tfSector.addActionListener(new FieldListener(this, m_tfSector));
-		
-		m_btnBegin = new JButton("|<<");
-		m_btnBegin.addActionListener(this);
-		m_btnBegin.setActionCommand(BEGIN);
-		m_btnPrev = new JButton("<");
-		m_btnPrev.addActionListener(this);
-		m_btnPrev.setActionCommand(PREV);
-		m_btnNext = new JButton(">");
-		m_btnNext.addActionListener(this);
-		m_btnNext.setActionCommand(NEXT);
-		m_btnEnd = new JButton(">>|");
-		m_btnEnd.addActionListener(this);
-		m_btnEnd.setActionCommand(END);
-
-		firstLine.add(jlSect);
-		firstLine.add(Box.createHorizontalStrut(10));
-		firstLine.add(m_tfSector);
-		firstLine.add(Box.createHorizontalStrut(20));
-		firstLine.add(m_btnBegin);
-		firstLine.add(m_btnPrev);
-		firstLine.add(m_btnNext);
-		firstLine.add(m_btnEnd);
-		firstLine.add(Box.createHorizontalGlue());
-		
-		jpInner.add(Box.createVerticalStrut(10));
-		jpInner.add(firstLine);
-		jpInner.add(Box.createVerticalStrut(10));
-		jpInner.add(Box.createVerticalGlue());
-
-		// Create a grid of bytes
-		JPanel jpBothPanels = new JPanel();
-		jpBothPanels.setLayout(new BoxLayout(jpBothPanels, BoxLayout.X_AXIS));
-
-		JPanel jpBytes = new JPanel();
-		jpBytes.setLayout(new GridLayout(16,16));
-		jpBytes.setBackground(Color.WHITE);
-		JPanel jpAscii = new JPanel();
-		jpAscii.setLayout(new GridLayout(16,16));
-		jpAscii.setBackground(Color.WHITE);
-		
-		m_jlByteContent = new JLabel[256];
-		m_jlAsciiContent = new JLabel[256];
-		
-		Font mono = fontName;
-		Font byteFont = mono.deriveFont((float)(mono.getSize() * 1.5));
-		for (int i=0; i < 256; i++) {
-			m_jlByteContent[i] = new JLabel("00");
-			m_jlByteContent[i].setFocusable(true);
-			ByteListener bl = new ByteListener(this, m_jlByteContent[i], i);
-			m_jlByteContent[i].addMouseListener(bl);
-			m_jlByteContent[i].addKeyListener(bl);
-			m_jlByteContent[i].setFont(byteFont);
-			m_jlByteContent[i].setOpaque(true);
-			m_jlByteContent[i].setBackground(Color.WHITE);
-
-			m_jlAsciiContent[i] = new JLabel(".");
-			m_jlAsciiContent[i].setFocusable(true);
-			AsciiListener al = new AsciiListener(this, m_jlAsciiContent[i], i);
-			m_jlAsciiContent[i].addMouseListener(al);
-			m_jlAsciiContent[i].addKeyListener(al);
-			m_jlAsciiContent[i].setFont(byteFont);
-			m_jlAsciiContent[i].setOpaque(true);
-			m_jlAsciiContent[i].setBackground(Color.WHITE);
-			
-			jpBytes.add(m_jlByteContent[i]);
-			jpAscii.add(m_jlAsciiContent[i]);
-		}
-		
-		FontMetrics fm1 = ((Graphics2D)(m_app.getMainFrame().getGraphics())).getFontMetrics(byteFont);
-
-		Dimension bytefielddim = new Dimension(fm1.charWidth('0')*48, fm1.getHeight()*16);
-		jpBytes.setMinimumSize(bytefielddim);
-		jpBytes.setPreferredSize(bytefielddim);
-		Dimension asciifielddim = new Dimension(fm1.charWidth('0')*16, fm1.getHeight()*16);
-		jpAscii.setMinimumSize(asciifielddim);
-		jpAscii.setPreferredSize(asciifielddim);
-
-		try {
-			getSector(0);
-			m_lastSector = m_image.getTotalSectors() -1; // only known after the first read sector
-			if (m_lastSector < 0) m_btnEnd.setEnabled(false);
-			showContent();
-		}
-		catch (IOException iox) {
-			iox.printStackTrace();
-		}
-		catch (ImageException ix) {
-			ix.printStackTrace();
-		}
-		
-		jpBothPanels.add(jpBytes);
-		jpBothPanels.add(Box.createHorizontalStrut(10));
-		jpBothPanels.add(Box.createHorizontalGlue());
-		jpBothPanels.add(jpAscii);
-
-		jpInner.add(jpBothPanels);		
-		jpInner.add(Box.createVerticalStrut(10));
-		toFront();
-	}
-	
-	void getSector(int i) throws IOException, ImageException, EOFException {
-		Sector sect = m_sectormap.get(i);
-		if (sect==null) {
-			sect = (Sector)m_image.readSector(i).clone();
-			m_sectormap.put(i, sect);
-		}
-		m_sector = sect;
-//		System.arraycopy(sect.getBytes(), 0, m_content, 0, TFileSystem.SECTOR_LENGTH);
-	}
-	
-	void showContent() {
-		char ch = 0;
-		byte[] content = m_sector.getData();
-		for (int i = 0; i < 256; i++) {
-			m_jlByteContent[i].setText(Utilities.toHex(content[i],2));
-			if (content[i] > 31 && content[i] < 127) ch = (char)content[i];
-			else ch = '.';
-			m_jlAsciiContent[i].setText(String.valueOf(ch));
-		}
-	}
-	
-	void goToSector(int i) throws IOException, ImageException, EOFException {
-		getSector(i);
-		showContent();
-		m_lastOffset = -1;
-		clearHighlight();
-		m_currentSector = i;
-	}
-	
-	void terminate() {
-		dispose();
-	}
-	
-	String createTextOutput() {
-		byte[] content = m_sector.getData();
-		StringBuilder sb = new StringBuilder();
-		sb.append(TIImageTool.langstr("ImageFile")).append(" ").append(m_imageName).append(", ");
-		sb.append(TIImageTool.langstr("Sector")).append(" ").append(m_currentSector).append("\n");
-		sb.append("\n");
-		for (int i=0; i < 16; i++) {
-			sb.append(Utilities.toHex(i*16, 2)).append(": ");
-			for (int j=0; j < 16; j++) {
-				sb.append(Utilities.toHex(content[i*16+j], 2)).append(" ");
-			}
-			sb.append("   ");
-			for (int j=0; j < 16; j++) {
-				char ch;
-				if (content[i*16+j] > 31 && content[i*16+j] < 127) ch = (char)content[i*16+j];
-				else ch = '.';
-				sb.append(ch);
-			}
-			sb.append("\n");
-		}
-		return sb.toString();
-	}
-	
-	/** Remove the highlight. */
-	private void clearHighlight() {
-		if (m_lastAscii) {
-			if (m_lastOffset != -1) {
-				m_jlAsciiContent[m_lastOffset].setBackground(Color.WHITE);
-			}
-		}
-		else {
-			if (m_lastOffset != -1) {
-				m_jlByteContent[m_lastOffset].setBackground(Color.WHITE);
-			}			
-		}		
-	}
-	
-	void showValue(int offset) {
-		byte[] content = m_sector.getData();
-		if (offset != -1) {
-			showValue(offset, content[offset]); 
-		}
-	}
-	
-	void showValue(int offset, byte val) {
-		byte[] content = m_sector.getData();
-		if (offset != -1) {
-			m_jlAsciiContent[offset].setText((val > 31 && val < 127)? String.valueOf((char)val) : ".");
-			m_jlByteContent[offset].setText(Utilities.toHex(content[offset],2));
-		}
-	}
-	
-	/** Clicked on a byte (left or right). */
-	void select(int offset, boolean ascii) {
-		byte[] content = m_sector.getData();
-		if (offset != m_lastOffset || ascii != m_lastAscii) {
-			// If we clicked on another byte, clear the last selection
-			clearHighlight();
-			
-			// Show the last byte (remove the underscore)
-			showValue(m_lastOffset);
-			
-			// Save the current value of this new coordinate
-			m_lastValue = content[offset];
-			m_lastOffset = offset;
-			m_lastAscii = ascii;
-			
-			// Create new highlight and underscore
-			if (ascii) {
-				// Clicked on the right
-				m_jlAsciiContent[offset].requestFocus();
-				m_jlAsciiContent[offset].setBackground(Color.YELLOW);
-				m_jlAsciiContent[offset].setText("_");
-			}
-			else {
-				// Clicked on the left
-				m_jlByteContent[offset].requestFocus();
-				m_jlByteContent[offset].setBackground(Color.YELLOW);
-				String text = Utilities.toHex(content[offset],2);
-				m_jlByteContent[offset].setText("_" + text.substring(1));
-				m_firstDigit = true;
-				m_newValue = content[offset];
-			}
-		}
-	}
-	
-	void returnPressed(boolean ascii) {
-		byte[] content = m_sector.getData();
-		if (!ascii) {
-			content[m_lastOffset] = (byte)m_newValue;
-		}
-		clearHighlight();
-		if (m_lastOffset < 255) {
-			select(m_lastOffset+1, ascii);
-		}
-	}
-	
-	void escapePressed(boolean ascii) {
-		clearHighlight();
-		showValue(m_lastOffset, (byte)m_lastValue);
-	}
-	
-	void keyPressed(char key, boolean ascii) {
-		byte[] content = m_sector.getData();		
-		if (ascii) {
-			m_jlAsciiContent[m_lastOffset].setText(String.valueOf(key));
-			m_jlByteContent[m_lastOffset].setText(Utilities.toHex(key,2));
-			content[m_lastOffset] = (byte)key;
-
-			// m_sector.dirty();    Sector or ImageSector?
-			
-			m_thereAreChanges = true;
-			clearHighlight();
-			if (m_lastOffset < 255) {
-				select(m_lastOffset+1, ascii);
-			}
-		}
-		else {
-			int val = -1;
-			if (key >= '0' && key <= '9') val = key - 48;
-			else {
-				if (key >= 'A' && key <= 'F') val = key - 55;
-				else {
-					if (key >= 'a' && key <= 'f') val = key - 87;
-				}
-			}			
-			if (val != -1) {
-				if (m_firstDigit) {
-					m_firstDigit = false;
-					m_newValue = (val << 4) | (m_newValue & 0xf);
-					String text = Utilities.toHex(m_newValue,2);
-					m_jlByteContent[m_lastOffset].setText(text.substring(0,1) + "_");
-					// m_sector.dirty();
-					m_thereAreChanges = true;
-				}
-				else {
-					m_newValue = (m_newValue & 0xf0) | val;
-					String text = Utilities.toHex(m_newValue,2);
-					m_jlByteContent[m_lastOffset].setText(text);
-					content[m_lastOffset] = (byte)m_newValue;
-					// m_sector.dirty();
-					m_thereAreChanges = true;
-					clearHighlight();
-					if (m_lastOffset < 255) {
-						select(m_lastOffset+1, ascii);
-					}
-				}
-			}
-		}
-	}
 
 	public void actionPerformed(ActionEvent ae) {
-		if (ae.getActionCommand()==SAVEAS) {
-			JFileChooser jfc = new JFileChooser();
-			
-			int nReturn = jfc.showSaveDialog(this);
-			if (nReturn == JFileChooser.APPROVE_OPTION) {
-				try {
-					File file = jfc.getSelectedFile();
-					
-					FileOutputStream fos = new FileOutputStream(file);
-					String scont = createTextOutput();
-					fos.write(scont.getBytes());
-					fos.close();
-				}
-				catch (IOException iox) {
-					JOptionPane.showMessageDialog(this, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 
-					return;
-				}
-			}
+		if (ae.getActionCommand()==CLOSE) {
+			closeFrame();
 		}
 		else {
-			if (ae.getActionCommand()==REVERT || ae.getActionCommand()==REVERTALL) {
-				escapePressed(m_lastAscii);
-				if (ae.getActionCommand()==REVERT) m_sectormap.remove(m_currentSector);
-				else m_sectormap.clear();
+			if (ae.getActionCommand()==WRITE) {
+				writeBackAll();
+			}
+			else {
 				try {
-					goToSector(m_currentSector);
+					int last = m_currentSector;
+					if (ae.getActionCommand()==BEGIN) {
+						m_currentSector = 0;
+					}
+					else {
+						if (ae.getActionCommand()==PREV) {
+							if (m_currentSector > 0) {
+								m_currentSector--;
+							}
+						}
+						else {
+							if (ae.getActionCommand()==NEXT) {
+								if ((m_lastSector < 0) || (m_currentSector < m_lastSector)) m_currentSector++;
+							}
+							else {
+								if (ae.getActionCommand()==END) {
+									if (m_lastSector > 0) 
+										m_currentSector = m_lastSector;
+								}
+							}
+						}
+					}
+					if (last != m_currentSector) {
+						m_tfSectorNumber.setText(String.valueOf(m_currentSector));
+						getSector(m_currentSector);
+						fillHexDisplay(m_sector.getData());
+						fillAsciiDisplay(m_sector.getData());
+					}
 				}
 				catch (IOException iox) {
 					iox.printStackTrace();
@@ -627,95 +327,93 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 					ix.printStackTrace();
 				}
 			}
-			else {
-				if (ae.getActionCommand()==CLOSE) {
-					closeFrame();
-				}
-				else {
-					if (ae.getActionCommand()==WRITE) {
-						writeBackAll();
-						m_thereAreChanges = false;
-					}
-					else {
-						try {
-							int last = m_currentSector;
-							clearHighlight();
-							if (ae.getActionCommand()==BEGIN) {
-								m_currentSector = 0;
-							}
-							else {
-								if (ae.getActionCommand()==PREV) {
-									if (m_currentSector > 0) {
-										m_currentSector--;
-									}
-								}
-								else {
-									if (ae.getActionCommand()==NEXT) {
-										if ((m_lastSector < 0) || (m_currentSector < m_lastSector)) m_currentSector++;
-									}
-									else {
-										if (ae.getActionCommand()==END) {
-											if (m_lastSector > 0) 
-												m_currentSector = m_lastSector;
-										}
-									}
-								}
-							}
-							if (last != m_currentSector) {
-								m_tfSector.setText(String.valueOf(m_currentSector));
-								getSector(m_currentSector);
-								showContent();
-							}
-						}
-						catch (IOException iox) {
-							iox.printStackTrace();
-						}
-						catch (ImageException ix) {
-							ix.printStackTrace();
-						}
-					}
-				}
-			}
 		}
 	}
+
+	void getSector(int i) throws IOException, ImageException {
+		m_sector = m_image.readSector(i);
+	}
+
+	void goToSector(int i) throws IOException, ImageException, EOFException {
+		getSector(i);
+		fillHexDisplay(m_sector.getData());
+		fillAsciiDisplay(m_sector.getData());
+		m_lastOffset = -1;
+		m_currentSector = i;
+	}
 	
-	private void closeFrame() {		
-		if (m_thereAreChanges) {
-			int doCheck = JOptionPane.showConfirmDialog(this, TIImageTool.langstr("UnsavedChanges") + ". " + TIImageTool.langstr("ReallyClose"), TIImageTool.langstr("Attention"), JOptionPane.ERROR_MESSAGE);
-			if (doCheck == JOptionPane.YES_OPTION) {
-				m_app.closeFrame(this);
+	public void focusGained(FocusEvent fe) {
+		// System.out.println("Focus gained");
+	}
+	
+	public void focusLost(FocusEvent fe) {
+		Component cmp = fe.getComponent();
+		boolean updated = false;
+		byte[] current = m_sector.getData();
+		
+		for (int i=0; i < 16; i++) {
+			if (cmp == m_atfHex[i]) {
+				byte[] line = parseHexContent(i);
+				for (int j=0; j < 16; j++) {
+					if (current[i*16 + j] != line[j]) updated = true;
+					current[i*16 + j] = line[j];
+				}
 			}
 		}
-		else {
-			m_app.closeFrame(this);
-		}	
+		fillAsciiDisplay(current);
+		if (updated) {
+			m_sector = new Sector(m_sector.getNumber(), current);
+			m_image.sameGeneration();
+			m_image.writeSector(m_sector);
+			m_image.nextGeneration(true);
+		}
+		// Add button "Commit"
+	}
+	
+	
+	private byte[] parseHexContent(int line) {
+		String sHex = m_atfHex[line].getText();
+		byte[] aby = new byte[16];
+		int pos = 0;
+		int val = 0;
+		String hex = "0123456789ABCDEF";
+		
+		for (int i=0; i < sHex.length(); i++) {
+			char c = sHex.charAt(i);
+			if (c > 32) {
+				if (c >= 96) c = (char)(c - 32);
+				int digit = hex.indexOf(c);
+				if (digit > -1) {
+					val = (val << 4) | digit;
+					pos++;
+					if (pos > 32) {
+						System.out.println("Clipping excess bytes");
+						break;
+					}
+					if ((pos % 2) == 0) {
+						aby[pos/2 - 1] = (byte)val;
+						val = 0;
+					}
+				}
+			}
+		}
+
+		// Clean line
+		StringBuilder sb = new StringBuilder();
+		for (int i=0; i < 16; i++) {
+			sb.append(Utilities.toHex(aby[i],2));
+			if (i < 15) sb.append(" ");
+		}
+		 m_atfHex[line].setText(sb.toString());
+		return aby;
 	}
 	
 	private void writeBackAll() {
-	//	try {
-			for (Integer i : m_sectormap.keySet()) {
-				Sector sect = m_sectormap.get(i);
-				/* if (sect.changed()) {
-					// System.out.println("Write back sector " + i);
-					System.out.println("FIXME: SectorEditFrame.writeBackAll");
-					// m_image.writeSector(i, sect.getBytes());  // directly written through
-				} */
-			}
-			Thread.currentThread().dumpStack();
-			// m_image.flush();
-			
-			// m_image.reopenForRead();
-			m_image.nextGeneration(true);
-//		}
-		/* catch (ImageException ix) {
-			// Sector not found
-			ix.printStackTrace();
-			JOptionPane.showMessageDialog(this, ix.getMessage(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
-		} */
-	/*	catch (IOException iox) {
-			// More low-level
-			iox.printStackTrace();
-			JOptionPane.showMessageDialog(this, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
-		} */
+		try {
+			((FileImageFormat)m_image).saveImage();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }

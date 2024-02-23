@@ -214,6 +214,8 @@ public class ImportContentAction extends Activity {
 				bValid = false;				
 			}
 		}
+		if (!bOK) dirCurrent.getVolume().rollback();
+		
 		imagetool.refresh(dvCurrent);
 		return bOK;
 	}

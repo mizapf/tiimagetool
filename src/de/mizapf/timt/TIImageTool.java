@@ -55,12 +55,7 @@
     [ ] Dis/Fix 255 display (and pos. other files) should be improved
 	
     Files
-	[x] Create archive in newly created image (not loaded) triggers Exception (java.lang.IndexOutOfBoundsException: Index: -1
-        at java.base/java.util.Collections$EmptyList.get(Collections.java:4483)
-        at de.mizapf.timt.ui.DirectoryPanel.getSelectedEntries(DirectoryPanel.java:299))
-    [x] Create archive fails with same exception when the current folder
-        has no files, only directories
-    [ ] Cannot drag&drop into Archive
+    [-] Cannot drag&drop into Archive
     [x] YAPP G7 cannot be loaded; treated wrongly as G6 (ImageFrame:246)
     [ ] Show 192 line graphics without black bar (192 line detection seems to be broken: Check whether possible at all)
 	[ ] Show embedded machine language in BASIC (or indicate at least)
@@ -75,8 +70,8 @@
 	[ ] Update hints
 	
     Current:
-    [ ] Allow Return key for New floppy image
-    [ ] Allow Return key for new element
+    [x] Allow Return key for New floppy image
+    [x] Allow Return key for new element
     [ ] Encode control characters in files from escape sequence (like §81 -> CTRL-a)
     [x] Use empty sector pattern 
     [x] Save As is active after closing all open images
