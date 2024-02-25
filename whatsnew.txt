@@ -1,0 +1,43 @@
+What's new?
+
+==== 3.0.0 (March 2024)
+
+1. All image processing is now done in memory. Nothing is changed in the image 
+file until explicitly saved
+2. "Save" and "Save as" were added. These operations commit all changes to the
+image file.
+3. The disk image format (sector dump/track dump/HFE for floopy disks, raw/CHD
+for hard disks) must be chosen at the time of saving, not at the time of creation.
+4. Conversions between formats is now handled by "Save as" and choosing another 
+format.
+5. For quick tests, you can simply create a floppy image in memory and discard it
+without saving.
+6. All file/directory operations on images may be undone, and also be redone before
+saving.
+7. MAME CHD format conversions were dropped, as all HD images are automatically
+saved as v5.
+8. Conversion between RAW and CHD formats were dropped, as thosae can now be 
+chosen with "Save as".
+9. SCSI images are supported (physical 512 bytes sectors)
+10. IDE images are supported, also partitioned, and partitions can be edited.
+11. Editing of CF7 layout (adding/removing volumes)
+12. Hard disk image layouts can be selected from predefined geometries or 
+directly defined.
+13. Image file suffixes may be configured for file chooser dialogs
+14. Several font size issues were fixed
+15. Directory views offer a blank space below the listing to allow the user to  
+get the general context menu
+16. Choosing an escape character in the TI character set now issues a warning.
+17. Fixed right-click behavior
+18. Text output window keeps its size
+19. YAPP G7 graphics format is supported
+20. Sector editor redesigned (simplified and faster)
+21. Return key can be used in several dialog windows as "OK"
+22. Empty patterns (one to several bytes) can be defined for floppies and hard disks
+separately.
+23. Fixes for copy/move
+24. Text display can now be edited. This means you can simply change text and BASIC 
+files on the image.
+25. New background image.
+
+

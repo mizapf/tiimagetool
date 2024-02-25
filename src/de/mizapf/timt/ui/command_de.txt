@@ -3,6 +3,8 @@ Funktionsübersicht
 ------------------
 
 <Imagedatei> ist eine Imagedatei in einem unterstützen Format. 
+CF7-Volumes können mit angefügtem "#n" gewählt werden.
+
 
 Verzeichnis anzeigen:
    dir <Imagedatei> [<Unterverzeichnis>]
@@ -11,5 +13,9 @@ Verzeichnis anzeigen:
 
 Ausgeben von Dateiinhalten: (Datei kann einfacher Name oder eine Pfadangabe wie UNTERV.DATEI sein)
    type <Imagedatei> <Datei>      
-   list <Imagedatei> <Basicdatei> 
+   list <Imagedatei> <Basicdatei>
+
+Export und Import
+   export <imagefile> [<subdir>]   exportiert in das aktuelle Verzeichnis
+   import <imagefile> [<subdir>]   importiert alle Dateien im aktuellen Verzeichnis
 

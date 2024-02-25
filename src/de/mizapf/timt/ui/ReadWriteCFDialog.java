@@ -36,17 +36,20 @@ class ReadWriteCFDialog extends ToolDialog {
 
 	TIImageTool imagetool;
 	JFrame m_parent;
-	JTextField m_tfDevice;
+/*	JTextField m_tfDevice;
 	JTextField m_tfImageFile;
 	JTextField m_tfddpath;
-	boolean m_read;
 	
 	private final static int DEV = 1;
 	private final static int FILE = 2;
 	private final static int DD = 3;
 	
 	JTextField m_tfCommandLine;
-			
+*/			
+	JTextArea m_taExplain;
+	JTextField m_tfCommand;
+	boolean m_read;
+
 	ReadWriteCFDialog(JFrame owner, TIImageTool timt, boolean read) {
 		super(owner, TIImageTool.langstr(read? "ReadWriteCFTitleR" : "ReadWriteCFTitleW"));
 		imagetool = timt;
@@ -54,25 +57,66 @@ class ReadWriteCFDialog extends ToolDialog {
 		m_read = read;
 	}	
 	
+	public void createGui(Font font) {
+		setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+		add(Box.createVerticalStrut(10));
+		/*
+		m_taExplain = new JTextArea(TIImageTool.langstr(m_read? "Warning.CFReading" : "Warning.CFWriting"));
+		m_taExplain.setFont(imagetool.dialogFont);
+		m_taExplain.setLineWrap(true);
+		m_taExplain.setWrapStyleWord(true);
+		m_taExplain.setBackground(new Color(10,10,10,0));
+		add(m_taExplain);
+		*/
+		
+		putMultiTextLine(this, TIImageTool.langstr(m_read? "Warning.CFReading1" : "Warning.CFWriting1"));
+		add(Box.createVerticalStrut(10));
+		putMultiTextLine(this, TIImageTool.langstr(m_read? "Warning.CFReading2" : "Warning.CFWriting2"));
+		add(Box.createVerticalStrut(10));
+		int type = imagetool.getOperatingSystem();
+		if (type==WINDOWS) {
+			add(Box.createVerticalStrut(10));
+			m_tfCommand = putTextField(this, TIImageTool.langstr("Warning.CFReading3Win"), TIImageTool.langstr(m_read? "Warning.CFReadingExWin" : "Warning.CFWritingExWin"), 0 ,0);
+			putMultiTextLine(this, TIImageTool.langstr(m_read? "Warning.CFReading4Win" : "Warning.CFWriting4Win"));
+		}
+		else {
+			add(Box.createVerticalStrut(10));
+			m_tfCommand = putTextField(this, TIImageTool.langstr("Warning.CFReading3Lin"), TIImageTool.langstr(m_read? "Warning.CFReadingExLin" : "Warning.CFWritingExLin"), 0 ,0);
+			putMultiTextLine(this, TIImageTool.langstr(m_read? "Warning.CFReading4Lin" : "Warning.CFWriting4Lin"));
+		}
+		m_tfCommand.setEditable(false);
+		m_tfCommand.setFont(imagetool.contentFont);
+		m_tfCommand.setBackground(Color.WHITE);
+		putMultiTextLine(this, TIImageTool.langstr("Warning.CFReading5"));
+	
+		add(Box.createVerticalStrut(10));
+		
+		if (!m_read) putMultiTextLine(this, "!" + TIImageTool.langstr("Warning.CFWriting6"));
+		
+		addButtons(ONLY_OK);
+	}
+
+	
+	
 /*
-	| 	Read / Write CF card								|
+//      | 	Read / Write CF card								|
+// 
+// 		Provide the CF path. For Windows this is something like "e:", 
+//		for Linux or Mac this looks like "/dev/sdc"
+// 
+// 		[1] CF device   _________   [btn]
+// 
+// 		[2] File on file system    [.....] [btn]
+// 
+// 		Path to dd program  ___/usr/bin/dd_____
+// 
+// 		Command line ___dd.exe if=\\.\[1] of=[2] bs=4096 _____
+// 		Command line ___kdesu dd if=[1] of=[2] bs=4096 _____
+// 
+// 		 +-------+			+-----------+
+//		 |	OK	 |		    |	Cancel	|
+//		 +-------+         +-----------+
 
-		Provide the CF path. For Windows this is something like "e:", 
-		for Linux or Mac this looks like "/dev/sdc"
-
-		[1] CF device   _________   [btn]
-		
-		[2] File on file system    [.....] [btn]
-		
-		Path to dd program  ___/usr/bin/dd_____
-		
-		Command line ___dd.exe if=\\.\[1] of=[2] bs=4096 _____
-		Command line ___kdesu dd if=[1] of=[2] bs=4096 _____
-		
-				+-------+			+-----------+
-				|	OK	|			|	Cancel	|
-				+-------+           +-----------+
-*/	
 	public void createGui(Font font) {
 
 		prepareGui();
@@ -142,7 +186,7 @@ class ReadWriteCFDialog extends ToolDialog {
 		m_tfDevice = new JTextField(lastPath);
 
 		if (m_read) {
-			addChoiceLineWithAuto(nColumnWidth, devprompt, DEVLINE, DEV, m_tfDevice, 45);
+			addChoiceLine(nColumnWidth, devprompt, DEVLINE, DEV, m_tfDevice, 45);
 			add(Box.createVerticalStrut(10));
 			addChoiceLine(nColumnWidth, fileprompt, FILELINE, FILE, m_tfImageFile, 32);
 			add(Box.createVerticalStrut(10));
@@ -150,7 +194,7 @@ class ReadWriteCFDialog extends ToolDialog {
 		else {
 			addChoiceLine(nColumnWidth, fileprompt, FILELINE, FILE, m_tfImageFile, 32);
 			add(Box.createVerticalStrut(10));
-			addChoiceLineWithAuto(nColumnWidth, devprompt, DEVLINE, DEV, m_tfDevice, 45);
+			addChoiceLine(nColumnWidth, devprompt, DEVLINE, DEV, m_tfDevice, 45);
 			add(Box.createVerticalStrut(10));
 		}
 
@@ -241,9 +285,7 @@ class ReadWriteCFDialog extends ToolDialog {
 		JFileChooser jfc = null;
 		int type = imagetool.getOperatingSystem();
 		if (ae.getSource()==m_btnOK) {
-			/* 
-			 * TODO: Check if command line has content and check if output file is set. Disable OK button if not.
-			 */
+			// TODO: Check if command line has content and check if output file is set. Disable OK button if not.
 			m_bSet = true;
 			dispose();
 		}
@@ -347,9 +389,9 @@ class ReadWriteCFDialog extends ToolDialog {
 		}
 	}
 	
-	/* This method generates an String array of commands to execute a device 
-	   copy process with the Unix 'dd' on various operating systems.
-	*/
+	// This method generates an String array of commands to execute a device 
+	//   copy process with the Unix 'dd' on various operating systems.
+	//
 	String[] getCommandLine() {
 		String[] result = null;
 		int type = imagetool.getOperatingSystem();
@@ -408,4 +450,5 @@ class ReadWriteCFDialog extends ToolDialog {
 		}
 		return result;			
 	}
+	*/
 }

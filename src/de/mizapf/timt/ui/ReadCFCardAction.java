@@ -24,8 +24,9 @@ package de.mizapf.timt.ui;
 
 import java.awt.Cursor;
 import java.io.*;
+import java.awt.*;
 
-import javax.swing.JOptionPane;
+import javax.swing.*;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.util.*;
 import de.mizapf.timt.TIImageTool;
@@ -37,6 +38,9 @@ import java.util.ArrayList;
 
    ProcessBuilder pb = new ProcessBuilder("xterm", "-e", "sudo sh -c \"touch testfile; chown michael testfile\"");
 
+   Since 3.0: Excluded from code base. CF7 is not used that much anymore since
+   TIPI is available, and it is a mess to find out whether the required tools
+   are available.
 */
 
 public class ReadCFCardAction extends Activity {
@@ -51,121 +55,12 @@ public class ReadCFCardAction extends Activity {
 	
 	public void go() {
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-		Runtime runtime = Runtime.getRuntime();
-		
-		// Find missing commands
-		if (imagetool.getOperatingSystem()==TIImageTool.WINDOWS) {
-			String ddpath = settings.getPropertyString(TIImageTool.DDPATH);
-			if (ddpath == null) ddpath = "";
-			if (ddpath.length() > 0) {
-				// Test whether the path is still valid
-				File ddfile = new File(ddpath);
-				if (!ddfile.exists()) {
-					ddpath = "";
-					settings.put(TIImageTool.DDPATH, ddpath);
-				}
-			}
-			
-			// Path is not valid; let's search for the proper path
-			if (ddpath.length()==0) {
-				FindCFUtilDialog findd = new FindCFUtilDialog(m_parent, imagetool);
-				findd.setSettings(settings);
-				findd.createGui(imagetool.boldFont);
-				findd.setVisible(true);
-				
-				if (!findd.confirmed()) {
-					m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-					return;
-				}
-				else {
-					ddpath = findd.getDDPath();
-					if (ddpath == null) ddpath = "";
-					settings.put(TIImageTool.DDPATH, ddpath);
-				}
-				ddpath = settings.getPropertyString(TIImageTool.DDPATH);
-			}
-			
-			if (ddpath.length()==0) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ReadWriteCFNoDD"), TIImageTool.langstr("ReadCFTitle"), JOptionPane.ERROR_MESSAGE);
-				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));				
-				return;
-			}
-		}
-		else {
-			// If we're on MAC/UNIX, check whether the chown/dd(/gksu/kdesu) tools were found
-			if (!imagetool.allToolsFound()) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ReadWriteCFNoUtils"), TIImageTool.langstr("ReadCFTitle"), JOptionPane.ERROR_MESSAGE);				
-				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));				
-				return;
-			}
-		}
-				
-		// Continue
 
 		ReadWriteCFDialog rwd = new ReadWriteCFDialog(m_parent, imagetool, true);
 
 		rwd.setSettings(settings);
 		rwd.createGui(imagetool.boldFont);
 		rwd.setVisible(true);
-		
-		if (rwd.confirmed()) {
-			String[] commands = rwd.getCommandLine();
-			if (commands == null || commands.length < 3) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("AbortCommand"), TIImageTool.langstr("ReadCFTitle"), JOptionPane.ERROR_MESSAGE);
-			} 
-			else {
-				// for (String s: commands) System.out.println("command = " + s);
-				String targetImage = rwd.getTargetImage();
-				File target = new File(targetImage); 
-				if (target.exists()) {
-					int nRet = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("ExistsOverwrite"), TIImageTool.langstr("ReadCFTitle"), JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-					if (nRet == JOptionPane.NO_OPTION) {
-						m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-						return;
-					}
-				}
-				
-				try {
-					long startTime = System.currentTimeMillis();
-					Process p = runtime.exec(commands, null, null);
-					WaitForCF7Dialog wd = new WaitForCF7Dialog(m_parent, imagetool, true);
-					wd.createGui(imagetool.boldFont);
-					wd.setVisible(true);
-					System.out.println("Starting CF operation");
-					p.waitFor();
-					System.out.println("CF operation completed");
-					wd.dispose();
-					long endTime = System.currentTimeMillis();
-					int exit = p.exitValue();
-					if (exit == 0) {
-						// Check whether the image file was created
-						if (endTime - startTime < 5000) {
-							// If it takes less than 5 secs, this obviously failed. 
-							// Looks like an ugly hack, but this should be a safe 
-							// way to find it out for different OS
-							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ReadCFFailed"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-						}
-						else {
-							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ReadCFSuccess"), TIImageTool.langstr("ReadCFTitle"), JOptionPane.INFORMATION_MESSAGE);
-						}
-					}
-					else {
-						// Only effective for the immediate command (e.g. kdesu)
-						JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("ReadCFFailed"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-					}
-				}
-				catch (IOException iox) {
-					// iox.printStackTrace();
-					// Linux: java.io.IOException: Cannot run program "xxx": error=2, Datei oder Verzeichnis nicht gefunden
-					// Windows: java.io.IOException: Cannot run program "xxx": CreateProcess error=2, Das System kann die angegebene Datei nicht finden
-					JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("DDFailed"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
-				}
-				catch (InterruptedException ix) {
-					ix.printStackTrace();
-				}
-			}
-		}
-		
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 }

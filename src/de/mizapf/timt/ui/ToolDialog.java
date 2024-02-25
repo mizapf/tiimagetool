@@ -471,14 +471,14 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		return arb;
 	}
 
-	protected void addChoiceLineWithAuto(int nColumnWidth, String prompt, int line, int number, JTextField textField, int width) {
+/*	protected void addChoiceLineWithAuto(int nColumnWidth, String prompt, int line, int number, JTextField textField, int width) {
 		addChoiceLineAuto(nColumnWidth, prompt, line, number, textField, width, true);
 	}
 
 	protected void addChoiceLine(int nColumnWidth, String prompt, int line, int number, JTextField textField, int width) {
-		addChoiceLineAuto(nColumnWidth, prompt, line, number, textField, width, false);
+		addChoiceLineAuto(nColumnWidth, prompt, line, number, textField, width);
 	}
-
+*/
 	protected void addSearchLine(int nColumnWidth, String prompt, JTextField textField) {
 		JButton searchbutton = null;
 		Box box = new Box(BoxLayout.X_AXIS);
@@ -515,7 +515,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		add(Box.createVerticalStrut(TIImageTool.dialogHeight));		
 	}
 	
-	protected void addChoiceLineAuto(int nColumnWidth, String prompt, int line, int number, JTextField textField, int width, boolean withAuto) {
+	protected void addChoiceLine(int nColumnWidth, String prompt, int line, int number, JTextField textField, int width) {
 
 		JButton button = null;
 		JButton searchbutton = null;
@@ -557,7 +557,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 			button = new JButton(diskicon);
 			
 			searchicon = new ImageIcon(searchurl);
-			searchbutton = new JButton(searchicon);			
+		//	searchbutton = new JButton(searchicon);			
 		} 
 		else {
 			System.err.println(TIImageTool.langstr("NoImage") + " " + iconurl);
@@ -580,7 +580,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		box.add(textField);
 		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
 		
-		if (line==DEVLINE) {
+/*		if (line==DEVLINE) {
 			searchbutton.setActionCommand("AUTO");
 			searchbutton.addActionListener(this);
 			searchbutton.setMinimumSize(new Dimension(38, 35));
@@ -588,7 +588,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 			searchbutton.setMaximumSize(new Dimension(38, 35));
 			box.add(searchbutton);		
 		}
-		
+*/		
 		add(box);
 		add(Box.createVerticalStrut(TIImageTool.dialogHeight));
 	}

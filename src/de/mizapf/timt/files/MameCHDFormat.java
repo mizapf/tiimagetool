@@ -268,6 +268,7 @@ public class MameCHDFormat extends HarddiskImageFormat {
 				throw new ImageException(String.format(TIImageTool.langstr("MameCHDTooLow"), m_nVersion));
 				
 			if (m_nVersion == 4) {
+				System.out.println(TIImageTool.langstr("Warning.CHDv4"));
 				m_nHunkLength = Utilities.getInt32be(head, 44);
 				m_nMapOffset = head.length;
 				

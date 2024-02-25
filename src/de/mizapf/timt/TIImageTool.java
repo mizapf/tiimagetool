@@ -28,8 +28,8 @@
 	[x] IDE harddisk support (incl. partitions)
 	[x] Add default hard disk format selection ("Seagate ST-225 | ... | maxAU8 | maxAU16 | user-defined")
 	[?] Add check for CF card read (check for newly created image file)
-	[ ] Search for CF7 card and for dd / chown automatically.
-	[ ] Check for CF7 open issues in Windows
+	[-] Search for CF7 card and for dd / chown automatically.
+	[-] Check for CF7 open issues in Windows
 	[x] "Please wait" window for CF7
 	[x] Define suffixes for images
 	[x] Add Edit CF7 to utilities (add/del/rename volumes)
@@ -63,7 +63,7 @@
 
     Utils
     [x] Next sector does not work in Sector Editor with raw file
-    [ ] Write back with sector editor
+    [x] Write back with sector editor
 	[ ] Cartridge creator (RPK)
 	[ ] Add access to xdt99
 	[x] Change MacOS defaults (see below in this file)
@@ -77,14 +77,15 @@
     [x] Save As is active after closing all open images
     [x] Complete undo
     [x] Complete redo
-    [x] Restore all floppy formats
-    [x] Restore all hd formats
   	[x] Unformatted image (998dd.dsk) can be opened without warning
   	[?] Abort copy/move should not touch the destination image
   	[x] Search function
   	[x] Rebuild image tree (-> undo/redo)
   	[x] Hard disk image contains floppy disk filling
   	[x] Use a full editor for textual files
+  	[ ] Fix CommandShell
+  	[x] Drop CHD conversion (saving converts to v5)
+  	[x] Drop RAW/CHD conversion
 */
 
 package de.mizapf.timt;
@@ -240,7 +241,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenuItem m_iToScsi;
 	JMenuItem m_iToHfdc;
 	JMenuItem m_iSearch;
-	JMenuItem m_iChangeCHDFormat;
 	JMenuItem m_iReadCF;
 	JMenuItem m_iWriteCF;
 	JMenuItem m_iEditCF;
@@ -334,9 +334,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	// Title icon
 	public ImageIcon m_frameicon = null;
-	
-	// Have we found all required utilities for CF operations?
-	boolean m_utilsfound;
 	
 	public long m_maxMemory;
 		
@@ -464,12 +461,10 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_iNewFloppy = createMenuItem(new NewFloppyImageAction());
 			m_iNewHD = createMenuItem(new NewHDImageAction());
 			m_iNewIDE = createMenuItem(new NewIDEImageAction());
-//			m_iNewCF7Vol = createMenuItem(new NewCF7VolumeAction());
 			m_iNewCF7Img = createMenuItem(new NewCF7ImageAction());
 			m_mNew.add(m_iNewFloppy);
 			m_mNew.add(m_iNewHD);
 			m_mNew.add(m_iNewIDE);
-//			m_mNew.add(m_iNewCF7Vol);
 			m_mNew.add(m_iNewCF7Img);
 			m_iOpen = createMenuItem(new OpenImageAction());
 			m_mFile.add(m_iOpen);
@@ -559,9 +554,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			m_iToScsi = createMenuItem(new ConvertToSCSIAction());
 			m_mUtility.add(m_iToScsi);
-			
-			m_iChangeCHDFormat = createMenuItem(new ChangeCHDFormatAction());
-			m_mUtility.add(m_iChangeCHDFormat);
 			
 			m_mUtility.addSeparator();
 			m_iSerialBridge = createMenuItem(new SerialBridgeAction());
@@ -1282,7 +1274,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			System.err.println(langstr("ParseError") + ": " + nfx.getMessage());
 		}		
 		
-		findPathsForCF();
 		m_maxMemory = Runtime.getRuntime().freeMemory();
 
 		// SectorCache.setGen(0);
@@ -1302,82 +1293,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			DirectoryPanel dp = (DirectoryPanel)m_jtViews.getComponentAt(nIndex);
 			dp.updateMemoryInfo(nPercent);
 		}
-	}
-	
-	public boolean allToolsFound() {
-		return m_utilsfound;
-	}
-	
-	private void findPathsForCF() {
-		// Find chown, dd, graphical su
-		m_utilsfound = true;
-		if (getOperatingSystem() != WINDOWS) {
-			String chown = m_Settings.getPropertyString(COPATH);
-			File flChown = null;
-			if (chown != null) flChown = new File(chown);
-			if (flChown == null || !flChown.exists()) {
-				System.out.print("Searching chown command ... ");
-				// Need to find chown
-				FileFinder ff = new FileFinder("/usr/bin;/usr/sbin;/bin;/sbin");
-				String chownfound = ff.find("chown");
-				if (chownfound == null) {
-					System.out.println("not found");
-					m_utilsfound = false;
-				}
-				else {
-					m_Settings.put(COPATH, chownfound);
-					System.out.println("found");
-				}
-			}
-			
-			String dd = m_Settings.getPropertyString(DDPATH);
-			File flDD = null; 
-			if (dd != null) flDD = new File(dd);
-			if (flDD == null || !flDD.exists()) {
-				System.out.print("Searching dd command ... ");
-				// Need to find dd
-				FileFinder ff = new FileFinder("/usr/bin;/usr/sbin;/bin;/sbin");
-				String ddfound = ff.find("dd");
-				if (ddfound == null) {
-					System.out.println("not found");
-					m_utilsfound = false;
-				}
-				else {
-					m_Settings.put(DDPATH, ddfound);
-					System.out.println("found");
-				}									
-			}
-			
-			if (getOperatingSystem() == UNIX) {
-				// Find graphical su for Linux
-				// MacOS uses osascript
-				String gsu = m_Settings.getPropertyString(SUPATH);
-				File flgsu = null;
-				if (gsu != null) flgsu = new File(gsu);
-				if (flgsu == null || !flgsu.exists()) {
-					System.out.print("Searching graphical su command (gksu or kdesu) ... ");
-					// Need to find kdesu
-					FileFinder ff = new FileFinder("/usr/bin;/usr/sbin;/bin;/sbin");
-					String sufound = ff.find("kdesu");
-					// If not found, try to find gksu
-					if (sufound == null) {
-						sufound = ff.find("gksu");
-						if (sufound==null) {
-							System.out.println("not found");
-							m_utilsfound = false;
-						}
-						else {
-							m_Settings.put(SUPATH, sufound);
-							System.out.println("found");
-						}
-					}
-					else {
-						m_Settings.put(SUPATH, sufound);
-						System.out.println("found");
-					}
-				}
-			}
-		}		
 	}
 	
 	public JFrame getMainFrame() {
