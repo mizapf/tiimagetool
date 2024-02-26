@@ -36,9 +36,9 @@
 	[x] Allow for up to 8 IDE partitions (new Nov 2023)
 
 	Disassembler
-	[ ] Disassembler problem in symbolic mode; see disassembler file
+	[?] Disassembler problem in symbolic mode; see disassembler file
     [?] Disassembly stops 6 bytes too early when using header
-    [ ] IDT label in Disassembler
+    [?] IDT label in Disassembler
 
     Display
 	    Fix font size:
@@ -60,32 +60,26 @@
     [ ] Show 192 line graphics without black bar (192 line detection seems to be broken: Check whether possible at all)
 	[ ] Show embedded machine language in BASIC (or indicate at least)
 	[?] Allow for more DIS/VAR formats to be viewed (needs test)
+    [x] Use empty sector pattern 
 
     Utils
     [x] Next sector does not work in Sector Editor with raw file
     [x] Write back with sector editor
 	[ ] Cartridge creator (RPK)
-	[ ] Add access to xdt99
 	[x] Change MacOS defaults (see below in this file)
 	[ ] Update hints
-	
-    Current:
     [x] Allow Return key for New floppy image
     [x] Allow Return key for new element
     [ ] Encode control characters in files from escape sequence (like §81 -> CTRL-a)
-    [x] Use empty sector pattern 
-    [x] Save As is active after closing all open images
     [x] Complete undo
     [x] Complete redo
-  	[x] Unformatted image (998dd.dsk) can be opened without warning
-  	[?] Abort copy/move should not touch the destination image
-  	[x] Search function
-  	[x] Rebuild image tree (-> undo/redo)
-  	[x] Hard disk image contains floppy disk filling
   	[x] Use a full editor for textual files
-  	[ ] Fix CommandShell
   	[x] Drop CHD conversion (saving converts to v5)
   	[x] Drop RAW/CHD conversion
+	
+    Open bugs:
+  	[ ] Fix CommandShell
+  	[ ] Install GeneveOS is outdated
 */
 
 package de.mizapf.timt;
@@ -244,8 +238,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JMenuItem m_iReadCF;
 	JMenuItem m_iWriteCF;
 	JMenuItem m_iEditCF;
-	JMenuItem m_iCHDToRaw;
-	JMenuItem m_iRawToCHD;
 	JMenuItem m_iInstallGenOS;
 	JMenuItem m_iSerialBridge;
 

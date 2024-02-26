@@ -84,7 +84,7 @@ public class ImageFrame extends JFrame {
 		m_abyContent = abyContent;
 		m_app = app;
 		if (m_app != null) m_app.registerFrame(this);
-		System.out.println(Utilities.hexdump(abyContent));
+		// System.out.println(Utilities.hexdump(abyContent));
 	}
 	
 	public static void main(String[] arg) {
@@ -254,10 +254,11 @@ public class ImageFrame extends JFrame {
 		// Now add the lines
 		while (!bDone) {
 			int nValue = Utilities.getInt16(m_abyContent, nPos);
-			if (nColumn==0) {
+			/* if (nColumn==0) {
 				System.out.print("\nRow " + nRow + ": ");
-			}
+			} 
 			System.out.print(Utilities.toHex(nValue, 4) + " ");
+			*/
 			nPos += 2;
 			int nColor = 0;
 			int nMaxColumn = g6? 512 : 256;
@@ -293,12 +294,12 @@ public class ImageFrame extends JFrame {
 				nRow++;
 			}
 			if (nRow == m_nRows) {
-				System.out.println("Completed image with " + nRow + " rows, mode " + (g6? "G6" : "G7"));
+				// System.out.println("Completed image with " + nRow + " rows, mode " + (g6? "G6" : "G7"));
 				bDone = true;
 			}
 			else {
 				if (nPos >= m_abyContent.length) {
-					System.out.println("Picture clipped at row " + nRow + ", mode " + (g6? "G6" : "G7"));
+					// System.out.println("Picture clipped at row " + nRow + ", mode " + (g6? "G6" : "G7"));
 					bDone = true;
 				}
 			}

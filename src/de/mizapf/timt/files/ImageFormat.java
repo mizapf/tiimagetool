@@ -209,7 +209,7 @@ public abstract class ImageFormat  {
 		for (Class<?> cls : m_formatClass) {
 			try {
 				if (cls != null) {
-					System.out.println("Trying " + cls.getName()); 
+					// System.out.println("Trying " + cls.getName()); 
 					Method vote = cls.getDeclaredMethod("vote", String.class);
 					if (((Integer)vote.invoke(null, sFile)).intValue() > 50) { 
 						Constructor<?> cons = cls.getConstructor(String.class);

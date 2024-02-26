@@ -35,6 +35,8 @@ public class AllocationMap implements Cloneable {
 	static final int EVENLONGER = -1; 
 	static final int NOTFOUND = -1; 
 	
+	private final static boolean DEBUG = false;
+	
 	/** Creates a new allocation map. 
 		@param nAU Number of allocation units
 		@param nAUSize Length of AU
@@ -122,7 +124,7 @@ public class AllocationMap implements Cloneable {
 	}
 	
 	public void allocateAU(int nUnit) {
-		System.out.println("Allocate unit " + nUnit);
+		if (DEBUG) System.out.println("Allocate unit " + nUnit);
 		if (nUnit < m_nLength) {
 			if (m_bFloppy) {
 				m_abyMap[nUnit/8] |= (1 << (nUnit%8));			
@@ -140,7 +142,7 @@ public class AllocationMap implements Cloneable {
 		@param it Interval (referring to sectors)
 	*/
 	public void allocate(Interval it) {
-		System.out.println("Allocate interval (sectors) = [" + it.start + ", "+ it.end + "]");
+		if (DEBUG) System.out.println("Allocate interval (sectors) = [" + it.start + ", "+ it.end + "]");
 		int nStartAU = it.start/m_nAUSize;
 		int nEndAU = it.end/m_nAUSize;
 		for (int i=nStartAU; i <= nEndAU; i++) allocateAU(i);		
@@ -158,7 +160,7 @@ public class AllocationMap implements Cloneable {
 		else  
 			throw new IndexOutOfBoundsException(String.valueOf(nUnit));
 
-		System.out.println("Deallocate unit " + nUnit);
+		if (DEBUG) System.out.println("Deallocate unit " + nUnit);
 	}
 
 	/** Deallocates the smallest set of AUs to contain the interval. 
@@ -168,7 +170,7 @@ public class AllocationMap implements Cloneable {
 		int nStartAU = it.start/m_nAUSize;
 		int nEndAU = it.end/m_nAUSize;
 		for (int i=nStartAU; i <= nEndAU; i++) deallocate(i);	
-		System.out.println("Deallocate interval (sectors) = [" + it.start + ", "+ it.end + "]");
+		if (DEBUG) System.out.println("Deallocate interval (sectors) = [" + it.start + ", "+ it.end + "]");
 	}
 	
 	public boolean hasAllocated(int nUnit) {

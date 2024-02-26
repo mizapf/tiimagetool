@@ -32,6 +32,50 @@ import de.mizapf.timt.util.*;
 import de.mizapf.timt.TIImageTool;
 
 public class InstallGenOSAction extends Activity {
+	
+	/*  
+	    0.98: other FDD   -> Floppy boot: SYSTEM/SYS in DSK1.
+	          HFDC        -> Floppy boot: LOAD-MFM as LOAD/SYS in DSK1., SYSTEM-SYS in DSK1.
+	                         HD boot:     LOAD-MFM as LOAD/SYS in HDS1.DSK1., SYSTEM-SYS in HDS1.
+	          SCSI        -> Floppy boot: SYSTEM/SYS in DSK1.
+	                         HD boot:     no direct support (use custom bootloader)
+	          IDE         -> Floppy boot: SYSTEM/SYS in DSK1.
+	                         HD boot:     no direct support (use custom bootloader)
+	          
+	    0.99: same as 2.00
+	          
+	    1.00: other FDD   -> Floppy boot: SYSTEM/SYS in DSK1.
+	          HFDC        -> Floppy boot: LOAD-MFM as LOAD/SYS in DSK1., SYSTEM-SYS in DSK1.
+	                         HD boot:     LOAD-MFM as LOAD/SYS in HDS1.DSK1., SYSTEM-SYS in HDS1.	                         
+	          SCSI        -> Floppy boot: SYSTEM/SYS in DSK1. 
+	                         HD boot:     LOAD-SCS as SCSI/SYS in SCS1. and SYSTEM-SYS in SCS1.
+	          IDE         -> Floppy boot: SYSTEM/SYS in DSK1.
+	                         HD boot:     no direct support (use custom bootloader)
+	                    
+	    2.00: other FDD   -> Floppy boot: SYSTEM-SYS in DSK1.
+ 	          HFDC        -> Floppy boot: LOAD-MFM in DSK1., SYSTEM-SYS in DSK1.
+	                         HD boot:     LOAD-MFM in HDS1.DSK1., SYSTEM-SYS in HDS1.
+	          SCSI        -> Floppy boot: SYSTEM-SYS in DSK1.
+	                         HD boot:     LOAD-SCS in SCS1., SYSTEM-SYS in SCS1.
+	          IDE         -> Floppy boot: SYSTEM-SYS in DSK1.
+	                         HD boot:     LOAD-IDE in IDE1., SYSTEM-SYS in IDE1.
+	                         
+	                         
+       The formerly used SCSI/SYS (2.1) leads to a CRC failure with EPROM 1.00,
+       and does not work at all with EPROM 2.00.
+
+       In order to boot, IDE and SCSI do NOT need a floppy controller to be present.
+       (tested for 0.99, 1.00 (SCSI only), 2.00)
+       
+       AUTOEXEC is only taken from DSK1 for SCSI and IDE. Only HFDC loads 
+       AUTOEXEC from the hard disk (tested for all EPROM versions).
+       
+       TIPI: AUTOEXEC is loaded correctly from TIPI. No floppy controller seems
+       to be required.
+       
+	*/
+	
+	
 
 	private final static String SYSTEMSYS = "/de/mizapf/timt/util/system_sys_redist.tfi";
 	private final static String LOADSYS = "/de/mizapf/timt/util/load_sys_redist.tfi";

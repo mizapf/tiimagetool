@@ -22,10 +22,13 @@ package de.mizapf.timt;
 import de.mizapf.timt.files.*;
 import de.mizapf.timt.basic.BasicLine;
 import de.mizapf.timt.util.*;
+import de.mizapf.timt.ui.Settings;
 import java.util.*;
 import java.io.*;
 
 public class CommandShell {
+
+	Settings m_Settings;
 	
 	public static void main(String[] arg) {
 		TIImageTool.localize();
@@ -40,7 +43,11 @@ public class CommandShell {
 				InputStream is = CommandShell.class.getResourceAsStream("/de/mizapf/timt/ui/command_" + loc.getLanguage() + ".txt");
 				if (is==null) {
 					System.err.println(TIImageTool.langstr("CommandNoHelp"));
-					return;
+					is = CommandShell.class.getResourceAsStream("/de/mizapf/timt/ui/command_en.txt");
+					if (is==null) {
+						System.err.println("Error: No language file for CommandShell.");
+						return;
+					}
 				}
 				BufferedReader br = new BufferedReader(new InputStreamReader(is));
 				while (br.ready()) {
@@ -170,6 +177,8 @@ public class CommandShell {
 		
 	CommandShell() {
 		// SectorCache.setGen(0);
+		m_Settings = new Settings(TIImageTool.getOperatingSystem());
+		ImageFormat.setSettings(m_Settings);
 	}
 	
 	private static Directory descendToDirectory(Volume image, String[] aSubdir, boolean bDir) throws FileNotFoundException {
@@ -238,8 +247,124 @@ public class CommandShell {
 		return image;
 	}
 	
+	private Volume openImage(String sAbsFile) throws FileNotFoundException, IOException, ImageException {
+		// ============== Open the image	
+		FileImageFormat image = (FileImageFormat)ImageFormat.getImageFormat(sAbsFile); // throws ImageExc if unknown
+								
+		byte[] vibmap = null;
+		TFileSystem fs = null;	
+		Volume vol = null;
+				
+		if (image instanceof FloppyImageFormat) {
+			vibmap = image.readSector(0).getData();			
+			int check = FloppyFileSystem.checkFormat(vibmap);
+			if (check != TFileSystem.GOOD) {
+				if ((check & TFileSystem.NO_SIG)!=0) {
+					System.err.println(TIImageTool.langstr("OpenImageNoDSK"));
+				}
+				if ((check & TFileSystem.BAD_GEOMETRY)!=0) {
+					System.err.println(TIImageTool.langstr("Format.badgeometry"));
+				}
+			}
+			fs = ((FloppyImageFormat)image).getFileSystem(vibmap);
+			fs.setupAllocationMap(vibmap);
+				
+			if (image.isPartitioned()) {
+				// need the partition number
+				System.err.println("Partitioned formats not supported");
+		/*		
+					Partition[] part = image.getPartitionTable();
+					PartitionSelectionDialog psd = new PartitionSelectionDialog(m_parent, part, image instanceof CF7ImageFormat);
+					psd.createGui(imagetool.boldFont);
+					psd.setVisible(true);
+					if (psd.confirmed()) {
+						int selPart = psd.getSelectedNumber()-1;
+						
+						if (part[selPart].getName().equals("---")) {
+							JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.PartitionUnformatted"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+							continue;
+						}
+						
+						image.setPartition(selPart);
+						// Do not open the partition if another partition of 
+						// the same image is open! This needs further investigation,
+						// especially for CHD (see sector cache)
+						
+						// Sectors are relative inside partitions, i.e. sector 0
+						// in partition 1 is in another format unit than sector 0
+						// in partition 2.
+						
+						// Although the sectors in the partitions do not overlap,
+						// the hunk map is shared. When two partitions have
+						// updates that create new hunks, this may lead to a race condition.
+						
+						// This means that the same sector cache must be used
+						
+						// However, this in turn means that saving the cache would
+						// commit the changes of all open partitions: Two tabs
+						// opened with two different partitions, both modified;
+						// doing a Save would require all changes of both partitions
+						// to be written.
+						if (imagetool.hasAlreadyOpenedVolume(sAbsFile)) {
+							Volume vol1 = imagetool.getAlreadyOpenedVolume(sAbsFile);
+							if (vol1.getPartitionNumber() != selPart) {
+								JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Image.OtherPartitionOpen"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
+								continue;
+							}
+						}
+						if (image instanceof CF7ImageFormat) {
+							vibmap = image.readSector(0).getData();
+							// int check = CF7bla.checkFormat(vibmap);
+							// FIXME
+							
+							fs = ((CF7ImageFormat)image).getFileSystem(vibmap);
+							fs.setupAllocationMap(vibmap);
+							}
+					}
+					*/
+			}		
+				
+			// image may have been replaced by the selected partition
+			if (image instanceof HarddiskImageFormat) {
+				HarddiskImageFormat hif = (HarddiskImageFormat)image;
+				
+				vibmap = image.readSector(0).getData();						
+				check = HarddiskFileSystem.checkFormat(vibmap);
+				
+				if (check != TFileSystem.GOOD) {
+					// When we have partitions, open the partition selection
+					if ((check & TFileSystem.BAD_GEOMETRY)!=0) {
+						System.err.println(TIImageTool.langstr("Format.badgeometry"));
+					}
+					if ((check & TFileSystem.BAD_AUCOUNT)!=0) {
+						System.err.println(TIImageTool.langstr("Format.badaucount"));
+					}
+				}
+				
+				fs = hif.getFileSystem(vibmap);
+				// Allocation map skips the first SECTOR_LENGTH bytes
+				fs.setupAllocationMap(image.getContent(0, 31));
+			}
+			try {
+				vol = new Volume(image, fs);					
+			}
+			catch (ImageException ix) {
+				System.err.println(ix.getMessage());
+			}
+			
+			if (vol.isReadOnly()) {
+				System.err.println(TIImageTool.langstr("ImageFWP"));
+			}
+			
+			Directory root = vol.getRootDirectory();	
+			image.setCheckpoint();      // req
+			vol.nextGeneration(true);   // req
+		}
+		return vol;
+	}
+	
 	public String directory(String sImagename, String sSubdir, String sCommand) throws FileNotFoundException, IOException, ImageException {
-		Volume image = new Volume(getImage(sImagename), null);
+		Volume image = openImage(sImagename);
 		boolean bOnlyNames = false;
 		boolean bDecorate = false;
 		
@@ -321,25 +446,24 @@ public class CommandShell {
 			return sb.toString();
 		}		   
 		
+		int nFileTotal = 0;
+
+		// DDIRs of subdirs
 		for (int i=0; i < aDir.length; i++) {
+			nFileTotal += aDir[i].getAllRequiredSectors(vol.getAUSize());
 			sb.append(aDir[i].toFormattedString()).append("\n");
 		}
-		
-		int nFileTotal = 0;
+
 		for (int i=0; i < aFile.length; i++) {
+			nFileTotal += aFile[i].getAllRequiredSectors(vol.getAUSize());
 			sb.append(aFile[i].toFormattedString()).append("\n");
-			nFileTotal += aFile[i].getUsedSectors();
 		}
-		
-		int nAlloc = image.getAllocatedSectorCount();
-		
-		int nSysAlloc = image.getSystemAllocatedSectors();
-		
-		int nDiffer = nAlloc - nSysAlloc - nFileTotal;
+			
+		int nDiffer = (vol.getAllocatedSectorCount() - vol.getSysAllocated()) - nFileTotal;
 		
 		sb.append("\n");
 		if (aFile.length > 0 || aDir.length > 0) {
-			sb.append(String.format(TIImageTool.langstr("CommandDirSummary1"), nFileTotal, aFile.length));
+			sb.append(String.format(TIImageTool.langstr("CommandDirSummary1"), vol.getAllocatedSectorCount(), aFile.length));
 		}
 		if (aDir.length!=0) {
 			sb.append(" ").append(String.format(TIImageTool.langstr("CommandDirSummary2"), aDir.length));
@@ -348,11 +472,11 @@ public class CommandShell {
 		if (aFile.length != 0 || aDir.length != 0) sb.append(",\n");
 
 		if (nDiffer!=0) {
-			sb.append(String.format(TIImageTool.langstr("CommandDirSummary3"), nDiffer));
+			sb.append(String.format(TIImageTool.langstr("PanelInThisDir"), nFileTotal));
 			sb.append(",\n");
 		}
 
-		sb.append(String.format(TIImageTool.langstr("CommandDirSummary4"), image.getTotalSectors() - nAlloc));
+		sb.append(String.format(TIImageTool.langstr("CommandDirSummary4"), image.getTotalSectors() - image.getAllocatedSectorCount()));
 		return sb.toString();
 	}	
 	

@@ -35,15 +35,7 @@ public class Volume {
 	/** File system */
 	TFileSystem m_FileSystem;
 
-	// long		m_nLastMod;		
-	// private String m_sImageFileName;
-			
-	/** Called when opening an image file. */
-/*	public Volume(String sFile) throws FileNotFoundException, IOException, ImageException {
-		this(sFile, null);
-	} */
-
-	// Indicates whether this is a read-only image
+	/** Indicates whether this is a read-only image */
 	private boolean m_bReadOnly;
 	
 	/** Create the volume from the given file name (existing file).
@@ -55,7 +47,7 @@ public class Volume {
 		m_bReadOnly = false;
 
 		if (fs == null) {
-			throw new InternalException("** FileSystem is null");
+			throw new InternalException("FileSystem is null");
 		}
 		m_FileSystem = fs;
 

@@ -47,7 +47,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		m_sFileName = sFileName;
 		m_file = new RandomAccessFile(sFileName, "r");
 		m_nLength = m_file.length();
-		System.out.println("Opening image " + sFileName + " for reading"); 
+		// System.out.println("Opening image " + sFileName + " for reading"); 
 		m_nCurrentFormatUnit = NONE;
 		m_bInitial = false;
 		m_writeCache.setName(getShortImageName());
@@ -57,7 +57,7 @@ public abstract class FileImageFormat extends ImageFormat {
 	protected FileImageFormat(String sFileName, FormatParameters param) throws FileNotFoundException, IOException {
 		m_sFileName = sFileName;
 		m_file = new RandomAccessFile(sFileName, "rw");
-		System.out.println("Opening image " + sFileName + " for writing"); 
+		// System.out.println("Opening image " + sFileName + " for writing"); 
 		m_nLength = m_file.length();
 		m_nCurrentFormatUnit = NONE;
 		m_bInitial = true;

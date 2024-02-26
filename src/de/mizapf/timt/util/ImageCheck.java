@@ -77,9 +77,7 @@ public class ImageCheck {
 				}
 				ps.print("\n");
 			}
-			catch (IndexOutOfBoundsException ix) {
-				ix.printStackTrace();
-				
+			catch (IndexOutOfBoundsException ix) {		
 				ps.println(":  " + String.format(TIImageTool.langstr("InvalidCluster"), sbFullname.toString()));
 			}
 			if (agl.size()>0) broken.add(agl);

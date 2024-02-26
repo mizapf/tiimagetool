@@ -288,6 +288,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		else {
 			if (ae.getActionCommand()==WRITE) {
 				writeBackAll();
+				closeFrame();
 			}
 			else {
 				try {
@@ -362,7 +363,7 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		}
 		fillAsciiDisplay(current);
 		if (updated) {
-			m_sector = new Sector(m_sector.getNumber(), current);
+			m_sector.modify(current);
 			m_image.sameGeneration();
 			m_image.writeSector(m_sector);
 			m_image.nextGeneration(true);

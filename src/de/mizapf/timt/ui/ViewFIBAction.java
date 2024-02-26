@@ -54,9 +54,15 @@ public class ViewFIBAction extends Activity {
 					for (int i=0; i < anFIB.length; i++) {
 						System.arraycopy(vol.readSector(anFIB[i]).getData(), 0, content, i * TFileSystem.SECTOR_LENGTH, TFileSystem.SECTOR_LENGTH);
 					}
+					StringBuilder sbFIB = new StringBuilder();
+					for (int i=0; i < anFIB.length; i++) {
+						sbFIB.append(anFIB[i]);
+						if (i < anFIB.length-1) sbFIB.append(",");
+					}
+
 					StringBuilder sb = new StringBuilder();
+					sb.append("====== " + String.format(TIImageTool.langstr("ViewFIBPlain"), sbFIB.toString()) + " ======\n\n");
 					
-					sb.append("====== " + TIImageTool.langstr("ViewFIBPlain") + " ======\n\n");
 					sb.append(Utilities.hexdump(0, 0, content, content.length, false));
 					
 					// Analyse the contents

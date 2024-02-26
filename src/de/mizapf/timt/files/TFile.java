@@ -163,7 +163,7 @@ public class TFile extends Element {
 						}
 					}
 				}
-				if (m_nNumberOfRecords > 1000000) throw new ImageException(TIImageTool.langstr("TFileDamaged"));
+				if (m_nNumberOfRecords > 1000000) throw new ImageException(TIImageTool.langstr("TFileDamaged") + " (" + m_anFIBSector[0] + ")");
 			}
 			else {
 				// Check whether the L3 count of variable files is correct

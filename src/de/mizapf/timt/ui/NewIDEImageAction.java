@@ -220,6 +220,8 @@ public class NewIDEImageAction extends Activity {
 							mif.writeSector(sec);
 						}					
 					}
+					
+					mif.nextGeneration(true);
 				
 					// New FileImageFormat
 					
