@@ -21,10 +21,9 @@
 package de.mizapf.timt.ui;
 
 import java.awt.Cursor;
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.DataInputStream;
+import java.io.*;
+import java.util.List;
+import java.util.LinkedList;
 
 import javax.swing.JOptionPane;
 import de.mizapf.timt.files.*;
@@ -75,11 +74,16 @@ public class InstallGenOSAction extends Activity {
        
 	*/
 	
+	// TODO: Check what happens with existing files
 	
+	final static int E098 = 1;
+	final static int E100 = 2;
+	final static int E200 = 3;	
+	
+	final static int HFDC = 1;
+	final static int OTHER = 2;
 
-	private final static String SYSTEMSYS = "/de/mizapf/timt/util/system_sys_redist.tfi";
-	private final static String LOADSYS = "/de/mizapf/timt/util/load_sys_redist.tfi";
-	private final static String AUTOEXEC = "/de/mizapf/timt/util/autoexec.txt";
+	DirectoryView m_dvCurrent;
 	
 	public String getMenuName() {
 		return TIImageTool.langstr("InstallGeneveOS");
@@ -90,137 +94,183 @@ public class InstallGenOSAction extends Activity {
 	}
 	
 	public void go() {
-		DirectoryView dvCurrent = imagetool.getSelectedView();
-		
-		// Caution: the next line will unselect all windows, and therefore,
-		// dvCurrent will be null
-		int nCheck = JOptionPane.showConfirmDialog(m_parent, TIImageTool.langstr("InstallGenOSHint"), TIImageTool.langstr("InstallGenOSTitle"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.INFORMATION_MESSAGE);
+		DirectoryView m_dvCurrent = imagetool.getSelectedView();
+		Volume volTarget = m_dvCurrent.getVolume();
+		Directory dirRoot = volTarget.getRootDirectory();
+		InstallGenOSDialog inst = new InstallGenOSDialog(m_parent, imagetool, volTarget.isFloppyImage());
 
-		if (dvCurrent == null) {
-			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InstallGenOSHint"), TIImageTool.langstr("InstallGenOSTitle"), JOptionPane.ERROR_MESSAGE);
-			return;
-		}
-		
-		Directory dirCurrent = dvCurrent.getDirectory();
-		DirectoryPanel dp = dvCurrent.getPanel();
+		inst.setSettings(settings);
+		inst.createGui(imagetool.boldFont);
+		inst.setVisible(true);
 
-		Volume vol = dvCurrent.getVolume();
-		Directory dirRoot = vol.getRootDirectory();
+		if (inst.confirmed()) {
+			String sInstallPath = settings.getPropertyString(TIImageTool.GENOSPATH);
+			// System.out.println("install from " + sInstallPath);
+			File ioRepo = new File(sInstallPath);
 
-		if (nCheck == JOptionPane.OK_OPTION) {
-			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-
-			Volume volTarget = dirCurrent.getVolume();
-/*			try {
-				volTarget.reopenForWrite();
-			}
-			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
-				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			if (!ioRepo.exists()) {
+				JOptionPane.showMessageDialog(m_dvCurrent.getFrame(), TIImageTool.langstr("InstallGenOSNoRepo"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE);
 				return;
 			}
-			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotReopen"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 				
-				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-				return;
-			}
-*/			
-						
+			
+			boolean bChanged = false;
+			List<String> failed = new LinkedList<String>();
+			Directory dirDSK1 = null;
+			
+			java.io.File[] aiof = ioRepo.listFiles();
 			try {
-				// SYSTEM/SYS
-				installFile(SYSTEMSYS, null, dirRoot, dvCurrent);
-				
-				// LOAD/SYS
-				if (vol.isFloppyImage()) {
-					dirCurrent = dirRoot;
+				// For HFDC we need a DSK1 subdirectory
+				if (volTarget.isHFDCImage()) {
+					if (!dirRoot.hasSubdirectory("DSK1"))
+						dirRoot.createSubdirectory("DSK1");
+					dirDSK1 = dirRoot.getSubdirectory("DSK1");
 				}
-				else {
-					if (dirRoot.hasSubdirectory("DSK1")) {
-						dirCurrent = dirRoot.getSubdirectory("DSK1");
+				
+				for (java.io.File iofile : aiof) {
+					DataInputStream dis = new DataInputStream(new FileInputStream(iofile));
+					byte[] abyTif = new byte[dis.available()];
+					dis.readFully(abyTif);
+					dis.close();
+					
+					if (!TIFiles.hasHeader(abyTif)) {
+						failed.add(iofile.getName());
+						System.err.println(iofile.getAbsolutePath() + ": " + TIImageTool.langstr("NoTIFILESHeader"));			
 					}
 					else {
-						// create a DSK1 directory
-						dirCurrent = dirRoot.createSubdirectory("DSK1", false);
+						TIFiles tfi = new TIFiles(abyTif);
+						String sName = tfi.getTFIName();
+						int bootver = inst.getEpromVersion();
+						int controller = inst.getController();
+						
+						// Handle floppy
+						if (volTarget.isFloppyImage()) {
+							if (controller == OTHER) {
+								if (sName.equals("SYSTEM-SYS") || sName.equals("SYSTEM/SYS")) {
+									if (sName.equals("SYSTEM-SYS") && (bootver != E200)) tfi.setTFIName("SYSTEM/SYS");
+									installFile(dirRoot, abyTif);
+								}
+							}
+							else {
+								if (sName.equals("LOAD-MFM")) {
+									if (bootver != E200) {
+										tfi.setTFIName("LOAD/SYS");
+										installFile(dirRoot, abyTif);
+									}
+								}
+								if (sName.equals("SYSTEM-SYS")) {
+									installFile(dirRoot, abyTif);
+								}
+							}
+						}
+						else {
+							if (sName.equals("SYSTEM-SYS")) {
+								installFile(dirRoot, abyTif);
+							}
+							else {
+								if (volTarget.isSCSIImage() && !volTarget.isIDEImage() && bootver == E100) {
+									if (sName.equals("SCSI/SYS"))
+										installFile(dirRoot, abyTif);
+									else {
+										if (sName.equals("LOAD-SCS")) {
+											tfi.setTFIName("SCSI/SYS");
+											installFile(dirRoot, abyTif);
+										}
+									}
+								}
+								else {
+									// SCSI or IDE
+									if (volTarget.isIDEImage()) {
+										if (sName.equals("LOAD-IDE")) {
+											installFile(dirRoot, abyTif);
+										}
+									}
+									else {
+										if (volTarget.isSCSIImage()) {
+											// Unpartitioned IDE images look like SCSI
+											if (sName.equals("LOAD-SCS") || sName.equals("LOAD-IDE")) {
+												installFile(dirRoot, abyTif);
+											}
+										}
+										else {  // HFDC
+											if (sName.equals("LOAD-MFM")) {
+												if (bootver != E200) 
+													tfi.setTFIName("LOAD/SYS");
+												installFile(dirDSK1, abyTif);
+											}
+										}
+									}
+								}
+							}
+						}
+						bChanged = true;
 					}
 				}
-				installFile(LOADSYS, null, dirCurrent, dvCurrent);
-
-				// AUTOEXEC
-				// Import content
-				installFile(AUTOEXEC, "AUTOEXEC", dirRoot, dvCurrent); 				
 			}
-			catch (IllegalOperationException iox) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InstallGenOSNotCreated"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE);
+			catch (IllegalOperationException iopx) {
+				iopx.printStackTrace();
+				JOptionPane.showMessageDialog(m_dvCurrent.getFrame(), TIImageTool.langstr("IllegalOperation") + ": " + iopx.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 			}
-			catch (InvalidNameException ix) {
-				ix.printStackTrace();
-			} 			
+			catch (IOException iox) {
+				iox.printStackTrace();
+				JOptionPane.showMessageDialog(m_dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
+			}
+			catch (ProtectedException px) {
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 				
+			}
+			catch (InvalidNameException inx) {
+				JOptionPane.showMessageDialog(m_dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + inx.getMessage(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
+			}
 			catch (ImageException ix) {
 				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InstallGenOSImageError") + ": " + ix.getMessage(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE);				
 			}			
-			catch (ProtectedException ix) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("VolumeWP"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
-			}			
-			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
-			}
 			
-/*			try {
-				volTarget.reopenForRead();
+			if (failed.size() > 0) {
+				StringBuilder sb = new StringBuilder();
+				for (String name : failed) {
+					if (sb.length() > 0) sb.append(", ");
+					sb.append(name);
+				}
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InstallGenOSFailed") + " " + sb.toString(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE);				
 			}
-			catch (IOException iox) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotReopen"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 				
+		
+			if (bChanged) {
+				try {
+					if (dirDSK1 != null) dirDSK1.commit(false);
+					dirRoot.commit(true);
+				}
+				catch (ImageException ix) {
+					ix.printStackTrace();
+					JOptionPane.showMessageDialog(m_dvCurrent.getFrame(), TIImageTool.langstr("ImageError"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
+				}		
+				catch (IOException iox) {
+					iox.printStackTrace();
+					JOptionPane.showMessageDialog(m_dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
+				}
+				catch (ProtectedException px) {
+					JOptionPane.showMessageDialog(m_dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
+				}
 			}
-*/			
-			try {
-				imagetool.reloadVolume(vol);
-				imagetool.refreshPanel(vol);
-			}
-			catch (Exception e) {
-				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("NotReopen"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
-			}
-
-			m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+			imagetool.refreshPanel(volTarget);	
 		}
 	}
 	
-	private void installFile(String sFilename, String sTargetName, Directory where, DirectoryView dvCurrent) throws IOException, ProtectedException, ImageException {
-		byte[] abyTif = null;
-		InputStream isFile = getClass().getResourceAsStream(sFilename);
-		if (isFile == null) {
-			JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("InstallGenOSMissing"), sFilename), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
-			return;
-		}
-		DataInputStream dis = new DataInputStream(isFile);
-		abyTif = new byte[dis.available()];
-		dis.readFully(abyTif);
-
-		// Before importing, save the "ignore TIFILES name" flag because
-		// we rely on the TIFILES name in this case
-		boolean nameMode = settings.getPropertyBoolean(TIImageTool.KEEPNAME);
-		settings.put(TIImageTool.KEEPNAME, "false");
+	private void installFile(Directory dir, byte[] abyTif) throws ImageException, ProtectedException, InvalidNameException, IOException {
+		TIFiles tif = new TIFiles(abyTif);
+		String sName = tif.getTFIName();
 		
-		if (sTargetName != null) {
-			String sAutoexec = new String(abyTif);
-			// Convert it to a DV80 file 
-			String[] lines = sAutoexec.split("\n");
-			byte[] sectors = TFile.textToSectors(lines);
-			// Hand it over to TIFiles
-			abyTif = TIFiles.createTfi(sectors, sTargetName, (byte)0x90, (byte)80, 0);
+		// Already there
+		TFile tf = dir.getFile(sName); 
+		if (tf != null) {
+			// Delete it
+			try {
+				// System.out.println("Delete existing " + tf.getName()); 
+				dir.deleteFile(tf, true);
+			}
+			catch (FileNotFoundException fnfx) {
+				fnfx.printStackTrace();
+				return;
+			}
 		}
-		
-		try {
-			imagetool.putTIFileIntoImage(where, dvCurrent, abyTif, "SOMEFILE");
-		}
-		catch (FileExistsException fx) {
-			JOptionPane.showMessageDialog(m_parent, String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
-		}
-		catch (InvalidNameException inx) {
-			JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("InvalidFileName") + ": " + inx.getMessage(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
-		}
-
-		settings.put(TIImageTool.KEEPNAME, nameMode? "true" : "false");
-
-		dis.close();		
+		imagetool.putTIFileIntoImage(dir, m_dvCurrent, abyTif, "");
 	}
 }

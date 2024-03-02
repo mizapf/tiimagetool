@@ -148,7 +148,8 @@ public class ContentFrame extends JFrame implements ActionListener, ComponentLis
 	
 	public void componentResized(ComponentEvent e) {
 		// System.out.println("Component resized to " + getWidth() + "x" + getHeight());
-		m_app.saveContentFrameDimension(getWidth(), getHeight());
+		if ((getWidth() >= 200) && (getHeight() >= 200))
+			m_app.saveContentFrameDimension(getWidth(), getHeight());
 	}
 	
 	public void componentShown(ComponentEvent e) {

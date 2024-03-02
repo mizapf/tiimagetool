@@ -88,8 +88,8 @@ class PreferencesDialog extends ToolDialog implements ActionListener {
 		m_tabs.setFont(TIImageTool.boldFont);
 		m_tabs.addTab(TIImageTool.langstr("PreferencesGeneral"), createTab("general"));
 		m_tabs.addTab(TIImageTool.langstr("PreferencesPaths"), createTab("paths"));
-		m_tabs.addTab(TIImageTool.langstr("PreferencesCFCard"), createTab("cfcard"));
 		m_tabs.addTab(TIImageTool.langstr("PreferencesOutput"), createTab("output"));
+		m_tabs.addTab(TIImageTool.langstr("PreferencesImage"), createTab("image"));
 		m_tabs.addTab(TIImageTool.langstr("PreferencesImporting"), createTab("import"));
 		m_tabs.addTab(TIImageTool.langstr("PreferencesExporting"), createTab("export"));
 		m_tabs.addTab(TIImageTool.langstr("PreferencesMisc"), createTab("misc"));

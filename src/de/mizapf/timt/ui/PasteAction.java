@@ -520,7 +520,7 @@ public class PasteAction extends Activity {
 		Directory[] dirs = dir.getDirectories();
 		if (dirs.length !=0 && dirTarget.getVolume().isFloppyImage()) throw new IllegalOperationException(TIImageTool.langstr("PasteNotFloppyDir"));
 		
-		Directory dirNew = dirTarget.createSubdirectory(sName, false);
+		Directory dirNew = dirTarget.createSubdirectory(sName);
 
 		// All files from dir
 		TFile[] files = dir.getFiles();

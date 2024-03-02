@@ -54,12 +54,12 @@ public class IDEFileSystem extends SCSIFileSystem {
 	// FIXME: IDE supports DSK(1) emulation on IDE1
 	
 	IDEFileSystem() {
-		System.out.println("IDE file system");
+		// System.out.println("IDE file system");
 	}
 	
 	public IDEFileSystem(FormatParameters param) {
 		super(param);
-		System.out.println("IDE file system");
+		// System.out.println("IDE file system");
 	}
 	
 	@Override

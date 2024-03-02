@@ -66,7 +66,7 @@ public class ImportFilesAction extends Activity {
 			}
 		}
 				
-		Directory sub = dirCurrent.createSubdirectory(sDirName, false);
+		Directory sub = dirCurrent.createSubdirectory(sDirName);
 
 		for (java.io.File iofile : aiof) {
 			if (iofile.isDirectory()) {

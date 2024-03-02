@@ -408,11 +408,11 @@ public class Directory extends Element {
 		throw new ImageException(String.format(TIImageTool.langstr("VolumeDirNotFound"), sDir));
 	}
 	
-	public TFile getFile(String sFile) throws FileNotFoundException {
+	public TFile getFile(String sFile) {
 		for (TFile file : m_Files) {
 			if (file.getName().equals(sFile)) return file; 
 		}
-		throw new FileNotFoundException(sFile);
+		return null;
 	}
 	
 	public TFile[] getFiles() {
@@ -697,9 +697,9 @@ public class Directory extends Element {
 		// System.out.println("Directory commit done");
 	}
 	
-	/** Creates a new subdirectory. 
+	/** Creates a new subdirectory.
 	*/
-	public Directory createSubdirectory(String sName, boolean bNextGen) throws ProtectedException, InvalidNameException, FileExistsException, ImageFullException, ImageException, IOException, IllegalOperationException {
+	public Directory createSubdirectory(String sName) throws ProtectedException, InvalidNameException, FileExistsException, ImageFullException, ImageException, IOException, IllegalOperationException {
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (!validName(sName)) throw new InvalidNameException(sName);
 		
@@ -1021,7 +1021,7 @@ public class Directory extends Element {
 			// Number of files and subdirectories
 			aDDRNew[0x16] = (byte)m_Files.length;
 			aDDRNew[0x17] = (byte)m_Subdirs.length;
-			System.out.println("(" + getName() + ") files = " + m_Files.length);
+			// System.out.println("(" + getName() + ") files = " + m_Files.length);
 			
 			// Subdirectories
 			Arrays.fill(aDDRNew, 0x1c, 0x100, (byte)0);

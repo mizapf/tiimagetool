@@ -84,11 +84,12 @@
    <delete file="${src}/tiimagetool.zip"/>
    <copy file="LICENSE" todir="${dist}"/>
    <copy file="README" todir="${dist}"/>
+   <copy file="whatsnew.txt" todir="${dist}"/>
    <copy file="prgicon.png" todir="${dist}"/>
    <copy file="${src}/src.zip" todir="${dist}"/>
    <copy file="${dist}/lib/tiimagetool.jar" todir="${dist}"/>
    <zip destfile="${dist}/tiimagetool.zip" basedir="${dist}"
-   includes="src.zip tiimagetool.jar LICENSE README prgicon.png" />
+   includes="src.zip tiimagetool.jar LICENSE README whatsnew.txt prgicon.png" />
 </target>
    
 <target name="clean">

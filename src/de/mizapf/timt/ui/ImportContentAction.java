@@ -67,7 +67,7 @@ public class ImportContentAction extends Activity {
 	public void go() {
 		DirectoryView dvCurrent = imagetool.getSelectedView();
 		m_nType = NEW;
-		EditorFrame dv = new EditorFrame(dvCurrent.getFrame(), this, dvCurrent, null, null, true);
+		EditorFrame dv = new EditorFrame(imagetool, dvCurrent.getFrame(), this, dvCurrent, null, null, true);
 		dv.setSize(settings.getPropertyDim(TIImageTool.CONTSIZE));
 		Point loc = imagetool.getFrameLocation();		
 		dv.setLocation(loc.x+20, loc.y+20);
@@ -80,7 +80,7 @@ public class ImportContentAction extends Activity {
 		try {
 			m_nType = getType(file);
 			// System.out.println(m_nType);
-			EditorFrame dv = new EditorFrame(dvCurrent.getFrame(), this, dvCurrent, file.getName(), sText, m_nType != NONE);
+			EditorFrame dv = new EditorFrame(imagetool, dvCurrent.getFrame(), this, dvCurrent, file.getName(), sText, m_nType != NONE);
 			dv.setSize(settings.getPropertyDim(TIImageTool.CONTSIZE));
 			Point loc = imagetool.getFrameLocation();		
 			dv.setLocation(loc.x+20, loc.y+20);
@@ -94,14 +94,6 @@ public class ImportContentAction extends Activity {
 		}
 	}
 
-/*	public void go(String sName, String sText) {
-		DirectoryView dvCurrent = imagetool.getSelectedView();
-		EditorFrame dv = new EditorFrame(dvCurrent.getFrame(), this, dvCurrent, sName, sText, true);
-		dv.setSize(settings.getPropertyDim(TIImageTool.CONTSIZE));
-		Point loc = imagetool.getFrameLocation();		
-		dv.setLocation(loc.x+20, loc.y+20);	
-	}
-*/	
 	public boolean convertAndImport(byte[] abyContent, DirectoryView dvCurrent, String sSuggested, boolean bCommit) {
 		if (!imagetool.viewStillThere(dvCurrent)) {
 			JOptionPane.showMessageDialog(imagetool.getMainFrame(), TIImageTool.langstr("ImportContentViewClosed"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);

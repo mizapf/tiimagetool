@@ -238,6 +238,15 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		return col2;
 	}
 	
+	protected int determineMaxWidth(String[] keys) {
+		int nColumnWidth = 0;
+		for (String stext : keys) {
+			int nc1 = determineFieldWidth(TIImageTool.langstr(stext));
+			if (nc1 > nColumnWidth) nColumnWidth = nc1;
+		}
+		return nColumnWidth;
+	}
+	
 	protected void addLine(String sLabel) {
 		Box box1 = new Box(BoxLayout.X_AXIS);
 		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));

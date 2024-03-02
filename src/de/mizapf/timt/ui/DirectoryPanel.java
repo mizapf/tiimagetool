@@ -247,7 +247,11 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		// Third line
 		sb = new StringBuilder();
 		sb.append(String.format(TIImageTool.langstr("PanelDir"), vol.getDeviceName(), dirCurrent.getFullPathname()));
-		comp.add(createHeadlineWithMem(sb.toString()));
+		if (m_Settings.getPropertyBoolean(TIImageTool.MEMORY))
+			comp.add(createHeadlineWithMem(sb.toString()));
+		else
+			comp.add(createHeadline(sb.toString()));
+		
 		comp.add(Box.createVerticalStrut(10));
 		
 		JComponent title = createLine(TIImageTool.boldFont, null, false, 
@@ -290,7 +294,7 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 		cnt.setOpaque(false);	// let the background shine through
 		//		cnt.setBackground(NORM);
 		cnt.add(Box.createHorizontalGlue());
-		cnt.add(new JLabel("Free Mem" + ":"));
+		cnt.add(new JLabel(TIImageTool.langstr("Panel.FreeMem") + ":"));
 		cnt.add(Box.createHorizontalStrut(10));
 		m_FreeMem = new JLabel("-");
 		cnt.add(m_FreeMem);		
@@ -300,7 +304,8 @@ public class DirectoryPanel extends JComponent implements ListCellRenderer<Eleme
 	}
 	
 	public void updateMemoryInfo(int nPercent) {
-		m_FreeMem.setText(String.valueOf(nPercent) + "%");
+		if (m_FreeMem != null)
+			m_FreeMem.setText(String.valueOf(nPercent) + "%");
 	}
 	
 	Directory getDirectory() {

@@ -73,12 +73,13 @@ class SearchDialog extends ToolDialog {
 		prepareGui();
 		String[] texts = { "SearchText", "SearchRegex", "SearchFor", "SearchArchives", "SearchPath", "SearchSubdir", "SearchMax" };
 		
-		int nColumnWidth = 0;
+/*		int nColumnWidth = 0;
 		for (String stext : texts) {
 			int nc1 = determineFieldWidth(TIImageTool.langstr(stext));
 			if (nc1 > nColumnWidth) nColumnWidth = nc1;
 		}
-			
+	*/
+		int nColumnWidth = determineMaxWidth(texts);
 		m_tfSearchString = putTextField(this, TIImageTool.langstr("SearchText"), "", nColumnWidth, 0); 
 
 		m_chbRegex = putCheckBox(this, TIImageTool.langstr("SearchRegex"), false, nColumnWidth);

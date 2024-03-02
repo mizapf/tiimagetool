@@ -486,6 +486,7 @@ public class CommandShell {
 		String[] dirPath = getPath(sFilename);
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);
 		TFile fl = dirCurrent.getFile(dirPath[dirPath.length-1]);
+		if (fl == null) throw new FileNotFoundException(dirPath[dirPath.length-1]);
 		return fl.getTextContent();		
 	}
 	
@@ -496,6 +497,8 @@ public class CommandShell {
 		String[] dirPath = getPath(sFilename);
 		Directory dirCurrent = descendToDirectory(image, dirPath, false);
 		TFile fl = dirCurrent.getFile(dirPath[dirPath.length-1]);
+		if (fl == null) throw new FileNotFoundException(dirPath[dirPath.length-1]);
+		
 		if (fl.isBasicFile()) {
 			return fl.listBasic(BasicLine.EX_BASIC, "§%");
 		}

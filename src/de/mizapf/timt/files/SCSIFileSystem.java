@@ -89,12 +89,12 @@ public class SCSIFileSystem extends HarddiskFileSystem {
 	}
 	
 	SCSIFileSystem() {
-		System.out.println("SCSI file system");
+		// System.out.println("SCSI file system");
 	}
 	
 	SCSIFileSystem(FormatParameters param) {
 		super(param);
-		System.out.println("SCSI file system");
+		// System.out.println("SCSI file system");
 	}
 	
 	void setGeometry(FormatParameters param) {

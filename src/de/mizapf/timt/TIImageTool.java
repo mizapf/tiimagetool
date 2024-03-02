@@ -172,11 +172,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String FILEDIALOG = "fdialogsize";
 	public final static String SOURCEDIR = "sourcedir";
 	public final static String EXPLOWER = "lower";
-	public final static String CFCARD = "cfcard";
-	public final static String DDPATH = "ddpath";
-	public final static String SUPATH = "supath";
-	public final static String COPATH = "copath";
-	public final static String BSIZE = "bsize";
 	public final static String CONVERT = "convert";
 	public final static String UNDERSCORE = "underscore";
 	public final static String SUFFIX = "suffix";
@@ -200,6 +195,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String IMGFORM = "imgform";
 	public final static String IMGSUF = "imgsuf";
 	public final static String CONTEXT = "context";
+	public final static String GENOSPATH = "genospath";
+	public final static String MEMORY = "memory";
 	
 	Properties m_propNames;
 	

@@ -210,6 +210,15 @@ public class TIFiles {
 		return Utilities.getString10(m_abyTFContent, 0x10);
 	}
 	
+	public void setTFIName(String sName) {
+		for (int i=0; i < 10; i++) {
+			if (i < sName.length())
+				m_abyTFContent[0x10 + i] = (byte)sName.charAt(i);
+			else
+				m_abyTFContent[0x10 + i] = (byte)0x20;
+		}
+	}
+	
 	public Time getCreationTime() {
 		byte[] nulltime = new byte[4];
 		int ext = Utilities.getInt16(m_abyTFContent, 0x1c);

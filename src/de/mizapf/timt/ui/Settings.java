@@ -104,34 +104,7 @@ public class Settings {
 		getPropertyString(TIImageTool.CONVERT, "/\\* __x");
 		getPropertyString(TIImageTool.SUFFIX, ".tfi");
 		getPropertyString(TIImageTool.UNDERSCORE, "true");		
-		getPropertyString(TIImageTool.EXPLOWER, "true");
-		
-		String card;
-		String ddpath;
-		String copath;
-		
-		switch(m_os) {
-		case TIImageTool.WINDOWS:
-			card = "k:";
-			ddpath = "";
-			copath = "";
-			break;
-		case TIImageTool.MACOS:
-			card = "/dev/disk4";
-			ddpath = "/bin/dd";
-			copath = "/usr/sbin/chown";
-			break;
-		default:
-			card = "/dev/sdg";
-			ddpath = "/usr/bin/dd";
-			copath = "/usr/bin/chown";
-			break;
-		}
-		getPropertyString(TIImageTool.CFCARD, card);
-		getPropertyString(TIImageTool.DDPATH, ddpath);
-		getPropertyString(TIImageTool.COPATH, copath);
-		
-		getPropertyString(TIImageTool.BSIZE, "4096");
+		getPropertyString(TIImageTool.EXPLOWER, "true");	
 		getPropertyString(TIImageTool.CONVERT, "true");	
 		getPropertyString(TIImageTool.KEEPNAME, "false");	
 		getPropertyString(TIImageTool.FORCEUPPER, "true");	
@@ -151,6 +124,8 @@ public class Settings {
 		getPropertyString(TIImageTool.IMGFORM, "CF7ImageFormat,SectorDumpFormat,TrackDumpFormat,HFEFormat,RawHDFormat,MameCHDFormat");
 		getPropertyString(TIImageTool.IMGSUF, "dsk,dtk,hfe,cf7,hd,chd,raw,bin,-");
 		getPropertyString(TIImageTool.CONTEXT, "false");
+		getPropertyString(TIImageTool.MEMORY, "false");
+		getPropertyString(TIImageTool.GENOSPATH, "");
 	}
 	
 	public int checkProperties() {

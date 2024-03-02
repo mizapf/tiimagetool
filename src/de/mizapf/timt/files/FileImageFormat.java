@@ -194,7 +194,7 @@ public abstract class FileImageFormat extends ImageFormat {
 		m_nCurrentFormatUnit = NONE;
 		try {
 			reopenForWrite();
-			System.out.println("Write back " + getTotalSectors() + " sectors");
+			// System.out.println("Write back " + getTotalSectors() + " sectors");
 			for (int i=0; i < getTotalSectors(); i++) {
 				Sector sect = imgOld.readSector(i);
 				// System.out.println("Write back sector "  + sect.getNumber());  // #%

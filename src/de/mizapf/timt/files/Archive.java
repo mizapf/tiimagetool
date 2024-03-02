@@ -482,7 +482,7 @@ public class Archive extends Directory {
 	}
 	
 	@Override
-	public Directory createSubdirectory(String sName, boolean bNextGen) throws ProtectedException, InvalidNameException, FileExistsException, ImageFullException, ImageException, IOException, IllegalOperationException {
+	public Directory createSubdirectory(String sName) throws ProtectedException, InvalidNameException, FileExistsException, ImageFullException, ImageException, IOException, IllegalOperationException {
 		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotCreateDir"));
 	}
 

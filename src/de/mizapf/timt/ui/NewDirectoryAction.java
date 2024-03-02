@@ -82,7 +82,7 @@ public class NewDirectoryAction extends Activity {
 
 			if (ok) {
 				try {
-					dirCurrent.createSubdirectory(sName, true);
+					dirCurrent.createSubdirectory(sName);
 					vol.nextGeneration(true);
 				}
 				catch (ImageFullException ifx) {

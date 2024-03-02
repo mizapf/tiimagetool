@@ -31,7 +31,7 @@ import java.util.*;
 import java.awt.print.*;
 import de.mizapf.timt.TIImageTool;
 
-class EditorFrame extends JFrame implements ActionListener, UndoableEditListener, DocumentListener {
+class EditorFrame extends JFrame implements ActionListener, UndoableEditListener, DocumentListener, ComponentListener {
 
 	public final static String FROMEDITOR = ".FRMED";
 	
@@ -72,6 +72,8 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 	
 	ImportContentAction m_importact;
 	DirectoryView m_dvCurrent;
+	
+	TIImageTool m_app;
 	
 	class UndoAction extends AbstractAction {
 		public UndoAction() {
@@ -130,7 +132,7 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 		}
 	}
 
-	EditorFrame(Frame owner, ImportContentAction ia, DirectoryView dv, String sName, String content, boolean bEditable) {
+	EditorFrame(TIImageTool timt, Frame owner, ImportContentAction ia, DirectoryView dv, String sName, String content, boolean bEditable) {
 		// Parameter dialog should probably be raised in this class
 		super(TIImageTool.langstr("EditorTitle"));
 		m_flText = null;
@@ -140,6 +142,8 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 		m_importact = ia;
 		m_dvCurrent = dv;
 		setVisible(true);
+		m_app = timt;
+		m_app.registerFrame(this);
 	}
 		
 	private void createUI(String sText, boolean bEditable) {
@@ -227,6 +231,8 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 
 		m_curNormal = m_jep.getCursor();
 		m_bAbort = true;
+		
+		getRootPane().addComponentListener(this);
 	}
 	
 	void setWaitCursor(boolean bWait) {
@@ -240,11 +246,6 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 
 	private void setRedoEnabled(boolean b) {
 		m_jmiRedo.setEnabled(b);
-	}
-
-	private void quit(boolean bAbort) {
-		m_bAbort = bAbort;
-		dispose();
 	}
 
 	public String getText() {
@@ -269,12 +270,12 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 		if (ae.getActionCommand().equals(CLOSE)) {
 			m_bAbort = false;
 			boolean bOK = m_importact.convertAndImport(getText().getBytes(), m_dvCurrent, FROMEDITOR, true);
-			if (bOK) dispose();
+			if (bOK) m_app.closeFrame(this);
 			return;
 		}
 		if (ae.getActionCommand().equals(QUIT)) {
 			m_bAbort = true;
-			dispose();
+			m_app.closeFrame(this);
 			return;
 		}
 
@@ -359,4 +360,19 @@ class EditorFrame extends JFrame implements ActionListener, UndoableEditListener
 	public void error(String sError) {
 		JOptionPane.showMessageDialog(this, sError, TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 	}
+	
+		public void componentHidden(ComponentEvent e) {
+	}
+	
+	public void componentMoved(ComponentEvent e) {
+	}
+	
+	public void componentResized(ComponentEvent e) {
+		// System.out.println("Component resized to " + getWidth() + "x" + getHeight());
+		if ((getWidth() >= 200) && (getHeight() >= 200))
+			m_app.saveContentFrameDimension(getWidth(), getHeight());
+	}
+	
+	public void componentShown(ComponentEvent e) {
+	}	
 }

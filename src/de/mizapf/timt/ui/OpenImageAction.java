@@ -73,7 +73,7 @@ public class OpenImageAction extends Activity {
 					
 					int check = FloppyFileSystem.checkFormat(vibmap);
 					
-					System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
+					// System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
 					if (check != TFileSystem.GOOD) {
 						int doCheckSig = JOptionPane.YES_OPTION;
 						if ((check & TFileSystem.NO_SIG)!=0) {
@@ -151,7 +151,7 @@ public class OpenImageAction extends Activity {
 					vibmap = image.readSector(0).getData();						
 					int check = HarddiskFileSystem.checkFormat(vibmap);
 					
-					System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
+					// System.out.println("Format check: " + TFileSystem.getFormatCheckText(check));
 					if (check != TFileSystem.GOOD) {
 						// When we have partitions, open the partition selection
 						
