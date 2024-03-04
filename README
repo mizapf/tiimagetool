@@ -30,24 +30,24 @@ Also, to be able to compile TIImageTool, you have to put a copy of
 the RXTXcomm.jar library into the ext folder. During runtime, RXTX need not
 be installed; the depending features will be disabled in that case.
 
-RXTX is available from rxtx.qbang.org or from Github. 
+RXTX is available from Github (https://github.com/rxtx/rxtx).
    
 
-3. Raw device access (DD)
+3. Raw device access (CF7)
 
 For reading from and writing to CF7 cards, raw device access is required 
-which is not easily feasible for Java programs. For this reason, TIMT will 
-make use of the "dd" utility program. It is run in a separate process with
-elevated rights.
+which is not easily feasible for Java programs, and across different platforms.
+Moreover, popular Linux distributions dropped the gksu tool for security 
+reasons. 
 
-Common Linux systems already come with a dd program (usually /usr/bin/dd), 
-so there is no need for a special installation. Check with your distribution
-in case of doubt. The same should be true for MacOS/OSX.
+For these reasons, I decided to drop the built-in support for reading and 
+writing CF7 cards. The "dd" program ("dd.exe" for Windows) is a suitable tool
+for reading and writing CF cards. Instead of calling the "dd" tool, TIImageTool
+will now just suggest a command line that you have to use.
 
-For Windows there is a port released by Chrysocome and John Newbigin under 
-GPL2 license (see http://www.chrysocome.net/dd). You can move the dd.exe 
-file to any suitable location, as long as you specify the location in the
-preferences.
+After pulling an image dump from the CF card, you can easily work with it in
+TIImageTool, including adding/removing volumes, and of course working on those
+volumes. Later, you have to use dd to write back the changed image.
 
 If you do not plan to work with CF7 cards, you need not care about all this.
 
@@ -70,7 +70,13 @@ Unpack the distribution zip package. You can launch TIImageTool
      depends on your system configuration; make sure that the JAR 
      file type is associated with starting the Java environment.
 
+     
+DOCUMENTATION
+-------------
 
+TIImageTool contains a built-in manual that you can open with F1. Also have a look
+at my website (www.mizapf.de) for updates.
+     
 
 BUGS and SUGGESTIONS
 --------------------
@@ -85,8 +91,6 @@ LICENSING
 TIImageTool is freely distributable and redistributable under the
 conditions of the GNU General Public License GPL v3. Please consult
 the file LICENSING for details.
-
-
 
 
 Michael Zapf
