@@ -65,20 +65,6 @@ public class CreateArchiveAction extends Activity {
 		Archive ark = null;
 
 		if (ad.confirmed()) {
-/*			try {
-				vol.reopenForWrite();
-			}
-			catch (ProtectedException px) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageFWP"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
-				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-				return;				
-			}
-			catch (IOException iox) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE); 				
-				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-				return;
-			}
-*/
 			// Create an empty archive
 			byte flags = ad.useCompression()? TFile.INTERNAL : (byte)0x00;
 			byte[] abyEmpty = Archive.createEmptyArchive(ad.useCompression());
@@ -100,15 +86,14 @@ public class CreateArchiveAction extends Activity {
 				forArc.toArray(aforarc);			
 				
 				// then add the archive
-				System.out.println("Add the empty archive file " + ad.getArchiveName() + " to the current directory");
+				// System.out.println("Add the empty archive file " + ad.getArchiveName() + " to the current directory");
 				arkf = dirCurrent.insertFile(abyTfi, null, false);
 				ark = arkf.unpackArchive(abyEmpty, ad.useCompression());
 				// vol.sameGeneration();
-				System.out.println("Add all selected files to the archive");
+				// System.out.println("Add all selected files to the archive");
 				ark.insertFilesIntoArchive(aforarc);
 				dirCurrent.commit(true);
-				System.out.println("Create archive done");
-			// FIXME: Element selection must be improved (select/deselect) 
+				// System.out.println("Create archive done");
 			}
 			catch (InvalidNameException inx) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ArchiveCannotPut"), inx.getMessage()), TIImageTool.langstr("ArchiveError"), JOptionPane.ERROR_MESSAGE); 	

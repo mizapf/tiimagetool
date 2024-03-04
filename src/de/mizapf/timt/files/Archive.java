@@ -427,7 +427,6 @@ public class Archive extends Directory {
 	@Override
 	public void moveoutFile(TFile file) throws ProtectedException, FileNotFoundException, IllegalOperationException {
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
-		System.out.println("moveout a " + file.getName());
 		deleteFile(file, true);
 	}
 	
@@ -437,7 +436,6 @@ public class Archive extends Directory {
 	public void moveinFile(TFile file) throws ProtectedException, FileExistsException, IOException, ImageException, IllegalOperationException {
 		if (m_Volume.isProtected()) throw new ProtectedException(TIImageTool.langstr("VolumeWP"));
 		if (containsInList(file)) throw new FileExistsException(file.getName());
-		System.out.println("movein a " + file.getName());
 		TIFiles tfiNew = TIFiles.createFromFile(file);
 		try {
 			insertFile(tfiNew.toByteArray(), null, false);
@@ -445,8 +443,6 @@ public class Archive extends Directory {
 		catch (InvalidNameException inx) {
 			inx.printStackTrace();
 		}
-		
-		// FIXME: Missing commit
 	}
 	
 	@Override

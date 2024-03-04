@@ -156,10 +156,6 @@ public class CF7ImageFormat extends FileImageFormat implements PartitionedStorag
 		return TIImageTool.langstr("CF7ImageType");
 	}
 	
-	public void setPartition(int part) {
-		m_nActivePartition = part;
-	}
-		
 	/** Find partitions. Each partition is exactly 400 KiB long (1600 sectors).
 	    We only consider those partitions that have a DSK signature.
 	*/

@@ -126,7 +126,6 @@ class NewFloppyImageDialog extends ToolDialog {
 	
 	FormatParameters getParameters() {
 		FormatParameters params = new FormatParameters(getDiskName(), true);
-		// FIXME: must not be -1
 		params.setCHS(getTrackCount(), getSides(), FloppyFileSystem.getSectorsFromDensity(getDensity())); 
 		return params;
 	}

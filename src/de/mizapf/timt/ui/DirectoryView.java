@@ -552,7 +552,7 @@ public class DirectoryView implements WindowListener, ActionListener, MouseListe
 		JMenu mnew = new JMenu(TIImageTool.langstr("CreateNew"));
 		mnew.add(m_iNewFile);
 		mnew.add(m_iNewDirectory);
-		mnew.add(m_iArchive);  // FIXME: Exception, disabled
+		mnew.add(m_iArchive);
 		mnew.setEnabled(!vol.isProtected() && !m_dirCurrent.isProtected());
 		m_ctxmenu.add(m_iSelect);
 		m_ctxmenu.addSeparator();

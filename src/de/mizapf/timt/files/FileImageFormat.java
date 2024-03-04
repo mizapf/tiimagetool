@@ -311,8 +311,10 @@ public abstract class FileImageFormat extends ImageFormat {
 		return m_nActivePartition;
 	}
 		
-	public void setPartition(int part) {
+	public void setPartition(int part) throws IllegalArgumentException {
 		// System.out.println("Selected partition " + (part+1));
+		if (part >= m_partition.length || m_partition[part] == null)
+			throw new IllegalArgumentException(TIImageTool.langstr("Error.InvPartVolumeNumber"));
 		m_nActivePartition = part;
 		m_nCurrentFormatUnit = NONE;
 	}

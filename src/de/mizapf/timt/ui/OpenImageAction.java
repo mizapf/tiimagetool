@@ -135,7 +135,7 @@ public class OpenImageAction extends Activity {
 						if (image instanceof CF7ImageFormat) {
 							vibmap = image.readSector(0).getData();
 							// int check = CF7bla.checkFormat(vibmap);
-							// FIXME
+							// TODO: Add check
 							
 							fs = ((CF7ImageFormat)image).getFileSystem(vibmap);
 							fs.setupAllocationMap(vibmap);

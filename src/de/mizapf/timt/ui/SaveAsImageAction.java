@@ -153,7 +153,7 @@ public class SaveAsImageAction extends Activity {
 	}
 }
 
-// FIXME: Only saves the open IDE partition as a single image. Or not FIXME?
+// NOTE: Only saves the open IDE partition as a single image.
 
 /*
 		

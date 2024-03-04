@@ -76,10 +76,6 @@
   	[x] Use a full editor for textual files
   	[x] Drop CHD conversion (saving converts to v5)
   	[x] Drop RAW/CHD conversion
-	
-    Open bugs:
-  	[ ] Fix CommandShell
-  	[ ] Install GeneveOS is outdated
 */
 
 package de.mizapf.timt;
@@ -1701,7 +1697,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		return lst;
 	}
 	
-	// FIXME: Move this into Directory
+	// TODO: Move this into Directory
 	public void putTIFileIntoImage(Directory dir, DirectoryView dvCurrent, byte[] abyTif, String sDefaultFilename) throws ProtectedException, InvalidNameException, FileNotFoundException, ImageException, IOException {
 
 		String sName = createValidInputFileName(sDefaultFilename);
@@ -1765,7 +1761,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		}
 	}
 
-	// FIXME: Move this into Directory
+	// TODO: Move this into Directory
 	public boolean putBinaryFileIntoImage(Directory dir, byte[] abyTif, String sDefaultFilename, boolean bMulti, boolean bGuess) throws ProtectedException, InvalidNameException, FileNotFoundException, ImageException, IOException {
 		String sName = createValidInputFileName(sDefaultFilename);
 		ImportDialog impdia = new ImportDialog(m_frmMain, sName, bMulti, ImportDialog.BINARY);
