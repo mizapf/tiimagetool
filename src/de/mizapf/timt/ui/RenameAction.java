@@ -92,14 +92,11 @@ public class RenameAction extends Activity {
 			// System.out.println("Commit after delete");
 			dirCurrent.commit(true);
 		}
-		catch (IOException iox) {
-			System.err.println(String.format(TIImageTool.langstr("IOErrorUpdate"), dirCurrent.getName()));
-		}
 		catch (ImageException ix) {
 			System.err.println(String.format(TIImageTool.langstr("ImageErrorUpdate"), dirCurrent.getName()));
 		}
 		catch (ProtectedException px) {
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(),  TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(),  TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE);
 			imagetool.closeCurrentView();
 		}
 		dvCurrent.refreshAll();			

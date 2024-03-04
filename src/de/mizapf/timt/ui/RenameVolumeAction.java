@@ -66,6 +66,7 @@ public class RenameVolumeAction extends Activity {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), inx.getMessage(), TIImageTool.langstr("RenameError"), JOptionPane.ERROR_MESSAGE);				
 			}
 		}
+		volCurrent.nextGeneration(true);
 		imagetool.refreshPanel(volCurrent);
 	//	m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}

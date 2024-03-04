@@ -242,10 +242,6 @@ public class InstallGenOSAction extends Activity {
 					ix.printStackTrace();
 					JOptionPane.showMessageDialog(m_dvCurrent.getFrame(), TIImageTool.langstr("ImageError"), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
 				}		
-				catch (IOException iox) {
-					iox.printStackTrace();
-					JOptionPane.showMessageDialog(m_dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
-				}
 				catch (ProtectedException px) {
 					JOptionPane.showMessageDialog(m_dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("InstallGenOSError"), JOptionPane.ERROR_MESSAGE); 
 				}

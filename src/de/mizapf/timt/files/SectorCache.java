@@ -94,7 +94,7 @@ public class SectorCache {
 		Sector sect = null;
 		while (backit.hasNext()) {
 			Sector sec = backit.next();
-			if (DEBUG) System.out.println("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + ")");
+			if (DEBUG) System.out.print("Cache: Sector " + sec.getNumber() + " (v"  + sec.getGeneration() + "), withCurrent = " + withCurrent + ": ");
 			
 			// Must be "<" for a working Undo
 			// Undos are done from committed changes, so nextgen is higher than
@@ -106,6 +106,9 @@ public class SectorCache {
 				if (DEBUG) System.out.println("hit");
 				sect = sec;
 				break;
+			}
+			else {
+				if (DEBUG) System.out.println("skip");
 			}
 		}
 		// If we could not find a version earlier than the selected generation, return null

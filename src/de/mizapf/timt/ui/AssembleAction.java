@@ -267,9 +267,6 @@ public class AssembleAction extends Activity {
 				ix.printStackTrace();
 				// JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 				
 			}
-			catch (IOException iox) {
-				iox.printStackTrace();
-			}
 		}
 		
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));

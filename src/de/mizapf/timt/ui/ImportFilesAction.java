@@ -177,11 +177,7 @@ public class ImportFilesAction extends Activity {
 			catch (IllegalOperationException iox) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IllegalOperation") + ": " + iox.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 				bOK = false;
-			} /*
-			catch (FileNotFoundException fnfx) {
-				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("FileNotFound") + ": " + fnfx.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
-				bOK = false;
-			} */
+			}
 		}
 		try {
 			dirCurrent.commit(true);
@@ -190,10 +186,6 @@ public class ImportFilesAction extends Activity {
 			ix.printStackTrace();
 			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 		}		
-		catch (IOException iox) {
-			iox.printStackTrace();
-			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("IOError") + ": " + iox.getClass().getName(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
-		}
 		catch (ProtectedException px) {
 			JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 		}

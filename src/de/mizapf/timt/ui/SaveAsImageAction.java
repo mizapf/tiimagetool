@@ -121,7 +121,7 @@ public class SaveAsImageAction extends Activity {
 				}
 				
 				// Ready to save
-				System.out.println("Save as " + selectedFile.getAbsolutePath());
+				// System.out.println("Save as " + selectedFile.getAbsolutePath());
 				
 				try {
 					newImage = (FileImageFormat)ImageFormat.getImageFormat(selectedFile.getAbsolutePath(), sd.getImageType(), vol.getFormatParams());

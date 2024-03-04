@@ -679,8 +679,8 @@ public class Directory extends Element {
 		dir.setContainingDirectory(this);
 	}
 	
-	// Called by Actions. Only the Archive.commit may throw an IOException
-	public void commit(boolean bFinal) throws ImageException, IOException, ProtectedException {
+	// Called by Actions. 
+	public void commit(boolean bFinal) throws ImageException, ProtectedException {
 		// Update directory descriptor record
 		// System.out.println("Directory " + getName() + " commit: final=" + bFinal);
 		// Thread.currentThread().dumpStack();
@@ -799,7 +799,7 @@ public class Directory extends Element {
 	}
 	
 	/** Called from DeleteAction and PasteAction. */
-	public void delDir(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException  {
+	public void delDir(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, ImageException, FormatException, IllegalOperationException  {
 		// Remove from volume
 		deleteDirectory(dir, bRecurse);
 		// Remove from internal list
@@ -936,9 +936,8 @@ public class Directory extends Element {
 		1. Deletes the file 
 		2. Inserts the new version.
 		If the new version is too big, inserts the old version again.
-		TODO: Remove this reinsert.
 	*/
-	protected TFile updateFile(TFile file, byte[] abySectorContent, int nNewL3, boolean bNextGen) throws ImageException, InvalidNameException, IOException, ProtectedException {
+	protected TFile updateFile(TFile file, byte[] abySectorContent, int nNewL3, boolean bNextGen) throws ImageException, InvalidNameException, ProtectedException {
 		// Keep the old file as a TIFiles image
 		byte[] abyTfiNew = TIFiles.createTfi(abySectorContent, file.getName(), file.getFlags(), file.getRecordLength(), nNewL3);
 

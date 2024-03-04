@@ -105,12 +105,12 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 	}
 	
 	HFDCFileSystem() {
-		System.out.println("HFDC file system");
+		// System.out.println("HFDC file system");
 	}
 	
 	HFDCFileSystem(FormatParameters param) {
 		super(param);
-		System.out.println("HFDC file system");
+		// System.out.println("HFDC file system");
 	}
 	
 	int getAUEmulateSector() {
@@ -146,6 +146,10 @@ public class HFDCFileSystem extends HarddiskFileSystem {
 		
 		((HarddiskImageFormat)m_Image).setFormatUnitLength(m_nFSSectorsPerTrack * TFileSystem.SECTOR_LENGTH);
 	}	
+	
+	void setEmulate(int emulateAU) {
+		m_nFSEmulate = emulateAU;
+	}
 	
 	@Override
 	FormatParameters getParams() {

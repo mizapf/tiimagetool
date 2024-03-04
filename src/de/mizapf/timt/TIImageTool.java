@@ -76,6 +76,9 @@
   	[x] Use a full editor for textual files
   	[x] Drop CHD conversion (saving converts to v5)
   	[x] Drop RAW/CHD conversion
+  	[x] Drop HFDC/SCSI conversions (would imply sector length change)
+  	
+  	[ ] Sector editor: Add first column
 */
 
 package de.mizapf.timt;
@@ -533,13 +536,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			m_iEditCF = createMenuItem(new EditCF7Action());
 			m_mUtility.add(m_iEditCF);
 
-			m_mUtility.addSeparator();
-			m_iToHfdc = createMenuItem(new ConvertToHFDCAction());
-			m_mUtility.add(m_iToHfdc);
-			
-			m_iToScsi = createMenuItem(new ConvertToSCSIAction());
-			m_mUtility.add(m_iToScsi);
-			
 			m_mUtility.addSeparator();
 			m_iSerialBridge = createMenuItem(new SerialBridgeAction());
 			m_mUtility.add(m_iSerialBridge);
@@ -2219,8 +2215,6 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		m_iQuit.setEnabled(bAlways);
 		
 		m_iCheck.setEnabled(bOpenImage);
-		m_iToScsi.setEnabled(bImageIsHFDC);
-		m_iToHfdc.setEnabled(bImageIsSCSI);
 		m_iInstallGenOS.setEnabled(bOpenImage);
 		m_iSerialBridge.setEnabled(m_bSerial);
 

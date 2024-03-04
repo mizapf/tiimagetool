@@ -396,7 +396,7 @@ public class Archive extends Directory {
 	}
 
 	@Override
-	public void commit(boolean bNextGen) throws ImageException, IOException, ProtectedException {
+	public void commit(boolean bNextGen) throws ImageException, ProtectedException {
 		// For archives, we now have to rebuild the byte array
 		// System.out.println("Archive commit");
 		m_abyOldContent = m_abyContent;
@@ -411,11 +411,6 @@ public class Archive extends Directory {
 			// System.out.println("Archive commit done");
 
 		}
-/*		catch (ImageFullException ifx) {
-			// Image is full; revert to previous state
-			ifx.printStackTrace();
-			throw new ImageException(TIImageTool.langstr("ArchiveNoSpaceLeft"));
-		} */
 		catch (InvalidNameException inx) {
 			inx.printStackTrace();
 			throw new ImageException(TIImageTool.langstr("ArchiveError"));
@@ -488,7 +483,7 @@ public class Archive extends Directory {
 	}
 	
 	@Override
-	public void delDir(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, IOException, ImageException, FormatException, IllegalOperationException {
+	public void delDir(Directory dir, boolean bRecurse) throws ProtectedException, FileNotFoundException, ImageException, FormatException, IllegalOperationException {
 		throw new IllegalOperationException(TIImageTool.langstr("ArchiveNotDelDir"));
 	}
 	

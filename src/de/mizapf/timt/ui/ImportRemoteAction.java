@@ -113,9 +113,11 @@ public class ImportRemoteAction extends Activity {
 			
 			// Now insert abyTif as done with "Insert File"
 			try {
-//				volTarget.reopenForWrite();
 				imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, "UNNAMED");
-//				volTarget.reopenForRead();
+				dirCurrent.commit(true);
+			}
+			catch (FileExistsException fx) {
+				JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
 			catch (java.io.FileNotFoundException fnfx) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
@@ -132,6 +134,7 @@ public class ImportRemoteAction extends Activity {
 			catch (InvalidNameException ix) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + ix.getMessage(), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
 			}
+			
 			imagetool.refreshPanel(volTarget);			
 		}
 	}

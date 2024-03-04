@@ -130,15 +130,15 @@ public abstract class FileImageFormat extends ImageFormat {
 		
 		if (sect == null) {
 			// Otherwise, determine the format unit of this sector
-			// System.out.println("nSecNum = " + nSectorNumber);
+			// System.out.println("from image");
 			int funum = getFUNumberFromSector(nSectorNumber); // throws ImageException
 			loadFormatUnit(funum);
 				
 			ImageSector isect = findSector(nSectorNumber); // throws ImageException
 			if (isect == null) throw new ImageException(String.format(TIImageTool.langstr("SectorNotFound"), nSectorNumber));
 			sect = isect;
-			// System.out.println(Utilities.hexdump(sect.getData()));
 		}
+		// System.out.println(Utilities.hexdump(sect.getData()));
 		return sect;	
 	}
 	

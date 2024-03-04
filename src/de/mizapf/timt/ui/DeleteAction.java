@@ -79,25 +79,22 @@ public class DeleteAction extends Activity {
 
 		int nRet = JOptionPane.showConfirmDialog(dvCurrent.getFrame(), jp, TIImageTool.langstr("DeleteObjects"), JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
 		if (nRet == JOptionPane.OK_OPTION) {
-			for (Element selected: dvCurrent.getSelectedEntries()) {
-				if (selected instanceof TFile) {
+			try {
+				for (Element selected: dvCurrent.getSelectedEntries()) {
 					try {
-						// System.out.println("Delete " + selected);
-						dirCurrent.deleteFile((TFile)selected, true);
-					}
-					catch (FileNotFoundException fnfx) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("DeleteNotFound"), fnfx.getMessage()), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
+						if (selected instanceof TFile) {
+							// System.out.println("Delete " + selected);
+							dirCurrent.deleteFile((TFile)selected, true);					
+						}
+						else {
+							if (selected instanceof Directory) {
+								dirCurrent.delDir((Directory)selected, cb.isSelected());
+							}
+							else System.err.println("BUG: Unknown type in delete");
+						}
 					}
 					catch (ImageException ix) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImageErrorDelete"), selected.getName()), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
-					}
-					catch (ProtectedException px) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("VolumeWP"), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
-					}
-				}
-				if (selected instanceof Directory) {
-					try {
-						dirCurrent.delDir((Directory)selected, cb.isSelected());
 					}
 					catch (FileNotFoundException fnfx) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("DeleteNotFound"), fnfx.getMessage()), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
@@ -105,43 +102,17 @@ public class DeleteAction extends Activity {
 					catch (FormatException fx) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("DeleteNotEmpty"), selected.getName()), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
 					}
-					catch (IOException iox) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("IOErrorDelete"), selected.getName()), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
-					}
-					catch (ImageException ix) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImageErrorDelete"), selected.getName()), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
-					}
-					catch (ProtectedException px) {
-						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("VolumeWP"), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
-					}
 					catch (IllegalOperationException ix) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), ix.getMessage(), TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);
 					}
 				}
-			}
-			try {
-				dirCurrent.commit(true);
-				// System.out.println("Commit after delete, changed=" + dirCurrent.getVolume().isModified());
-			}
-			catch (FileNotFoundException fnfx) {
-				if (fnfx.getMessage().indexOf("ermission")!=-1) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NoPermissionImage"), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE); 
-				}
-				else {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NoReopenWrite"), TIImageTool.langstr("WriteError"), JOptionPane.ERROR_MESSAGE);
-				}
 				try {
-					imagetool.reloadVolume(vol);
+					dirCurrent.commit(true);
+					// System.out.println("Commit after delete, changed=" + dirCurrent.getVolume().isModified());
 				}
-				catch (Exception ex) {
-					JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("NotReopen"), TIImageTool.langstr("ReadError"), JOptionPane.ERROR_MESSAGE); 
+				catch (ImageException ix) {
+					System.err.println(String.format(TIImageTool.langstr("ImageErrorUpdate"), dirCurrent.getName()));
 				}
-			}
-			catch (IOException iox) {
-				System.err.println(String.format(TIImageTool.langstr("IOErrorUpdate"), dirCurrent.getName()));
-			}
-			catch (ImageException ix) {
-				System.err.println(String.format(TIImageTool.langstr("ImageErrorUpdate"), dirCurrent.getName()));
 			}
 			catch (ProtectedException px) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(),  TIImageTool.langstr("DeleteError"), JOptionPane.ERROR_MESSAGE);

@@ -42,19 +42,18 @@ public class ToggleEmulateAction extends Activity {
 	// Used from the Menu
 	public void go() {
 		DirectoryView dvCurrent = imagetool.getSelectedView();
+		Directory dirCurrent = dvCurrent.getDirectory();
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));	
 		Element elFirst = dvCurrent.getClickedElement();
+		Volume vol = null;
 		try {
 			if (elFirst instanceof TFile) {
-				Volume vol = dvCurrent.getVolume();
-//				vol.reopenForWrite();		
+				vol = dvCurrent.getVolume();
 				vol.toggleEmulateFlag(((TFile)elFirst).getFIBLocation());
-//				vol.reopenForRead();
 			}
 			else {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ToggleEmulateBug") + ": " + elFirst.getName(), TIImageTool.langstr("InternalError"), JOptionPane.ERROR_MESSAGE); 		
 			}
-			dvCurrent.refreshAll();
 		}
 		catch (ProtectedException px) {
 			JOptionPane.showMessageDialog(dvCurrent.getFrame(), px.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
@@ -63,7 +62,9 @@ public class ToggleEmulateAction extends Activity {
 			JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("ImageError") + ": " + ix.getMessage(), TIImageTool.langstr("Error"), JOptionPane.ERROR_MESSAGE);
 			ix.printStackTrace();
 		}
-		
+		if (vol != null) 
+			vol.nextGeneration(true);
+		dvCurrent.refreshAll();		
 		m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 	}
 }

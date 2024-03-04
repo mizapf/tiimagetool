@@ -97,6 +97,13 @@ public class Volume {
 			dirRoot = new Directory(this, sector0, null);   // used for HD
 
 		m_FileSystem.setRootDirectory(dirRoot);
+		
+		byte[] vib = sector0.getData();
+		m_FileSystem.setVolumeName0(Utilities.getString10(vib, 0));
+		
+		if (m_FileSystem instanceof HFDCFileSystem) {
+			((HFDCFileSystem)m_FileSystem).setEmulate(Utilities.getInt16(vib, 0x1a));
+		}
 	}
 	
 	public boolean isReadOnly() {
@@ -425,7 +432,7 @@ public class Volume {
 		m_FileSystem.setImage(newImage);
 		
 		m_Image = newImage;
-		System.out.println(newImage.getClass().getName());
+		// System.out.println(newImage.getClass().getName());
 	}
 		
 	public boolean isMemoryImage() {
