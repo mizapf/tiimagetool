@@ -39,7 +39,8 @@ in deeper levels.
 checks for under-/over-/cross-allocation issues, for L3 record count errors,
 and for CRC errors in track dump images.
 16 = There is a context menu which is displayed when you click the right mouse button within
-a directory view.
+a directory view. If your mouse does not offer a right button, you can choose
+to include the context menu in the main menu.
 17 = Directory views can be detached from the main window so that you can easily
 compare image contents and use drag-and-drop to copy or move contents. When you
 close a detached view, it becomes a tab in the main window. When you close the
@@ -64,25 +65,37 @@ it can produce syntactically correct source code that can be assembled again.
 exclude regions from disassembly and that stores its settings for each file
 so that you do not have to enter them again.
 25 = You can create a Geneve floppy or hard boot disk with the menu function 
-<em>Utility->Install Geneve OS</em>. All necessary files, including GeneveOS, are 
-contained in this TIImageTool distribution. If you have the boot EPROM dump, 
-you can immediately fire up your MAME Geneve emulation.
-26 = You can create CHD files (MAME hard disk containers) from your plain
-SCSI drive dump, and you can get a dump to be written back again.
+<em>Utility->Install Geneve OS</em>. All necessary files, including GeneveOS, must
+be stored in a directory that you can specify.
+26 = TIImageTool works on the image exclusively in memory; changes are only 
+applied by the “Save” function.
 27 = TIImageTool provides the Serial Bridge feature, which allows MAME to
 communicate with a real TI via a serial connection.
 28 = There is a command line mode in TIImageTool which can be used to get a 
 directory listing or to output a text file located in an
-image file. Use <em>java -jar tiimagetool.jar CommandShell -h</em> to get more information.
+image file. Use <em>java -classpath tiimagetool.jar de.mizapf.timt.CommandShell -h</em> 
+to get more information.
 29 = You can import BASIC programs from a text file or the built-in text editor;
 just copy and paste a BASIC listing from a website into your image file.
 30 = Output from the program, including error messages, can now be logged in
 a file; you can set the file name in the preferences.
-31 = You can directly read, write, and create image files for the Lotharek Floppy Disk Emulator.
+31 = You can directly read, write, and create image files for the Lotharek/GoTek Floppy Disk Emulator.
 32 = There is a Search feature in the Utility menu by which you can look
 for file names and even for file contents.
 33 = There is a sector editor in the <em>Utilities</em> which allows you to edit sectors
 of floppy or HD images, even of HFE images.
 34 = TIImageTool offers various UI languages that you can change in the preferences.
-35 = You can read Compact Flash cards with TIImageTool, and you can format CF7
-volumes or move and copy files from or into them directly. 
+35 = You have to read and write CF7 cards with your own tool, but you can add 
+or delete volumes on these images using TIImageTool and edit these volumes individually.
+36 = You can not only open text and BASIC files, but also edit and save them.
+37 = You can undo most operations, or change your mind and redo them.
+38 = You have to choose the image format at the time of saving. That way, you can
+easily save an existing image in another format.
+39 = TIImageTool supports SCSI and IDE images, the latter with up to 8 partitions.
+40 = You can freely define image file suffixes so that those are visible in the file dialogs. 
+41 = Below the file listing, a small gap remains where you can right-click without
+selecting a file.
+42 = If you save a partition or volume using "Save As", it will be saved as a 
+separate image. If you have just changed something and want to save it, use "Save".
+43 = 43 = You can only view one partition of partitioned images (IDE/CF7)
+at a time. You have to copy between partitions via an intermediate step.

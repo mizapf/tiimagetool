@@ -37,8 +37,9 @@ nei livelli inferiori.
 15 = E' disponibile una funzione di controllo nel menu <em>Utilità->Controlla filesystem</em> che
 verifica eventuali problemi di allocazione, errori di conteggio record L3 ed errori CRC 
 nelle immagini track dump.
-16 = E' disponibile un menu contestuale che viene mostrato quando si clicca il tasto destro del mouse
-all'interno di una finestra cartella.
+16 = C'è un menu contestuale che viene visualizzato quando si fa clic con il pulsante destro del mouse all'interno
+una visualizzazione della directory. Se il tuo mouse non offre un pulsante destro, puoi scegliere
+per includere il menu contestuale nel menu principale.
 17 = Le finestre directory possono essere distaccate dalla finestra principale in modo da poter
 facilmente confrontare i contenuti delle immagini ed utilizzare il trascinamento per copiare o spostare contenuti. 
 Quando chiudete una finestra scollegata diventa un tab nella finestra principale. Quando chiudete la
@@ -62,26 +63,42 @@ generare codice sorgente sintatticamente corretto che può essere assemblato di 
 24 = In TIImageTool è disponibile un disassemblatore GPL che può essere configurato per
 escludere alcune parti dal disassemblatore e che memorizza le sue impostazioni per ogni file
 in modo che non dobbiate reinserirli di nuovo.
-25 = Potete creare un floppy Geneve oppure un disco di boot con la funzione 
-<em>Utilità->Installa Geneve OS</em>. Tutti i file necessari, compreso GeneveOS, sono 
-contenuti in questa distribuzione di TIImageTool. Se avete il dump del boot EPROM, 
-potete far partire subito l'emulazione MAME Geneve.
-26 = Potete creare i file CHD (contenitori di hard disk MAME) a partire dal dump
-di un drive SCSI e potete effettuare di nuovo la scrittura di un dump.
+25 = È possibile utilizzare un disco di avvio o un disco rigido avviabile per
+Geneve selezionando <em>Strumenti->Installa GeneveOS</em>. 
+È necessario memorizzare i file necessari in una directory da selezionare. 
+26 = TIImageTool lavora sull'immagine esclusivamente in memoria; le modifiche 
+vengono applicate solo tramite "Salva".
 27 = TIImageTool fornisce la funzione Serial Bridge, che consente ad un sistema MAME
 di comunicare con un TI fisico attraverso una connessione seriale.
 28 = E' disponibile una modalità a linea di comando in TIImageTool che può essere usata per 
 ottenere un elenco delle directory o per produrre in output un file di testo che si trova
-all'interno di un file immagine. Usare <em>java -jar tiimagetool.jar CommandShell -h</em> per maggiori informazioni.
+all'interno di un file immagine. Usare 
+<em>java -classpath tiimagetool.jar de.mizapf.timt.CommandShell -h</em> per maggiori informazioni.
 29 = Potete importare programmi BASIC da un file di testo o dall'editor di testo integrato;
 basta copiare e incollare un listato BASIC da un sito web nel vostro file immagine.
 30 = I dati di output di un programma, compresi i messaggi d'errore, possono ora essere convogliati in un
 file di log; potete impostare il filename nelle preferenze.
-31 = Potete leggere, scrivere e creare file immagine direttamente per l'emulatore di Floppy Disk Lotharek.
+31 = Potete leggere, scrivere e creare file immagine direttamente per l'emulatore di Floppy Disk Lotharek/GoTek.
 32 = E' disponibile una funzione di Ricerca nem menu Utilità con la quale potete ricercare i file per nome 
 e persino per i contenuti dei file.
 33 = E' disponibile un editor di settori nel menu <em>Utilità</em> che consente di modificare singoli
 settori di immagini floppy, HD o anche immagini HFE.
 34 = TIImageTool offre svariati lingue che è possibile cambiare nelle preferenze.
-35 = Potete leggere le card Compact Flash con TIImageTool e potete anche formattare volumi CF7
-oppure spostare e copiare file direttamente da e verso di esse. 
+35 = Devi leggere e scrivere le schede CF7 con il tuo strumento, ma puoi aggiungere 
+o eliminare volumi su queste immagini utilizzando TIImageTool e modificare questi 
+volumi individualmente.
+36 = Non solo è possibile aprire testi e programmi BASIC, ma anche modificarli 
+e salvarli nuovamente.
+37 = È possibile annullare quasi tutte le operazioni e poi eseguirle nuovamente 
+(funzione annulla/ripeti).
+38 = Seleziona il formato dell'immagine solo quando salvi l'immagine. Puoi anche
+salvare un'immagine esistente in un formato diverso.
+39 = TIImageTool supporta immagini SCSI e IDE, quest'ultima con un massimo di 8 partizioni.
+40 = Puoi scegliere liberamente i suffissi per le immagini in modo che vengano 
+visualizzate nella finestra di dialogo del file.
+41 = Rimane un'area libera sotto l'elenco dei file in cui è possibile fare clic 
+con il pulsante destro del mouse senza selezionare un file.
+42 = Se salvi una partizione o un volume utilizzando "Salva come", verrà 
+salvato come immagine separata. Se hai appena cambiato qualcosa e vuoi salvarlo, usa "Salva".
+43 = È possibile visualizzare solo una partizione di immagini partizionate (IDE/CF7) 
+alla volta. È necessario copiare tra le partizioni tramite un passaggio intermedio.

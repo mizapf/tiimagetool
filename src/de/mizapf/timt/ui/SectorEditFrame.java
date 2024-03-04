@@ -168,6 +168,16 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		jpDisplays.setLayout(new BoxLayout(jpDisplays, BoxLayout.X_AXIS));
 		jpDisplays.add(Box.createHorizontalStrut(10));
 		
+		JPanel jpFirstCol = new JPanel();
+		jpFirstCol.setLayout(new BoxLayout(jpFirstCol, BoxLayout.Y_AXIS));
+		for (int i=0; i < 16; i++) {
+			JLabel jl = new JLabel(Utilities.toHex(i*16, 2));
+			jpFirstCol.add(jl);
+		}
+
+		jpDisplays.add(jpFirstCol);		
+		jpDisplays.add(Box.createHorizontalStrut(20));
+		
 		JPanel jpHexDisplay = new JPanel();
 		jpHexDisplay.setLayout(new BoxLayout(jpHexDisplay, BoxLayout.Y_AXIS));
 				
@@ -215,7 +225,9 @@ public class SectorEditFrame extends JFrame implements ActionListener, WindowLis
 		catch (ImageException ix) {
 			ix.printStackTrace();
 		}
-		m_image.nextGeneration(true);	
+		m_image.nextGeneration(true);
+		
+		setResizable(false);
 	}
 
 	private void fillHexDisplay(byte[] content) {

@@ -27,7 +27,7 @@ tout ce que vous attendez des répertoires est possible, y compris couper, colle
 renommer et bien plus encore. Vous pouvez même ouvrir une archive dans l'archive
 et, par exemple, renommer un fichier.
 10 = Vous pouvez importer des fichiers binaires en tant que fichiers PROGRAM.
-11 = Vous pouvez importer des fichiers texte sous forme de fichiers DIV/VAR-80, 
+11 = Vous pouvez importer des fichiers texte sous forme de fichiers DIS/VAR-80, 
 ce qui est particulièrement utile pour le code source d'assemblage.
 12 = TIImageTool découvre si un fichier est un programme BASIC et fournit une 
 liste BASIC lors d'un double-clic. Ceci s'applique aux fichiers PROGRAM, MERGE et LONG (INT/VAR 254).
@@ -39,8 +39,9 @@ dans le répertoire racine et seulement trois (correspondant au système de fich
 TI étendu de HFDC ou GeneveOS).
 15 = Il y a un vérificateur de système de fichiers dans le menu <em>Outils</em> 
 qui peut détecter et corriger diverses erreurs telles qu'une allocation erronée/sur/croisée.
-16 = Un menu contextuel avec les fonctions correspondantes apparaît lorsque vous
-cliquez avec le bouton droit dans une vue de répertoire.
+16 = Un menu contextuel s'affiche lorsque vous cliquez sur le bouton droit de la souris dans
+une vue répertoire. Si votre souris ne propose pas de bouton droit, vous pouvez choisir
+pour inclure le menu contextuel dans le menu principal.
 17 = Une vue de répertoire peut avoir sa propre fenêtre, ce qui facilite la comparaison 
 du contenu ou le glisser-déposer de fichiers entre les images. Lorsque vous 
 fermez une telle fenêtre, elle s'attache à la fenêtre principale sous forme d'onglet.
@@ -63,30 +64,47 @@ générer du code source, qui peut être remonté.
 24 = Il existe également un désassembleur GPL dans TIImageTool qui peut exclure 
 des zones du désassemblage en les marquant comme zones de données ou de texte. 
 Ces informations ainsi que d'autres sont enregistrées de manière permanente pour le fichier respectif.
-25 = Il est possible de créer un disque de démarrage ou un disque dur pour Geneve 
-en sélectionnant <em>Outils->Installer GeneveOS</em>. Tous les fichiers nécessaires à cela sont inclus dans cette distribution TIImageTool.
-26 = Les images CHD (c'est-à-dire les images du disque dur MAME) peuvent être créées 
-à partir de simples dumps de secteur. A l'inverse, vous pouvez également lire les 
-images CHD afin de les écrire sur un disque SCSI que vous souhaitez utiliser sur la TI/Geneve.
+25 =  Il est possible d'utiliser un disque de démarrage ou un disque dur bootable pour
+Geneve en sélectionnant <em>Outils->Installer GeneveOS</em>. Vous devez stocker les fichiers
+nécessaires dans un répertoire à sélectionner.
+26 = TIImageTool travaille sur l'image exclusivement en mémoire ; les modifications 
+ne sont appliquées que par « Enregistrer ».
 27 = TIImageTool fournit la fonction "Serial Bridge", qui permet de coupler l'émulation 
 TI/Geneve dans MAME à un vrai port série.
 28 = Il existe une option pour exécuter TIImageTool à partir d'une ligne de commande 
 afin de pouvoir rediriger la sortie du répertoire vers un fichier. Utilisez 
-<em>java -jar tiimagetool.jar CommandShell -h</em> pour des informations plus détaillées.
+<em>java -classpath tiimagetool.jar de.mizapf.timt.CommandShell -h</em> pour des
+informations plus détaillées.
 29 = Les programmes BASIC sous forme de texte peuvent être importés dans une image. 
 Cela facilite la récupération d'un programme sur un site Web et son exécution dans MAME, par exemple.
 30 = Les résultats d'erreur et de diagnostic de TIImageTool peuvent être redirigés
 vers un fichier. Cela peut être défini dans les <em>Paramètres</em>.
 31 = TIImageTool prend en charge le format HFE utilisé par l'émulateur de disquette 
-Lotharek directement et sans conversion.
+Lotharek/GoTek directement et sans conversion.
 32 = Il y a une fonction de recherche dans le menu <em>Extras</em>, avec laquelle 
 vous pouvez non seulement rechercher des fichiers sur des images, mais même du contenu 
 et également utiliser des expressions régulières.
 33 = Avec l'éditeur de secteurs intégré, vous pouvez éditer des secteurs individuels 
 sur une image, par exemple pour la réparer. Tous les formats sont pris en charge, y 
-compris les conteneurs CHD de MAME ou les conteneurs HFE de Lotharek.
+compris les conteneurs CHD de MAME ou les conteneurs HFE de Lotharek/GoTek.
 34 = TIImageTool propose son interface dans différentes langues, qui peuvent être 
 modifiées dans les <em>Paramètres</em>.
-35 = Il est possible de lire des cartes Compact Flash (ou autres cartes mémoire) avec 
-TIImageTool et de les stocker sous forme d'image. Sur cette image, les volumes CF7
-peuvent être formatés, édités et enfin tout peut être réécrit sur la carte mémoire.
+35 = Vous devez lire et écrire les cartes CF7 avec votre propre outil, mais vous
+pouvez ajouter ou supprimer des volumes sur ces images à l'aide de TIImageTool 
+et éditer ces volumes individuellement.
+36 = Vous pouvez non seulement ouvrir des textes et des programmes BASIC, mais aussi
+les éditer et les enregistrer à nouveau.
+37 = Vous pouvez annuler presque toutes les opérations puis les exécuter à 
+nouveau (fonction annuler/recommencer).
+38 = Vous sélectionnez uniquement le format d'image lors de l'enregistrement de l'image.
+Vous pouvez également enregistrer une image existante dans un format différent.
+39 = TIImageTool prend en charge les images SCSI et IDE, ces dernières avec jusqu'à 8 partitions.
+40 = Vous pouvez choisir librement les suffixes des images afin qu'elles soient
+affichées dans la boîte de dialogue de fichier.
+41 = Il reste une zone libre sous la liste des fichiers sur laquelle vous pouvez
+cliquer avec le bouton droit sans sélectionner de fichier.
+42 = Si vous enregistrez une partition ou un volume en utilisant « Enregistrer 
+sous », il sera enregistré en tant qu'image distincte. Si vous venez de modifier
+quelque chose et souhaitez l'enregistrer, utilisez "Enregistrer".
+43 = Vous ne pouvez afficher qu'une seule partition d'images partitionnées (IDE/CF7)
+à la fois. Vous devez copier entre les partitions via une étape intermédiaire.

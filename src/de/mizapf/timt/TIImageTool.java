@@ -77,8 +77,6 @@
   	[x] Drop CHD conversion (saving converts to v5)
   	[x] Drop RAW/CHD conversion
   	[x] Drop HFDC/SCSI conversions (would imply sector length change)
-  	
-  	[ ] Sector editor: Add first column
 */
 
 package de.mizapf.timt;

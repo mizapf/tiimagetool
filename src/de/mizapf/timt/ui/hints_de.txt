@@ -25,7 +25,7 @@ behandelt wird, ist alles möglich, was man von Verzeichnissen erwartet, einschl
 dem Ausschneiden, Einfügen, Umbenennen und mehr. Man kann sogar ein Archiv im 
 Archiv öffnen und darin zum Beispiel eine Datei umbenennen.
 10 = Man kann Binärdateien als PROGRAM-Dateien importieren. 
-11 = Man kann Textdateien als DIV/VAR-80-Dateien importieren, was besonders 
+11 = Man kann Textdateien als DIS/VAR-80-Dateien importieren, was besonders 
 nützlich für Assemberquellcode ist.
 12 = TIImageTool findet heraus, ob eine Datei ein BASIC-Programm ist und liefert
 bei Doppelklick ein BASIC-Listing. Das gilt für PROGRAM-, MERGE- sowie LONG-Dateien
@@ -38,7 +38,8 @@ drei (entsprechend dem erweiterten TI-Dateisystem von HFDC oder GeneveOS).
 15 = Es gibt einen Dateisystemprüfer im <em>Extras</em>-Menü, der verschiedene 
 Fehler wie Fehl-/Über-/Kreuzallokation entdecken und beheben kann.
 16 = Es erscheint ein Kontextmenü mit entsprechenden Funktionen, wenn Sie die
-rechte Maustaste in einer Verzeichnisansicht klicken.
+rechte Maustaste in einer Verzeichnisansicht klicken. Falls Ihre Maus keine
+rechte Taste besitzt, kann das Menü in das Hauptmenü eingegliedert werden.
 17 = Eine Verzeichnisansicht kann ein eigenes Fenster bekommen, was es einfacher
 macht, Inhalte zu vergleichen oder Dateien per Drag-and-Drop zwischen den Images
 zu bewegen. Ein solches Fenster hängt sich beim Schließen wieder als Reiter in
@@ -67,32 +68,46 @@ gekennzeichnet werden. Diese und andere Angaben werden für die jeweilige Datei
 permanent gespeichert.
 25 = Es ist möglich, eine Boot-Diskette oder eine bootfähige Festplatte für 
 den Geneve zu erzeugen, indem man <em>Extras->GeneveOS installieren</em>
-auswählt. Alle hierzu notwendigen Dateien sind in dieser TIImageTool-Distribution
-enthalten.
-26 = CHD-Images (also MAME-Festplatten-Images) können aus einfachen Sektordumps
-erzeugt werden. Man kann umgekehrt die CHD-Images auch auslesen, um sie etwa
-auf eine SCSI-Platte zu schreiben, die man am TI/Geneve verwenden möchte.
+auswählt. Die notwendigen Dateien müssen Sie in ein auszuwählendes Verzeichnis ablegen. 
+26 = TIImageTool arbeitet auf dem Image ausschließlich im Speicher; Änderungen
+werden erst durch "Speichern" übernommen.
 27 = TIImageTool bietet die Funktion "Serial Bridge", die es ermöglicht, die
 TI/Geneve-Emulation in MAME mit einer echten seriellen Schnittstelle zu koppeln.
 28 = Es gibt die Möglichkeit, TIImageTool in einer Befehlszeile auszuführen, sodass
 man Verzeichnisausgaben in eine Datei umlenken kann. Verwenden Sie  
-<em>java -jar tiimagetool.jar CommandShell -h</em> für weiter gehende Informationen.
+<em>java -classpath tiimagetool.jar de.mizapf.timt.CommandShell -h</em> für 
+weitergehende Informationen.
 29 = In Textform vorliegende BASIC-Programme können in ein Image importiert werden. 
 Damit ist es ein Leichtes, ein Programm von einer Webseite zu übernehmen und 
 dann etwa in MAME zur Ausführung zu bringen.
 30 = Fehler- und Diagnoseausgaben von TIImageTool können in eine Datei umgelenkt werden.
 Dies ist in den <em>Einstellungen</em> festzulegen.
-31 = TIImageTool unterstützt das HFE-Format, welches vom Lotharek-Floppy-Emulator
+31 = TIImageTool unterstützt das HFE-Format, welches vom Lotharek-/GoTek-Floppy-Emulator
 verwendet wird, direkt und ohne Konvertierung.
 32 = Es gibt eine Suchfunktion im <em>Extras</em>-Menü, mit dem man nicht nur
 Dateien auf Images, sondern sogar nach Inhalten suchen und noch dazu auch
 reguläre Ausdrücke verwenden kann.
 33 = Mit dem eingebauten Sektoreditor kann man einzelne Sektoren auf einem Image
 bearbeiten, etwa um dieses zu reparieren. Es werden alle Formate unterstützt, 
-einschließlich der CHD-Container von MAME oder HFE von Lotharek.
+einschließlich der CHD-Container von MAME oder HFE von Lotharek/GoTek.
 34 = TIImageTool bietet seine Oberfläche in verschiedenen Sprachen an, 
 die man in den <em>Einstellungen</em> ändern kann.
-35 = Es ist möglich, Compact-Flash-Karten (oder andere Speicherkarten) 
-mit TIImageTool zu lesen und als Image abzulegen. Auf diesem Image können 
-CF7-Volumes formatiert, bearbeitet und schließlich alles wieder auf die 
-Speicherkarte geschrieben werden.
+35 = CF7-Karten müssen Sie mit einem eigenen Tool auslesen und beschreiben, aber
+Sie können mit TIImageTool auf diesen Images Volumes hinzufügen oder
+löschen und diese Volumes einzeln bearbeiten.
+36 = Sie können Texte und BASIC-Programme nicht nur öffnen, sondern sie auch
+bearbeiten und wieder speichern.
+37 = Sie können fast alle Operationen wieder rückgängig machen und sie danach
+wieder ausführen (Undo/Redo-Funktion).
+38 = Sie wählen das Imageformat erst beim Speichern des Images. Sie können so auch
+ein bestehendes Image in einem anderen Format speichern.
+39 = TIImageTool unterstützt SCSI- und IDE-Images, letztere mit bis zu 8 Partitionen.
+40 = Sie können Suffixe für Images frei wählen, sodass diese im Dateidialog angezeigt werden.
+41 = Unter dem Dateilisting verbleibt ein freier Bereich, in dem Sie rechtsklicken können,
+ohne eine Datei anzuwählen.
+42 = Wenn Sie eine Partition oder ein Volume mit "Speichern unter" abspeichern,
+wird dies als separates Image abgelegt. Wenn Sie nur etwas geändert haben und
+speichern wollen, nutzen Sie "Speichern".
+43 = Von partitionierten Images (IDE/CF7) können Sie immer nur eine Partition
+auf einmal anzeigen. Das Kopieren zwischen Partitionen müssen Sie über einen
+Zwischenschritt vornehmen.
