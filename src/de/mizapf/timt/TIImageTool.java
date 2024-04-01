@@ -20,7 +20,7 @@
 ****************************************************************************/
 
 /*
-	TODOs for 3.0
+	TODOs for 3.0.1
 	-------------
     
     Images
@@ -77,6 +77,13 @@
   	[x] Drop CHD conversion (saving converts to v5)
   	[x] Drop RAW/CHD conversion
   	[x] Drop HFDC/SCSI conversions (would imply sector length change)
+  	
+  	Bugs
+  	[ ] Cut/paste from floppy root into floppy dir: java.lang.ClassCastException: 
+  	    class de.mizapf.timt.ui.DirectoryPanel$EndOfListElement cannot be cast 
+  	    to class de.mizapf.timt.files.Directory (de.mizapf.timt.ui.DirectoryPanel$EndOfListElement
+  	    and de.mizapf.timt.files.Directory are in unnamed module of loader 'app')
+        at de.mizapf.timt.ui.PasteAction.paste(PasteAction.java:205)
 */
 
 package de.mizapf.timt;
