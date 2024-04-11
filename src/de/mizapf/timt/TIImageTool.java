@@ -79,11 +79,15 @@
   	[x] Drop HFDC/SCSI conversions (would imply sector length change)
   	
   	Bugs
-  	[ ] Cut/paste from floppy root into floppy dir: java.lang.ClassCastException: 
+    [ ] Cut/paste from floppy root into floppy dir: java.lang.ClassCastException: 
   	    class de.mizapf.timt.ui.DirectoryPanel$EndOfListElement cannot be cast 
   	    to class de.mizapf.timt.files.Directory (de.mizapf.timt.ui.DirectoryPanel$EndOfListElement
   	    and de.mizapf.timt.files.Directory are in unnamed module of loader 'app')
         at de.mizapf.timt.ui.PasteAction.paste(PasteAction.java:205)
+    
+    Fixed
+    [x] Serial bridge standalone frame display
+    [x] File sizes in CommandShell dir are one too low
 */
 
 package de.mizapf.timt;
@@ -154,8 +158,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "3.0.0";
-	public final static String MONTH = "March";
+	public final static String VERSION = "3.0.1";
+	public final static String MONTH = "April";
 	public final static String YEAR = "2024";
 	
 	private static final String TITLE = "TIImageTool";
@@ -1008,25 +1012,67 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public static void main(String[] arg) {
 		if (arg.length>0) {
 			if (arg[0].equalsIgnoreCase("bridge")) {
+				
 				TIImageTool.localize();
 				try {
 					// Check for presence of RXTX
 					// If not available, block the remote functions
 					Class cls = Class.forName(SERIALPACKAGE + "SerialPort");
+					gnu.io.DriverManager.getInstance().loadDrivers();                
 				}
 				catch (ClassNotFoundException cnfx) {
 					System.err.println(langstr("MainSerialMissing"));
 					return;
 				}
+			
+				String sSerial = null;
+				String sPort = null;
 				
 				if (arg.length>2) {
-					String sSerial = arg[1];
-					String sPort = arg[2];
-					SerialBridgeAction act = new SerialBridgeAction();
-					act.setup(sSerial, sPort);
+					sSerial = arg[1];
+					sPort = arg[2];
 				}
-				else
+				else {
 					System.err.println(langstr("MainBridgeParamsMissing"));
+					return;
+				}
+				
+				// Set the look and feel
+				String lafclass = "javax.swing.plaf.metal.MetalLookAndFeel";
+
+				// We don't have the settings here, so let's try 16
+				fontSize = 16;
+				try {
+					if (arg.length > 3) {
+						fontSize = Integer.parseInt(arg[3]);
+					}
+				}
+				catch (NumberFormatException nfx) {
+					System.err.println(langstr(String.format("ParseError", arg[3])));
+					fontSize = 16;
+				}
+				
+				dialogFont = new Font(FONT, Font.PLAIN, fontSize);	
+				boldDialogFont = new Font(FONT, Font.BOLD, fontSize);
+				try {
+					UIManager.setLookAndFeel(lafclass);
+					UIManager.put("Label.font", dialogFont);
+					UIManager.put("TextField.font", dialogFont);
+					UIManager.put("Button.font", boldDialogFont);
+				}
+				catch (UnsupportedLookAndFeelException e) {
+					System.err.println(langstr("MainUnsuppLF") + ": " + lafclass);
+				}
+				catch (ClassNotFoundException e) {
+					System.err.println(langstr("MainNotFoundLF") + ": "+ lafclass);
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+	
+				SerialBridgeAction act = new SerialBridgeAction();
+				act.setup(sSerial, sPort);
+
 				return;
 			}
 			if (arg[0].equalsIgnoreCase("commandshell")) {

@@ -123,18 +123,22 @@ public class SerialBridgeDisplay implements ActionListener, WindowListener {
 	void createGui(Font font) {
 		m_frmDisplay.addWindowListener(this);
 		
+		Container cnt = m_frmDisplay.getContentPane();
+		cnt.setLayout(new BoxLayout(cnt, BoxLayout.Y_AXIS));
+		
 		m_frmDisplay.setVisible(true);
-		m_frmDisplay.setLayout(new BoxLayout(m_frmDisplay.getContentPane(), BoxLayout.Y_AXIS));
 		m_frmDisplay.setFont(font);
 		
 		// m_nFontHeight = 15;
-		FontRenderContext frc = ((Graphics2D)(m_frmDisplay.getGraphics())).getFontRenderContext();
+		Graphics2D g2d = (Graphics2D)m_frmDisplay.getGraphics();
+		FontRenderContext frc = g2d.getFontRenderContext();
 		LineMetrics lm = font.getLineMetrics("B", 0, 2, frc);
 		m_nFontHeight = (int)Math.ceil(lm.getHeight()*1.2);
 
 		FontMetrics fm = ((Graphics2D)(m_frmDisplay.getGraphics())).getFontMetrics(font);
 		m_nColumnWidth = fm.stringWidth(TIImageTool.langstr("SBDisplayColumn"))+40;
-//		System.out.println("font height: " + m_nFontHeight + ", width: " + m_nColumnWidth);		
+				
+		// System.out.println("font height: " + m_nFontHeight + ", width: " + m_nColumnWidth);		
 		Dimension dimPref = new Dimension(m_nColumnWidth, m_nFontHeight);
 
 		m_LedDataIn = new SerialDisplayLED(TIImageTool.langstr("SBDisplayDataIn"), false, 100, 0, dimPref, font);

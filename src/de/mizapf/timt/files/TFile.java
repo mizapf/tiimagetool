@@ -511,7 +511,7 @@ public class TFile extends Element {
 		if ((m_byFlags & PROTECTED)!=0) sProt = "P";
 		String sFrag = " ";
 		if (isFragmented()) sFrag = "F";
-		return String.format(sPattern, getName(), getUsedSectors(), typeToString(), 
+		return String.format(sPattern, getName(), getAllRequiredSectors(getVolume().getAUSize()), typeToString(), 
 			nSize, sProt, sFrag, m_tCreation.toString(), m_tUpdate.toString());
 	}
 

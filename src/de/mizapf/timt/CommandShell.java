@@ -189,6 +189,7 @@ public class CommandShell {
 	
 	private static Directory descendToDirectory(Volume image, String[] aSubdir, boolean bDir) throws FileNotFoundException {
 		// We need to descent to the given directory
+		if (image == null) return null;
 		Directory dirCurrent = image.getRootDirectory();
 		if (aSubdir == null) return dirCurrent;
 		int nPathLength = aSubdir.length;
@@ -320,6 +321,7 @@ public class CommandShell {
 		}
 		catch (ImageException ix) {
 			System.err.println(ix.getMessage());
+			return null;
 		}
 		
 		if (vol.isReadOnly()) {
@@ -352,6 +354,7 @@ public class CommandShell {
 		// We need to descent to the given directory
 		String[] dirPath = getPath(sSubdir);
 		Directory dirCurrent = descendToDirectory(image, dirPath, true);
+		if (dirCurrent == null) return null;
 
 		Volume vol = dirCurrent.getVolume();
 		
