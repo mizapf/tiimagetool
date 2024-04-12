@@ -34,7 +34,7 @@ import de.mizapf.timt.TIImageTool;
 
 public class Assembler {
 	
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	
 	byte[] m_Code;
 	static Command[] command; 
@@ -675,7 +675,7 @@ public class Assembler {
 			boolean bFirstInBlock = true;
 			bodylines = new LinkedList<DisassembledLine>();
 			tocFile.setPosition(0);
-			System.out.println("pass " + nPass);
+			debug("pass " + nPass);
 			tocFile.setBranchTable(branchtable);
 			
 			debug("===================");
