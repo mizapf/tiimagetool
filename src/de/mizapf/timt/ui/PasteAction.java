@@ -202,13 +202,18 @@ public class PasteAction extends Activity {
 							}
 						}
 						else {
-							Directory dir = (Directory)el;
-							// Ignore the parent link
-							if (dir.isParentLink()) continue;
-							
-							// Keep the allocation
-							dirTarget.moveinDir(dir);
-							dirSource.moveoutDir(dir);
+							if (el instanceof Directory) {
+								Directory dir = (Directory)el;
+								// Ignore the parent link
+								if (dir.isParentLink()) continue;
+								
+								// Keep the allocation
+								dirTarget.moveinDir(dir);
+								dirSource.moveoutDir(dir);
+							}
+							else {
+								System.out.println("Found end-of-list in selection; ignoring");
+							}
 						}
 					}
 					// System.out.println("paste done");

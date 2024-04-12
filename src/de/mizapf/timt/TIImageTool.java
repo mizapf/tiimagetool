@@ -67,7 +67,7 @@
     [x] Write back with sector editor
 	[ ] Cartridge creator (RPK)
 	[x] Change MacOS defaults (see below in this file)
-	[ ] Update hints
+	[x] Update hints
     [x] Allow Return key for New floppy image
     [x] Allow Return key for new element
     [ ] Encode control characters in files from escape sequence (like §81 -> CTRL-a)
@@ -78,16 +78,13 @@
   	[x] Drop RAW/CHD conversion
   	[x] Drop HFDC/SCSI conversions (would imply sector length change)
   	
-  	Bugs
-    [ ] Cut/paste from floppy root into floppy dir: java.lang.ClassCastException: 
-  	    class de.mizapf.timt.ui.DirectoryPanel$EndOfListElement cannot be cast 
-  	    to class de.mizapf.timt.files.Directory (de.mizapf.timt.ui.DirectoryPanel$EndOfListElement
-  	    and de.mizapf.timt.files.Directory are in unnamed module of loader 'app')
-        at de.mizapf.timt.ui.PasteAction.paste(PasteAction.java:205)
+  	Open bugs
     
-    Fixed
+    Fixed bugs
+    [x] Avoid pasting the end-of-list
     [x] Serial bridge standalone frame display
     [x] File sizes in CommandShell dir are one too low
+    [x] Improve output of InvalidEscape
 */
 
 package de.mizapf.timt;
