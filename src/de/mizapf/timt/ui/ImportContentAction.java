@@ -99,7 +99,6 @@ public class ImportContentAction extends Activity {
 			JOptionPane.showMessageDialog(imagetool.getMainFrame(), TIImageTool.langstr("ImportContentViewClosed"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
 			return true;
 		}
-		
 		boolean bValid = false;
 		String sName = null;
 		Directory dirCurrent = dvCurrent.getDirectory();
@@ -203,10 +202,62 @@ public class ImportContentAction extends Activity {
 				bValid = false;				
 			}
 		}
-		if (!bOK) dirCurrent.getVolume().rollback();
-		
+		if (!bOK) {
+			dirCurrent.getVolume().rollback();
+		}
 		imagetool.refresh(dvCurrent);
 		return bOK;
+	}
+	
+	public byte[] convertForImport(byte[] abyContent, DirectoryView dvCurrent, String sSuggested) {
+		if (!imagetool.viewStillThere(dvCurrent)) {
+			JOptionPane.showMessageDialog(imagetool.getMainFrame(), TIImageTool.langstr("ImportContentViewClosed"), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);
+			return null;
+		}
+		
+		boolean bValid = false;
+		String sName = null;
+		Directory dirCurrent = dvCurrent.getDirectory();
+		
+		ImportDialog impdia = null;
+		boolean bDone = false;
+		ImportParameters impParam = null;
+		boolean bOK = true;
+		boolean bUpdate = false;
+		byte[] abyTif = null;
+		
+		while (!bDone) {   // While file exists
+			while (!bValid) {
+				int mode = BasicCruncher.contentLooksLikeBasic(abyContent, settings.getPropertyBoolean(TIImageTool.VERBOSE))? ImportDialog.BASIC : ImportDialog.TEXTONLY;					
+				impdia = new ImportDialog(dvCurrent.getFrame(), sSuggested, false, mode);
+				impdia.setContent(abyContent);
+				impdia.setSettings(settings);
+				impdia.createGui();
+				impdia.setVisible(true);
+				if (impdia.confirmed()) {
+					sName = impdia.getFileName();
+					bValid = TFile.validName(sName);
+					if (!bValid) {
+						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + sName, TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);				
+					}
+				}
+				else {
+					// System.out.println("not confirmed");
+					return null;
+				}
+				impParam = impdia.getParameters();
+			}
+			
+			bDone = true;
+			abyTif = prepareFileImage(dvCurrent, impParam, abyContent);
+			
+			if (abyTif == null) {
+				bDone = false;
+				bValid = false;
+				continue;
+			}
+		}
+		return abyTif;
 	}
 	
 	private byte[] prepareFileImage(DirectoryView dvCurrent, ImportParameters impParam, byte[] abyContent) {

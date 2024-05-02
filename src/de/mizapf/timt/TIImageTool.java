@@ -20,7 +20,7 @@
 ****************************************************************************/
 
 /*
-	TODOs for 3.0.1
+	TODOs for 3.0.2
 	-------------
     
     Images
@@ -77,9 +77,11 @@
   	[x] Drop CHD conversion (saving converts to v5)
   	[x] Drop RAW/CHD conversion
   	[x] Drop HFDC/SCSI conversions (would imply sector length change)
-  	
+    [ ] Allow mass-import of non-headered files (Option Import all text files as DV80 / binary files as PRG; Preferences)
+
   	Open bugs
-    
+    [x] Importing a text or binary file (without TFI header) does not commit correctly
+
     Fixed bugs
     [x] Avoid pasting the end-of-list
     [x] Serial bridge standalone frame display
@@ -155,8 +157,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "3.0.1";
-	public final static String MONTH = "April";
+	public final static String VERSION = "3.0.2";
+	public final static String MONTH = "May";
 	public final static String YEAR = "2024";
 	
 	private static final String TITLE = "TIImageTool";
@@ -1766,7 +1768,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			if (sName.equals(TIFiles.NOHEADER)) {
 				if (TIFiles.hasFDRPrefix(abyTif)) {
 					try {
-						TIFiles.transformPrefix(abyTif);
+						TIFiles.convertFDRToTFI(abyTif);
 						sName = TIFiles.getName(abyTif);
 					}
 					catch (FormatException fx) {
@@ -1784,7 +1786,11 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 					else {					
 						ImportContentAction ia = new ImportContentAction();
 						ia.setLinks(this, m_frmMain, m_Settings);
-						ia.convertAndImport(abyTif, dvCurrent, createValidInputFileName(sDefaultFilename), false);
+						abyTif = ia.convertForImport(abyTif, dvCurrent, createValidInputFileName(sDefaultFilename));
+						if (abyTif != null) {
+							sName = TIFiles.getName(abyTif);
+							dir.insertFile(abyTif, sName, false);
+						}
 					}
 				}
 			}

@@ -296,7 +296,7 @@ public class TIFiles {
 		}
 	}
 	
-	public static void transformPrefix(byte[] plain) throws FormatException {
+	public static void convertFDRToTFI(byte[] plain) throws FormatException {
 		// Check for validity of dir entry
 		byte[] name = new byte[10];
 		for (int i=0; i < 10; i++) {
