@@ -2,6 +2,21 @@
 ******************* What's new? *********************
 ******
 
+==== 3.0.3 (June 2024)
+- Fixed ViewImage function, which threw an exception when there was no color file
+
+==== 3.0.2 (May 2024)
+- Fixed a bug when importing text files into an image (by drag-and-drop or menu function)
+- Turned off disassembler debug output
+
+==== 3.0.1 (April 2024)
+- Return to Java 8 for better compatibility
+- Edited escape character warning (pointing to preferences)
+- Fixed errors
+  + when pasting a list of files (exclude the end-of-list pseudo entry)
+  + with the serial bridge standalone mode (driver init)
+  + with the file size display in the CommandShell
+
 ==== 3.0.0 (March 2024)
 
 == New features

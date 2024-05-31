@@ -77,12 +77,12 @@ public class ViewImageAction extends Activity {
 			if (sName1.endsWith("_P")) {
 				abyPattern = sel.getRawContent();
 				String sColorTable = sName1.substring(0, sName1.length()-1) + "C";
-				try {
-					TFile col = dirCurrent.getFile(sColorTable);
+				TFile col = dirCurrent.getFile(sColorTable);
+				if (col != null) {
 					abyColor = col.getRawContent();
 				}
-				catch (FileNotFoundException fnfx) {
-					System.err.println(TIImageTool.langstr("ViewImageNoColor") + ": " + fnfx.getMessage());
+				else {
+					System.err.println(TIImageTool.langstr("ViewImageNoColor") + ": " + sColorTable);
 					// Create a black/white color table
 					abyColor = new byte[6144];
 					for (int i=0; i < abyColor.length; i++) {

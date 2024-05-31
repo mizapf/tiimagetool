@@ -78,15 +78,18 @@
   	[x] Drop RAW/CHD conversion
   	[x] Drop HFDC/SCSI conversions (would imply sector length change)
     [ ] Allow mass-import of non-headered files (Option Import all text files as DV80 / binary files as PRG; Preferences)
-
+    [ ] Allow binary import as DIS/FIX128 (see ImportContentAction:309, remove the second option)
+    
   	Open bugs
-    [x] Importing a text or binary file (without TFI header) does not commit correctly
+  	[ ] Failed import of a file leads to dirty image
 
     Fixed bugs
     [x] Avoid pasting the end-of-list
     [x] Serial bridge standalone frame display
     [x] File sizes in CommandShell dir are one too low
     [x] Improve output of InvalidEscape
+    [x] Importing a text or binary file (without TFI header) does not commit correctly
+    [x] ViewImage when there is no color file
 */
 
 package de.mizapf.timt;
@@ -157,8 +160,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "3.0.2";
-	public final static String MONTH = "May";
+	public final static String VERSION = "3.0.3";
+	public final static String MONTH = "June";
 	public final static String YEAR = "2024";
 	
 	private static final String TITLE = "TIImageTool";
