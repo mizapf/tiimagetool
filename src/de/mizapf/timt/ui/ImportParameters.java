@@ -63,4 +63,19 @@ class ImportParameters {
 		flags = (byte)0;
 		recordLength = 0;
 	}
+	
+	// For text-only
+	ImportParameters(String sSuggested) {
+		asBasic = false;
+		asText = true;
+		asWideText = false;
+		binary = false;
+		other = false;
+		fileName = sSuggested;
+		basicVersion = 0;
+		saveFormat = 0;
+		protect = false;
+		flags = (byte)0x80;
+		recordLength = 80;
+	}
 }

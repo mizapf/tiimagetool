@@ -144,7 +144,7 @@ public class ImportContentAction extends Activity {
 				inpParam.fileName = m_file.getName();
 				*/
 				int mode = BasicCruncher.contentLooksLikeBasic(abyContent, settings.getPropertyBoolean(TIImageTool.VERBOSE))? ImportDialog.BASIC : ImportDialog.TEXTONLY;					
-				System.out.println("mode = " + mode);
+				// System.out.println("mode = " + mode);
 				impdia = new ImportDialog(dvCurrent.getFrame(), m_file.getName(), false, mode);
 				impdia.setFromEditor(true);
 				impdia.setContent(abyContent);
@@ -229,23 +229,34 @@ public class ImportContentAction extends Activity {
 		while (!bDone) {   // While file exists
 			while (!bValid) {
 				int mode = BasicCruncher.contentLooksLikeBasic(abyContent, settings.getPropertyBoolean(TIImageTool.VERBOSE))? ImportDialog.BASIC : ImportDialog.TEXTONLY;					
-				impdia = new ImportDialog(dvCurrent.getFrame(), sSuggested, false, mode);
-				impdia.setContent(abyContent);
-				impdia.setSettings(settings);
-				impdia.createGui();
-				impdia.setVisible(true);
-				if (impdia.confirmed()) {
-					sName = impdia.getFileName();
+
+				if (mode != ImportDialog.BASIC && settings.getPropertyBoolean(TIImageTool.IMPTEXT) && looksLikePlainText(abyContent)) {
+					impParam = new ImportParameters(sSuggested);
+					sName = sSuggested;
 					bValid = TFile.validName(sName);
 					if (!bValid) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + sName, TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);				
 					}
 				}
 				else {
-					// System.out.println("not confirmed");
-					return null;
+					impdia = new ImportDialog(dvCurrent.getFrame(), sSuggested, false, mode);
+					impdia.setContent(abyContent);
+					impdia.setSettings(settings);
+					impdia.createGui();
+					impdia.setVisible(true);
+					if (impdia.confirmed()) {
+						sName = impdia.getFileName();
+						bValid = TFile.validName(sName);
+						if (!bValid) {
+							JOptionPane.showMessageDialog(dvCurrent.getFrame(), TIImageTool.langstr("InvalidFileName") + ": " + sName, TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE);				
+						}
+					}
+					else {
+						// System.out.println("not confirmed");
+						return null;
+					}
+					impParam = impdia.getParameters();
 				}
-				impParam = impdia.getParameters();
 			}
 			
 			bDone = true;
@@ -383,6 +394,7 @@ public class ImportContentAction extends Activity {
 					}
 				}
 				catch (IOException iox) {
+					System.out.println("IOException when importing " + impParam.fileName);
 					iox.printStackTrace();
 				}
 				sectors = impfile.closeAndGetBytes(false, false);
@@ -398,5 +410,23 @@ public class ImportContentAction extends Activity {
 			}
 		}
 		return abyTif;
+	}
+	
+	private boolean looksLikePlainText(byte[] abyContent) {
+		boolean bResult = true;
+		int nLineLength = 0;
+		for (int i=0; i < abyContent.length; i++) {
+			nLineLength++;
+			if (nLineLength > 81) { bResult = false; break; }
+			
+			if (abyContent[i] < 32 || abyContent[i] > 126) {
+				if (abyContent[i] != 0x0a &&  abyContent[i] != 0x0d) {
+					System.out.println("Not a text file: character = " + abyContent[i]);
+					bResult = false;
+				}
+				else nLineLength = 0;
+			}
+		}
+		return bResult;
 	}
 }

@@ -93,6 +93,8 @@ public class ImportFilesAction extends Activity {
 				}
 			}
 		}
+		// Write the DDR and FDIR of this new subdirectory
+		sub.commit(false);
 	}
 	
 	private void doImport(java.io.File[] afile, DirectoryView dvCurrent) {
@@ -101,10 +103,13 @@ public class ImportFilesAction extends Activity {
 		Directory dirCurrent = dvCurrent.getDirectory();
 		Volume volTarget = dirCurrent.getVolume();
 
+		boolean bInserted = false;
+		
 		for (java.io.File iofile:afile) {
 			try {
 				if (iofile.isDirectory()) {
 					importDirectory(dvCurrent, dirCurrent, iofile);
+					bInserted = true;
 				}
 				else {
 					FileInputStream fis = new FileInputStream(iofile);
@@ -129,7 +134,8 @@ public class ImportFilesAction extends Activity {
 								}
 //							}
 						}
-						imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, iofile.getName());
+						if (imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, iofile.getName()))
+							bInserted = true;
 					}
 					catch (FileExistsException fx) {
 						JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 
@@ -180,7 +186,7 @@ public class ImportFilesAction extends Activity {
 			}
 		}
 		try {
-			dirCurrent.commit(true);
+			if (bInserted) dirCurrent.commit(true);
 		}
 		catch (ImageException ix) {
 			ix.printStackTrace();

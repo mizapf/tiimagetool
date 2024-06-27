@@ -82,6 +82,7 @@
     
   	Open bugs
   	[ ] Failed import of a file leads to dirty image
+	[x] Import of a directory copies all files, but they are gone after reopening (directory not committed?)
 
     Fixed bugs
     [x] Avoid pasting the end-of-list
@@ -160,7 +161,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "3.0.3";
+	public final static String VERSION = "3.0.4";
 	public final static String MONTH = "June";
 	public final static String YEAR = "2024";
 	
@@ -187,6 +188,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public final static String SUFFIX = "suffix";
 	public final static String KEEPNAME = "keepname";
 	public final static String FORCEUPPER = "forceupper";
+	public final static String IMPTEXT = "imptext";
 	public final static String HINTS = "hints";
 	public final static String HINTSTART = "hintstart";
 	public final static String BASICVER = "basicver";
@@ -1747,10 +1749,11 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	}
 	
 	// TODO: Move this into Directory
-	public void putTIFileIntoImage(Directory dir, DirectoryView dvCurrent, byte[] abyTif, String sDefaultFilename) throws ProtectedException, InvalidNameException, FileNotFoundException, ImageException, IOException {
+	public boolean putTIFileIntoImage(Directory dir, DirectoryView dvCurrent, byte[] abyTif, String sDefaultFilename) throws ProtectedException, InvalidNameException, FileNotFoundException, ImageException, IOException {
 
 		String sName = createValidInputFileName(sDefaultFilename);
 			
+		boolean bInserted = true;
 		// Shall we keep the external filename or take the name in the TIFILES header?
 		if (m_Settings.getPropertyBoolean(KEEPNAME)==false)  
 			sName = TIFiles.getName(abyTif);
@@ -1765,7 +1768,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			if (TIFiles.hasHeader(abyTif)) {
 				dir.insertFile(abyTif, sName, false);
 				// commit is in caller (ImportFilesAction)
-				return;
+				return true;
 			}
 			
 			if (sName.equals(TIFiles.NOHEADER)) {
@@ -1785,6 +1788,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 						sName = createValidInputFileName(sDefaultFilename);
 						abyTif = TIFiles.createTfi(abyTif, sName, (byte)0x00, 128, (abyTif.length-1)/128+1);						
 						dir.insertFile(abyTif, sName, false);
+						bInserted = true;
 					}
 					else {					
 						ImportContentAction ia = new ImportContentAction();
@@ -1794,6 +1798,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 							sName = TIFiles.getName(abyTif);
 							dir.insertFile(abyTif, sName, false);
 						}
+						else bInserted = false;
 					}
 				}
 			}
@@ -1812,6 +1817,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 				ia.convertAndImport(abyTif, dvCurrent, sName, false);
 			}
 		}
+		return bInserted;
 	}
 
 	// TODO: Move this into Directory

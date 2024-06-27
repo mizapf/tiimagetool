@@ -9,6 +9,7 @@ genospath=paths:s:Path to GeneveOS files
 tfifilter=import:b:Suggest TIFILES file filter 
 keepname=import:b:Ignore name in TIFILES header
 forceupper=import:b:Force uppercase for TI file names
+imptext=import:b:Don't ask when importing plain text files
 lower=export:b:Use lowercase file name for export
 suffix=export:s:Add file name suffix
 convert=export:s:Character conversion rules

@@ -113,8 +113,8 @@ public class ImportRemoteAction extends Activity {
 			
 			// Now insert abyTif as done with "Insert File"
 			try {
-				imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, "UNNAMED");
-				dirCurrent.commit(true);
+				if (imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, "UNNAMED"))
+					dirCurrent.commit(true);
 			}
 			catch (FileExistsException fx) {
 				JOptionPane.showMessageDialog(dvCurrent.getFrame(), String.format(TIImageTool.langstr("ImportFileExists"), fx.getMessage()), TIImageTool.langstr("ImportError"), JOptionPane.ERROR_MESSAGE); 

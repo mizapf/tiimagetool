@@ -108,6 +108,7 @@ public class Settings {
 		getPropertyString(TIImageTool.CONVERT, "true");	
 		getPropertyString(TIImageTool.KEEPNAME, "false");	
 		getPropertyString(TIImageTool.FORCEUPPER, "true");	
+		getPropertyString(TIImageTool.IMPTEXT, "false");
 		getPropertyString(TIImageTool.HINTSTART, "true");
 		getPropertyString(TIImageTool.BASICVER, "true");
 		getPropertyString(TIImageTool.TFIFILTER, "true");

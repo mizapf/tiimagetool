@@ -736,6 +736,7 @@ public class Directory extends Element {
 			}
 			m_Volume.allocate(aFDIR[0]);
 			dirNew = new Directory(m_Volume, sName, aDDR[0].start, aFDIR[0].start, this);
+			// System.out.println("New subdir " + sName + " with DDR=" + aDDR[0].start + " and FDIR=" + aFDIR[0].start);
 		}
 
 		addToList(dirNew);
