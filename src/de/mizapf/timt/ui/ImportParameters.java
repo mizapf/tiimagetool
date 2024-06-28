@@ -23,7 +23,7 @@ package de.mizapf.timt.ui;
 class ImportParameters {
 	boolean asBasic;
 	boolean asText;
-	boolean asWideText;
+	boolean asDF128;
 	boolean binary;
 	boolean other;
 	String fileName;
@@ -33,13 +33,13 @@ class ImportParameters {
 	byte flags;
 	int  recordLength;
 	
-	ImportParameters(boolean bBasic, boolean bText, boolean bWide,
+	ImportParameters(boolean bBasic, boolean bText, boolean bDF128,
 		boolean bBinary, boolean bOther,
 		String sFile, int nBasic, int nFormat, boolean bProtect, byte byFlags,
 		int recLen) {
 		asBasic = bBasic;
 		asText = bText;
-		asWideText = bWide;
+		asDF128 = bDF128;
 		binary = bBinary;
 		other = bOther;
 		fileName = sFile;
@@ -53,7 +53,7 @@ class ImportParameters {
 	ImportParameters() {
 		asBasic = false;
 		asText = false;
-		asWideText = false;
+		asDF128 = false;
 		binary = false;
 		other = false;
 		fileName = null;
@@ -68,7 +68,7 @@ class ImportParameters {
 	ImportParameters(String sSuggested) {
 		asBasic = false;
 		asText = true;
-		asWideText = false;
+		asDF128 = false;
 		binary = false;
 		other = false;
 		fileName = sSuggested;

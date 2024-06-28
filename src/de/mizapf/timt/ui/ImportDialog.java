@@ -365,7 +365,7 @@ public class ImportDialog extends ToolDialog {
 		return m_rbtOpt1.isSelected();
 	}
 	
-	boolean importAsWideText() {
+	boolean importAsDF128() {
 		return m_nMode!=BASIC && m_rbtOpt3.isSelected() && getRecordLength()==128 && getFlags()==0x00;
 	}
 
@@ -435,7 +435,7 @@ public class ImportDialog extends ToolDialog {
 	}
 	
 	ImportParameters getParameters() {
-		return new ImportParameters(importAsBasic(), importAsText(), importAsWideText(),
+		return new ImportParameters(importAsBasic(), importAsText(), importAsDF128(),
 			importAsBinary(), importAsOther(),
 			getFileName(), getBasicVersion(), 
 			getSaveFormat(), getProtected(), getFlags(), getRecordLength());

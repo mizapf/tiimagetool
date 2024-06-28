@@ -317,7 +317,7 @@ public class ImportContentAction extends Activity {
 		}
 		else {
 			
-			if (impParam.asText || impParam.asWideText) {
+			if (impParam.asText) {
 				
 				StringBuilder special = new StringBuilder();
 				String sneu = new String(abyContent);
@@ -433,7 +433,7 @@ public class ImportContentAction extends Activity {
 			
 			if (abyContent[i] < 32 || abyContent[i] > 126) {
 				if (abyContent[i] != 0x0a &&  abyContent[i] != 0x0d) {
-					System.out.println("Not a text file: character = " + abyContent[i]);
+					// System.out.println("Not a text file: character = " + (abyContent[i] & 0xff));
 					bResult = false;
 				}
 				else nLineLength = 0;

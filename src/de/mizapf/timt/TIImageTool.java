@@ -78,7 +78,7 @@
   	[x] Drop RAW/CHD conversion
   	[x] Drop HFDC/SCSI conversions (would imply sector length change)
     [x] Allow mass-import of non-headered files (Option Import all text files as DV80 / binary files as PRG; Preferences)
-    [ ] Allow binary import as DIS/FIX128 (see ImportContentAction:309, remove the second option)
+    [x] Allow binary import as DIS/FIX128 (see ImportContentAction:309, remove the second option)
     [x] Auto-split text lines in import to record length
     
   	Open bugs
