@@ -384,13 +384,25 @@ public class ImportContentAction extends Activity {
 				
 				byte[] sectors = null;
 				// Convert it to a sequence of lines
+				// We have to split lines exceeding the record length
 				String split = Utilities.getSeparator(text);
 				String[] lines = text.split(split);		
 				TIFiles impfile = new TIFiles(impParam.fileName, TFile.flagsToType(impParam.flags), impParam.recordLength);
 				
 				try {
 					for (int i=0; i < lines.length; i++) {
-						impfile.writeRecord(lines[i].getBytes(), 0x20);
+						if (lines[i].length() > impParam.recordLength) {
+							int pos = 0;
+							while (pos < lines[i].length()) {
+								int len = lines[i].length() - pos;
+								if (len > impParam.recordLength) len = impParam.recordLength;
+								String part = lines[i].substring(pos, pos+len);
+								impfile.writeRecord(part.getBytes(), 0x20);
+								pos = pos + len;
+							}
+						}
+						else
+							impfile.writeRecord(lines[i].getBytes(), 0x20);
 					}
 				}
 				catch (IOException iox) {

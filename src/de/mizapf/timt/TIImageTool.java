@@ -77,11 +77,12 @@
   	[x] Drop CHD conversion (saving converts to v5)
   	[x] Drop RAW/CHD conversion
   	[x] Drop HFDC/SCSI conversions (would imply sector length change)
-    [ ] Allow mass-import of non-headered files (Option Import all text files as DV80 / binary files as PRG; Preferences)
+    [x] Allow mass-import of non-headered files (Option Import all text files as DV80 / binary files as PRG; Preferences)
     [ ] Allow binary import as DIS/FIX128 (see ImportContentAction:309, remove the second option)
+    [x] Auto-split text lines in import to record length
     
   	Open bugs
-  	[ ] Failed import of a file leads to dirty image
+	[x] Failed import of a file leads to dirty image
 	[x] Import of a directory copies all files, but they are gone after reopening (directory not committed?)
 
     Fixed bugs
@@ -161,7 +162,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "3.0.4";
+	public final static String VERSION = "3.0.5";
 	public final static String MONTH = "June";
 	public final static String YEAR = "2024";
 	
