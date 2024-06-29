@@ -142,6 +142,10 @@ public abstract class TFileSystem {
 		int nStartSector = 0;
 //		System.out.println("find free space for " + nSectors + " sectors, starting from sector " + nStarting);
 
+		// If the file is empty, return an empty list
+		if (nSectors == 0)
+			return new Interval[0];
+
 		int nSectorsPerAU = getSectorsPerAU();
 
 		if (nSectorsPerAU > 1) {

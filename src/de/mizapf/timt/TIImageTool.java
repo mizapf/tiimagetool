@@ -82,8 +82,7 @@
     [x] Auto-split text lines in import to record length
     
   	Open bugs
-	[x] Failed import of a file leads to dirty image
-	[x] Import of a directory copies all files, but they are gone after reopening (directory not committed?)
+    -
 
     Fixed bugs
     [x] Avoid pasting the end-of-list
@@ -92,6 +91,9 @@
     [x] Improve output of InvalidEscape
     [x] Importing a text or binary file (without TFI header) does not commit correctly
     [x] ViewImage when there is no color file
+    [x] Failed import of a file leads to dirty image
+    [x] Import of a directory copies all files, but they are gone after reopening (directory not committed)
+    [x] Empty files are copied with a bad sector allocation [022..fff]
 */
 
 package de.mizapf.timt;
@@ -162,7 +164,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "3.0.5";
+	public final static String VERSION = "3.0.6";
 	public final static String MONTH = "June";
 	public final static String YEAR = "2024";
 	

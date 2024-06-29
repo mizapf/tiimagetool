@@ -63,17 +63,20 @@ public class ImageCheck {
 					ps.print(", " + TIImageTool.langstr("Check.OccupyingS") + " " + ainv[0].start);
 				}
 				else {
-					ps.print(", " + TIImageTool.langstr("Check.OccupyingI") + " ");
-					boolean first = true;
-					for (int j=0; j < ainv.length; j++) {
-						if (!first) ps.print(", ");
-						first = false;
-						ps.print(ainv[j]);
-						Integer[] aret = map.getUnallocatedLocations(ainv[j]);
-						if (aret.length>0) {
-							agl.setList(aret);
+					if (ainv.length > 0) {
+						ps.print(", " + TIImageTool.langstr("Check.OccupyingI") + " ");
+						boolean first = true;
+						for (int j=0; j < ainv.length; j++) {
+							if (!first) ps.print(", ");
+							first = false;
+							ps.print(ainv[j]);
+							Integer[] aret = map.getUnallocatedLocations(ainv[j]);
+							if (aret.length>0) {
+								agl.setList(aret);
+							}
 						}
 					}
+					else ps.print(", " + TIImageTool.langstr("Check.OccupyingE"));
 				}
 				ps.print("\n");
 			}
