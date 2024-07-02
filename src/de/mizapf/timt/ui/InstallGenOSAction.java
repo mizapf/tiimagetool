@@ -36,9 +36,9 @@ public class InstallGenOSAction extends Activity {
 	    0.98: other FDD   -> Floppy boot: SYSTEM/SYS in DSK1.
 	          HFDC        -> Floppy boot: LOAD-MFM as LOAD/SYS in DSK1., SYSTEM-SYS in DSK1.
 	                         HD boot:     LOAD-MFM as LOAD/SYS in HDS1.DSK1., SYSTEM-SYS in HDS1.
-	          SCSI        -> Floppy boot: SYSTEM/SYS in DSK1.
+	          SCSI        -> Floppy boot: depends on floppy controller (other/HFDC)
 	                         HD boot:     no direct support (use custom bootloader)
-	          IDE         -> Floppy boot: SYSTEM/SYS in DSK1.
+	          IDE         -> Floppy boot: depends on floppy controller (other/HFDC)
 	                         HD boot:     no direct support (use custom bootloader)
 	          
 	    0.99: same as 2.00
@@ -46,17 +46,17 @@ public class InstallGenOSAction extends Activity {
 	    1.00: other FDD   -> Floppy boot: SYSTEM/SYS in DSK1.
 	          HFDC        -> Floppy boot: LOAD-MFM as LOAD/SYS in DSK1., SYSTEM-SYS in DSK1.
 	                         HD boot:     LOAD-MFM as LOAD/SYS in HDS1.DSK1., SYSTEM-SYS in HDS1.	                         
-	          SCSI        -> Floppy boot: SYSTEM/SYS in DSK1. 
+	          SCSI        -> Floppy boot: depends on floppy controller (other/HFDC)
 	                         HD boot:     LOAD-SCS as SCSI/SYS in SCS1. and SYSTEM-SYS in SCS1.
-	          IDE         -> Floppy boot: SYSTEM/SYS in DSK1.
+	          IDE         -> Floppy boot: depends on floppy controller (other/HFDC)
 	                         HD boot:     no direct support (use custom bootloader)
 	                    
 	    2.00: other FDD   -> Floppy boot: SYSTEM-SYS in DSK1.
  	          HFDC        -> Floppy boot: LOAD-MFM in DSK1., SYSTEM-SYS in DSK1.
 	                         HD boot:     LOAD-MFM in HDS1.DSK1., SYSTEM-SYS in HDS1.
-	          SCSI        -> Floppy boot: SYSTEM-SYS in DSK1.
+	          SCSI        -> Floppy boot: depends on floppy controller (other/HFDC)
 	                         HD boot:     LOAD-SCS in SCS1., SYSTEM-SYS in SCS1.
-	          IDE         -> Floppy boot: SYSTEM-SYS in DSK1.
+	          IDE         -> Floppy boot: depends on floppy controller (other/HFDC)
 	                         HD boot:     LOAD-IDE in IDE1., SYSTEM-SYS in IDE1.
 	                         
 	                         
@@ -70,8 +70,7 @@ public class InstallGenOSAction extends Activity {
        AUTOEXEC from the hard disk (tested for all EPROM versions).
        
        TIPI: AUTOEXEC is loaded correctly from TIPI. No floppy controller seems
-       to be required.
-       
+       to be required.    
 	*/
 	
 	// TODO: Check what happens with existing files
@@ -142,6 +141,11 @@ public class InstallGenOSAction extends Activity {
 						int bootver = inst.getEpromVersion();
 						int controller = inst.getController();
 						
+						if (sName.equals("AUTOEXEC")) {
+							installFile(dirRoot, abyTif);
+							continue;
+						}
+						
 						// Handle floppy
 						if (volTarget.isFloppyImage()) {
 							if (controller == OTHER) {
@@ -154,8 +158,8 @@ public class InstallGenOSAction extends Activity {
 								if (sName.equals("LOAD-MFM")) {
 									if (bootver != E200) {
 										tfi.setTFIName("LOAD/SYS");
-										installFile(dirRoot, abyTif);
 									}
+									installFile(dirRoot, abyTif);
 								}
 								if (sName.equals("SYSTEM-SYS")) {
 									installFile(dirRoot, abyTif);
