@@ -2,6 +2,13 @@
 ******************* What's new? *********************
 ******
 
+==== 3.0.6 (September 2024)
+- Improved error message for saving incompatible geometries
+- Improved mass import of text files, fixed directrory import
+- Binary files can be imported as DIS/VAR 128
+- Fixed broken allocation table when importing an empty file
+- Fixed boot flooy disk preparation; add AUTOEXEC import
+
 ==== 3.0.3 (June 2024)
 - Fixed ViewImage function, which threw an exception when there was no color file
 
