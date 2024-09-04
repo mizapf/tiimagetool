@@ -62,6 +62,7 @@ public class SaveAsImageAction extends Activity {
 			if (sWarn != null) {
 				if (sWarn.startsWith("!")) {
 					JOptionPane.showMessageDialog(m_parent, sWarn.substring(1), TIImageTool.langstr("ImageError"), JOptionPane.ERROR_MESSAGE);
+					m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
 					return;
 				}
 				else {

@@ -387,11 +387,13 @@ class TrackDumpFormat extends FloppyImageFormat {
 	
 	static String checkFormatCompatibility(FormatParameters params) {
 		if (params.heads < 2) 
-			return TIImageTool.langstr("Format.invalid") + ": heads=" + params.heads;
+			return TIImageTool.langstr("Format.invalid") + ": " + TIImageTool.langstr("Format.Heads") + " = " + params.heads;
+		if (params.cylinders > 40)
+			return TIImageTool.langstr("Format.invalid") + ": " + TIImageTool.langstr("Format.Tracks") + " = " + params.cylinders;
 		if ((params.sectors != 9) && (params.sectors != 18))
-			return TIImageTool.langstr("Format.unsupported") + ": sectors=" + params.sectors;
+			return TIImageTool.langstr("Format.unsupported") + ": " + TIImageTool.langstr("Format.Sectors") + " = " + params.sectors;
 		if (params.sectors > 18)
-			return TIImageTool.langstr("Format.invalid") + ": sectors=" + params.sectors;
+			return TIImageTool.langstr("Format.invalid") + ": " + TIImageTool.langstr("Format.Sectors") + " = " + params.sectors;
 		
 		return null;
 	}

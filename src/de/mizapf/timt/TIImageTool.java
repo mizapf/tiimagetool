@@ -20,7 +20,7 @@
 ****************************************************************************/
 
 /*
-	TODOs for 3.0.2
+	TODOs for 3.0.7
 	-------------
     
     Images
@@ -94,6 +94,7 @@
     [x] Failed import of a file leads to dirty image
     [x] Import of a directory copies all files, but they are gone after reopening (directory not committed)
     [x] Empty files are copied with a bad sector allocation [022..fff]
+    [x] Track dump format delivers a better error message for 80 track images
 */
 
 package de.mizapf.timt;
@@ -165,7 +166,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JFrame m_frmMain;
 
 	public final static String VERSION = "3.0.6";
-	public final static String MONTH = "June";
+	public final static String MONTH = "September";
 	public final static String YEAR = "2024";
 	
 	private static final String TITLE = "TIImageTool";
