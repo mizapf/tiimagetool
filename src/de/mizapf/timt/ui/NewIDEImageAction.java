@@ -181,7 +181,7 @@ public class NewIDEImageAction extends Activity {
 					int offset = 1;
 					int size = 0;
 					
-					int[] secoff = new int[4];
+					int[] secoff = new int[anSize.length];
 					
 					for (int i=0; i < anSize.length; i++) {
 						size = newimage.getParameters(i).totalsectors / 2;

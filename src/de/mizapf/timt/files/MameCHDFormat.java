@@ -317,7 +317,7 @@ public class MameCHDFormat extends HarddiskImageFormat {
 			int nHeaderLength = 0x7c;
 			
 			// getTotalSectors is always the logical count (256 bytes long)
-			m_nLogicalSize = parm.getTotalSectors() * TFileSystem.SECTOR_LENGTH; 
+			m_nLogicalSize = (long)parm.getTotalSectors() * TFileSystem.SECTOR_LENGTH;
 
 			m_nVersion = 5;
 			m_nHunkLength = HUNKLENGTH;

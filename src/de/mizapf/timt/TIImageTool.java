@@ -95,6 +95,7 @@
     [x] Import of a directory copies all files, but they are gone after reopening (directory not committed)
     [x] Empty files are copied with a bad sector allocation [022..fff]
     [x] Track dump format delivers a better error message for 80 track images
+    [x] Defining more than 4 partitions triggers ArrayIndexOOBException 
 */
 
 package de.mizapf.timt;
@@ -165,8 +166,8 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	JFrame m_frmMain;
 
-	public final static String VERSION = "3.0.6";
-	public final static String MONTH = "September";
+	public final static String VERSION = "3.0.7";
+	public final static String MONTH = "November";
 	public final static String YEAR = "2024";
 	
 	private static final String TITLE = "TIImageTool";
