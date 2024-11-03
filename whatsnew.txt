@@ -2,6 +2,11 @@
 ******************* What's new? *********************
 ******
 
+==== 3.0.7 (November 2024)
+- New IDE partition dialog
+- Fixed an error with automatic file suffix creation
+- Fixed IDE creation with 2 GiB image file (number overflow)
+
 ==== 3.0.6 (September 2024)
 - Improved error message for saving incompatible geometries
 - Improved mass import of text files, fixed directrory import
