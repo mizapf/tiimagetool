@@ -96,6 +96,7 @@
     [x] Empty files are copied with a bad sector allocation [022..fff]
     [x] Track dump format delivers a better error message for 80 track images
     [x] Defining more than 4 partitions triggers ArrayIndexOOBException 
+    [x] Auto file suffix generation was shifted
 */
 
 package de.mizapf.timt;
@@ -357,6 +358,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	public static int plainHeight;
 	public static int boldHeight;
 	public static int dialogHeight;
+	public static int spaceWidth;
 	public static Font plainFont;
 	public static Font boldFont;
 	public static Font dialogFont;
@@ -416,6 +418,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 			
 			lm = dialogFont.getLineMetrics("XXX", 0, 2, frc);
 			dialogHeight = (int)Math.round(lm.getHeight());
+			spaceWidth = dialogHeight/2;
 			
 			contentFont = new Font(CONTENTFONT, Font.PLAIN, fontSize);	
 			

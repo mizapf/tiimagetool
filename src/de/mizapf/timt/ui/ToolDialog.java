@@ -56,7 +56,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 	public static final int OK_AND_CANCEL = 2;
 	public static final int ONLY_CANCEL = 3;
 	public static final int NONE = 4;
-	
+		
 	protected ToolDialog(JFrame owner, String sTitle) {
 		super(owner, sTitle, true);
 		m_frmMain = owner;
@@ -146,7 +146,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		comp[0] = btn;
 		
 		Box box = new Box(BoxLayout.X_AXIS);
-		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		JLabel jl = new JLabel(sLabel, SwingConstants.LEFT); 
 		jl.setFont(TIImageTool.dialogFont);
 		String lastPath = sPath;
@@ -224,6 +224,11 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.dialogFont);
 		m_nColumnWidth = fm.stringWidth(s);
 	}
+
+	protected int getBoldWidth(String s) {
+		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.boldDialogFont);
+		return fm.stringWidth(s);
+	}
 	
 	protected int determineFieldWidth(String s) {
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(TIImageTool.dialogFont);
@@ -249,10 +254,10 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 	
 	protected void addLine(String sLabel) {
 		Box box1 = new Box(BoxLayout.X_AXIS);
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		JLabel jl = new JLabel(sLabel, SwingConstants.LEFT);
 		box1.add(jl);
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		box1.add(Box.createHorizontalGlue());
 		add(box1);
 		add(Box.createVerticalStrut(TIImageTool.dialogHeight/5));			
@@ -260,14 +265,14 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 	
 	protected void addLine(String sLabel, JComponent jc) {
 		Box box1 = new Box(BoxLayout.X_AXIS);
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		JLabel jl = new JLabel(sLabel, SwingConstants.LEFT);
 		jl.setPreferredSize(new Dimension(m_nColumnWidth, TIImageTool.dialogHeight));
 		box1.add(jl);
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2+5));
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth+5));
 //		jc.setPreferredSize(new Dimension(m_nColumnWidth, m_nFontHeight)); 
 		box1.add(jc);
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		box1.add(Box.createHorizontalGlue());
 		add(box1);
 		add(Box.createVerticalStrut(TIImageTool.dialogHeight/5));	
@@ -276,21 +281,21 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 	protected void addLine(String sLabel1, JComponent jc1, String sLabel2, JComponent jc2) {
 		Box box1 = new Box(BoxLayout.X_AXIS);
 
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 
 		JLabel jl1 = new JLabel(sLabel1, SwingConstants.LEFT);
 		jl1.setPreferredSize(new Dimension(m_nColumnWidth, TIImageTool.dialogHeight));
 		box1.add(jl1);
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2+5));
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth+5));
 		box1.add(jc1);
 
 		JLabel jl2 = new JLabel(sLabel2, SwingConstants.LEFT);
 		jl2.setPreferredSize(new Dimension(m_nColumnWidth, TIImageTool.dialogHeight));
 		box1.add(jl2);
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2+5));
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth+5));
 		box1.add(jc2);
 		
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 
 		add(box1);
 		add(Box.createVerticalStrut(TIImageTool.dialogHeight/5));	
@@ -310,13 +315,13 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 			comp.setMaximumSize(new Dimension(nWidth, nHeight));
 		}
 		box.add(comp);
-		if (nSpace!=0) box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		if (nSpace!=0) box.add(Box.createHorizontalStrut(nSpace));
 		else box.add(Box.createGlue());
 	}
 	
 	final protected void putTextLine(Container where, String sText, int nWidth) {
 		Box box0 = new Box(BoxLayout.X_AXIS);
-		box0.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box0.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 
 		Font font = TIImageTool.dialogFont;
 		if (sText.charAt(0)=='!') {
@@ -328,7 +333,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		jl.setFont(font);
 	
 		addField(box0, jl,  nWidth, 18,  0);
-		box0.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));		
+		box0.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));		
 		where.add(box0);		
 	}
 	
@@ -349,13 +354,13 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		String[] textLines = sText.split("\n");
 		for (String line : textLines) {
 			Box box0 = new Box(BoxLayout.X_AXIS);
-			box0.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+			box0.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 			JLabel jl = new JLabel(line, SwingConstants.LEFT);
 			jl.setFont(font);
 			box0.add(jl);
 			box0.add(Box.createGlue());
 			jl.setMaximumSize(new Dimension(600, 10000));
-			box0.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));		
+			box0.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));		
 			where.add(box0);
 		}
 	}	
@@ -364,14 +369,35 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		Box box = new Box(BoxLayout.X_AXIS);
 		JTextField tf = new JTextField();
 		tf.setText(sDefaultEntry);
-		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));		
+		box.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));		
 		JLabel jl = new JLabel(sText, SwingConstants.LEFT); 
-		addField(box, jl,  nColumnWidth, TIImageTool.dialogHeight+10, TIImageTool.dialogHeight/2);
+		addField(box, jl,  nColumnWidth, TIImageTool.dialogHeight+10, TIImageTool.spaceWidth);
 		addField(box, tf, nFieldWidth, TIImageTool.dialogHeight*3/2,  0);
-		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));		
+		box.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));		
 		where.add(box);
-		where.add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
+		where.add(Box.createVerticalStrut(TIImageTool.spaceWidth));
 		return tf;
+	}
+	
+	final protected JTextField[] putTextFieldN(Container where, String sText, int nFieldCount, int nColumnWidth, int nFieldWidth) {
+		Box box = new Box(BoxLayout.X_AXIS);
+		JTextField[] atf = new JTextField[nFieldCount];
+
+		JLabel jl = new JLabel(sText, SwingConstants.LEFT); 
+		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight));	
+		addField(box, jl,  nColumnWidth/2, TIImageTool.dialogHeight+10, 0);
+		box.add(Box.createHorizontalStrut(nColumnWidth));	
+		
+		for (int i=0; i < nFieldCount; i++) {
+			atf[i] = new JTextField();
+			atf[i].setText("");
+			addField(box, atf[i], nFieldWidth, TIImageTool.dialogHeight*3/2,  0);			
+		}
+		box.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));		
+
+		where.add(box);
+		where.add(Box.createVerticalStrut(TIImageTool.spaceWidth));
+		return atf;
 	}
 	
 	final protected JLabel putLabel(Container where, String sText, String sDefaultEntry, int nColumnWidth) {
@@ -382,11 +408,11 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		Box box1 = new Box(BoxLayout.X_AXIS);
 		JLabel jl = new JLabel();
 		jl.setText(sDefaultEntry);
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		JLabel jla = new JLabel(sText, SwingConstants.LEFT);
-		addField(box1, jla,  nColumnWidth, TIImageTool.dialogHeight, TIImageTool.dialogHeight/2);
+		addField(box1, jla,  nColumnWidth, TIImageTool.dialogHeight, TIImageTool.spaceWidth);
 		addField(box1, jl, nFieldWidth, TIImageTool.dialogHeight,  0);
-		box1.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));		
+		box1.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));		
 		where.add(box1);
 		return jl;
 	}
@@ -395,11 +421,11 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		Box box3 = new Box(BoxLayout.X_AXIS);
 		JComboBox<String> jc = new JComboBox<String>(options);
 		jc.setSelectedIndex(nSelectedIndex);
-		box3.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box3.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		JLabel jl = new JLabel(sText, SwingConstants.LEFT);
-		addField(box3, jl,  nColumnWidth, TIImageTool.dialogHeight,  TIImageTool.dialogHeight/2);
+		addField(box3, jl,  nColumnWidth, TIImageTool.dialogHeight,  TIImageTool.spaceWidth);
 		addField(box3, jc, 0, TIImageTool.dialogHeight,  0);
-		box3.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));		
+		box3.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));		
 		where.add(box3);
 		return jc;
 	}
@@ -408,11 +434,11 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		Box box7 = new Box(BoxLayout.X_AXIS);
 		JCheckBox chb = new JCheckBox();
 		chb.setSelected(bSelected);
-		box7.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));		
+		box7.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));		
 		JLabel jl = new JLabel(sText, SwingConstants.LEFT);
-		addField(box7, jl,  nLabelWidth, TIImageTool.dialogHeight,  TIImageTool.dialogHeight/2);
+		addField(box7, jl,  nLabelWidth, TIImageTool.dialogHeight,  TIImageTool.spaceWidth);
 		addField(box7, chb, 100, TIImageTool.dialogHeight,  0);
-		box7.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));		
+		box7.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));		
 		where.add(box7);
 		where.add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
 		return chb;
@@ -422,11 +448,11 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		Box box7 = new Box(BoxLayout.X_AXIS);
 		JRadioButton chb = new JRadioButton();
 		chb.setSelected(bSelected);
-		box7.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));	
+		box7.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));	
 		JLabel jl = new JLabel(sText, SwingConstants.LEFT);
-		addField(box7, jl,  nLabelWidth, TIImageTool.dialogHeight,  TIImageTool.dialogHeight/2);
+		addField(box7, jl,  nLabelWidth, TIImageTool.dialogHeight,  TIImageTool.spaceWidth);
 		addField(box7, chb, nValueWidth, TIImageTool.dialogHeight,  0);
-		box7.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));		
+		box7.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));		
 		where.add(box7);
 		bg.add(chb);
 		return chb;
@@ -439,7 +465,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		boolean bHoriz = (anWidth!=null);
 		JRadioButton rb = null;
 		
-		box7.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));	
+		box7.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));	
 		JLabel jl = new JLabel(sLabel, SwingConstants.LEFT);
 
 		if (bHoriz) {
@@ -463,7 +489,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 			//                * Option 2
 			//                o Option 3
 			//
-			addField(box7, jl,  nLabelWidth, TIImageTool.dialogHeight,  TIImageTool.dialogHeight/2);
+			addField(box7, jl,  nLabelWidth, TIImageTool.dialogHeight,  TIImageTool.spaceWidth);
 			for (int i=0; i < asOption.length; i++) {
 				rb = new JRadioButton(asOption[i]);
 				bg.add(rb);
@@ -472,8 +498,8 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 				rb.setSelected(i==nSelected);
 				where.add(box7);
 				box7 = new Box(BoxLayout.X_AXIS);
-				box7.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
-				addField(box7, new JLabel(""), nLabelWidth, TIImageTool.dialogHeight,  TIImageTool.dialogHeight/2);
+				box7.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
+				addField(box7, new JLabel(""), nLabelWidth, TIImageTool.dialogHeight,  TIImageTool.spaceWidth);
 			}
 			
 		}
@@ -491,13 +517,13 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 	protected void addSearchLine(int nColumnWidth, String prompt, JTextField textField) {
 		JButton searchbutton = null;
 		Box box = new Box(BoxLayout.X_AXIS);
-		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		JLabel jl = new JLabel(prompt, SwingConstants.LEFT);
 		// jl.setMinimumSize(new Dimension(nColumnWidth, TIImageTool.dialogHeight));
 //		jl.setPreferredSize(new Dimension(nColumnWidth, TIImageTool.dialogHeight));
 //		jl.setMaximumSize(new Dimension(nColumnWidth, TIImageTool.dialogHeight));
 		box.add(jl);
-		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 
 		ImageIcon searchicon = null;
 		java.net.URL searchurl = ToolDialog.class.getResource(SEAICON);
@@ -512,7 +538,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		textField.setMaximumSize(new Dimension(100000, 20));
 
 		box.add(textField);
-		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		searchbutton.setActionCommand("AUTOSEARCH");
 		searchbutton.addActionListener(this);
 		searchbutton.setMinimumSize(new Dimension(38, 35));
@@ -530,7 +556,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		JButton searchbutton = null;
 			
 		Box box = new Box(BoxLayout.X_AXIS);
-		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		JLabel jl = new JLabel(prompt, SwingConstants.LEFT);
 
 		// Path setup
@@ -541,7 +567,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 			jl.setMaximumSize(new Dimension(nColumnWidth, TIImageTool.dialogHeight));
 		}
 		box.add(jl);
-		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		
 		// Button
 		ImageIcon diskicon = null;
@@ -587,7 +613,7 @@ public class ToolDialog extends JDialog implements ActionListener, KeyListener {
 		textField.setMaximumSize(new Dimension(1000, 20));
 
 		box.add(textField);
-		box.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		box.add(Box.createHorizontalStrut(TIImageTool.spaceWidth));
 		
 /*		if (line==DEVLINE) {
 			searchbutton.setActionCommand("AUTO");

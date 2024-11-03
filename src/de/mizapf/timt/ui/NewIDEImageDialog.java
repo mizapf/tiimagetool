@@ -32,8 +32,8 @@ import de.mizapf.timt.files.Time;
 
 class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListener {
 	
-	JTextField 		m_tfSize;
-	JTextField[]	m_atfPartition;	
+	JTextField 		m_tfCapacity;
+	JTextField[]	m_atfName;	
 
 	JTextField[]	m_atfSize;
 		
@@ -44,74 +44,110 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 	
 	NewIDEImageDialog(JFrame owner) {
 		super(owner, TIImageTool.langstr("Title.IDE.CreateNew"));
-		m_atfPartition = new JTextField[8];
+		m_atfName = new JTextField[8];
 		m_atfSize = new JTextField[8];
 		m_anSize = new int[8];
 	}
 	
-/*		
-	| 	Create new partitioned IDE image										|
+/*				
+		| 	Create new partitioned IDE image										|
 	
-	    Partitions can be created from 1 to 4, but they must be contiguous.
+	    Partitions can be created from 1 to 8, but without gaps. For partitions
+	    beyond 4 the IDE DSR must be updated to release 1.6.
 
 		Full capacity          [...]
 	
-		Partition 1 
-		Name                   [...]
-		Size                   [...]
+		Number	Name	Size 
+		1       [...]   [...]
+		2       [...]   [...]
+		3       [...]   [...]
+		4       [...]   [...]
+		5       [...]   [...]
+		6       [...]   [...]
+		7       [...]   [...]
+		8       [...]   [...]
 		
-		Partition 2 
-		Name                   [...]
-		Size                   [...]
-
-		Partition 3 
-		Name                   [...]
-		Size                   [...]
-
-		Partition 4 
-		Name                   [...]
-		Size                   [...]
-
 				+-------+			+-----------+
 				|	OK	|			|	Cancel	|
-				+-------+           +-----------+
-
+				+-------+			+-----------+
+				
+		Completion rules:
+		- If the capacity is less than the sum in the size fields, update the
+		  capacity
+		- If the capacity is higher than the sum in the size fields, suggest the
+		  difference for the next partition if more than 10 MiB
+		- If a new size or capacity is entered, check the above rules
+		- When Return is pressed, move forward from name to size, and from size
+		  to the next name, check the above rules
+		- When the focus is lost, check the above rules
+		- When an empty name is entered, clear all following fields (you can 
+		  still click cancel)
+		- When an invalid size is entered, restore the previous entry
+		- When size 0 is entered, clear the name and all following fields
+	    - When an invalid name is entered, restore the previous entry
+	    - When an invalid capacity is entered, fill it with the sum of the sizes
+	      or 200
+	    - Start with a capacity of 200
 */	
 	public void createGui(Font font) {
 		prepareGui();
 		FontMetrics fm = ((Graphics2D)(m_frmMain.getGraphics())).getFontMetrics(font);
 		int nColumnWidth = determineMaxWidth(font, TIImageTool.langstr("Image.IDE.FullCapacity"), TIImageTool.langstr("VolumeName"));
+
+		int nColumnWidth1 = getBoldWidth(TIImageTool.langstr("Dialog.IDE.Partition"));
+		int nColumnWidth2 = getColumnWidth(10);
+		int nColumnWidth3 = getBoldWidth(TIImageTool.langstr("Capacity"));
+	
 		int nFieldWidth = fm.stringWidth("XXXXXXXXXXXX");
 
 		putMultiTextLine(this, TIImageTool.langstr("Dialog.IDE.Header"));
+		putMultiTextLine(this, TIImageTool.langstr("Dialog.IDE.Upgrade"));
 		putMultiTextLine(this, TIImageTool.langstr("Dialog.IDE.HeaderUnpart"));
 		add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
 		
 //		add(vspace(120));
 		// Max capacity is 4*248 = 992 MiB
-		m_tfSize = putTextField(this,  TIImageTool.langstr("Image.IDE.FullCapacity"), "200", nColumnWidth, nFieldWidth); 
+		m_tfCapacity = putTextField(this,  TIImageTool.langstr("Image.IDE.FullCapacity"), "200", nColumnWidth, nFieldWidth); 
 		add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
 		
 		//		add(vspace(80));		
-		m_tfSize.addActionListener(this);	
-		m_tfSize.addFocusListener(this);	
+		m_tfCapacity.addActionListener(this);	
+		m_tfCapacity.addFocusListener(this);	
 
 		JPanel jp = new JPanel();
 		jp.setLayout(new BoxLayout(jp, BoxLayout.Y_AXIS));
+				
+		// Create table title
+		jp.add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
+		Box title = new Box(BoxLayout.X_AXIS);
+		title.add(Box.createHorizontalStrut(TIImageTool.dialogHeight/2));
+		JLabel jlt1 = new JLabel(TIImageTool.langstr("Dialog.IDE.Partition"), SwingConstants.LEFT);
+		jlt1.setFont(TIImageTool.boldDialogFont);
+		addField(title, jlt1,  nColumnWidth1, TIImageTool.dialogHeight,  0);
+		
+		JLabel jlt2 = new JLabel(TIImageTool.langstr("Dialog.IDE.Name"), SwingConstants.LEFT);
+		jlt2.setFont(TIImageTool.boldDialogFont);
+		addField(title, jlt2,  nColumnWidth2, TIImageTool.dialogHeight,  0);
+		
+		JLabel jlt3 = new JLabel(TIImageTool.langstr("Capacity"), SwingConstants.LEFT);
+		jlt3.setFont(TIImageTool.boldDialogFont);
+		addField(title, jlt3,  nColumnWidth3, TIImageTool.dialogHeight,  0);
+		
+		jp.add(title);
 		
 		for (int i=1; i <=8; i++) {
-			putTextLine(jp, "!" + TIImageTool.langstr("Dialog.IDE.Partition") + " " + i, 0);
 			jp.add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
 
-			m_atfPartition[i-1] = putTextField(jp, TIImageTool.langstr("VolumeName"), (i==1)? "PART1" : "", nColumnWidth, nFieldWidth);
-			m_atfSize[i-1] = putTextField(jp, TIImageTool.langstr("Capacity"), (i==1)? "200" : "", nColumnWidth, nFieldWidth);
-			jp.add(Box.createVerticalStrut(TIImageTool.dialogHeight/2));
+			JTextField[] atf = putTextFieldN(jp, String.valueOf(i), 2, nColumnWidth1, nFieldWidth);
+
+			m_atfName[i-1] = atf[0];
+			m_atfSize[i-1] = atf[1];
+
+			m_atfName[i-1].addActionListener(this);
+			m_atfName[i-1].addFocusListener(this);
 
 			m_atfSize[i-1].addActionListener(this);	
 			m_atfSize[i-1].addFocusListener(this);
-			
-			m_atfPartition[i-1].addActionListener(this);
-			m_atfPartition[i-1].addFocusListener(this);
 		}
 		
 		JScrollPane jsp = new JScrollPane(jp);
@@ -126,55 +162,132 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 		addButtons();
 	}
 	
-	// Only if there is a name, the partition is valid, and the value of the size is shown
+	private int calcFullCapacity(int skip) {
+		int capa = 0;
+		for (int i=0; i < 8; i++) {
+			if (i != skip) {
+				if (isValidName(m_atfName[i].getText()) && isValidSize(m_atfSize[i].getText())) {
+					capa += m_anSize[i];
+				}
+				else break;
+			}
+		}
+		return capa;
+	}
 	
+	private boolean isValidName(String sName) {
+		if (sName == null) return false;
+		if ((sName.length() < 1) || (sName.length() > 10)) return false;
+		for (int i=0; i < sName.length(); i++) {
+			if ((sName.charAt(i) <= 32) || (sName.charAt(i) > 126) || (sName.charAt(i) == '.')) return false;
+		}
+		return true;
+	}
+	
+	private boolean isValidSize(String sValue) {
+		int value = 0;
+		try {
+			value = Integer.parseInt(sValue);
+		}
+		catch (NumberFormatException nfx) {
+			return false;
+		}
+		return ((value >=0 ) && (value < 249));
+	}
+	
+	private void changeName(int i, String s) {
+//		System.out.println("changeName(" + i + ", " + "\"" + s + "\")");
+		if (s.trim().length()==0) {
+			m_atfSize[i].setText("");
+			m_anSize[i] = 0;
+			if (i < 7) {
+				m_atfName[i+1].setText("");
+				changeName(i+1, "");
+				m_atfSize[i+1].setText("");
+				m_anSize[i+1] = 0;			
+			}
+		}
+		else {
+			if (isValidName(s)) {
+				int count = getDefinedPartitions();
+				if (i <= count) {
+					m_asName[i] = s;
+					int remain = m_nFullCapacity;
+					if (getDefinedPartitions() > 0)
+						remain = m_nFullCapacity - calcFullCapacity(i);
+				
+					if (remain >= 10) {
+						if (remain > 248) remain = 248; 
+						m_atfSize[i].setText(String.valueOf(remain));
+						changeSize(i, String.valueOf(remain));
+					}
+				}
+				else {
+					m_atfName[i].setText("");
+					changeName(i, "");
+				}
+			}
+			else m_atfName[i].setText(m_asName[i]);  // restore old entry
+		}
+	}
+	
+	private void changeSize(int i, String s) {
+//		System.out.println("changeSize(" + i + ", " + "\"" + s + "\")");
+		int size = 0;
+		if (isValidSize(s)) {
+			size = Integer.parseInt(s);
+		}
+		else {
+			if ((m_asName[i].length() > 0) && (m_anSize[i] > 0))
+				m_atfSize[i].setText(String.valueOf(m_anSize[i]));
+			else
+				changeSize(i, "0");
+			return;
+		}
+		if (size == 0) {
+			m_atfName[i].setText("");
+			changeName(i, "");
+		}
+		else {
+			m_anSize[i] = size;
+			int nCap = calcFullCapacity(-1);
+			if (nCap > m_nFullCapacity) {
+				m_nFullCapacity = nCap;
+				m_tfCapacity.setText(String.valueOf(m_nFullCapacity));
+			}
+		}
+	}
+	
+	// Only if there is a name, the partition is valid, and the value of the size is shown
+	// Triggered when the Return key is pressed one of the text fields
 	public void actionPerformed(ActionEvent ae) {
-		if (ae.getSource()==m_tfSize) {
-			// System.out.println("Action performed");
+
+		if (ae.getSource()==m_tfCapacity) {
 			try {
-				m_nFullCapacity = Integer.parseInt(m_tfSize.getText());
-				distributeCapacity();
+				m_nFullCapacity = Integer.parseInt(m_tfCapacity.getText());
 			}
 			catch (NumberFormatException nfx) {
-				m_tfSize.setText(String.valueOf(m_nFullCapacity));
+				m_tfCapacity.setText(String.valueOf(calcFullCapacity(-1)));
 			}
 		}
 		
 		for (int i=0; i < 8; i++) {
-			if (ae.getSource()==m_atfPartition[i]) {
-				String editpart = m_atfPartition[i].getText().trim();
-				if ((editpart.length() == 0 && m_asName[i].length() > 0)
-					|| (editpart.length() > 0 && m_asName[i].length() == 0))
-					distributeCapacity();
-				m_asName[i] = editpart;
+			if (ae.getSource()==m_atfName[i]) {
+				// Changes are done by the focus listener
+				m_atfSize[i].grabFocus();
+			}
+			else {
+				if (ae.getSource()==m_atfSize[i]) {
+					// Changes are done by the focus listener
+					m_atfName[(i+1)%8].grabFocus();
+				}
 			}
 		}
-		
+				
 		super.actionPerformed(ae);
 	}
-	
-	/** Assist in filling in the sizes.
-	*/
-	private void distributeCapacity() {
-		int count = getDefinedPartitions();
-		// System.out.println("Defined partitions = " + count);
-		for (int i=count; i < 8; i++) {
-			m_atfPartition[i].setText("");
-			m_atfSize[i].setText("");
-		}
-		int[] sizes = getPartitionSizes();
-		int sum = 0;
-		for (int i=0; i < sizes.length-1; i++) {
-			sum += sizes[i];
-		}
-		// System.out.println("sum = " + sum);	
-		int prop = m_nFullCapacity - sum;
-		if (prop > 248) prop = 248;
-		if (prop < 0) prop = 0;
 		
-		m_atfSize[count-1].setText(String.valueOf(prop));
-	}
-	
+	// Triggered when the dialog (and any of its fields) is selected
 	public void focusGained(FocusEvent fe) {
 		// System.out.println("Focus gained");
 	}
@@ -185,71 +298,46 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 	
 	public void focusLost(FocusEvent fe) {
 		// System.out.println("Focus lost");
-		
-		if (fe.getSource()==m_tfSize) {
+		if (fe.getSource()==m_tfCapacity) {
 			try {
-				m_nFullCapacity = Integer.parseInt(m_tfSize.getText());
-				distributeCapacity();
+				m_nFullCapacity = Integer.parseInt(m_tfCapacity.getText());
 			}
 			catch (NumberFormatException nfx) {
-				m_tfSize.setText(String.valueOf(m_nFullCapacity));
+				m_tfCapacity.setText(String.valueOf(calcFullCapacity(-1)));
 			}
-			return;
 		}
-		
+
 		for (int i=0; i < 8; i++) {
-			if (fe.getSource()==m_atfPartition[i]) {
-				String editpart = m_atfPartition[i].getText().trim();
-				// if ((editpart.length() == 0 && m_asName[i].length() > 0)
-				//	|| (editpart.length() > 0 && m_asName[i].length() == 0))
-					distributeCapacity();
-				m_asName[i] = editpart;
+			if (fe.getSource()==m_atfName[i]) {
+				changeName(i, m_atfName[i].getText());
+				// System.out.println("Left field name " + (i+1));
+			}
+			else {
+				if (fe.getSource()==m_atfSize[i]) {
+					changeSize(i, m_atfSize[i].getText());
+					// System.out.println("Left field size " + (i+1));
+				}
 			}
 		}
 	}
 	
 	private int getDefinedPartitions() {
 		for (int i=0; i < 8; i++) {
-			if (m_atfPartition[i].getText().trim().length()==0) return i;
+			if (m_atfName[i].getText().trim().length()==0) return i;
 		}
 		return 8;
 	}
 	
-	String[] getPartitionNames() {
-		int count = getDefinedPartitions();
-		String[] as = new String[count];
-		for (int i=0; i < count; i++) {
-			as[i] = m_atfPartition[i].getText().trim();
-		}
-		return as;
-	}
-	
-	int[] getPartitionSizes() {
-		int count = getDefinedPartitions();
-		int[] an = new int[count];
-		for (int i=0; i < count; i++) {
-			try {
-				an[i] = Integer.parseInt(m_atfSize[i].getText().trim());
-			}
-			catch (NumberFormatException nfx) {
-				an[i] = -1;
-			}
-		}
-		return an;
-	}
-	
 	FormatParameters getParameters(int part) {
-		int[] size = getPartitionSizes();
-		String[] name = getPartitionNames();
+		FormatParameters params = new FormatParameters(m_asName[part], true);
+		params.setHD(Time.createNow(), getAUSize(part), getReserved(m_anSize[part]), HarddiskFileSystem.SCSI);
 		
-		FormatParameters params = new FormatParameters(name[part], true);
-		params.setHD(Time.createNow(), getAUSize(part), getReserved(size[part]), HarddiskFileSystem.SCSI);
-		
-		int i = size[part] * 4096;
+		int count = getDefinedPartitions();
+		int i = m_anSize[part] * 4096;
 		
 		// One sector (512 bytes) contains the partition table; take it from the size
 		// of the last partition
-		if (part == size.length-1) 
+		if (part == count-1) 
 			i = i-2;  
 			
 		params.setTotal(i);
@@ -262,7 +350,7 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 		
 		// AU size = sectors / max = cap * 4096 / (31 * 2048)
 		//          = cap * 2 / 31
-		double nAUSize = (getPartitionSizes()[i]*2)/31.0;
+		double nAUSize = (m_anSize[i]*2)/31.0;
 		if (nAUSize > 8) return 16;
 		if (nAUSize > 4) return 8;
 		if (nAUSize > 2) return 4;
@@ -287,5 +375,14 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 		return res;
 		
 		// SCSI: max=0xe6*0x40 = 14720  (bei 248 MiB)
+	}
+	
+	int[] getPartitionSizes() {
+		int[] psize = new int[getDefinedPartitions()];
+		for (int i=0; i < psize.length; i++) {
+			psize[i] = m_anSize[i];
+		}
+		
+		return psize; 
 	}
 }

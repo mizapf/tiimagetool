@@ -109,7 +109,6 @@ public class NewIDEImageAction extends Activity {
 		
 		if (newimage.confirmed()) {
 			// System.out.println("New partitions: ");
-			String[] asPart = newimage.getPartitionNames();
 			int[] anSize = newimage.getPartitionSizes();
 			// for (int i=0; i < asPart.length; i++) {
 			// 	System.out.println(asPart[i] + ": " + anSize[i]);

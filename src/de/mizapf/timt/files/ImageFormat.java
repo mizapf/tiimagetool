@@ -128,7 +128,7 @@ public abstract class ImageFormat  {
 	
 	public final static int NONE = -1;
 
-	public final static String[] suffix = { "", "dsk", "dtk", "hfe", "hd", "raw", "cf7" };
+	public final static String[] suffix = { "", "dsk", "dtk", "cf7", "hfe", "hd", "raw" };
 
 	// Indicates whether the current format unit has been changed 
 	boolean m_bDirty;
