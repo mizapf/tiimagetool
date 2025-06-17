@@ -2,6 +2,9 @@
 ******************* What's new? *********************
 ******
 
+==== 3.0.8 (June 2025)
+- Caught an exception that stopped searching images
+
 ==== 3.0.7 (November 2024)
 - New IDE partition dialog
 - Fixed an error with automatic file suffix creation

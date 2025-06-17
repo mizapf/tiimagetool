@@ -218,6 +218,9 @@ public class SearchAction extends Activity {
 		}
 		catch (NumberFormatException nfx) {
 		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 		return vol;
 	}
 	
