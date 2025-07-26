@@ -14,26 +14,19 @@
     You should have received a copy of the GNU General Public License
     along with TIImageTool.  If not, see <http://www.gnu.org/licenses/>.
     
-    Copyright 2011-2024 Michael Zapf
+    Copyright 2011-2025 Michael Zapf
     www.mizapf.de
     
 ****************************************************************************/
 
 /*
-	TODOs for 3.0.7
+	TODOs for 3.0.8
 	-------------
     
     Images
-	[x] SCSI/IDE harddisk (512 bytes/sector)
-	[x] IDE harddisk support (incl. partitions)
-	[x] Add default hard disk format selection ("Seagate ST-225 | ... | maxAU8 | maxAU16 | user-defined")
 	[?] Add check for CF card read (check for newly created image file)
 	[-] Search for CF7 card and for dd / chown automatically.
 	[-] Check for CF7 open issues in Windows
-	[x] "Please wait" window for CF7
-	[x] Define suffixes for images
-	[x] Add Edit CF7 to utilities (add/del/rename volumes)
-	[x] Allow for up to 8 IDE partitions (new Nov 2023)
 
 	Disassembler
 	[?] Disassembler problem in symbolic mode; see disassembler file
@@ -41,62 +34,30 @@
     [?] IDT label in Disassembler
 
     Display
-	    Fix font size:
-	[x] - Change CHD version (file name is truncated)
-	[x] - Serial bridge
-	[x] - Search dialog
 	[-] Paste error: If last entry is dir, object will be pasted there (not reproducible)
-	[x] Safe area for right-click outside of file
-    [x] Periods appear doubled in XB file listing -> appears when . is used as escape character       
-    [x] Add note to avoid "~" or "." as escape character
 	[?] Recent files need escaping for semicolon in file name    
-    [x] Right-click on another file does not deselect the previously marked file → javax.swing.ListSelectionModel
-    [x] Keep dimension of text output window
     [ ] Dis/Fix 255 display (and pos. other files) should be improved
+    [x] Add a key listener to NewIDEImage so that ESC and Return are recognized
 	
     Files
     [-] Cannot drag&drop into Archive
-    [x] YAPP G7 cannot be loaded; treated wrongly as G6 (ImageFrame:246)
     [ ] Show 192 line graphics without black bar (192 line detection seems to be broken: Check whether possible at all)
 	[ ] Show embedded machine language in BASIC (or indicate at least)
 	[?] Allow for more DIS/VAR formats to be viewed (needs test)
-    [x] Use empty sector pattern 
 
     Utils
-    [x] Next sector does not work in Sector Editor with raw file
-    [x] Write back with sector editor
 	[ ] Cartridge creator (RPK)
-	[x] Change MacOS defaults (see below in this file)
-	[x] Update hints
-    [x] Allow Return key for New floppy image
-    [x] Allow Return key for new element
     [ ] Encode control characters in files from escape sequence (like §81 -> CTRL-a)
-    [x] Complete undo
-    [x] Complete redo
-  	[x] Use a full editor for textual files
-  	[x] Drop CHD conversion (saving converts to v5)
-  	[x] Drop RAW/CHD conversion
-  	[x] Drop HFDC/SCSI conversions (would imply sector length change)
-    [x] Allow mass-import of non-headered files (Option Import all text files as DV80 / binary files as PRG; Preferences)
-    [x] Allow binary import as DIS/FIX128 (see ImportContentAction:309, remove the second option)
-    [x] Auto-split text lines in import to record length
     
   	Open bugs
     -
 
     Fixed bugs
-    [x] Avoid pasting the end-of-list
-    [x] Serial bridge standalone frame display
-    [x] File sizes in CommandShell dir are one too low
-    [x] Improve output of InvalidEscape
-    [x] Importing a text or binary file (without TFI header) does not commit correctly
-    [x] ViewImage when there is no color file
-    [x] Failed import of a file leads to dirty image
-    [x] Import of a directory copies all files, but they are gone after reopening (directory not committed)
-    [x] Empty files are copied with a bad sector allocation [022..fff]
-    [x] Track dump format delivers a better error message for 80 track images
-    [x] Defining more than 4 partitions triggers ArrayIndexOOBException 
-    [x] Auto file suffix generation was shifted
+    [x] Caught an exception that stopped searching images
+    [x] Fixed a lockup when two action keys are hit quickly one after another (Ctrl-N and M)
+    [x] Import of directories with TIFILES now works with non-normalized lengths
+    [x] Preset the first IDE partition entry
+    [x] Fixed an error when creating IDE images with 0 partitions
 */
 
 package de.mizapf.timt;
@@ -1533,7 +1494,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	
 	synchronized void setUserInput(String sCommand) {
 		Activity act = activities.get(sCommand);
-		if (act != null) setUserInput(act);			
+		if (act != null && m_UserInput == null) setUserInput(act);			
 	}
 
 	public boolean offersSerialConnection() {
@@ -1861,8 +1822,11 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 		is retrieved from the map and executed. This is the main function 
 		for user action handling. */
 	public void actionPerformed(ActionEvent ae) {
+//		System.out.println(ae);
 		Activity act = activities.get(ae.getActionCommand());
-		if (act != null) setUserInput(act);			
+//		System.out.print("<-");
+		if (act != null && m_UserInput == null) setUserInput(act);
+//		System.out.println("->");
 	}
 		
 	public void componentHidden(ComponentEvent ce) { 	}

@@ -110,9 +110,13 @@ public class NewIDEImageAction extends Activity {
 		if (newimage.confirmed()) {
 			// System.out.println("New partitions: ");
 			int[] anSize = newimage.getPartitionSizes();
-			// for (int i=0; i < asPart.length; i++) {
-			// 	System.out.println(asPart[i] + ": " + anSize[i]);
-			// }
+			
+			if (anSize.length == 0) {
+				JOptionPane.showMessageDialog(m_parent, TIImageTool.langstr("Dialog.IDE.NoPart"), TIImageTool.langstr("ImageError"), JOptionPane.ERROR_MESSAGE);
+				m_parent.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+				return;
+			}				
+			
 			
 			SaveAsImageDialog sd = new SaveAsImageDialog(m_parent, ImageFormat.MEMORY, false);
 			

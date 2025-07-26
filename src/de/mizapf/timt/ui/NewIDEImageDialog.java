@@ -158,6 +158,10 @@ class NewIDEImageDialog extends ToolDialog implements ActionListener, FocusListe
 		m_asName = new String[8];
 		for (int i=0; i < 8; i++) m_asName[i] = "";
 		m_nFullCapacity = 200;
+
+		m_tfCapacity.addKeyListener(this);
+		m_atfName[0].setText("PART1");
+		changeName(0, "PART1");
 		
 		addButtons();
 	}

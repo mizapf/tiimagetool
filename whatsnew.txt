@@ -2,8 +2,13 @@
 ******************* What's new? *********************
 ******
 
-==== 3.0.8 (June 2025)
+==== 3.0.8 (August 2025)
 - Caught an exception that stopped searching images
+- Fixed a lockup when two action keys are hit quickly one after another (Ctrl-N and M)
+- Import of directories with TIFILES now works with non-normalized lengths
+- Add a key listener to NewIDEImage so that ESC and Return are recognized
+- Preset the first IDE partition entry
+- Fixed an error when creating IDE images with 0 partitions
 
 ==== 3.0.7 (November 2024)
 - New IDE partition dialog
