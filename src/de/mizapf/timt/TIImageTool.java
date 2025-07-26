@@ -168,7 +168,7 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	JFrame m_frmMain;
 
 	public final static String VERSION = "3.0.8";
-	public final static String MONTH = "June";
+	public final static String MONTH = "August";
 	public final static String YEAR = "2025";
 	
 	private static final String TITLE = "TIImageTool";
@@ -1759,6 +1759,17 @@ public class TIImageTool implements ActionListener, ComponentListener, WindowLis
 	// TODO: Move this into Directory
 	public boolean putTIFileIntoImage(Directory dir, DirectoryView dvCurrent, byte[] abyTif, String sDefaultFilename) throws ProtectedException, InvalidNameException, FileNotFoundException, ImageException, IOException {
 
+		int nSectorsInTif = TIFiles.getTotalNumberOfSectors(abyTif);
+		if (TIFiles.hasHeader(abyTif)) {
+			abyTif = TIFiles.normalizeLength(abyTif);
+			if ((abyTif.length - 128) != nSectorsInTif * TFileSystem.SECTOR_LENGTH) {
+				// Clip the file
+				byte[] abyNew = new byte[nSectorsInTif * TFileSystem.SECTOR_LENGTH + 128];
+				System.arraycopy(abyTif, 0, abyNew, 0, abyNew.length);
+				abyTif = abyNew;									
+			}
+		}
+				
 		String sName = createValidInputFileName(sDefaultFilename);
 			
 		boolean bInserted = true;

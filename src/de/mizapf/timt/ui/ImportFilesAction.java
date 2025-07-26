@@ -118,22 +118,6 @@ public class ImportFilesAction extends Activity {
 					dis.readFully(abyTif);
 					
 					try {
-						int nSectorsInTif = TIFiles.getTotalNumberOfSectors(abyTif);
-						if (TIFiles.hasHeader(abyTif)) {
-							abyTif = TIFiles.normalizeLength(abyTif);
-//							if (!TIFiles.hasProperSize(abyTif)) {
-//								JOptionPane.showMessageDialog(dvCurrent.getFrame(), iofile.getName() + ": File is clipped; should be at least " + (nSectorsInTif* TFileSystem.SECTOR_LENGTH + 128) + " bytes long.", "Import error", JOptionPane.ERROR_MESSAGE);
-//								continue;
-//							}
-//							else {
-								if ((abyTif.length - 128) != nSectorsInTif * TFileSystem.SECTOR_LENGTH) {
-									// Clip the file
-									byte[] abyNew = new byte[nSectorsInTif * TFileSystem.SECTOR_LENGTH + 128];
-									System.arraycopy(abyTif, 0, abyNew, 0, abyNew.length);
-									abyTif = abyNew;									
-								}
-//							}
-						}
 						if (imagetool.putTIFileIntoImage(dirCurrent, dvCurrent, abyTif, iofile.getName()))
 							bInserted = true;
 					}
